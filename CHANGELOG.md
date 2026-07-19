@@ -11,6 +11,40 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.2] - 2026-07-19
+
+### Added
+
+- 新增 Task 3.3 数据表结构设计文档
+- 正式确认五类共 57 张逻辑表
+- 明确三张候选表及暂不纳入原因
+- 新增 Task 3.3 表结构设计正式决策
+
+### Changed
+
+- Task 3.3 状态更新为 Completed / Approved
+- 下一任务更新为 Task 3.4 字段结构设计，状态 Not Started
+- 数据库规格入口增加 Task 3.3 文档链接和正式表清单摘要
+
+### Design
+
+- 统一仓库表和统一当前库存表，不建立平行表
+- 多 SKU 正式单据采用主表与明细表结构
+- 生产进度和分批完工记录独立建表
+- 附件采用统一附件表及附件关联表
+- 单据状态历史和审批记录独立建表
+- `role_warehouses`、`role_stores` 和 `safety_stock_rules` 暂列候选
+
+### Status
+
+- Phase 3: In Progress
+- Task 3.1: Completed / Approved
+- Task 3.2: Completed / Approved
+- Task 3.3: Completed / Approved
+- Task 3.4: Not Started
+- Field Design: Not Started
+- Development: Not Started
+
 ## [0.3.1] - 2026-07-19
 
 ### Added

@@ -395,3 +395,29 @@ Approved
 ### 影响
 
 Task 3.2 作为后续数据表结构设计的正式输入。本决定只确认概念关系、关系基数、业务约束、单据主从结构及追溯关系，不定义字段名称、字段类型、主键、外键实现、索引、SQL、ORM、数据库技术选型或物理 ER 模型，不启动 Task 3.3，也不进入技术开发。
+
+## DEC-022 批准Task 3.3数据表结构设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-19
+
+### 决定
+
+- Task 3.3 数据表结构设计（Table Structure Design）状态为 Completed / Approved；
+- 正式逻辑表数量为 57 张，分为基础资料类 11 张、采购与生产类 10 张、验收与出入库类 10 张、跨境与库存类 12 张、系统与治理类 14 张；
+- 仓库和当前库存分别使用统一的 `warehouses` 和 `inventories`，不建立平行表；
+- 所有多 SKU 正式业务单据采用主表与明细表结构；
+- `production_progress_records` 和 `production_completion_records` 独立保存生产进度及分批完工历史；
+- 附件统一使用 `attachments` 和 `attachment_links`；
+- 单据状态历史和审批记录分别使用 `document_status_histories` 和 `approval_records`；
+- `role_warehouses`、`role_stores` 和 `safety_stock_rules` 暂列候选，不进入 57 张正式表清单；
+- 下一任务为 Task 3.4 字段结构设计（Field Structure Design），状态为 Not Started。
+
+### 影响
+
+Task 3.3 作为 Task 3.4 字段结构设计的正式输入。本决定只确认逻辑表名称、分类、用途和从属关系，不定义字段清单、字段名称、字段类型、主键、外键字段、索引、唯一约束的物理实现、SQL、ORM、数据库技术选型、数据库 Schema 或物理 ER 模型，不启动 Task 3.4，也不进入技术开发。
