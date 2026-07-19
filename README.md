@@ -5,7 +5,7 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-19
+updated_date: 2026-07-20
 related_phase: Phase 1
 ---
 
@@ -32,8 +32,9 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 3.4：Completed / Approved
 - Task 3.5：In Progress
 - Task 3.5.1：Completed / Approved
-- Next Subtask：Task 3.5.2 Primary Key and Unique Constraint Design
-- Task 3.5.2 状态：Not Started
+- Task 3.5.2：Completed / Approved
+- Next Subtask：Task 3.5.3 Foreign Key Relationship Standard
+- Task 3.5.3 状态：Not Started
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -41,10 +42,11 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 数据库设计：In Progress
 - 数据库字段名称设计：Completed / Approved
 - 字段数据类型规范：Completed / Approved
-- 主键、唯一约束、外键策略、索引和 Check 约束：Not Started
+- 主键与唯一约束设计：Completed / Approved
+- 外键关系规范、普通查询索引和 Check 约束：Not Started
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.4 均已完成并获得批准，Task 3.5 已进入 In Progress。Task 3.5.1 字段数据类型规范已完成并获得批准；Task 3.5.2 和技术开发均未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.4 均已完成并获得批准，Task 3.5 已进入 In Progress。Task 3.5.1 字段数据类型规范和 Task 3.5.2 主键与唯一约束设计均已完成并获得批准；Task 3.5.3 和技术开发均未开始。
 
 ## 九阶段开发路线
 
@@ -91,6 +93,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 3.3 数据表结构设计（Approved）](docs/phases/phase-03/TASK_3_3_TABLE_STRUCTURE_DESIGN.md)
 - [Task 3.4 字段结构设计（Approved）](docs/phases/phase-03/TASK_3_4_FIELD_STRUCTURE_DESIGN.md)
 - [Task 3.5.1 字段数据类型规范（Approved）](docs/phases/phase-03/TASK_3_5_1_FIELD_TYPE_STANDARD.md)
+- [Task 3.5.2 主键与唯一约束设计（Approved）](docs/phases/phase-03/TASK_3_5_2_PRIMARY_KEY_UNIQUE_CONSTRAINT_DESIGN.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -100,7 +103,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 3 正在进行，Task 3.5.1 已完成并获得批准。Task 3.5.2 尚未启动，不得定义具体主键或唯一约束清单、外键删除策略、索引或 Check 约束，不得创建 SQL、ORM、Schema、Migration、物理 ER 图、API、页面、业务代码、应用框架或安装依赖。
+Phase 3 正在进行，Task 3.5.1 和 Task 3.5.2 已完成并获得批准。Task 3.5.3 尚未启动，不得定义外键删除或更新策略、普通查询索引或 Check 约束，不得创建 SQL、ORM、Schema、Migration、物理 ER 图、API、页面、业务代码、应用框架或安装依赖。
 
 ## 安全说明
 

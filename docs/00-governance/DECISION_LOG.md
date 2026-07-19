@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-19
+updated_date: 2026-07-20
 related_phase: Phase 1
 ---
 
@@ -480,3 +480,32 @@ Approved
 ### 影响
 
 Task 3.5.1 作为 Task 3.5.2 的正式输入。本决定只确认逻辑字段类型、长度、精度及适用边界，不定义具体主键或唯一约束清单、外键删除策略、索引、Check 约束、SQL、ORM、数据库选型、Schema、Migration 或业务代码。Task 3.5.1 验收通过前不得启动 Task 3.5.2。
+
+## DEC-025 批准Task 3.5.2主键与唯一约束设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-20
+
+### 决定
+
+- Phase 3 数据库设计状态保持 In Progress；
+- Task 3.5 字段类型、约束与索引设计状态保持 In Progress；
+- Task 3.5.1 字段数据类型规范状态为 Completed / Approved；
+- Task 3.5.2 主键与唯一约束设计状态为 Completed / Approved；
+- 全部 60 张正式表采用单字段 UUID 主键 `id`，优先 UUID v7，业务编码不得作为主键；
+- 业务编码及单据编号在各自业务范围内唯一，单据明细采用“主表 ID + 行号”组合唯一；
+- 库存余额采用 `sku_id, warehouse_id` 组合唯一，多对多关系表采用业务对象 ID 组合唯一且保留独立 UUID 主键；
+- 平台外部订单及退货编号按店铺范围唯一，外部店铺标识按平台范围唯一，物流信息按承运商与非空物流单号组合唯一；
+- 编码及用户名按不区分大小写原则判重；
+- 可空唯一字段仅在非空时参与唯一判断；
+- 审计日志、单据状态历史和审批记录不设置业务唯一约束；
+- 下一小任务为 Task 3.5.3 外键关系规范（Foreign Key Relationship Standard），状态为 Not Started。
+
+### 影响
+
+Task 3.5.2 作为 Task 3.5.3 的正式输入。本决定只确认逻辑主键与业务唯一范围，不定义外键删除或更新策略、普通查询索引、Check 约束、枚举完整合法值、SQL、ORM、数据库选型、Schema、Migration、页面、API 或业务代码。Task 3.5.2 验收通过前不得启动 Task 3.5.3。

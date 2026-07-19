@@ -5,11 +5,47 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-19
+updated_date: 2026-07-20
 related_phase: Phase 1
 ---
 
 # CHANGELOG
+
+## [0.3.5] - 2026-07-20
+
+### Added
+
+- 新增 Task 3.5.2 主键与唯一约束设计文档
+- 完成全部 60 张正式表的主键和业务唯一范围设计
+- 新增 Task 3.5.2 主键与唯一约束正式决策
+
+### Changed
+
+- Task 3.5.2 状态更新为 Completed / Approved
+- 下一小任务更新为 Task 3.5.3 外键关系规范，状态 Not Started
+- 数据库规格入口增加 Task 3.5.2 文档链接和约束设计摘要
+
+### Design
+
+- 全部 60 张正式表统一采用单字段 UUID 主键 `id`，优先 UUID v7
+- 业务编码不作为主键，业务唯一性通过独立唯一约束表达
+- 单据编号在各自业务表内唯一，单据明细采用“主表 ID + 行号”组合唯一
+- 库存余额采用 `sku_id, warehouse_id` 组合唯一，多对多关联表采用业务对象 ID 组合唯一
+- 外部平台订单及退货编号按店铺范围唯一，物流信息按承运商与非空物流单号组合唯一
+- 编码及用户名按不区分大小写原则判重，可空唯一字段仅在非空时参与判断
+- 审计日志、单据状态历史和审批记录不设置业务唯一约束
+
+### Status
+
+- Phase 3: In Progress
+- Task 3.5: In Progress
+- Task 3.5.1: Completed / Approved
+- Task 3.5.2: Completed / Approved
+- Task 3.5.3: Not Started
+- Field Type Standard: Completed / Approved
+- Primary Key and Unique Constraint Design: Completed / Approved
+- Foreign Key Policy, Ordinary Index and Check Constraint Design: Not Started
+- SQL, ORM, Schema, Migration and Development: Not Started
 
 ## [0.3.4] - 2026-07-19
 
