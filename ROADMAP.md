@@ -33,8 +33,9 @@ related_phase: All Phases
 - Task 3.5：In Progress
 - Task 3.5.1：Completed / Approved
 - Task 3.5.2：Completed / Approved
-- Next Subtask：Task 3.5.3 Foreign Key Relationship Standard
-- Task 3.5.3 状态：Not Started
+- Task 3.5.3：Completed / Approved
+- Next Subtask：Task 3.5.4 Index Design
+- Task 3.5.4 状态：Not Started
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
@@ -44,9 +45,10 @@ related_phase: All Phases
 - 数据库字段名称设计：Completed / Approved
 - 字段数据类型规范：Completed / Approved
 - 主键与唯一约束设计：Completed / Approved
-- 外键关系规范、普通查询索引和 Check 约束：Not Started
+- 外键关系规范：Completed / Approved
+- 普通查询索引和 Check 约束：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.4 均已完成并获得批准，Task 3.5 状态为 In Progress。Task 3.5.1 和 Task 3.5.2 均已完成并获得批准；下一小任务为 Task 3.5.3 外键关系规范，当前状态为 Not Started。Task 3.5.2 验收通过前不得开始 Task 3.5.3。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.4 均已完成并获得批准，Task 3.5 状态为 In Progress。Task 3.5.1、Task 3.5.2 和 Task 3.5.3 均已完成并获得批准；下一小任务为 Task 3.5.4 索引设计，当前状态为 Not Started。Task 3.5.3 验收通过前不得开始 Task 3.5.4。
 
 ## 3. 固定九阶段开发路线
 
@@ -256,8 +258,8 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 ## 6. 当前下一步
 
-等待 ChatGPT 读取 GitHub 并验收 Task 3.5.2 主键与唯一约束设计。
+等待 ChatGPT 读取 GitHub 并验收 Task 3.5.3 外键关系规范。
 
-Phase 2 的 Task 2.1 至 Task 2.6 已全部完成并获得批准。Phase 3 正在进行，Task 3.1 至 Task 3.4 已完成并获得批准。Task 3.5 已启动；Task 3.5.1 已确定数据库无关的逻辑字段类型规范，Task 3.5.2 已确定全部 60 张正式表的 UUID 主键规则及业务唯一约束。
+Phase 2 的 Task 2.1 至 Task 2.6 已全部完成并获得批准。Phase 3 正在进行，Task 3.1 至 Task 3.4 已完成并获得批准。Task 3.5 已启动；Task 3.5.1 已确定逻辑字段类型，Task 3.5.2 已确定主键及业务唯一范围，Task 3.5.3 已确定全部 60 张正式表的外键关系、引用必填性及 `RESTRICT`、结构性 `CASCADE` 和受控多态边界。
 
-Task 3.5.3 外键关系规范当前状态为 Not Started。Task 3.5.2 验收通过前不得启动 Task 3.5.3，不得定义外键删除或更新策略、普通查询索引、Check 约束、SQL、ORM、Schema、Migration、数据库选型或进入技术开发。
+Task 3.5.4 索引设计当前状态为 Not Started。Task 3.5.3 验收通过前不得启动 Task 3.5.4，不得设计普通查询索引、Check 约束、SQL、ORM、Schema、Migration、数据库选型或进入技术开发。

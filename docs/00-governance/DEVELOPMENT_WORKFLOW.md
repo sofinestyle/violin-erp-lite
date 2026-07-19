@@ -68,14 +68,16 @@ Phase 1 业务需求分析
 - Task 3.5：In Progress
 - Task 3.5.1：Completed / Approved
 - Task 3.5.2：Completed / Approved
-- Next Subtask：Task 3.5.3 Foreign Key Relationship Standard
-- Task 3.5.3：Not Started
+- Task 3.5.3：Completed / Approved
+- Next Subtask：Task 3.5.4 Index Design
+- Task 3.5.4：Not Started
 - 技术开发：Not Started
 - 数据库设计：In Progress
 - 数据库字段名称设计：Completed / Approved
 - 字段数据类型规范：Completed / Approved
 - 主键与唯一约束设计：Completed / Approved
-- 外键关系规范、普通查询索引和 Check 约束：Not Started
+- 外键关系规范：Completed / Approved
+- 普通查询索引和 Check 约束：Not Started
 
 ## Phase 2内部任务列表
 
@@ -102,6 +104,7 @@ Task 3.5 内部小任务进度：
 
 1. Task 3.5.1 字段数据类型规范（Field Type Standard）：Completed / Approved；
 2. Task 3.5.2 主键与唯一约束设计（Primary Key and Unique Constraint Design）：Completed / Approved；
-3. Task 3.5.3 外键关系规范（Foreign Key Relationship Standard）：Not Started。
+3. Task 3.5.3 外键关系规范（Foreign Key Relationship Standard）：Completed / Approved；
+4. Task 3.5.4 索引设计（Index Design）：Not Started。
 
-Phase 3 正在进行，Task 3.5 状态为 In Progress。Task 3.5.1 已建立数据库无关的逻辑字段类型规范；Task 3.5.2 已确定全部 60 张正式表统一采用单字段 UUID 主键 `id`，并完成业务编码、单据编号、明细行号、库存余额、多对多关系、外部平台编号、大小写判重和可空字段条件唯一原则。外键删除或更新策略、普通查询索引、Check 约束、SQL、ORM、Schema、Migration 和数据库选型均未开始；Task 3.5.2 验收通过前不得启动 Task 3.5.3。
+Phase 3 正在进行，Task 3.5 状态为 In Progress。Task 3.5.1 已建立数据库无关的逻辑字段类型规范；Task 3.5.2 已确定主键和业务唯一范围；Task 3.5.3 已检查全部 60 张正式表并确定外键引用、业务必填性、默认 `RESTRICT`、结构性 `CASCADE`、基础资料停用和受控多态引用边界。普通查询索引、Check 约束、SQL、ORM、Schema、Migration 和数据库选型均未开始；Task 3.5.3 验收通过前不得启动 Task 3.5.4。

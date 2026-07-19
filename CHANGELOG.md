@@ -11,6 +11,43 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.6] - 2026-07-20
+
+### Added
+
+- 新增 Task 3.5.3 外键关系规范文档
+- 完成全部 60 张正式表的外键需求、引用必填性及删除更新策略检查
+- 新增 Task 3.5.3 外键关系正式决策
+
+### Changed
+
+- Task 3.5.3 状态更新为 Completed / Approved
+- 下一小任务更新为 Task 3.5.4 索引设计，状态 Not Started
+- 数据库规格入口增加 Task 3.5.3 文档链接和外键策略摘要
+
+### Design
+
+- 普通业务外键更新和删除默认采用 `RESTRICT`
+- 结构性明细、导入明细、附件关系及纯权限关系限定使用结构性 `CASCADE`
+- 基础资料被引用后通过停用保留历史，正式业务主表和核心历史表不得级联删除
+- 用户历史引用统一保护，专用操作用户字段继续关联 `users.id`
+- 验收来源保持采购与生产互斥，入库来源使用已批准受控多态字段
+- 库存流水、附件、审计、状态历史和审批对象采用受控多态引用，不建立错误的单表外键
+- 跨境发货和调拨分别保留来源仓、在途仓与目的仓关系
+- 全部外键字段均来源于 Task 3.4，未新增字段或正式表
+
+### Status
+
+- Phase 3: In Progress
+- Task 3.5: In Progress
+- Task 3.5.1: Completed / Approved
+- Task 3.5.2: Completed / Approved
+- Task 3.5.3: Completed / Approved
+- Task 3.5.4: Not Started
+- Foreign Key Relationship Standard: Completed / Approved
+- Ordinary Index and Check Constraint Design: Not Started
+- SQL, ORM, Schema, Migration and Development: Not Started
+
 ## [0.3.5] - 2026-07-20
 
 ### Added
