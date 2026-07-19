@@ -11,6 +11,36 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.9] - 2026-07-20
+
+### Added
+
+- 新增 Task 3.5.6 数据库命名规范文档
+- 完成 60 张正式逻辑表及 Task 3.4 已批准字段的命名审计
+- 新增 Task 3.5.6 数据库命名规范正式决策
+
+### Changed
+
+- Task 3.5.6 状态更新为 Completed / Approved
+- Task 3.5.7 Database Freeze 按数据库设计冲刺进入 In Progress
+- 数据库规格入口增加 Task 3.5.6 文档链接和命名审计摘要
+
+### Design
+
+- 统一表名、字段名、时间日期、布尔、编码编号、数量金额比率、快照及状态命名
+- 统一主键、唯一约束、外键、Check 约束和普通索引名称前缀
+- 统一枚举值格式和允许、禁止缩写边界
+- 保留 5 类已批准兼容项，不新增别名或平行字段
+- 未新增、删除或重命名任何正式逻辑表或字段
+
+### Status
+
+- Phase 3: In Progress
+- Task 3.5: In Progress
+- Task 3.5.6: Completed / Approved
+- Task 3.5.7: In Progress
+- SQL, ORM, Schema, Migration and Development: Not Started
+
 ## [0.3.8] - 2026-07-20
 
 ### Added

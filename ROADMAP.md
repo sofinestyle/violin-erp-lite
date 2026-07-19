@@ -36,8 +36,9 @@ related_phase: All Phases
 - Task 3.5.3：Completed / Approved
 - Task 3.5.4：Completed / Approved
 - Task 3.5.5：Completed / Approved
-- Current Subtask：Task 3.5.6 Database Naming Standard
-- Task 3.5.6 状态：In Progress
+- Task 3.5.6：Completed / Approved
+- Current Subtask：Task 3.5.7 Database Freeze
+- Task 3.5.7 状态：In Progress
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
@@ -50,9 +51,10 @@ related_phase: All Phases
 - 外键关系规范：Completed / Approved
 - 索引设计：Completed / Approved
 - Check 约束设计：Completed / Approved
-- 数据库命名规范：In Progress
+- 数据库命名规范：Completed / Approved
+- 数据库冻结：In Progress
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.5.5 均已完成并获得批准，Task 3.5 状态为 In Progress。Task 3.5.6 数据库命名规范已按数据库设计冲刺进入 In Progress。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.5.6 均已完成并获得批准，Task 3.5 状态为 In Progress。Task 3.5.7 Database Freeze 已按数据库设计冲刺进入 In Progress。
 
 ## 3. 固定九阶段开发路线
 
@@ -262,8 +264,8 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 ## 6. 当前下一步
 
-继续执行 Database Design Sprint 的 Task 3.5.6 数据库命名规范。
+继续执行 Database Design Sprint 的 Task 3.5.7 Database Freeze。
 
-Phase 2 的 Task 2.1 至 Task 2.6 已全部完成并获得批准。Phase 3 正在进行，Task 3.1 至 Task 3.5.5 已完成并获得批准。Task 3.5.5 已确定 201 项 Check 逻辑规则，覆盖数值、日期、动作字段、来源完整性和仓库角色，并明确跨表及事务校验仍由服务层负责。
+Phase 2 的 Task 2.1 至 Task 2.6 已全部完成并获得批准。Phase 3 正在进行，Task 3.1 至 Task 3.5.6 已完成并获得批准。Task 3.5.6 已统一表名、字段、约束、索引和枚举值格式，并在不重命名的前提下完成 60 张正式逻辑表的命名审计。
 
-Task 3.5.6 状态为 In Progress。本冲刺仍不得编写 SQL、ORM、Schema、Migration，不得选择数据库或进入技术开发。
+Task 3.5.7 状态为 In Progress。本冲刺仍不得编写 SQL、ORM、Schema、Migration，不得选择数据库或进入技术开发。

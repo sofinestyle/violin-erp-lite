@@ -36,8 +36,9 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 3.5.3：Completed / Approved
 - Task 3.5.4：Completed / Approved
 - Task 3.5.5：Completed / Approved
-- Current Subtask：Task 3.5.6 Database Naming Standard
-- Task 3.5.6 状态：In Progress
+- Task 3.5.6：Completed / Approved
+- Current Subtask：Task 3.5.7 Database Freeze
+- Task 3.5.7 状态：In Progress
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -49,10 +50,11 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 外键关系规范：Completed / Approved
 - 索引设计：Completed / Approved
 - Check 约束设计：Completed / Approved
-- 数据库命名规范：In Progress
+- 数据库命名规范：Completed / Approved
+- 数据库冻结：In Progress
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.5.5 均已完成并获得批准；Task 3.5.6 已按数据库设计冲刺进入 In Progress，技术开发尚未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.5.6 均已完成并获得批准；Task 3.5.7 Database Freeze 已按数据库设计冲刺进入 In Progress，技术开发尚未开始。
 
 ## 九阶段开发路线
 
@@ -103,6 +105,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 3.5.3 外键关系规范（Approved）](docs/phases/phase-03/TASK_3_5_3_FOREIGN_KEY_RELATIONSHIP_STANDARD.md)
 - [Task 3.5.4 索引设计（Approved）](docs/phases/phase-03/TASK_3_5_4_INDEX_DESIGN.md)
 - [Task 3.5.5 Check 约束设计（Approved）](docs/phases/phase-03/TASK_3_5_5_CHECK_CONSTRAINT_STANDARD.md)
+- [Task 3.5.6 数据库命名规范（Approved）](docs/phases/phase-03/TASK_3_5_6_DATABASE_NAMING_STANDARD.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -112,7 +115,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 3 正在进行，Task 3.5.5 已完成并获得批准，Task 3.5.6 正在进行。不得创建 SQL、ORM、Schema、Migration、物理 ER 图、API、页面、业务代码、应用框架或安装依赖。
+Phase 3 正在进行，Task 3.5.6 已完成并获得批准，Task 3.5.7 Database Freeze 正在进行。不得创建 SQL、ORM、Schema、Migration、物理 ER 图、API、页面、业务代码、应用框架或安装依赖。
 
 ## 安全说明
 
