@@ -11,6 +11,33 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.2.0] - 2026-07-19
+
+### Added
+
+- 新增 Phase 2 Task 2.1 系统模块划分正式记录
+- 新增 Phase 2 Task 2.2 模块职责设计 Reviewed 评审稿
+- 记录九个一级模块及“出入库管理”正式名称
+- 新增 DEC-013 正式启动 Phase 2 并确认 Task 2.1
+
+### Changed
+
+- 将 Phase 2 状态由 Not Started 更新为 In Progress
+- 同步更新 `PROJECT.md`、`README.md`、`ROADMAP.md` 和开发流程中的项目进度
+- 将 Current Task 更新为 Task 2.2 模块职责设计
+- 将 Next Task 更新为待 Task 2.2 确认后进入 Task 2.3 模块关系设计
+
+### Status
+
+- Phase 1: Closed
+- Phase 2: In Progress
+- Task 2.1: Completed
+- Task 2.2: Reviewed
+- Current Task: Task 2.2
+- Business Rules: Frozen
+- Database Design: Not Started
+- Development: Not Started
+
 ## [0.1.2] - 2026-07-19
 
 ### Added

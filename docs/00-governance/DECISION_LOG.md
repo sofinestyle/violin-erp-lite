@@ -171,3 +171,40 @@ Phase 1 业务需求分析、业务规则冻结、项目治理体系及开发路
 - Phase 1：Closed
 - Phase 2：Not Started
 - Development：Not Started
+
+## DEC-013 正式启动Phase 2并确认Task 2.1
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-19
+
+### 决定
+
+项目负责人正式启动 Phase 2：业务流程设计（Business Process Design），Phase 2 状态更新为 In Progress。
+
+Task 2.1：系统模块划分（Module Breakdown）正式认定为 Completed。第一版确认以下九个一级模块：
+
+1. 基础资料；
+2. 采购管理；
+3. 生产管理；
+4. 库存管理；
+5. 出入库管理；
+6. 跨境业务；
+7. 统计分析；
+8. 用户权限；
+9. 系统设置。
+
+“出入库管理”名称保持不变，不改为“库存作业”。
+
+### 影响
+
+- `ROADMAP.md` 中 Phase 2 状态更新为 In Progress；
+- Task 2.1 状态为 Completed；
+- Task 2.2 模块职责设计以 Reviewed 状态进入项目文档，等待项目负责人确认；
+- 当前任务为 Task 2.2；
+- Task 2.2 确认后方可进入 Task 2.3 模块关系设计；
+- 技术开发和数据库设计继续保持 Not Started。

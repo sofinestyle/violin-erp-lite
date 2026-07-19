@@ -52,6 +52,10 @@ Phase 1 业务需求分析
 ## 当前阶段状态
 
 - Phase 1：Closed
-- Phase 2：Not Started
+- Phase 2：In Progress
+- Task 2.1：Completed
+- Task 2.2：Reviewed，待项目负责人确认
+- Current Task：Task 2.2 模块职责设计
+- Next Task：待 Task 2.2 确认后进入 Task 2.3 模块关系设计
 - 技术开发：Not Started
 - 数据库设计：Not Started
