@@ -369,3 +369,29 @@ Approved
 ### 影响
 
 Task 3.1 作为后续实体关系和数据表设计的正式输入。本决定只确认概念实体边界，不定义详细字段、字段类型、主键、外键、索引、SQL、ORM、数据库技术选型或物理 ER 模型，不启动 Task 3.2，也不进入技术开发。
+
+## DEC-021 批准Task 3.2实体关系详细设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-19
+
+### 决定
+
+- Task 3.2 实体关系详细设计（Entity Relationship Design）状态为 Completed / Approved；
+- `PurchaseOrder` 与 `ProductionOrder` 完全平行，不建立父子关系；
+- 采购和生产共用统一 `InspectionOrder`，一张验收单必须且只能对应一种业务来源；
+- 所有多 SKU 正式业务单据采用主实体与明细实体一对多结构；
+- `InventoryTransaction` 必须追溯来源业务单据及具体明细；
+- `CrossBorderShipment` 与 `ImportTask` 采用多对多匹配关系，后续由关联实体承载匹配业务属性；
+- `User` 与 `Role`、`Role` 与 `Permission` 均采用多对多关系；
+- 已被业务引用的基础资料、已完成单据及其明细、库存流水和审计日志的历史关系不得物理删除；
+- 下一任务为 Task 3.3 数据表结构设计（Table Structure Design），状态为 Not Started。
+
+### 影响
+
+Task 3.2 作为后续数据表结构设计的正式输入。本决定只确认概念关系、关系基数、业务约束、单据主从结构及追溯关系，不定义字段名称、字段类型、主键、外键实现、索引、SQL、ORM、数据库技术选型或物理 ER 模型，不启动 Task 3.3，也不进入技术开发。

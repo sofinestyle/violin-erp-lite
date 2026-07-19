@@ -11,6 +11,40 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.1] - 2026-07-19
+
+### Added
+
+- 新增 Task 3.2 实体关系详细设计文档
+- 完成基础资料、业务单据、库存、跨境、权限和审计关系设计
+- 增加概念级实体关系图及关系基数说明
+- 新增 Task 3.2 核心关系正式决策
+
+### Changed
+
+- Task 3.2 状态更新为 Completed / Approved
+- 下一任务更新为 Task 3.3 数据表结构设计，状态 Not Started
+- 同步更新项目进度、开发流程和数据库规格入口
+
+### Design
+
+- 采购与生产实体保持平行，不建立父子关系
+- 采购与生产共用 `InspectionOrder`，并执行单一业务来源互斥规则
+- 多 SKU 正式业务单据采用主实体与明细实体一对多结构
+- 库存流水必须追溯来源业务单据及具体明细
+- `CrossBorderShipment` 与 `ImportTask` 采用多对多匹配关系
+- `User` 与 `Role`、`Role` 与 `Permission` 采用多对多关系
+- 历史实体关系不得物理删除
+
+### Status
+
+- Phase 3: In Progress
+- Task 3.1: Completed / Approved
+- Task 3.2: Completed / Approved
+- Task 3.3: Not Started
+- Database Field Design: Not Started
+- Development: Not Started
+
 ## [0.3.0] - 2026-07-19
 
 ### Added
