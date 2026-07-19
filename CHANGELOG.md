@@ -11,6 +11,45 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.4] - 2026-07-19
+
+### Added
+
+- 新增 Task 3.5.1 字段数据类型规范文档
+- 建立数据库无关的标准逻辑类型与字符串长度规范
+- 明确数量、金额、税率、百分比、日期时间、ENUM、JSON、敏感字段和文件字段规范
+- 新增 Task 3.5.1 字段数据类型正式决策
+
+### Changed
+
+- Task 3.5 状态更新为 In Progress
+- Task 3.5.1 状态更新为 Completed / Approved
+- 下一小任务更新为 Task 3.5.2 主键与唯一约束设计，状态 Not Started
+- 数据库规格入口增加 Task 3.5.1 文档链接和逻辑类型摘要
+
+### Design
+
+- 所有主键和对象引用采用 UUID，优先 UUID v7
+- 数量、金额及单价采用 `DECIMAL(18,4)`
+- 税率及百分比采用 `DECIMAL(7,4)`
+- 纯业务日期采用 `DATE`，准确操作时间采用 `DATETIME`
+- ENUM 保存稳定英文代码，JSON 不得替代正式关系表或明细表
+- 文件本体不直接保存至数据库，文件大小统一按字节记录
+- 密码只保存密码哈希，银行、税务和个人信息继续按敏感字段管理
+- 只追加表不设置更新或删除用途字段
+
+### Status
+
+- Phase 3: In Progress
+- Task 3.4: Completed / Approved
+- Task 3.5: In Progress
+- Task 3.5.1: Completed / Approved
+- Task 3.5.2: Not Started
+- Field Name Design: Completed / Approved
+- Field Type Standard: Completed / Approved
+- Primary Key, Unique Constraint, Foreign Key Policy, Index and Check Constraint Design: Not Started
+- SQL, ORM, Schema, Migration and Development: Not Started
+
 ## [0.3.3] - 2026-07-19
 
 ### Added

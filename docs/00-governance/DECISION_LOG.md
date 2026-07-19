@@ -450,3 +450,33 @@ Approved
 ### 影响
 
 Task 3.4 作为 Task 3.5 的正式输入。本决定只确认字段名称、中文含义、业务用途、业务必填性、历史快照和只追加原则，不定义字段类型、长度、精度、主键与外键物理约束、唯一约束、检查约束、索引、SQL、ORM、数据库技术选型、数据库 Schema、迁移文件或物理 ER 模型。Task 3.4 验收通过前不得启动 Task 3.5，也不进入页面、API 或业务代码开发。
+
+## DEC-024 批准Task 3.5.1字段数据类型规范
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-19
+
+### 决定
+
+- Task 3.5 字段类型、约束与索引设计（Field Type, Constraint and Index Design）状态更新为 In Progress；
+- Task 3.5.1 字段数据类型规范（Field Type Standard）状态为 Completed / Approved；
+- 项目采用数据库无关的逻辑字段类型规范；
+- 所有主键及对象引用采用 UUID，并优先采用大致按时间有序的 UUID v7；
+- 普通数量、金额和单价统一采用 `DECIMAL(18,4)`，不得使用浮点类型；
+- 税率和百分比统一采用 `DECIMAL(7,4)` 并保存实际百分数值；
+- 纯业务日期采用 `DATE`，准确操作时间采用 `DATETIME`，正式日期时间不得使用普通字符串保存；
+- ENUM 保存稳定的小写英文及下划线代码，已使用代码不得直接改名；
+- JSON 仅用于导入原始数据、审计快照等非固定数据，不得替代正式关系表、明细表或库存余额；
+- 密码只保存密码哈希，银行、税务及个人信息继续作为敏感字段管理；
+- 文件本体不直接保存至数据库，仅保存元数据和存储引用；
+- `inventory_transactions`、`audit_logs`、`document_status_histories` 和 `approval_records` 继续执行只追加类型原则；
+- 下一小任务为 Task 3.5.2 主键与唯一约束设计（Primary Key and Unique Constraint Design），状态为 Not Started。
+
+### 影响
+
+Task 3.5.1 作为 Task 3.5.2 的正式输入。本决定只确认逻辑字段类型、长度、精度及适用边界，不定义具体主键或唯一约束清单、外键删除策略、索引、Check 约束、SQL、ORM、数据库选型、Schema、Migration 或业务代码。Task 3.5.1 验收通过前不得启动 Task 3.5.2。
