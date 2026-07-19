@@ -39,7 +39,7 @@ related_phase: Phase 2
 本文件是以下后续工作的业务依据：
 
 - Task 2.5 状态流转设计；
-- Task 2.6 输入输出分析；
+- Task 2.6 业务对象定义（Business Object Definition）；
 - Phase 3 数据库设计；
 - Phase 6 功能详细设计。
 

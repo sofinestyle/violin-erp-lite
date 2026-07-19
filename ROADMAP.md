@@ -23,8 +23,9 @@ related_phase: All Phases
 - Task 2.2：Completed / Approved
 - Task 2.3：Completed / Approved
 - Task 2.4：Completed / Approved
-- Current Task：Task 2.5 状态流转设计
-- Task 2.5 状态：Not Started
+- Task 2.5：Completed / Approved
+- Current Task：Task 2.6 业务对象定义（Business Object Definition）
+- Task 2.6 状态：Not Started
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
@@ -241,4 +242,8 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 ## 6. 当前下一步
 
-等待项目负责人正式启动 Task 2.5：状态流转设计。
+等待项目负责人正式启动 Task 2.6：业务对象定义（Business Object Definition）。
+
+Task 2.6 的目标范围已经确认：确定核心业务对象，明确对象定义、用途和业务关系，关联 Task 2.4 生命周期与 Task 2.5 状态体系，明确对象的业务输入和输出，并为 Phase 3 数据库设计提供业务基础。
+
+Task 2.6 不包含数据库表、字段类型、主键、外键、索引、API、页面或技术实现。Task 2.6 当前仅为 Not Started，不得开始正文设计。

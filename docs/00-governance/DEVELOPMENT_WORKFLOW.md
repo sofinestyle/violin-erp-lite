@@ -57,7 +57,21 @@ Phase 1 业务需求分析
 - Task 2.2：Completed / Approved
 - Task 2.3：Completed / Approved
 - Task 2.4：Completed / Approved
-- Current Task：Task 2.5 状态流转设计
-- Task 2.5 状态：Not Started
+- Task 2.5：Completed / Approved
+- Current Task：Task 2.6 业务对象定义（Business Object Definition）
+- Task 2.6 状态：Not Started
 - 技术开发：Not Started
 - 数据库设计：Not Started
+
+## Phase 2内部任务列表
+
+1. Task 2.1 系统模块划分：Completed / Approved；
+2. Task 2.2 模块职责设计：Completed / Approved；
+3. Task 2.3 模块关系设计：Completed / Approved；
+4. Task 2.4 业务生命周期设计：Completed / Approved；
+5. Task 2.5 状态流转设计：Completed / Approved；
+6. Task 2.6 业务对象定义（Business Object Definition）：Not Started。
+
+Task 2.6 的名称调整不增加或删除 Task，不改变 Task 顺序，也不改变固定九阶段开发路线。
+
+Task 2.6 负责定义核心业务对象及其用途、业务关系、生命周期与状态关联，以及对象的业务输入和输出；不包含数据库表、字段、主键、外键、索引、API、页面或技术实现。Task 2.6 当前保持 Not Started，不得开始正文设计。

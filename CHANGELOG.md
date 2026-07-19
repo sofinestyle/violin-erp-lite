@@ -11,6 +11,34 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.2.3] - 2026-07-19
+
+### Added
+
+- 新增 Task 2.5 状态流转设计
+- 明确采购、委外生产、验收、出入库、跨境、调拨、盘点等多维状态体系
+- 明确关键状态转换条件和禁止规则
+- 新增多维业务状态正式决策
+
+### Changed
+
+- Task 2.5 状态更新为 Approved
+- Task 2.6 由“输入输出分析”调整为“业务对象定义（Business Object Definition）”
+- 更新 Phase 2 任务进度
+- 当前下一任务更新为 Task 2.6 业务对象定义
+
+### Status
+
+- Phase 2: In Progress
+- Task 2.1: Approved
+- Task 2.2: Approved
+- Task 2.3: Approved
+- Task 2.4: Approved
+- Task 2.5: Approved
+- Task 2.6: Not Started
+- Database Design: Not Started
+- Development: Not Started
+
 ## [0.2.2] - 2026-07-19
 
 ### Added
