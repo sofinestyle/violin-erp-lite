@@ -56,7 +56,8 @@ Phase 1 业务需求分析
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
 - Task 2.3：Completed / Approved
-- Current Task：Task 2.4 核心业务流程设计
-- Task 2.4 状态：Not Started
+- Task 2.4：Completed / Approved
+- Current Task：Task 2.5 状态流转设计
+- Task 2.5 状态：Not Started
 - 技术开发：Not Started
 - 数据库设计：Not Started

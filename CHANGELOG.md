@@ -11,6 +11,33 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.2.2] - 2026-07-19
+
+### Added
+
+- 新增 Task 2.4 业务生命周期设计
+- 明确产品、采购、委外生产、跨境和库存五类生命周期
+- 明确各生命周期的正常路径、异常路径和完成条件
+- 明确付款状态与业务完成状态分离
+- 新增五类业务生命周期正式决策
+
+### Changed
+
+- Task 2.4 状态更新为 Approved
+- 更新 Phase 2 任务进度
+- 当前下一任务更新为 Task 2.5 状态流转设计
+
+### Status
+
+- Phase 2: In Progress
+- Task 2.1: Approved
+- Task 2.2: Approved
+- Task 2.3: Approved
+- Task 2.4: Approved
+- Task 2.5: Not Started
+- Database Design: Not Started
+- Development: Not Started
+
 ## [0.2.1] - 2026-07-19
 
 ### Added
