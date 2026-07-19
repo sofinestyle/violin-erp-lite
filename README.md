@@ -34,8 +34,9 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 3.5.1：Completed / Approved
 - Task 3.5.2：Completed / Approved
 - Task 3.5.3：Completed / Approved
-- Next Subtask：Task 3.5.4 Index Design
-- Task 3.5.4 状态：Not Started
+- Task 3.5.4：Completed / Approved
+- Current Subtask：Task 3.5.5 Check Constraint Design
+- Task 3.5.5 状态：In Progress
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -45,10 +46,11 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 字段数据类型规范：Completed / Approved
 - 主键与唯一约束设计：Completed / Approved
 - 外键关系规范：Completed / Approved
-- 普通查询索引和 Check 约束：Not Started
+- 索引设计：Completed / Approved
+- Check 约束：In Progress
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.4 均已完成并获得批准，Task 3.5 已进入 In Progress。Task 3.5.1、Task 3.5.2 和 Task 3.5.3 均已完成并获得批准；Task 3.5.4 和技术开发均未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.5.4 均已完成并获得批准；Task 3.5.5 已按数据库设计冲刺进入 In Progress，技术开发尚未开始。
 
 ## 九阶段开发路线
 
@@ -97,6 +99,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 3.5.1 字段数据类型规范（Approved）](docs/phases/phase-03/TASK_3_5_1_FIELD_TYPE_STANDARD.md)
 - [Task 3.5.2 主键与唯一约束设计（Approved）](docs/phases/phase-03/TASK_3_5_2_PRIMARY_KEY_UNIQUE_CONSTRAINT_DESIGN.md)
 - [Task 3.5.3 外键关系规范（Approved）](docs/phases/phase-03/TASK_3_5_3_FOREIGN_KEY_RELATIONSHIP_STANDARD.md)
+- [Task 3.5.4 索引设计（Approved）](docs/phases/phase-03/TASK_3_5_4_INDEX_DESIGN.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -106,7 +109,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 3 正在进行，Task 3.5.1、Task 3.5.2 和 Task 3.5.3 已完成并获得批准。Task 3.5.4 尚未启动，不得设计普通查询索引或 Check 约束，不得创建 SQL、ORM、Schema、Migration、物理 ER 图、API、页面、业务代码、应用框架或安装依赖。
+Phase 3 正在进行，Task 3.5.4 已完成并获得批准，Task 3.5.5 正在进行。不得创建 SQL、ORM、Schema、Migration、物理 ER 图、API、页面、业务代码、应用框架或安装依赖。
 
 ## 安全说明
 

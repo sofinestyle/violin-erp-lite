@@ -69,15 +69,17 @@ Phase 1 业务需求分析
 - Task 3.5.1：Completed / Approved
 - Task 3.5.2：Completed / Approved
 - Task 3.5.3：Completed / Approved
-- Next Subtask：Task 3.5.4 Index Design
-- Task 3.5.4：Not Started
+- Task 3.5.4：Completed / Approved
+- Current Subtask：Task 3.5.5 Check Constraint Design
+- Task 3.5.5：In Progress
 - 技术开发：Not Started
 - 数据库设计：In Progress
 - 数据库字段名称设计：Completed / Approved
 - 字段数据类型规范：Completed / Approved
 - 主键与唯一约束设计：Completed / Approved
 - 外键关系规范：Completed / Approved
-- 普通查询索引和 Check 约束：Not Started
+- 索引设计：Completed / Approved
+- Check 约束：In Progress
 
 ## Phase 2内部任务列表
 
@@ -105,6 +107,7 @@ Task 3.5 内部小任务进度：
 1. Task 3.5.1 字段数据类型规范（Field Type Standard）：Completed / Approved；
 2. Task 3.5.2 主键与唯一约束设计（Primary Key and Unique Constraint Design）：Completed / Approved；
 3. Task 3.5.3 外键关系规范（Foreign Key Relationship Standard）：Completed / Approved；
-4. Task 3.5.4 索引设计（Index Design）：Not Started。
+4. Task 3.5.4 索引设计（Index Design）：Completed / Approved；
+5. Task 3.5.5 Check 约束设计（Check Constraint Standard）：In Progress。
 
-Phase 3 正在进行，Task 3.5 状态为 In Progress。Task 3.5.1 已建立数据库无关的逻辑字段类型规范；Task 3.5.2 已确定主键和业务唯一范围；Task 3.5.3 已检查全部 60 张正式表并确定外键引用、业务必填性、默认 `RESTRICT`、结构性 `CASCADE`、基础资料停用和受控多态引用边界。普通查询索引、Check 约束、SQL、ORM、Schema、Migration 和数据库选型均未开始；Task 3.5.3 验收通过前不得启动 Task 3.5.4。
+Phase 3 正在进行，Task 3.5 状态为 In Progress。Task 3.5.1 至 Task 3.5.3 已完成字段类型、主键、唯一约束和外键关系规范；Task 3.5.4 已确定 90 项普通逻辑索引，覆盖外键、业务主体、状态日期、多态对象及历史查询，并排除重复和过度索引。Task 3.5.5 已按数据库设计冲刺进入 In Progress；SQL、ORM、Schema、Migration、数据库选型和技术开发均未开始。

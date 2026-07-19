@@ -11,6 +11,37 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.7] - 2026-07-20
+
+### Added
+
+- 新增 Task 3.5.4 索引设计文档
+- 完成外键、业务主体状态日期、多态对象及历史表逻辑索引设计
+- 新增 Task 3.5.4 索引设计正式决策
+
+### Changed
+
+- Task 3.5.4 状态更新为 Completed / Approved
+- Task 3.5.5 Check 约束设计按数据库设计冲刺进入 In Progress
+- 数据库规格入口增加 Task 3.5.4 文档链接和索引摘要
+
+### Design
+
+- 确定 90 项普通逻辑索引，其中含外键字段 69 项、组合索引 59 项、多态索引 15 项
+- 正式单据围绕业务主体、状态和日期建立组合索引
+- 库存流水围绕 SKU、仓库、时间和受控来源建立索引
+- 历史与只追加表围绕对象、用户和时间建立索引
+- 排除 21 项与主键、唯一约束重复或已被有效前缀覆盖的建议
+- 不机械索引长文本、JSON、快照、敏感联系信息或单独低选择性布尔字段
+
+### Status
+
+- Phase 3: In Progress
+- Task 3.5: In Progress
+- Task 3.5.4: Completed / Approved
+- Task 3.5.5: In Progress
+- SQL, ORM, Schema, Migration and Development: Not Started
+
 ## [0.3.6] - 2026-07-20
 
 ### Added
