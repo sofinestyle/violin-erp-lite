@@ -43,6 +43,7 @@ Phase 1 业务需求分析
 ## 强制规则
 
 - 每个阶段完成后必须更新正式文档、决策记录和变更记录；
+- 每个 Task 或正式小章节完成并确认后，必须立即更新 GitHub 并完成验收，方可进入下一 Task 或正式小章节；
 - 每个阶段必须经过项目负责人确认；
 - 当前 Phase 未完成并确认前，不得进入下一 Phase；
 - Codex、ChatGPT 或其他 AI 不得自行批准阶段启动或状态变化；
@@ -52,14 +53,15 @@ Phase 1 业务需求分析
 ## 当前阶段状态
 
 - Phase 1：Closed
-- Phase 2：In Progress
+- Phase 2：Completed / Approved
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
 - Task 2.3：Completed / Approved
 - Task 2.4：Completed / Approved
 - Task 2.5：Completed / Approved
-- Current Task：Task 2.6 业务对象定义（Business Object Definition）
-- Task 2.6 状态：Not Started
+- Task 2.6：Completed / Approved
+- Next Phase：Phase 3 Database Design
+- Phase 3 状态：Not Started
 - 技术开发：Not Started
 - 数据库设计：Not Started
 
@@ -70,8 +72,8 @@ Phase 1 业务需求分析
 3. Task 2.3 模块关系设计：Completed / Approved；
 4. Task 2.4 业务生命周期设计：Completed / Approved；
 5. Task 2.5 状态流转设计：Completed / Approved；
-6. Task 2.6 业务对象定义（Business Object Definition）：Not Started。
+6. Task 2.6 业务对象定义（Business Object Definition）：Completed / Approved。
 
-Task 2.6 的名称调整不增加或删除 Task，不改变 Task 顺序，也不改变固定九阶段开发路线。
+Task 2.1 至 Task 2.6 均已完成并获得批准，Phase 2 已完成。Task 2.6 的名称调整不增加或删除 Task，不改变 Task 顺序，也不改变固定九阶段开发路线。
 
-Task 2.6 负责定义核心业务对象及其用途、业务关系、生命周期与状态关联，以及对象的业务输入和输出；不包含数据库表、字段、主键、外键、索引、API、页面或技术实现。Task 2.6 当前保持 Not Started，不得开始正文设计。
+Task 2.6 定义核心业务对象及其用途、业务关系、生命周期与状态关联，以及对象的业务输入和输出；不包含数据库表、字段、主键、外键、索引、API、页面或技术实现。下一阶段为 Phase 3 Database Design，当前状态为 Not Started；不得在项目负责人正式启动前开始 Task 3.1。

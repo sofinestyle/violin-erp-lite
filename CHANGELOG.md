@@ -11,6 +11,27 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.2.4] - 2026-07-19
+
+### Added
+
+- 新增 Task 2.6 业务对象定义
+- 完成基础对象、业务对象、库存对象和系统对象定义
+- 增加按 Task 完成后立即更新 GitHub 的工作规则
+
+### Changed
+
+- Task 2.6 更新为 Completed / Approved
+- Phase 2 更新为 Completed / Approved
+- 下一阶段更新为 Phase 3 Database Design，状态 Not Started
+
+### Status
+
+- Phase 2: Completed / Approved
+- Phase 3: Not Started
+- Database Design: Not Started
+- Development: Not Started
+
 ## [0.2.3] - 2026-07-19
 
 ### Added
