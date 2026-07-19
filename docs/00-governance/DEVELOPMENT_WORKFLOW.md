@@ -70,8 +70,9 @@ Phase 1 业务需求分析
 - Task 3.5.2：Completed / Approved
 - Task 3.5.3：Completed / Approved
 - Task 3.5.4：Completed / Approved
-- Current Subtask：Task 3.5.5 Check Constraint Design
-- Task 3.5.5：In Progress
+- Task 3.5.5：Completed / Approved
+- Current Subtask：Task 3.5.6 Database Naming Standard
+- Task 3.5.6：In Progress
 - 技术开发：Not Started
 - 数据库设计：In Progress
 - 数据库字段名称设计：Completed / Approved
@@ -79,7 +80,8 @@ Phase 1 业务需求分析
 - 主键与唯一约束设计：Completed / Approved
 - 外键关系规范：Completed / Approved
 - 索引设计：Completed / Approved
-- Check 约束：In Progress
+- Check 约束设计：Completed / Approved
+- 数据库命名规范：In Progress
 
 ## Phase 2内部任务列表
 
@@ -108,6 +110,7 @@ Task 3.5 内部小任务进度：
 2. Task 3.5.2 主键与唯一约束设计（Primary Key and Unique Constraint Design）：Completed / Approved；
 3. Task 3.5.3 外键关系规范（Foreign Key Relationship Standard）：Completed / Approved；
 4. Task 3.5.4 索引设计（Index Design）：Completed / Approved；
-5. Task 3.5.5 Check 约束设计（Check Constraint Standard）：In Progress。
+5. Task 3.5.5 Check 约束设计（Check Constraint Standard）：Completed / Approved；
+6. Task 3.5.6 数据库命名规范（Database Naming Standard）：In Progress。
 
-Phase 3 正在进行，Task 3.5 状态为 In Progress。Task 3.5.1 至 Task 3.5.3 已完成字段类型、主键、唯一约束和外键关系规范；Task 3.5.4 已确定 90 项普通逻辑索引，覆盖外键、业务主体、状态日期、多态对象及历史查询，并排除重复和过度索引。Task 3.5.5 已按数据库设计冲刺进入 In Progress；SQL、ORM、Schema、Migration、数据库选型和技术开发均未开始。
+Phase 3 正在进行，Task 3.5 状态为 In Progress。Task 3.5.4 已完成逻辑索引设计；Task 3.5.5 已确定 201 项同一行可验证的 Check 逻辑规则及其与跨表、权限、库存事务和服务层校验的边界。Task 3.5.6 已按数据库设计冲刺进入 In Progress；SQL、ORM、Schema、Migration、数据库选型和技术开发均未开始。

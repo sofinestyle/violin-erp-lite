@@ -11,6 +11,37 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.8] - 2026-07-20
+
+### Added
+
+- 新增 Task 3.5.5 Check 约束设计文档
+- 完成数值、日期、动作字段、来源组合和仓库角色逻辑约束设计
+- 新增 Task 3.5.5 Check 约束正式决策
+
+### Changed
+
+- Task 3.5.5 状态更新为 Completed / Approved
+- Task 3.5.6 数据库命名规范按数据库设计冲刺进入 In Progress
+- 数据库规格入口增加 Task 3.5.5 文档链接和约束摘要
+
+### Design
+
+- 确定 201 项数据库无关的 Check 逻辑规则
+- 正式明细数量、行号、版本号、金额、价格和累计数量获得范围约束
+- 提交、审核、取消、停用及有效期字段获得一致性约束
+- 验收、入库、库存流水和多态结果字段获得组合完整性约束
+- 厂家仓、海外仓、跨境发货及调拨仓库角色获得逻辑约束
+- 明确 Check 不承担跨表存在性、权限、并发和库存事务验证
+
+### Status
+
+- Phase 3: In Progress
+- Task 3.5: In Progress
+- Task 3.5.5: Completed / Approved
+- Task 3.5.6: In Progress
+- SQL, ORM, Schema, Migration and Development: Not Started
+
 ## [0.3.7] - 2026-07-20
 
 ### Added
