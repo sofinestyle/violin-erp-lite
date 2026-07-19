@@ -17,7 +17,7 @@ related_phase: All Phases
 
 ## 2. 当前项目进度
 
-- 当前阶段：Phase 2 业务流程设计（已完成）
+- 当前阶段：Phase 3 数据库设计（进行中）
 - Phase 2 状态：Completed / Approved
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
@@ -25,16 +25,19 @@ related_phase: All Phases
 - Task 2.4：Completed / Approved
 - Task 2.5：Completed / Approved
 - Task 2.6：Completed / Approved
-- Next Phase：Phase 3 Database Design
-- Phase 3 状态：Not Started
+- Phase 3 状态：In Progress
+- Task 3.1：Completed / Approved
+- Next Task：Task 3.2 Entity Relationship Design
+- Task 3.2 状态：Not Started
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
 - 九阶段开发路线：Frozen
 - 技术开发：Not Started
-- 数据库设计：Not Started
+- 数据库设计：In Progress
+- 数据库详细字段设计：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。下一阶段为 Phase 3 Database Design，当前状态为 Not Started；项目负责人正式启动 Phase 3 前，不得开始 Task 3.1 或任何数据库设计。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 已正式启动，Task 3.1 业务对象到数据库实体映射已完成并获得批准。下一任务为 Task 3.2 实体关系详细设计，当前状态为 Not Started；Task 3.1 验收通过前不得开始 Task 3.2。
 
 ## 3. 固定九阶段开发路线
 
@@ -82,7 +85,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。下一阶段为 Pha
 
 ### Phase 3：数据库设计（Database Design）
 
-- 状态：Not Started
+- 状态：In Progress
 - 目标：将已批准的业务对象和业务流程转化为一致、可追溯的数据设计。
 - 主要输出：
   - 数据对象落地；
@@ -244,8 +247,8 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 ## 6. 当前下一步
 
-等待项目负责人正式启动 Phase 3：Database Design。
+等待 ChatGPT 读取 GitHub 并验收 Task 3.1 业务对象到数据库实体映射。
 
-Phase 2 的 Task 2.1 至 Task 2.6 已全部完成并获得批准。Task 2.6 已完成核心业务对象、用途、业务关系、生命周期、状态关联和业务输出定义，并作为 Phase 3 数据库设计的业务输入。
+Phase 2 的 Task 2.1 至 Task 2.6 已全部完成并获得批准。Phase 3 已正式启动，Task 3.1 已完成统一仓库、统一库存余额、库存与库存流水分离及其他概念实体边界设计，并作为后续实体关系和数据表设计的正式输入。
 
-Phase 3 当前状态为 Not Started。不得开始 Task 3.1，不得创建数据库表、定义字段、创建 ER 图或进入任何技术实现。
+Task 3.2 实体关系详细设计当前状态为 Not Started。Task 3.1 验收通过前不得启动 Task 3.2，不得定义详细字段、字段类型、主键、外键、索引、SQL、ORM、数据库技术选型或进入技术开发。

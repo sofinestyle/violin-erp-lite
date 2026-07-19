@@ -342,3 +342,30 @@ Approved
 ### 影响
 
 后续阶段内任务必须逐项完成文档回写、Git 提交、推送和验收，不得累积未归档成果后提前进入下一章节。本决定不改变固定九阶段顺序，也不代表 Phase 3 已启动。
+
+## DEC-020 正式启动Phase 3并批准Task 3.1实体映射
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-19
+
+### 决定
+
+- 正式启动 Phase 3 数据库设计（Database Design），Phase 3 状态更新为 In Progress；
+- Task 3.1 业务对象到数据库实体映射（Entity Mapping）状态为 Completed / Approved；
+- 公司仓、厂家仓、海外仓、在途节点和待处理节点统一使用 `Warehouse` 表达，不建立平行仓库实体；
+- 可用库存、厂家库存、海外库存、待处理库存和在途库存统一使用 `Inventory` 表达，不建立平行库存余额实体；
+- 当前库存与库存流水分离，分别使用 `Inventory` 和 `InventoryTransaction`；
+- 统计报表不建立业务事实实体，不得形成平行业务数据源；
+- 业务操作日志统一使用 `AuditLog`，不建立第二套平行日志实体；
+- 库存预警使用独立 `InventoryAlert` 持久化，以保留生成、处理和关闭记录；
+- 海外库存导入复用统一 `ImportTask`；
+- 下一任务为 Task 3.2 实体关系详细设计（Entity Relationship Design），状态为 Not Started。
+
+### 影响
+
+Task 3.1 作为后续实体关系和数据表设计的正式输入。本决定只确认概念实体边界，不定义详细字段、字段类型、主键、外键、索引、SQL、ORM、数据库技术选型或物理 ER 模型，不启动 Task 3.2，也不进入技术开发。

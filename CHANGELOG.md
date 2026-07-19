@@ -11,6 +11,41 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.0] - 2026-07-19
+
+### Added
+
+- 正式启动 Phase 3 数据库设计
+- 新增 Task 3.1 业务对象到数据库实体映射文档
+- 明确独立实体、非独立实体及初步概念关系
+- 新增 Phase 3 启动与实体映射正式决策
+
+### Changed
+
+- Phase 3 状态更新为 In Progress
+- Task 3.1 状态更新为 Completed / Approved
+- 下一任务更新为 Task 3.2 实体关系详细设计，状态 Not Started
+- 数据库规格入口更新为 Phase 3 当前进度
+
+### Design
+
+- 仓库子类型统一映射至 `Warehouse`
+- 五类库存余额统一映射至 `Inventory`
+- 当前库存与库存流水分别映射至 `Inventory` 和 `InventoryTransaction`
+- 海外库存导入复用统一 `ImportTask`
+- 统计报表不建立业务事实实体
+- 业务操作日志复用统一 `AuditLog`
+- 库存预警建立独立 `InventoryAlert`
+
+### Status
+
+- Phase 2: Completed / Approved
+- Phase 3: In Progress
+- Task 3.1: Completed / Approved
+- Task 3.2: Not Started
+- Detailed Database Design: Not Started
+- Development: Not Started
+
 ## [0.2.4] - 2026-07-19
 
 ### Added

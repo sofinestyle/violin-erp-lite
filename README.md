@@ -17,7 +17,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 ## 当前项目状态
 
-- 当前阶段：Phase 2 业务流程设计（已完成）
+- 当前阶段：Phase 3 数据库设计（进行中）
 - Phase 2 状态：Completed / Approved
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
@@ -25,16 +25,19 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 2.4：Completed / Approved
 - Task 2.5：Completed / Approved
 - Task 2.6：Completed / Approved
-- Next Phase：Phase 3 Database Design
-- Phase 3 状态：Not Started
+- Phase 3 状态：In Progress
+- Task 3.1：Completed / Approved
+- Next Task：Task 3.2 Entity Relationship Design
+- Task 3.2 状态：Not Started
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
 - 九阶段开发路线：Frozen
-- 数据库设计：Not Started
+- 数据库设计：In Progress
+- 数据库详细字段设计：Not Started
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。下一阶段为 Phase 3 Database Design，但尚未正式启动；数据库设计和技术开发均未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 已正式启动，Task 3.1 业务对象到数据库实体映射已完成并获得批准。Task 3.2 尚未启动，数据库详细字段设计和技术开发均未开始。
 
 ## 九阶段开发路线
 
@@ -42,7 +45,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。下一阶段为 Pha
 | --- | --- | --- |
 | Phase 1 | 业务需求分析 | Closed（Completed） |
 | Phase 2 | 业务流程设计 | Completed / Approved |
-| Phase 3 | 数据库设计 | Not Started |
+| Phase 3 | 数据库设计 | In Progress |
 | Phase 4 | 页面设计 | Waiting |
 | Phase 5 | 接口设计 | Waiting |
 | Phase 6 | 功能详细设计 | Waiting |
@@ -76,6 +79,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。下一阶段为 Pha
 - [Task 2.4 业务生命周期设计（Approved）](docs/phases/phase-02/TASK_2_4_BUSINESS_LIFECYCLE_DESIGN.md)
 - [Task 2.5 状态流转设计（Approved）](docs/phases/phase-02/TASK_2_5_STATE_TRANSITION_DESIGN.md)
 - [Task 2.6 业务对象定义（Approved）](docs/phases/phase-02/TASK_2_6_BUSINESS_OBJECT_DEFINITION.md)
+- [Task 3.1 业务对象到数据库实体映射（Approved）](docs/phases/phase-03/TASK_3_1_ENTITY_MAPPING.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -85,7 +89,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。下一阶段为 Pha
 
 ## 当前禁止事项
 
-Phase 2 已完成。Phase 3 尚未启动，不得开始 Task 3.1，不得进行数据库或数据表设计、ER 图设计、API 设计、技术架构选型、页面设计、前后端编码、应用框架创建或依赖安装。
+Phase 3 已启动，Task 3.1 已完成并获得批准。Task 3.2 尚未启动，不得进行实体关系详细设计、数据库表和字段设计、正式 ER 图设计、SQL、ORM、数据库技术选型、API 设计、页面设计、前后端编码、应用框架创建或依赖安装。
 
 ## 安全说明
 

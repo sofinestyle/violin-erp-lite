@@ -60,10 +60,13 @@ Phase 1 业务需求分析
 - Task 2.4：Completed / Approved
 - Task 2.5：Completed / Approved
 - Task 2.6：Completed / Approved
-- Next Phase：Phase 3 Database Design
-- Phase 3 状态：Not Started
+- Phase 3：In Progress
+- Task 3.1：Completed / Approved
+- Next Task：Task 3.2 Entity Relationship Design
+- Task 3.2：Not Started
 - 技术开发：Not Started
-- 数据库设计：Not Started
+- 数据库设计：In Progress
+- 数据库详细字段设计：Not Started
 
 ## Phase 2内部任务列表
 
@@ -76,4 +79,11 @@ Phase 1 业务需求分析
 
 Task 2.1 至 Task 2.6 均已完成并获得批准，Phase 2 已完成。Task 2.6 的名称调整不增加或删除 Task，不改变 Task 顺序，也不改变固定九阶段开发路线。
 
-Task 2.6 定义核心业务对象及其用途、业务关系、生命周期与状态关联，以及对象的业务输入和输出；不包含数据库表、字段、主键、外键、索引、API、页面或技术实现。下一阶段为 Phase 3 Database Design，当前状态为 Not Started；不得在项目负责人正式启动前开始 Task 3.1。
+Task 2.6 定义核心业务对象及其用途、业务关系、生命周期与状态关联，以及对象的业务输入和输出；不包含数据库表、字段、主键、外键、索引、API、页面或技术实现。
+
+## Phase 3内部任务进度
+
+1. Task 3.1 业务对象到数据库实体映射（Entity Mapping）：Completed / Approved；
+2. Task 3.2 实体关系详细设计（Entity Relationship Design）：Not Started。
+
+Phase 3 已正式启动。Task 3.1 已完成概念实体边界设计，不包含详细字段、字段类型、主键、外键、索引、SQL、ORM、数据库技术选型或正式 ER 图。Task 3.1 验收通过前不得启动 Task 3.2。
