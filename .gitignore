@@ -1,0 +1,47 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies and builds
+node_modules/
+dist/
+build/
+.next/
+coverage/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Business data and imports
+uploads/
+backups/
+backup/
+temp/
+tmp/
+private/
+data/private/
+*.xlsx
+*.xls
+*.csv
+
+# Logs
+*.log
+logs/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/
+
+# WeChat local private config
+project.private.config.json
+
+# To commit a safe blank Excel template later, add a narrow exception for a
+# dedicated template directory. Never remove the global Excel ignore rules.
