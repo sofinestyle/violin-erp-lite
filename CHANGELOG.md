@@ -11,6 +11,46 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.3] - 2026-07-19
+
+### Added
+
+- 新增 Task 3.4 字段结构设计文档
+- 完成一般表、正式业务单据主表和单据明细公共字段规范
+- 完成全部 60 张正式逻辑表的字段名称、中文含义、业务用途及业务必填性设计
+- 新增 Task 3.4 字段结构设计正式决策
+
+### Changed
+
+- Task 3.4 状态更新为 Completed / Approved
+- Task 3.3 保持 Completed / Approved，正式逻辑表数量经结构检查由 57 张修正为 60 张
+- 新增 `production_completion_record_items`
+- `role_warehouses` 和 `role_stores` 由候选表转为正式表
+- 下一任务更新为 Task 3.5 字段类型、约束与索引设计，状态 Not Started
+- 数据库规格入口增加 Task 3.4 文档链接和修正后的表清单摘要
+
+### Design
+
+- 正式单据统一单据编号、状态、审核、作废和版本字段
+- 多 SKU 明细统一保留 SKU 编码、名称和规格快照
+- 库存流水、审计日志、单据状态历史和审批记录只追加
+- `inventories` 不设置 `in_transit_quantity`，在途库存继续通过在途仓库节点表达
+- 第一阶段安全库存采用 `skus.safety_stock_quantity`
+- `safety_stock_rules` 继续保留为候选表
+- 敏感银行、税务、个人与配置数据后续必须纳入权限、脱敏和审计控制
+
+### Status
+
+- Phase 3: In Progress
+- Task 3.1: Completed / Approved
+- Task 3.2: Completed / Approved
+- Task 3.3: Completed / Approved
+- Task 3.4: Completed / Approved
+- Task 3.5: Not Started
+- Field Name Design: Completed / Approved
+- Field Type, Constraint and Index Design: Not Started
+- Development: Not Started
+
 ## [0.3.2] - 2026-07-19
 
 ### Added

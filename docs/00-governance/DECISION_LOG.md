@@ -421,3 +421,32 @@ Approved
 ### 影响
 
 Task 3.3 作为 Task 3.4 字段结构设计的正式输入。本决定只确认逻辑表名称、分类、用途和从属关系，不定义字段清单、字段名称、字段类型、主键、外键字段、索引、唯一约束的物理实现、SQL、ORM、数据库技术选型、数据库 Schema 或物理 ER 模型，不启动 Task 3.4，也不进入技术开发。
+
+## DEC-023 批准Task 3.4字段结构设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-19
+
+### 决定
+
+- Task 3.4 字段结构设计（Field Structure Design）状态为 Completed / Approved；
+- 全部正式表采用统一公共字段规范，正式业务单据统一使用单据编号、状态、审核、作废和版本字段；
+- 多 SKU 单据明细保存 SKU 关联以及编码、名称和规格等必要历史快照；
+- 正式单据保存供应商、生产厂家及其他必要业务快照；
+- 库存流水、审计日志、单据状态历史和审批记录采用只追加原则，不设置更新或删除用途字段；
+- Task 3.3 保持 Completed / Approved，正式逻辑表数量经字段结构检查由 57 张修正为 60 张；
+- 新增 `production_completion_record_items`，用于保存分批完工中的 SKU 行级数量并追溯原生产单明细；
+- `role_warehouses` 和 `role_stores` 由候选表转为正式表，承载角色的仓库和店铺数据权限范围；
+- `safety_stock_rules` 继续保留为候选表，第一阶段安全库存采用 `skus.safety_stock_quantity`；
+- `inventories` 不设置 `in_transit_quantity`，在途库存继续通过在途仓库节点表达；
+- 用户密码只保存密码哈希，银行、税务、个人信息和敏感配置必须受权限、脱敏及审计控制；
+- 下一任务为 Task 3.5 字段类型、约束与索引设计（Field Type, Constraint and Index Design），状态为 Not Started。
+
+### 影响
+
+Task 3.4 作为 Task 3.5 的正式输入。本决定只确认字段名称、中文含义、业务用途、业务必填性、历史快照和只追加原则，不定义字段类型、长度、精度、主键与外键物理约束、唯一约束、检查约束、索引、SQL、ORM、数据库技术选型、数据库 Schema、迁移文件或物理 ER 模型。Task 3.4 验收通过前不得启动 Task 3.5，也不进入页面、API 或业务代码开发。

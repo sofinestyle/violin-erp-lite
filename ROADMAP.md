@@ -29,17 +29,19 @@ related_phase: All Phases
 - Task 3.1：Completed / Approved
 - Task 3.2：Completed / Approved
 - Task 3.3：Completed / Approved
-- Next Task：Task 3.4 Field Structure Design
-- Task 3.4 状态：Not Started
+- Task 3.4：Completed / Approved
+- Next Task：Task 3.5 Field Type, Constraint and Index Design
+- Task 3.5 状态：Not Started
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
 - 九阶段开发路线：Frozen
 - 技术开发：Not Started
 - 数据库设计：In Progress
-- 数据库字段设计：Not Started
+- 数据库字段名称设计：Completed / Approved
+- 字段类型、长度、主外键物理约束和索引设计：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.3 均已完成并获得批准。下一任务为 Task 3.4 字段结构设计，当前状态为 Not Started；Task 3.3 验收通过前不得开始 Task 3.4。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.4 均已完成并获得批准。下一任务为 Task 3.5 字段类型、约束与索引设计，当前状态为 Not Started；Task 3.4 验收通过前不得开始 Task 3.5。
 
 ## 3. 固定九阶段开发路线
 
@@ -249,8 +251,8 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 ## 6. 当前下一步
 
-等待 ChatGPT 读取 GitHub 并验收 Task 3.3 数据表结构设计。
+等待 ChatGPT 读取 GitHub 并验收 Task 3.4 字段结构设计。
 
-Phase 2 的 Task 2.1 至 Task 2.6 已全部完成并获得批准。Phase 3 正在进行，Task 3.1 已完成概念实体边界设计，Task 3.2 已完成关系设计，Task 3.3 已确认五类共 57 张正式逻辑表及三张候选表，并作为后续字段结构设计的正式输入。
+Phase 2 的 Task 2.1 至 Task 2.6 已全部完成并获得批准。Phase 3 正在进行，Task 3.1 已完成概念实体边界设计，Task 3.2 已完成关系设计，Task 3.3 保持 Completed / Approved；其正式逻辑表清单经 Task 3.4 结构检查由 57 张修正为 60 张。Task 3.4 已完成全部 60 张正式表的字段名称、业务含义、必填性、公共字段和历史快照设计。
 
-Task 3.4 字段结构设计当前状态为 Not Started。Task 3.3 验收通过前不得启动 Task 3.4，不得定义字段清单、字段名称、字段类型、主键、外键字段、索引、SQL、ORM、数据库技术选型或进入技术开发。
+Task 3.5 字段类型、约束与索引设计当前状态为 Not Started。Task 3.4 验收通过前不得启动 Task 3.5，不得定义字段类型、长度、精度、主外键物理约束、索引、SQL、ORM、数据库技术选型或进入技术开发。
