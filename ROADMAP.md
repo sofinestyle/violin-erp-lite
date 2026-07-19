@@ -17,7 +17,7 @@ related_phase: All Phases
 
 ## 2. 当前项目进度
 
-- 当前阶段：Phase 3 数据库设计（进行中）
+- 当前阶段：Phase 3 数据库设计（Completed / Approved / Frozen）
 - Phase 2 状态：Completed / Approved
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
@@ -25,26 +25,27 @@ related_phase: All Phases
 - Task 2.4：Completed / Approved
 - Task 2.5：Completed / Approved
 - Task 2.6：Completed / Approved
-- Phase 3 状态：In Progress
+- Phase 3 状态：Completed / Approved / Frozen
 - Task 3.1：Completed / Approved
 - Task 3.2：Completed / Approved
 - Task 3.3：Completed / Approved
 - Task 3.4：Completed / Approved
-- Task 3.5：In Progress
+- Task 3.5：Completed / Approved
 - Task 3.5.1：Completed / Approved
 - Task 3.5.2：Completed / Approved
 - Task 3.5.3：Completed / Approved
 - Task 3.5.4：Completed / Approved
 - Task 3.5.5：Completed / Approved
 - Task 3.5.6：Completed / Approved
-- Current Subtask：Task 3.5.7 Database Freeze
-- Task 3.5.7 状态：In Progress
+- Task 3.5.7：Completed / Approved / Frozen
+- 下一阶段：Phase 4 页面设计（UI / Page Design）
+- Phase 4 状态：Not Started
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
 - 九阶段开发路线：Frozen
 - 技术开发：Not Started
-- 数据库设计：In Progress
+- 数据库设计：Completed / Approved / Frozen
 - 数据库字段名称设计：Completed / Approved
 - 字段数据类型规范：Completed / Approved
 - 主键与唯一约束设计：Completed / Approved
@@ -52,9 +53,9 @@ related_phase: All Phases
 - 索引设计：Completed / Approved
 - Check 约束设计：Completed / Approved
 - 数据库命名规范：Completed / Approved
-- 数据库冻结：In Progress
+- 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 正在进行，Task 3.1 至 Task 3.5.6 均已完成并获得批准，Task 3.5 状态为 In Progress。Task 3.5.7 Database Freeze 已按数据库设计冲刺进入 In Progress。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。下一阶段仍为既定的 Phase 4 页面设计（UI / Page Design），状态为 Not Started；当前等待 ChatGPT 验收 Phase 3，验收通过前不得启动 Phase 4。
 
 ## 3. 固定九阶段开发路线
 
@@ -264,8 +265,8 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 ## 6. 当前下一步
 
-继续执行 Database Design Sprint 的 Task 3.5.7 Database Freeze。
+等待 ChatGPT 读取 GitHub 并统一验收 Task 3.5.4 至 Task 3.5.7 及 Phase 3 Database Freeze。
 
-Phase 2 的 Task 2.1 至 Task 2.6 已全部完成并获得批准。Phase 3 正在进行，Task 3.1 至 Task 3.5.6 已完成并获得批准。Task 3.5.6 已统一表名、字段、约束、索引和枚举值格式，并在不重命名的前提下完成 60 张正式逻辑表的命名审计。
+Phase 3 状态为 Completed / Approved / Frozen，Database Logical Design v1.0 已冻结。下一阶段为 Phase 4 页面设计（UI / Page Design），状态为 Not Started，其既有阶段定义和九阶段顺序保持不变。
 
-Task 3.5.7 状态为 In Progress。本冲刺仍不得编写 SQL、ORM、Schema、Migration，不得选择数据库或进入技术开发。
+Phase 3 验收通过前不得启动 Phase 4。数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及其他技术映射必须等待后续具备相应范围和正式授权的开发阶段启动后执行，本路线不预先将其分配给 Phase 4。

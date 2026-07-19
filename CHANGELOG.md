@@ -11,6 +11,39 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.3.10] - 2026-07-20
+
+### Added
+
+- 新增 Task 3.5.7 Database Freeze 文档
+- 建立 Database Change Request 冻结后变更流程
+- 新增 Database Logical Design v1.0 冻结及 Phase 3 关闭正式决策
+
+### Changed
+
+- Phase 3 状态更新为 Completed / Approved / Frozen
+- Task 3.5 状态更新为 Completed / Approved
+- Task 3.5.7 状态更新为 Completed / Approved / Frozen
+- `DATABASE_SPEC.md` 更新为 Frozen 数据库逻辑规格总入口
+- 下一阶段保持 Phase 4 页面设计（UI / Page Design），状态为 Not Started
+- 当前下一步更新为等待 ChatGPT 验收 Phase 3
+
+### Design
+
+- 冻结 60 张正式逻辑表、字段业务语义、逻辑类型、约束、关系、逻辑索引、命名、库存粒度及历史保留原则
+- 明确任何 Frozen 数据库逻辑设计变化必须经过 Database Change Request
+- 明确技术索引、物理类型和实现语法仅可在后续正式授权阶段确定
+- 未将数据库或 ORM 选型、DDL、Schema、Migration、Seed 或物理 ER 图预先分配给 Phase 4
+- 未修改 Frozen 九阶段路线或 Phase 4 页面设计定义
+
+### Status
+
+- Phase 3: Completed / Approved / Frozen
+- Task 3.5: Completed / Approved
+- Task 3.5.7: Completed / Approved / Frozen
+- Phase 4 UI / Page Design: Not Started
+- Database, ORM, DDL, Schema, Migration and Development: Not Started
+
 ## [0.3.9] - 2026-07-20
 
 ### Added

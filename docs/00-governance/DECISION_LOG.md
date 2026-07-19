@@ -619,3 +619,30 @@ Approved
 ### 影响
 
 Task 3.5.6 作为 Task 3.5.7 Database Freeze 的正式输入。本决定不定义数据库物理标识符适配，不选择数据库或 ORM，不编写 SQL、Schema、Migration，也不进入页面、API 或业务代码开发。
+
+## DEC-030 冻结数据库逻辑设计并关闭Phase 3
+
+### 状态
+
+Approved / Frozen
+
+### 日期
+
+2026-07-20
+
+### 决定
+
+- Database Logical Design v1.0 于 2026-07-20 正式冻结；
+- Phase 3 数据库设计状态更新为 Completed / Approved / Frozen；
+- Task 3.5 状态更新为 Completed / Approved；
+- Task 3.5.7 Database Freeze 状态更新为 Completed / Approved / Frozen；
+- 60 张正式逻辑表、字段业务语义、逻辑类型、主键、唯一约束、外键关系、逻辑索引、Check 规则、命名规范、库存粒度和历史保留原则纳入冻结范围；
+- 任何逻辑表、字段、业务含义、唯一范围、外键关系、库存粒度或历史保留规则的修改必须提交 Database Change Request；
+- Frozen 数据库逻辑设计作为后续页面设计、技术设计和开发工作的正式输入，后续阶段不得改变其业务语义；
+- 数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及数据库初始化必须等待后续具备相应范围和正式授权的开发阶段启动后执行；
+- 下一阶段保持 Frozen 路线定义的 Phase 4 页面设计（UI / Page Design），状态为 Not Started；
+- 当前等待 ChatGPT 验收 Phase 3，验收通过前不得启动 Phase 4。
+
+### 影响
+
+本决定不改变九阶段路线、Phase 4 名称或既有阶段定义，不预先将数据库或 ORM 选型及技术映射分配给 Phase 4。本次未新增或删除正式逻辑表及字段，未修改 Frozen 业务规则，未编写 SQL，未创建 Schema、Migration、Seed 或物理 ER 图，未产生页面、API 或业务代码，也未安装依赖。
