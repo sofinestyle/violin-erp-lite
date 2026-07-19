@@ -2,7 +2,7 @@
 document_name: 标准开发流程
 project: Violin ERP Lite
 version: 1.0
-status: Draft
+status: Approved
 owner: Project Manager
 created_date: 2026-07-19
 updated_date: 2026-07-19

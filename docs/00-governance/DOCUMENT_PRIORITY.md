@@ -2,7 +2,7 @@
 document_name: 文档优先级规则
 project: Violin ERP Lite
 version: 1.0
-status: Draft
+status: Approved
 owner: Project Manager
 created_date: 2026-07-19
 updated_date: 2026-07-19
@@ -10,6 +10,24 @@ related_phase: Phase 1
 ---
 
 # 文档优先级规则
+
+## 治理层级
+
+第一层：Frozen 业务规则
+
+第二层：Approved 项目治理文件
+
+第三层：Approved 业务与产品文档
+
+第四层：Reviewed 文档
+
+第五层：Draft 文档
+
+第六层：当前临时指令和聊天内容
+
+- 当前聊天不能直接覆盖 Approved 或 Frozen 文档；
+- 如果项目负责人确认新变更，必须先更新正式文档；
+- 文档状态与业务规则优先级共同决定执行依据。
 
 ## 文档优先级
 

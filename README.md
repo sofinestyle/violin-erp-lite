@@ -20,6 +20,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Current Phase: Phase 1 Completed
 - Phase 1 Status: Approved
 - Business Rules Status: Frozen
+- Governance Documents Status: Approved
 - Development Status: Not Started
 
 当前已完成项目治理体系、Phase 1 业务需求分析及第一版业务规则冻结，尚未开始任何技术开发。

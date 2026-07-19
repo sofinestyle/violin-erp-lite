@@ -2,7 +2,7 @@
 document_name: 正式决策记录
 project: Violin ERP Lite
 version: 1.0
-status: Draft
+status: Approved
 owner: Project Manager
 created_date: 2026-07-19
 updated_date: 2026-07-19
@@ -73,3 +73,34 @@ related_phase: Phase 1
 
 - 只导入期初库存；
 - 不导入全部历史流水。
+
+## DEC-009 正式启用项目治理文档
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-19
+
+### 决定
+
+以下文档正式作为 Violin ERP Lite 项目治理依据生效：
+
+- `PROJECT.md`
+- `AGENTS.md`
+- `DOCUMENT_PRIORITY.md`
+- `DEVELOPMENT_WORKFLOW.md`
+- `CHANGE_CONTROL.md`
+- `DECISION_LOG.md`
+
+### 原因
+
+上述文档已经完成项目治理规则确认，继续标记为 Draft 会造成其是否具备约束效力的歧义。
+
+### 影响
+
+Codex 后续执行任何任务前，必须读取并遵守上述治理文档。
+
+本次调整不改变任何 Frozen 业务规则，不代表 Phase 2 开始，也不涉及数据库、技术架构或业务开发。

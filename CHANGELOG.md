@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.1.1] - 2026-07-19
+
+### Changed
+
+- 将正式项目治理文档状态由 Draft 修正为 Approved
+- 明确 `AGENTS.md` 已作为 Codex 正式执行约束生效
+- 明确 `PROJECT.md` 及治理流程文件已正式生效
+- 更新 README 中的治理文档状态说明
+
+### Unchanged
+
+- Phase 1 Business Requirement Analysis remains Approved
+- BUSINESS_RULES remains Frozen
+- System, database, UI, API and testing specifications remain Draft
+- Development remains Not Started
+
+### Status
+
+- Current Phase: Phase 1 Completed
+- Governance Documents: Approved
+- Phase 1: Approved
+- Business Rules: Frozen
+- Development: Not Started
+
 ## [0.1.0] - 2026-07-19
 
 ### Added

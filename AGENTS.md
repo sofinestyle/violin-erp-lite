@@ -2,7 +2,7 @@
 document_name: Codex项目执行约束
 project: Violin ERP Lite
 version: 1.0
-status: Draft
+status: Approved
 owner: Project Manager
 created_date: 2026-07-19
 updated_date: 2026-07-19
@@ -10,6 +10,12 @@ related_phase: Phase 1
 ---
 
 # AGENTS
+
+## 文档效力
+
+本文件状态为 Approved。
+本文件中的执行规则对 Codex 后续所有任务正式生效。
+如果临时指令与本文件或 Frozen 业务规则冲突，Codex 必须停止冲突部分并报告。
 
 ## 强制读取规则
 
