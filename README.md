@@ -15,15 +15,35 @@ related_phase: Phase 1
 
 Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小提琴及相关配件为主的乐器产品，覆盖产品、SKU、供应商、采购、委外生产、质量验收、库存、国内销售出库、跨境分批发货、采购付款与统计分析等业务。
 
-## 当前状态
+## 当前项目状态
 
-- Current Phase: Phase 1 Completed
-- Phase 1 Status: Approved
-- Business Rules Status: Frozen
-- Governance Documents Status: Approved
-- Development Status: Not Started
+- 当前阶段：Phase 1 已完成
+- 下一阶段：Phase 2 业务流程设计
+- Phase 2 状态：尚未开始
+- Phase 1 业务需求分析：Approved
+- BUSINESS_RULES：Frozen
+- 项目治理文件：Approved
+- 九阶段开发路线：Frozen
+- 数据库设计：Not Started
+- 技术开发：Not Started
 
-当前已完成项目治理体系、Phase 1 业务需求分析及第一版业务规则冻结，尚未开始任何技术开发。
+Phase 1 已正式关闭。Phase 2 仅为固定的下一阶段，必须等待项目负责人正式启动；当前尚未开始数据库设计或技术开发。
+
+## 九阶段开发路线
+
+| 阶段 | 名称 | 状态 |
+| --- | --- | --- |
+| Phase 1 | 业务需求分析 | Closed（Completed） |
+| Phase 2 | 业务流程设计 | Not Started（Next） |
+| Phase 3 | 数据库设计 | Waiting |
+| Phase 4 | 页面设计 | Waiting |
+| Phase 5 | 接口设计 | Waiting |
+| Phase 6 | 功能详细设计 | Waiting |
+| Phase 7 | 开发规范与 Codex 执行 | Waiting |
+| Phase 8 | 测试方案 | Waiting |
+| Phase 9 | 验收与上线 | Waiting |
+
+九个阶段的数量、名称和顺序已经冻结，详细规则参见 `ROADMAP.md`。
 
 ## 仓库用途
 
@@ -39,6 +59,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 - [项目总纲](PROJECT.md)
 - [Codex 执行约束](AGENTS.md)
+- [Frozen 项目开发路线](ROADMAP.md)
 - [文档优先级](docs/00-governance/DOCUMENT_PRIORITY.md)
 - [Phase 1 业务需求分析](docs/01-business/PHASE_01_BUSINESS_REQUIREMENT_ANALYSIS.md)
 - [Frozen 业务规则](docs/01-business/BUSINESS_RULES.md)
@@ -47,11 +68,11 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 ## 开发前强制阅读
 
-开始任何任务前必须按顺序阅读 `PROJECT.md`、`AGENTS.md`、`docs/00-governance/DOCUMENT_PRIORITY.md`、`docs/01-business/BUSINESS_RULES.md`、`docs/02-product/SYSTEM_SPEC.md` 和当前 Phase 文档，并根据任务类型补充阅读对应 Spec。
+开始任何任务前必须按顺序阅读 `PROJECT.md`、`AGENTS.md`、`docs/00-governance/DOCUMENT_PRIORITY.md`、`ROADMAP.md`、`docs/01-business/BUSINESS_RULES.md`、`docs/02-product/SYSTEM_SPEC.md` 和当前 Phase 文档，并根据任务类型补充阅读对应 Spec。
 
 ## 当前禁止事项
 
-当前不得进入 Phase 2，不得进行系统功能详细规划、数据库或数据表设计、API 设计、技术架构选型、页面设计、前后端编码、应用框架创建或依赖安装。
+Phase 1 已关闭，Phase 2 尚未正式启动。当前不得开始 Phase 2 业务流程设计，不得进行数据库或数据表设计、API 设计、技术架构选型、页面设计、前后端编码、应用框架创建或依赖安装。
 
 ## 安全说明
 

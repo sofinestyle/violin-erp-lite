@@ -24,9 +24,10 @@ related_phase: Phase 1
 1. `PROJECT.md`
 2. `AGENTS.md`
 3. `docs/00-governance/DOCUMENT_PRIORITY.md`
-4. `docs/01-business/BUSINESS_RULES.md`
-5. `docs/02-product/SYSTEM_SPEC.md`
-6. 当前 Phase 文档
+4. `ROADMAP.md`
+5. `docs/01-business/BUSINESS_RULES.md`
+6. `docs/02-product/SYSTEM_SPEC.md`
+7. 当前 Phase 文档
 
 按任务类型额外读取：
 
@@ -34,6 +35,60 @@ related_phase: Phase 1
 - 涉及页面：读取 `docs/04-ui/` 下对应文档；
 - 涉及接口：读取 `docs/05-api/API_SPEC.md`；
 - 涉及测试：读取 `docs/06-testing/` 下对应文档。
+
+## 阶段读取规则
+
+Codex 开始任何任务前必须读取 `ROADMAP.md`，并确认：
+
+- 当前 Phase；
+- 当前 Phase 状态；
+- 下一 Phase；
+- 本次任务是否属于当前 Phase；
+- 是否存在跨阶段内容。
+
+## 阶段边界规则
+
+如用户指令要求执行尚未进入的 Phase 内容：
+
+1. 不直接执行；
+2. 指出当前 Phase；
+3. 指出请求属于哪个后续 Phase；
+4. 等待项目负责人正式确认启动该 Phase；
+5. 不得自行推断项目负责人已经同意跨阶段执行。
+
+不得以单个功能已经明确为理由跳过当前 Phase。
+
+## 路线冻结规则
+
+`ROADMAP.md` 状态为 Frozen。
+
+Codex 不得自行增加、删除、合并、拆分、重命名或调整九个 Phase，不得跳过 Phase，也不得在当前 Phase 完成前执行后续 Phase 内容。任何路线或阶段状态变更必须由项目负责人批准并完成正式变更流程。
+
+## 项目语言规范
+
+1. 项目主要语言为中文（简体）。
+2. 所有正式项目文档默认使用中文编写，包括但不限于：
+   - `PROJECT.md`；
+   - `ROADMAP.md`；
+   - `BUSINESS_RULES.md`；
+   - `SYSTEM_SPEC.md`；
+   - `FEATURE_LIST.md`；
+   - `DATABASE_SPEC.md`；
+   - UI 规范；
+   - API 规范；
+   - `TEST_PLAN.md`；
+   - `ACCEPTANCE_CRITERIA.md`；
+   - `CHANGELOG.md`；
+   - `DECISION_LOG.md`；
+   - Codex 执行汇报。
+3. 专业术语首次出现时，可以采用“中文（English）”格式，例如业务需求分析（Business Requirement Analysis）、库存流水（Inventory Ledger）、采购订单（Purchase Order）和质量验收（Quality Inspection）。
+4. 同一术语后续应统一使用，不得在产品、商品、货品、Item、Product 之间随意切换。
+5. 页面显示文字默认使用中文（简体）。
+6. 代码中的变量名、函数名、类名、数据库表名、字段名和 API 字段名使用英文。
+7. Git Commit 继续使用英文，并遵循规范化格式。
+8. README 以中文为主要语言，可以保留必要英文术语。
+9. 除非项目负责人明确要求，不得将正式项目文档整体改写为英文。
+10. 所有 AI 在本项目中默认使用中文回复。
 
 ## 冲突处理规则
 

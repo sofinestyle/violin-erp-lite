@@ -11,6 +11,37 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.1.2] - 2026-07-19
+
+### Added
+
+- 正式建立并冻结固定九阶段开发路线
+- 增加开发阶段冻结规则
+- 增加项目语言规范
+- 明确中文（简体）为项目主要语言
+- 增加 Codex 阶段边界检查要求
+- 增加 Phase 路线变更控制规则
+
+### Changed
+
+- 将 `ROADMAP.md` 由 Draft 升级为 Frozen
+- 更新 `PROJECT.md` 中的项目进度和开发路线
+- 更新 `README.md` 中的当前项目状态
+- 更新 `AGENTS.md` 中的阶段读取和语言规则
+- 更新 `DEVELOPMENT_WORKFLOW.md` 和 `CHANGE_CONTROL.md`
+- 更新 `DECISION_LOG.md`
+
+### Status
+
+- Phase 1: Closed
+- Phase 2: Not Started
+- Business Requirements: Approved
+- Business Rules: Frozen
+- Governance Documents: Approved
+- Development Roadmap: Frozen
+- Database Design: Not Started
+- Development: Not Started
+
 ## [0.1.1] - 2026-07-19
 
 ### Changed
