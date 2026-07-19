@@ -11,6 +11,33 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.2.1] - 2026-07-19
+
+### Added
+
+- 新增 Task 2.3 模块关系设计
+- 明确采购管理与生产管理为平行模块
+- 明确质量验收为采购与生产共用业务节点
+- 明确国内采购、委外生产、跨境发货、单据流和库存流关系
+- 新增采购与生产关系正式决策
+
+### Changed
+
+- Task 2.2 状态由 Reviewed 更新为 Approved
+- Task 2.3 状态设置为 Approved
+- 更新 Phase 2 任务进度
+- 当前下一任务更新为 Task 2.4 核心业务流程设计
+
+### Status
+
+- Phase 2: In Progress
+- Task 2.1: Approved
+- Task 2.2: Approved
+- Task 2.3: Approved
+- Task 2.4: Not Started
+- Database Design: Not Started
+- Development: Not Started
+
 ## [0.2.0] - 2026-07-19
 
 ### Added

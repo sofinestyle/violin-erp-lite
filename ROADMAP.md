@@ -19,10 +19,11 @@ related_phase: All Phases
 
 - 当前阶段：Phase 2 业务流程设计
 - Phase 2 状态：In Progress
-- Task 2.1：Completed
-- Task 2.2：Reviewed，待项目负责人确认
-- Current Task：Task 2.2 模块职责设计
-- Next Task：待 Task 2.2 确认后进入 Task 2.3 模块关系设计
+- Task 2.1：Completed / Approved
+- Task 2.2：Completed / Approved
+- Task 2.3：Completed / Approved
+- Current Task：Task 2.4 核心业务流程设计
+- Task 2.4 状态：Not Started
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
@@ -239,4 +240,4 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 ## 6. 当前下一步
 
-等待项目负责人确认 Task 2.2：模块职责设计；确认后进入 Task 2.3：模块关系设计。
+等待项目负责人正式启动 Task 2.4：核心业务流程设计。
