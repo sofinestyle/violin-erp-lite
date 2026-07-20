@@ -45,8 +45,9 @@ related_phase: All Phases
 - Task 4.4 首页 Dashboard 页面设计：Completed / Approved
 - Task 4.5 基础资料模块页面设计：Completed / Approved
 - Task 4.6 采购管理页面设计：Completed / Approved
-- 下一任务：Task 4.7 生产管理页面设计
-- Task 4.7：Not Started
+- Task 4.7 生产管理页面设计：Completed / Approved
+- 下一任务：Task 4.8 库存管理页面设计
+- Task 4.8：Not Started
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
@@ -62,7 +63,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）保持 In Progress；Task 4.1 至 Task 4.6 均已完成并获得批准。下一任务为 Task 4.7 生产管理页面设计，状态为 Not Started。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）保持 In Progress；Task 4.1 至 Task 4.7 均已完成并获得批准。下一任务为 Task 4.8 库存管理页面设计，状态为 Not Started。
 
 ## 3. 固定九阶段开发路线
 
@@ -272,6 +273,6 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 ## 6. 当前下一步
 
-Phase 3 状态为 Completed / Approved / Frozen，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）状态为 In Progress，Task 4.1 至 Task 4.6 状态均为 Completed / Approved，Task 4.7 状态为 Not Started。
+Phase 3 状态为 Completed / Approved / Frozen，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）状态为 In Progress，Task 4.1 至 Task 4.7 状态均为 Completed / Approved，Task 4.8 状态为 Not Started。
 
-当前下一步为 Task 4.7 生产管理页面设计。Task 4.7 必须由项目负责人正式确认启动，启动前不得提前编写正文。数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及其他技术映射必须等待后续具备相应范围和正式授权的开发阶段启动后执行。
+当前下一步为 Task 4.8 库存管理页面设计。Task 4.8 必须由项目负责人正式确认启动，启动前不得提前编写正文。数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及其他技术映射必须等待后续具备相应范围和正式授权的开发阶段启动后执行。

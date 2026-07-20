@@ -11,6 +11,45 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.6] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.7 生产管理页面设计文档
+- 新增委外生产单、生产进度、分批完工、生产验收和执行跟踪页面设计
+- 新增生产付款关联展示、跨境验收人员及生产页面权限规则
+- 新增批准 Task 4.7 生产管理页面设计的正式决策
+
+### Changed
+
+- Task 4.7 状态更新为 Completed / Approved
+- 下一任务更新为 Task 4.8 库存管理页面设计
+- Task 4.8 状态保持 Not Started
+- 项目进度、文档入口和开发流程同步更新
+
+### Design
+
+- 委外生产单不保存目标仓库，目标仓库只映射分批完工记录
+- 不建立独立生产异常表、字段、业务对象、页面或权限
+- 特殊情况通过 Frozen 生产进度状态、进度说明和现有附件能力表达
+- 生产进度与完工验收严格使用 Frozen 状态集合
+- 生产单、进度、分批完工及验收均不得直接增加库存
+- 验收合格数量只形成入库依据，实际入库通过出入库管理完成
+- 本次不发起 Database Change Request，不修改数据库逻辑或九阶段路线
+
+### Status
+
+- Phase 4: In Progress
+- Task 4.1: Completed / Approved
+- Task 4.2: Completed / Approved
+- Task 4.3: Completed / Approved
+- Task 4.4: Completed / Approved
+- Task 4.5: Completed / Approved
+- Task 4.6: Completed / Approved
+- Task 4.7: Completed / Approved
+- Task 4.8: Not Started
+- Technical Development: Not Started
+
 ## [0.4.5] - 2026-07-20
 
 ### Added
