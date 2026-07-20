@@ -43,8 +43,9 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 4.2 PC 管理端布局与导航设计：Completed / Approved
 - Task 4.3 PC 管理端视觉规范设计：Completed / Approved
 - Task 4.4 首页 Dashboard 页面设计：Completed / Approved
-- 下一任务：Task 4.5 基础资料模块页面设计
-- Task 4.5：Not Started
+- Task 4.5 基础资料模块页面设计：Completed / Approved
+- 下一任务：Task 4.6 采购管理页面设计
+- Task 4.6：Not Started
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -60,7 +61,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 数据库冻结：Completed / Approved / Frozen
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）保持 In Progress；Task 4.1 页面架构设计、Task 4.2 PC 管理端布局与导航设计、Task 4.3 PC 管理端视觉规范设计及 Task 4.4 首页 Dashboard 页面设计均已完成并获得批准，Dashboard 页面设计已经确定。下一任务为 Task 4.5 基础资料模块页面设计，状态为 Not Started；未经项目负责人确认不得开始 Task 4.5 正文。技术开发尚未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）保持 In Progress；Task 4.1 至 Task 4.5 均已完成并获得批准，基础资料模块页面设计已经确定。下一任务为 Task 4.6 采购管理页面设计，状态为 Not Started；未经项目负责人确认不得开始 Task 4.6 正文。技术开发尚未开始。
 
 ## 九阶段开发路线
 
@@ -117,6 +118,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 4.2 PC 管理端布局与导航设计（Approved）](docs/phases/phase-04/TASK_4_2_PC_LAYOUT_AND_NAVIGATION.md)
 - [Task 4.3 PC 管理端视觉规范设计（Approved）](docs/phases/phase-04/TASK_4_3_PC_VISUAL_DESIGN_SYSTEM.md)
 - [Task 4.4 首页 Dashboard 页面设计（Approved）](docs/phases/phase-04/TASK_4_4_DASHBOARD_PAGE_DESIGN.md)
+- [Task 4.5 基础资料模块页面设计（Approved）](docs/phases/phase-04/TASK_4_5_MASTER_DATA_PAGE_DESIGN.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -126,7 +128,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 4 保持 In Progress，当前仅进行页面设计。Task 4.5 尚未启动，不得提前编写 Task 4.5 至 Task 4.10 正文；不得编写页面代码，不得创建 API，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得创建业务代码或应用框架，不得安装依赖。
+Phase 4 保持 In Progress，当前仅进行页面设计。Task 4.6 尚未启动，不得提前编写 Task 4.6 至 Task 4.10 正文；不得编写页面代码，不得创建 API，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得创建业务代码或应用框架，不得安装依赖。
 
 ## 安全说明
 

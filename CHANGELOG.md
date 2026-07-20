@@ -11,6 +11,44 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.4] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.5 基础资料模块页面设计文档
+- 新增产品、SKU、产品分类、品牌、计量单位和供应商页面设计
+- 新增仓库、销售平台、店铺和客户资料页面设计
+- 新增基础资料页面组件、状态、权限、跳转、空状态、加载和异常规则
+- 新增批准 Task 4.5 基础资料模块页面设计的正式决策
+
+### Changed
+
+- Task 4.5 状态更新为 Completed / Approved
+- 下一任务更新为 Task 4.6 采购管理页面设计
+- Task 4.6 状态保持 Not Started
+- 项目进度、文档入口和开发流程同步更新
+
+### Design
+
+- 产品与 SKU 分别采用列表、详情、新增和编辑页面
+- 基础资料被业务引用后不得物理删除，只能按规则停用
+- 仓库采用统一页面和数据源，并保持不同仓库类型语义
+- 计量单位复用受控字典能力，不新增独立表或平行数据源
+- 客户资料仅查询销售出库客户快照，不建立独立客户主数据
+- 基础资料按功能、仓库、店铺及厂家范围动态展示
+- 本次未修改 Task 4.1 至 Task 4.4、Frozen 业务规则、数据库逻辑或九阶段路线
+
+### Status
+
+- Phase 4: In Progress
+- Task 4.1: Completed / Approved
+- Task 4.2: Completed / Approved
+- Task 4.3: Completed / Approved
+- Task 4.4: Completed / Approved
+- Task 4.5: Completed / Approved
+- Task 4.6: Not Started
+- Technical Development: Not Started
+
 ## [0.4.3] - 2026-07-20
 
 ### Added

@@ -79,8 +79,9 @@ Phase 1 业务需求分析
 - Task 4.2 PC 管理端布局与导航设计：Completed / Approved
 - Task 4.3 PC 管理端视觉规范设计：Completed / Approved
 - Task 4.4 首页 Dashboard 页面设计：Completed / Approved
-- 下一任务：Task 4.5 基础资料模块页面设计
-- Task 4.5：Not Started
+- Task 4.5 基础资料模块页面设计：Completed / Approved
+- 下一任务：Task 4.6 采购管理页面设计
+- Task 4.6：Not Started
 - 技术开发：Not Started
 - 数据库设计：Completed / Approved / Frozen
 - 数据库字段名称设计：Completed / Approved
@@ -131,6 +132,7 @@ Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.0 已
 2. Task 4.2 PC 管理端布局与导航设计（PC Layout and Navigation Design）：Completed / Approved；
 3. Task 4.3 PC 管理端视觉规范设计（PC Visual Design System）：Completed / Approved；
 4. Task 4.4 首页 Dashboard 页面设计（Dashboard Page Design）：Completed / Approved；
-5. Task 4.5 基础资料模块页面设计：Not Started。
+5. Task 4.5 基础资料模块页面设计（Master Data Page Design）：Completed / Approved；
+6. Task 4.6 采购管理页面设计：Not Started。
 
-Phase 4 保持 In Progress。Task 4.1 至 Task 4.4 均已完成并获得批准，Dashboard 页面设计已经确定。下一任务为 Task 4.5 基础资料模块页面设计，必须由项目负责人正式确认启动；启动前不得提前编写 Task 4.5 至 Task 4.10 正文。技术开发保持 Not Started。
+Phase 4 保持 In Progress。Task 4.1 至 Task 4.5 均已完成并获得批准，基础资料模块页面设计已经确定。下一任务为 Task 4.6 采购管理页面设计，必须由项目负责人正式确认启动；启动前不得提前编写 Task 4.6 至 Task 4.10 正文。技术开发保持 Not Started。
