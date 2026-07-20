@@ -17,7 +17,7 @@ related_phase: All Phases
 
 ## 2. 当前项目进度
 
-- 当前阶段：Phase 4 页面设计（UI / Page Design，In Progress）
+- 当前已完成阶段：Phase 4 页面设计（UI / Page Design，Completed / Approved）
 - Phase 2 状态：Completed / Approved
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
@@ -38,7 +38,7 @@ related_phase: All Phases
 - Task 3.5.5：Completed / Approved
 - Task 3.5.6：Completed / Approved
 - Task 3.5.7：Completed / Approved / Frozen
-- Phase 4 状态：In Progress
+- Phase 4 状态：Completed / Approved
 - Task 4.1 页面架构设计：Completed / Approved
 - Task 4.2 PC 管理端布局与导航设计：Completed / Approved
 - Task 4.3 PC 管理端视觉规范设计：Completed / Approved
@@ -48,8 +48,9 @@ related_phase: All Phases
 - Task 4.7 生产管理页面设计：Completed / Approved
 - Task 4.8 库存管理页面设计：Completed / Approved
 - Task 4.9 出入库管理页面设计：Completed / Approved
-- 下一任务：Task 4.10 跨境业务页面设计
-- Task 4.10：Not Started
+- Task 4.10 跨境业务页面设计：Completed / Approved
+- 下一阶段：Phase 5 接口设计
+- Phase 5：Waiting / Not Started
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
@@ -65,7 +66,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）保持 In Progress；Task 4.1 至 Task 4.9 均已完成并获得批准。下一任务为 Task 4.10 跨境业务页面设计，状态为 Not Started。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。下一阶段为 Phase 5 接口设计，状态为 Waiting / Not Started，未经项目负责人单独确认不得启动。
 
 ## 3. 固定九阶段开发路线
 
@@ -130,7 +131,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ### Phase 4：页面设计（UI / Page Design）
 
-- 状态：In Progress
+- 状态：Completed / Approved
 - 目标：基于已批准的业务流程和数据设计，确定微信小程序及 PC 管理端的页面架构与交互规则。
 - 主要输出：
   - 微信小程序页面架构；
@@ -148,7 +149,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ### Phase 5：接口设计（API Design）
 
-- 状态：Waiting
+- 状态：Waiting / Not Started
 - 目标：在已批准业务、数据和页面设计基础上，定义系统接口契约及安全、一致性规则。
 - 主要输出：
   - API 目录；
@@ -275,6 +276,6 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 ## 6. 当前下一步
 
-Phase 3 状态为 Completed / Approved / Frozen，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）状态为 In Progress，Task 4.1 至 Task 4.9 状态均为 Completed / Approved，Task 4.10 状态为 Not Started。
+Phase 3 状态为 Completed / Approved / Frozen，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 状态均为 Completed / Approved；Phase 4 未标记为 Frozen。
 
-当前下一步为 Task 4.10 跨境业务页面设计。Task 4.10 必须由项目负责人正式确认启动，启动前不得提前编写正文。数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及其他技术映射必须等待后续具备相应范围和正式授权的开发阶段启动后执行。
+下一阶段为 Phase 5 接口设计，状态为 Waiting / Not Started。未经项目负责人单独确认不得启动 Phase 5 或创建其正文。数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及其他技术映射必须等待后续具备相应范围和正式授权的开发阶段启动后执行。

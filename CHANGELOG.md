@@ -11,6 +11,48 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.9] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.10 跨境业务页面设计文档
+- 新增跨境发货、发运确认、海外收货、海外数据导入和明细匹配页面设计
+- 新增跨境执行跟踪、海外仓库存入口、页面组件、状态、权限和异常处理规则
+- 新增批准 Task 4.10 并完成 Phase 4 的正式决策
+
+### Changed
+
+- Task 4.10 状态更新为 Completed / Approved
+- Phase 4 状态更新为 Completed / Approved，未标记为 Frozen
+- 下一阶段更新为 Phase 5 接口设计
+- Phase 5 状态保持 Waiting / Not Started
+- 项目进度、文档入口、路线状态和开发流程同步更新
+
+### Design
+
+- 跨境发货严格经过来源仓、在途仓和目的海外仓
+- 发运与海外收货分别形成正式库存流水和库存余额变化
+- 海外实收、差异和发货导入匹配均按明细记录
+- 导入任务、导入明细和匹配记录严格复用 Frozen 正式对象
+- 海外正式库存继续以 `inventories` 为唯一余额来源
+- 本次未新增跨境订单、物流轨迹、海外库存余额表或平行数据源
+
+### Status
+
+- Phase 4: Completed / Approved
+- Task 4.1: Completed / Approved
+- Task 4.2: Completed / Approved
+- Task 4.3: Completed / Approved
+- Task 4.4: Completed / Approved
+- Task 4.5: Completed / Approved
+- Task 4.6: Completed / Approved
+- Task 4.7: Completed / Approved
+- Task 4.8: Completed / Approved
+- Task 4.9: Completed / Approved
+- Task 4.10: Completed / Approved
+- Phase 5 API Design: Waiting / Not Started
+- Technical Development: Not Started
+
 ## [0.4.8] - 2026-07-20
 
 ### Added

@@ -17,7 +17,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 ## 当前项目状态
 
-- 当前阶段：Phase 4 页面设计（UI / Page Design，In Progress）
+- 当前已完成阶段：Phase 4 页面设计（UI / Page Design，Completed / Approved）
 - Phase 2 状态：Completed / Approved
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
@@ -38,7 +38,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 3.5.5：Completed / Approved
 - Task 3.5.6：Completed / Approved
 - Task 3.5.7：Completed / Approved / Frozen
-- Phase 4 状态：In Progress
+- Phase 4 状态：Completed / Approved
 - Task 4.1 页面架构设计：Completed / Approved
 - Task 4.2 PC 管理端布局与导航设计：Completed / Approved
 - Task 4.3 PC 管理端视觉规范设计：Completed / Approved
@@ -48,8 +48,9 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 4.7 生产管理页面设计：Completed / Approved
 - Task 4.8 库存管理页面设计：Completed / Approved
 - Task 4.9 出入库管理页面设计：Completed / Approved
-- 下一任务：Task 4.10 跨境业务页面设计
-- Task 4.10：Not Started
+- Task 4.10 跨境业务页面设计：Completed / Approved
+- 下一阶段：Phase 5 接口设计
+- Phase 5：Waiting / Not Started
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -65,7 +66,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 数据库冻结：Completed / Approved / Frozen
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）保持 In Progress；Task 4.1 至 Task 4.9 均已完成并获得批准，出入库管理页面设计已经确定。下一任务为 Task 4.10 跨境业务页面设计，状态为 Not Started；未经项目负责人确认不得开始 Task 4.10 正文。技术开发尚未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。下一阶段为 Phase 5 接口设计，状态保持 Waiting / Not Started；未经项目负责人单独确认不得启动 Phase 5。技术开发尚未开始。
 
 ## 九阶段开发路线
 
@@ -74,8 +75,8 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 | Phase 1 | 业务需求分析 | Closed（Completed） |
 | Phase 2 | 业务流程设计 | Completed / Approved |
 | Phase 3 | 数据库设计 | Completed / Approved / Frozen |
-| Phase 4 | 页面设计 | In Progress |
-| Phase 5 | 接口设计 | Waiting |
+| Phase 4 | 页面设计 | Completed / Approved |
+| Phase 5 | 接口设计 | Waiting / Not Started |
 | Phase 6 | 功能详细设计 | Waiting |
 | Phase 7 | 开发规范与 Codex 执行 | Waiting |
 | Phase 8 | 测试方案 | Waiting |
@@ -127,6 +128,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 4.7 生产管理页面设计（Approved）](docs/phases/phase-04/TASK_4_7_PRODUCTION_MANAGEMENT_PAGE_DESIGN.md)
 - [Task 4.8 库存管理页面设计（Approved）](docs/phases/phase-04/TASK_4_8_INVENTORY_MANAGEMENT_PAGE_DESIGN.md)
 - [Task 4.9 出入库管理页面设计（Approved）](docs/phases/phase-04/TASK_4_9_INBOUND_OUTBOUND_MANAGEMENT_PAGE_DESIGN.md)
+- [Task 4.10 跨境业务页面设计（Approved）](docs/phases/phase-04/TASK_4_10_CROSS_BORDER_BUSINESS_PAGE_DESIGN.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -136,7 +138,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 4 保持 In Progress，当前仅进行页面设计。Task 4.10 尚未启动，不得提前编写 Task 4.10 正文；不得编写页面代码，不得创建 API，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得创建业务代码或应用框架，不得安装依赖。
+Phase 4 已完成并获得批准，未标记为 Frozen。Phase 5 接口设计保持 Waiting / Not Started，未经项目负责人单独确认不得创建 Phase 5 正文、API 或接口设计；不得编写页面代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得创建业务代码或应用框架，不得安装依赖。
 
 ## 安全说明
 

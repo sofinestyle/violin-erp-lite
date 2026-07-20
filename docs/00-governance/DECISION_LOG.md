@@ -913,3 +913,34 @@ Approved
 ### 影响
 
 Task 4.9 为出入库和仓库库存作业提供统一页面结构、Frozen 映射、权限、跳转和状态依据。本决定不改变 Task 4.1 至 Task 4.8，不改变 Frozen 业务规则、Database Logical Design v1.0 或固定九阶段路线，不启动或创建 Task 4.10 正文。本次不新增数据库表、字段、业务对象、平行数据源或一级模块，不编写页面代码，不创建 API、ORM、DDL、Schema、Migration、Seed 或其他技术文件，不安装依赖。
+
+## DEC-040 批准Task 4.10跨境业务页面设计并完成Phase 4
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-20
+
+### 决定
+
+- Task 4.10 跨境业务页面设计状态为 Completed / Approved；
+- 批准跨境发货、发运确认、海外收货、海外数据导入、发货明细匹配、执行跟踪和海外库存入口页面设计；
+- 跨境发货必须经过来源仓、在途仓和目的海外仓；
+- 正式发运后来源仓库存减少、在途仓库存增加，海外收货确认后在途仓库存减少、海外仓库存增加；
+- 发运和海外收货均通过正式仓库、库存余额和库存流水表达；
+- 海外实收、差异和发货导入匹配均按明细记录；
+- 导入任务、导入明细和发货匹配复用 Frozen 正式对象；
+- 海外正式库存继续以 `inventories` 为唯一余额来源；
+- 不新增独立跨境销售订单、物流轨迹、海外库存余额表或其他平行数据对象；
+- Task 4.1 至 Task 4.10 状态均为 Completed / Approved；
+- Phase 4 页面设计状态更新为 Completed / Approved，不标记为 Frozen；
+- 下一阶段为 Phase 5 接口设计，状态保持 Waiting / Not Started；
+- 未经项目负责人单独确认不得启动 Phase 5；
+- 技术开发状态保持 Not Started。
+
+### 影响
+
+Task 4.10 完成 Phase 4 页面设计收口，为后续经正式授权的接口设计提供页面输入。本决定不改变 Task 4.1 至 Task 4.9 Approved 正文，不改变 Frozen 业务规则、Database Logical Design v1.0 或固定九阶段路线，不启动或创建 Phase 5 正文。本次不新增数据库表、字段、业务对象或平行数据源，不创建 API、页面代码、ORM、DDL、Schema、Migration、Seed 或其他技术文件，不安装依赖。

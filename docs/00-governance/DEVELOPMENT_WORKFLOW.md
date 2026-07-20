@@ -73,8 +73,8 @@ Phase 1 业务需求分析
 - Task 3.5.5：Completed / Approved
 - Task 3.5.6：Completed / Approved
 - Task 3.5.7：Completed / Approved / Frozen
-- 当前阶段：Phase 4 页面设计（UI / Page Design）
-- Phase 4：In Progress
+- 当前已完成阶段：Phase 4 页面设计（UI / Page Design）
+- Phase 4：Completed / Approved
 - Task 4.1 页面架构设计：Completed / Approved
 - Task 4.2 PC 管理端布局与导航设计：Completed / Approved
 - Task 4.3 PC 管理端视觉规范设计：Completed / Approved
@@ -84,8 +84,9 @@ Phase 1 业务需求分析
 - Task 4.7 生产管理页面设计：Completed / Approved
 - Task 4.8 库存管理页面设计：Completed / Approved
 - Task 4.9 出入库管理页面设计：Completed / Approved
-- 下一任务：Task 4.10 跨境业务页面设计
-- Task 4.10：Not Started
+- Task 4.10 跨境业务页面设计：Completed / Approved
+- 下一阶段：Phase 5 接口设计
+- Phase 5：Waiting / Not Started
 - 技术开发：Not Started
 - 数据库设计：Completed / Approved / Frozen
 - 数据库字段名称设计：Completed / Approved
@@ -128,7 +129,7 @@ Task 3.5 内部小任务进度：
 6. Task 3.5.6 数据库命名规范（Database Naming Standard）：Completed / Approved；
 7. Task 3.5.7 Database Freeze：Completed / Approved / Frozen。
 
-Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）已正式启动，状态为 In Progress；数据库、ORM、DDL、Schema、Migration 和技术开发均未开始，且不属于当前页面架构设计范围。
+Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 均已完成并获得批准，状态为 Completed / Approved，未标记为 Frozen。Phase 5 接口设计保持 Waiting / Not Started，未经项目负责人单独确认不得启动；数据库、ORM、DDL、Schema、Migration 和技术开发均未开始。
 
 ## Phase 4内部任务进度
 
@@ -141,6 +142,6 @@ Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.0 已
 7. Task 4.7 生产管理页面设计（Production Management Page Design）：Completed / Approved；
 8. Task 4.8 库存管理页面设计（Inventory Management Page Design）：Completed / Approved；
 9. Task 4.9 出入库管理页面设计（Inbound and Outbound Management Page Design）：Completed / Approved；
-10. Task 4.10 跨境业务页面设计：Not Started。
+10. Task 4.10 跨境业务页面设计（Cross-border Business Page Design）：Completed / Approved。
 
-Phase 4 保持 In Progress。Task 4.1 至 Task 4.9 均已完成并获得批准，出入库管理页面设计已经确定。下一任务为 Task 4.10 跨境业务页面设计，必须由项目负责人正式确认启动；启动前不得提前编写 Task 4.10 正文。技术开发保持 Not Started。
+Phase 4 及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。下一阶段为 Phase 5 接口设计，状态保持 Waiting / Not Started；未经项目负责人单独确认不得启动 Phase 5 或创建其正文。技术开发保持 Not Started。
