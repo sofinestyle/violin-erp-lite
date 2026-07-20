@@ -11,6 +11,45 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.5] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.6 采购管理页面设计文档
+- 新增采购订单列表、新增、编辑、详情及采购执行跟踪页面设计
+- 新增采购验收、采购退货和采购付款辅助记录页面设计
+- 新增采购管理页面组件、状态、权限、跳转与异常处理规则
+- 新增批准 Task 4.6 采购管理页面设计的正式决策
+
+### Changed
+
+- Task 4.6 状态更新为 Completed / Approved
+- 下一任务更新为 Task 4.7 生产管理页面设计
+- Task 4.7 状态保持 Not Started
+- 项目进度、文档入口和开发流程同步更新
+
+### Design
+
+- 采购订单和采购验收均不得直接增加库存
+- 验收确认只形成正式入库依据，实际入库通过出入库管理完成
+- 采购执行数量与金额均由合法关联记录汇总，不允许直接编辑
+- 采购退货的库存减少必须通过正式退货出库完成
+- 采购付款仅作为付款辅助记录，不替代财务、应付或银行对账能力
+- 页面按功能权限、金额权限和数据权限动态显示
+- 本次未修改 Task 4.1 至 Task 4.5、Frozen 业务规则、数据库逻辑或九阶段路线
+
+### Status
+
+- Phase 4: In Progress
+- Task 4.1: Completed / Approved
+- Task 4.2: Completed / Approved
+- Task 4.3: Completed / Approved
+- Task 4.4: Completed / Approved
+- Task 4.5: Completed / Approved
+- Task 4.6: Completed / Approved
+- Task 4.7: Not Started
+- Technical Development: Not Started
+
 ## [0.4.4] - 2026-07-20
 
 ### Added
