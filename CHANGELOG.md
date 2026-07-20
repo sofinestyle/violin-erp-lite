@@ -11,6 +11,47 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.7] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.8 库存管理页面设计文档
+- 新增当前库存、分仓库存、厂家仓、在途仓和海外仓库存视图设计
+- 新增 SKU 库存详情、库存流水和库存预警页面设计
+- 新增批准 Task 4.8 库存管理页面设计的正式决策
+
+### Changed
+
+- Task 4.8 状态更新为 Completed / Approved
+- 下一任务更新为 Task 4.9 出入库管理页面设计
+- Task 4.9 状态保持 Not Started
+- 项目进度、文档入口和开发流程同步更新
+
+### Design
+
+- `inventories` 保持 SKU 与仓库粒度的唯一库存余额来源
+- 在途库存通过在途类型仓库表达，不设置独立在途数量字段
+- 公司仓、厂家仓、在途仓和海外仓仅作为统一库存筛选视图
+- 库存流水严格映射 `inventory_transactions`，只追加且不可编辑或删除
+- 库存页面及预警处置均不得直接修改库存
+- 调拨、盘点和库存调整执行归属 Task 4.9
+- 海外库存导入归属 Task 4.10
+- 本次未新增数据库字段、表或平行库存数据源
+
+### Status
+
+- Phase 4: In Progress
+- Task 4.1: Completed / Approved
+- Task 4.2: Completed / Approved
+- Task 4.3: Completed / Approved
+- Task 4.4: Completed / Approved
+- Task 4.5: Completed / Approved
+- Task 4.6: Completed / Approved
+- Task 4.7: Completed / Approved
+- Task 4.8: Completed / Approved
+- Task 4.9: Not Started
+- Technical Development: Not Started
+
 ## [0.4.6] - 2026-07-20
 
 ### Added
