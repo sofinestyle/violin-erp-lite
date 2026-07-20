@@ -51,6 +51,11 @@ related_phase: All Phases
 - Task 4.10 跨境业务页面设计：Completed / Approved
 - 下一阶段：Phase 5 接口设计
 - Phase 5：Waiting / Not Started
+- Task 5.1 API 设计原则：Waiting
+- Task 5.2 基础资料与采购 API：Waiting
+- Task 5.3 生产、质量验收与库存 API：Waiting
+- Task 5.4 出入库与跨境业务 API：Waiting
+- Task 5.5 导入、日志、安全与 API 最终收口：Waiting
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
@@ -66,7 +71,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。下一阶段为 Phase 5 接口设计，状态为 Waiting / Not Started，未经项目负责人单独确认不得启动。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。Phase 5 已完成文档结构初始化，Task 5.1 至 Task 5.5 均为 Waiting；Phase 5 状态保持 Waiting / Not Started，未经项目负责人单独确认不得启动任何 Task 正文。
 
 ## 3. 固定九阶段开发路线
 
@@ -164,6 +169,16 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
   - 日志接口。
 - 进入条件：Phase 4 已完成并经项目负责人确认，且项目负责人正式启动 Phase 5。
 - 完成条件：API 规格完成审核，接口契约和相关规则由项目负责人确认。
+
+#### Phase 5 内部任务
+
+1. Task 5.1 API 设计原则：Waiting；
+2. Task 5.2 基础资料与采购 API：Waiting；
+3. Task 5.3 生产、质量验收与库存 API：Waiting；
+4. Task 5.4 出入库与跨境业务 API：Waiting；
+5. Task 5.5 导入、日志、安全与 API 最终收口：Waiting。
+
+以上文档仅完成结构初始化，不包含任何 API 正文。各 Task 必须等待项目负责人分别批准启动。
 
 ### Phase 6：功能详细设计（Functional Specification）
 
@@ -278,4 +293,4 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 Phase 3 状态为 Completed / Approved / Frozen，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 状态均为 Completed / Approved；Phase 4 未标记为 Frozen。
 
-下一阶段为 Phase 5 接口设计，状态为 Waiting / Not Started。未经项目负责人单独确认不得启动 Phase 5 或创建其正文。数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及其他技术映射必须等待后续具备相应范围和正式授权的开发阶段启动后执行。
+下一阶段为 Phase 5 接口设计，状态为 Waiting / Not Started。Task 5.1 至 Task 5.5 的占位文档已完成初始化，状态均为 Waiting，且不包含 API 正文。未经项目负责人单独确认不得启动 Phase 5 或填写任何 Task 正文。数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及其他技术映射必须等待后续具备相应范围和正式授权的开发阶段启动后执行。

@@ -11,6 +11,38 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.5.0] - 2026-07-20
+
+### Added
+
+- 新增 Phase 5 文档目录及 Task 5.1 至 Task 5.5 占位文档
+- 新增 Phase 5 内部任务清单及文档入口
+- 新增 Phase 5 文档结构初始化正式决策
+
+### Changed
+
+- Task 5.1 至 Task 5.5 状态登记为 Waiting
+- Phase 5 状态保持 Waiting / Not Started
+- PROJECT、ROADMAP、README 和 DECISION_LOG 同步登记 Phase 5 初始化状态
+
+### Scope
+
+- 本次仅完成 Phase 5 文档初始化，不包含任何 API 正文
+- 未修改 Frozen 数据库设计或 Approved 页面设计
+- 未新增数据库字段、表或业务对象
+- 未开始技术开发
+
+### Status
+
+- Phase 4: Completed / Approved
+- Phase 5 API Design: Waiting / Not Started
+- Task 5.1: Waiting
+- Task 5.2: Waiting
+- Task 5.3: Waiting
+- Task 5.4: Waiting
+- Task 5.5: Waiting
+- Technical Development: Not Started
+
 ## [0.4.9] - 2026-07-20
 
 ### Added

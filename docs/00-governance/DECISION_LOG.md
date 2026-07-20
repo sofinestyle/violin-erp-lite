@@ -944,3 +944,30 @@ Approved
 ### 影响
 
 Task 4.10 完成 Phase 4 页面设计收口，为后续经正式授权的接口设计提供页面输入。本决定不改变 Task 4.1 至 Task 4.9 Approved 正文，不改变 Frozen 业务规则、Database Logical Design v1.0 或固定九阶段路线，不启动或创建 Phase 5 正文。本次不新增数据库表、字段、业务对象或平行数据源，不创建 API、页面代码、ORM、DDL、Schema、Migration、Seed 或其他技术文件，不安装依赖。
+
+## DEC-041 初始化Phase 5文档结构
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-20
+
+### 决定
+
+- 创建 `docs/phases/phase-05/` 文档目录；
+- 创建 Task 5.1 至 Task 5.5 占位文档；
+- Task 5.1 API 设计原则状态为 Waiting；
+- Task 5.2 基础资料与采购 API 状态为 Waiting；
+- Task 5.3 生产、质量验收与库存 API 状态为 Waiting；
+- Task 5.4 出入库与跨境业务 API 状态为 Waiting；
+- Task 5.5 导入、日志、安全与 API 最终收口状态为 Waiting；
+- Phase 5 接口设计状态保持 Waiting / Not Started；
+- 各占位文档不得填写任何 API 正文，必须等待项目负责人批准启动对应 Task；
+- 技术开发状态保持 Not Started。
+
+### 影响
+
+本决定仅初始化 Phase 5 文档结构和内部任务清单，不启动 Phase 5 正文，不创建接口、参数或错误码，不改变 Frozen 业务规则、Database Logical Design v1.0、Approved 页面设计或固定九阶段路线。本次未新增数据库字段、表或业务对象，未创建 API、ORM、DDL、Schema、Migration、Seed、页面代码或业务代码，也未安装依赖。
