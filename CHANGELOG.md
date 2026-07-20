@@ -11,6 +11,42 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.5.1] - 2026-07-20
+
+### Added
+
+- 完成 Task 5.1 API 总体规范与安全规则设计文档
+- 新增 API 版本、资源命名、HTTP、请求响应、分页筛选和接口模板规范
+- 新增身份认证、权限、状态、校验、幂等、并发、错误码、日志、脱敏、附件和安全规则
+- 新增正式启动 Phase 5 并提交 Task 5.1 验收的决策记录
+
+### Changed
+
+- Phase 5 状态由 Waiting / Not Started 更新为 In Progress
+- Task 5.1 状态由 Waiting 更新为 Completed / Pending Approval
+- Task 5.2 至 Task 5.5 状态保持 Waiting
+- PROJECT、README、ROADMAP、API_SPEC、DECISION_LOG 和 DEVELOPMENT_WORKFLOW 同步更新当前状态
+- 当前下一步更新为 Task 5.1 GitHub 验收
+
+### Scope
+
+- 本次仅完成 API 总体规范和通用安全契约设计
+- 未创建真实 API Route，未编写业务代码
+- 未修改 Frozen 数据库设计或 Approved 页面设计
+- 未新增数据库字段、表、状态、索引、关联关系或业务对象
+- 未开始 Task 5.2、Phase 6 或技术开发
+
+### Status
+
+- Phase 4: Completed / Approved
+- Phase 5 API Design: In Progress
+- Task 5.1: Completed / Pending Approval
+- Task 5.2: Waiting
+- Task 5.3: Waiting
+- Task 5.4: Waiting
+- Task 5.5: Waiting
+- Technical Development: Not Started
+
 ## [0.5.0] - 2026-07-20
 
 ### Added

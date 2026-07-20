@@ -971,3 +971,29 @@ Approved
 ### 影响
 
 本决定仅初始化 Phase 5 文档结构和内部任务清单，不启动 Phase 5 正文，不创建接口、参数或错误码，不改变 Frozen 业务规则、Database Logical Design v1.0、Approved 页面设计或固定九阶段路线。本次未新增数据库字段、表或业务对象，未创建 API、ORM、DDL、Schema、Migration、Seed、页面代码或业务代码，也未安装依赖。
+
+## DEC-042 正式启动Phase 5并完成Task 5.1设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-20
+
+### 决定
+
+- 项目负责人正式启动 Phase 5 接口设计，Phase 5 状态更新为 In Progress；
+- Task 5.1 API 总体规范与安全规则设计状态更新为 Completed / Pending Approval；
+- Task 5.1 统一 PC 管理端与微信小程序的 API 设计原则、版本、URL、HTTP、请求和响应规范；
+- Task 5.1 统一身份认证、权限、仓库与店铺数据范围、状态校验、数据校验、幂等、并发和错误处理原则；
+- Task 5.1 统一操作日志、数据脱敏、附件及 API 安全规则；
+- Task 5.1 建立 Task 5.2 至 Task 5.5 共用的接口描述模板；
+- Task 5.2 至 Task 5.5 状态保持 Waiting；
+- 当前下一步为 Task 5.1 GitHub 验收；
+- 技术开发状态保持 Not Started。
+
+### 影响
+
+Task 5.1 作为后续 Phase 5 接口设计任务的统一规则输入，但其状态为 Completed / Pending Approval，不代表已经获得项目负责人验收批准。本决定不开始 Task 5.2，不改变 Phase 1 至 Phase 4 已批准状态，不改变 Frozen 业务规则、Database Logical Design v1.0、Approved 页面设计或固定九阶段路线。本次未创建真实 API Route，未编写业务代码，未新增数据库字段、表、状态、索引、关联关系或业务对象，未创建 ORM、DDL、Schema、Migration、Seed，也未安装依赖。

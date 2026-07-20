@@ -49,13 +49,14 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 4.8 库存管理页面设计：Completed / Approved
 - Task 4.9 出入库管理页面设计：Completed / Approved
 - Task 4.10 跨境业务页面设计：Completed / Approved
-- 下一阶段：Phase 5 接口设计
-- Phase 5：Waiting / Not Started
-- Task 5.1 API 设计原则：Waiting
+- 当前阶段：Phase 5 接口设计
+- Phase 5：In Progress
+- Task 5.1 API 总体规范与安全规则设计：Completed / Pending Approval
 - Task 5.2 基础资料与采购 API：Waiting
 - Task 5.3 生产、质量验收与库存 API：Waiting
 - Task 5.4 出入库与跨境业务 API：Waiting
 - Task 5.5 导入、日志、安全与 API 最终收口：Waiting
+- 当前下一步：Task 5.1 GitHub 验收
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -71,7 +72,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 数据库冻结：Completed / Approved / Frozen
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。Phase 5 已完成文档结构初始化，Task 5.1 至 Task 5.5 均为 Waiting；Phase 5 状态保持 Waiting / Not Started，未经项目负责人单独确认不得启动任何 Task 正文。技术开发尚未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。项目负责人已正式启动 Phase 5 接口设计，状态为 In Progress；Task 5.1 API 总体规范与安全规则设计已完成，状态为 Completed / Pending Approval，当前等待 GitHub 验收。Task 5.2 至 Task 5.5 保持 Waiting，技术开发尚未开始。
 
 ## 九阶段开发路线
 
@@ -81,7 +82,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 | Phase 2 | 业务流程设计 | Completed / Approved |
 | Phase 3 | 数据库设计 | Completed / Approved / Frozen |
 | Phase 4 | 页面设计 | Completed / Approved |
-| Phase 5 | 接口设计 | Waiting / Not Started |
+| Phase 5 | 接口设计 | In Progress |
 | Phase 6 | 功能详细设计 | Waiting |
 | Phase 7 | 开发规范与 Codex 执行 | Waiting |
 | Phase 8 | 测试方案 | Waiting |
@@ -134,7 +135,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 4.8 库存管理页面设计（Approved）](docs/phases/phase-04/TASK_4_8_INVENTORY_MANAGEMENT_PAGE_DESIGN.md)
 - [Task 4.9 出入库管理页面设计（Approved）](docs/phases/phase-04/TASK_4_9_INBOUND_OUTBOUND_MANAGEMENT_PAGE_DESIGN.md)
 - [Task 4.10 跨境业务页面设计（Approved）](docs/phases/phase-04/TASK_4_10_CROSS_BORDER_BUSINESS_PAGE_DESIGN.md)
-- [Task 5.1 API 设计原则（Waiting）](docs/phases/phase-05/TASK_5_1_API_DESIGN_PRINCIPLES.md)
+- [Task 5.1 API 总体规范与安全规则设计（Completed / Pending Approval）](docs/phases/phase-05/TASK_5_1_API_DESIGN_PRINCIPLES.md)
 - [Task 5.2 基础资料与采购 API（Waiting）](docs/phases/phase-05/TASK_5_2_MASTER_DATA_AND_PURCHASE_API.md)
 - [Task 5.3 生产、质量验收与库存 API（Waiting）](docs/phases/phase-05/TASK_5_3_PRODUCTION_QUALITY_INVENTORY_API.md)
 - [Task 5.4 出入库与跨境业务 API（Waiting）](docs/phases/phase-05/TASK_5_4_INBOUND_OUTBOUND_CROSS_BORDER_API.md)
@@ -148,7 +149,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 4 已完成并获得批准，未标记为 Frozen。Phase 5 接口设计保持 Waiting / Not Started，Task 5.1 至 Task 5.5 仅存在 Waiting 占位文档；未经项目负责人单独确认不得填写 Phase 5 正文、API 或接口设计；不得编写页面代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得创建业务代码或应用框架，不得安装依赖。
+Phase 4 已完成并获得批准，未标记为 Frozen。Phase 5 接口设计为 In Progress，Task 5.1 已完成并等待 GitHub 验收；Task 5.2 至 Task 5.5 保持 Waiting，未经项目负责人正式指令不得开始其正文。当前不得创建真实 API Route，不得编写页面代码或业务代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得安装依赖。
 
 ## 安全说明
 
