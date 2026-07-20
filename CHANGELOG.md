@@ -11,6 +11,42 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.2] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.3 PC 管理端视觉规范设计文档
+- 新增 PC 管理端色彩、字体、间距、圆角与阴影视觉规范
+- 新增 Header、Sidebar、Tab、按钮、表单、表格与状态标签规范
+- 新增卡片、弹窗、抽屉、图标、反馈、加载、空状态及无障碍规范
+- 新增批准 Task 4.3 PC 管理端视觉规范设计的正式决策
+
+### Changed
+
+- Task 4.3 状态更新为 Completed / Approved
+- 下一任务更新为 Task 4.4 首页 Dashboard 页面设计
+- Task 4.4 状态保持 Not Started
+- 项目进度、文档入口和开发流程同步更新
+
+### Design
+
+- PC 管理端采用轻量企业级 ERP 视觉风格
+- 主色采用企业蓝，Sidebar 采用深蓝灰色
+- 间距采用 4px 基础系统，普通卡片不使用重阴影
+- 表格、表单和状态表达保持清晰、紧凑、可读
+- 第一版本仅支持 Light Mode
+- 本任务不指定具体组件库或图标库
+- 本次未修改 Task 4.1 页面架构、Task 4.2 布局与导航、Frozen 业务规则、数据库逻辑或九阶段路线
+
+### Status
+
+- Phase 4: In Progress
+- Task 4.1: Completed / Approved
+- Task 4.2: Completed / Approved
+- Task 4.3: Completed / Approved
+- Task 4.4: Not Started
+- Technical Development: Not Started
+
 ## [0.4.1] - 2026-07-20
 
 ### Added

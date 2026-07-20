@@ -701,3 +701,31 @@ Approved
 ### 影响
 
 Task 4.2 为后续 PC 页面视觉规范和页面详细设计提供统一布局依据。本决定不改变 Frozen 业务规则，不改变 Database Logical Design v1.0，不改变固定九阶段路线，不开始技术开发，不启动 Task 4.3 正文设计。本次不定义具体配色、字体、图标、按钮、表格或表单视觉规范，不创建页面代码、API 或技术文件，也不安装依赖。
+
+## DEC-033 批准Task 4.3 PC管理端视觉规范设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-20
+
+### 决定
+
+- PC 管理端采用干净、专业、清晰、轻量的企业级 ERP 视觉风格；
+- 主色采用企业蓝，Sidebar 采用深蓝灰色；
+- 采用 4px 基础间距系统；
+- 普通卡片使用白色背景和浅灰边框，不使用重阴影；
+- 表格、表单和状态表达保持清晰、紧凑、可读；
+- 第一版本仅支持 Light Mode；
+- 本任务不指定具体组件库或图标库；
+- Task 4.3 PC 管理端视觉规范设计状态为 Completed / Approved；
+- Phase 4 页面设计状态保持 In Progress；
+- 下一任务为 Task 4.4 首页 Dashboard 页面设计，状态为 Not Started；
+- 技术开发状态保持 Not Started。
+
+### 影响
+
+Task 4.3 为后续 PC 管理端页面详细设计提供统一视觉依据。本决定不改变 Task 4.1 页面架构设计，不改变 Task 4.2 PC 管理端布局与导航设计，不改变 Frozen 业务规则、Database Logical Design v1.0 或固定九阶段路线，不启动 Task 4.4 至 Task 4.10 正文设计。本次不编写页面代码或组件，不选择具体组件库或图标库，不创建 API、ORM、DDL、Schema、Migration、Seed 或其他技术文件，不制作 Figma 或交互原型，也不安装依赖。
