@@ -673,3 +673,31 @@ Approved
 ### 影响
 
 Task 4.1 作为 Phase 4 后续页面设计任务的正式页面架构输入。本决定只确认 PC 管理端与微信小程序的页面分组、导航层级、质量验收页面归属及入口权限原则，不定义 UI 视觉样式、页面具体布局、表单字段、API、数据库技术实现、ORM、Schema、Migration 或业务代码。本次不改变 Frozen 业务规则、Database Logical Design v1.0 或固定九阶段路线，不启动 Task 4.2 正文设计，也不安装依赖。
+
+## DEC-032 批准Task 4.2 PC管理端布局与导航设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-20
+
+### 决定
+
+- PC 管理端采用 Header、Sidebar、Main Content 和 Info Panel 布局；
+- 正式采用 Tab 多标签工作区，首页 Tab 固定且不可关闭；
+- Sidebar 保持九个已批准一级模块，第一版原则上不使用三级菜单；
+- Info Panel 第一版默认关闭且默认不占用 Main Content 宽度；
+- Info Panel 展开和折叠状态应被记忆；
+- Info Panel 第一版仅预留 AI 助手、最近操作、快捷入口、操作帮助和系统通知；
+- 第一版不开发 Info Panel 具体功能；
+- PC 管理端和微信小程序采用不同页面布局；
+- Task 4.2 PC 管理端布局与导航设计状态为 Completed / Approved；
+- Phase 4 页面设计状态保持 In Progress；
+- 下一任务为 Task 4.3 PC 管理端视觉规范设计，状态为 Not Started。
+
+### 影响
+
+Task 4.2 为后续 PC 页面视觉规范和页面详细设计提供统一布局依据。本决定不改变 Frozen 业务规则，不改变 Database Logical Design v1.0，不改变固定九阶段路线，不开始技术开发，不启动 Task 4.3 正文设计。本次不定义具体配色、字体、图标、按钮、表格或表单视觉规范，不创建页面代码、API 或技术文件，也不安装依赖。

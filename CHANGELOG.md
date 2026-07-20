@@ -11,6 +11,42 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.1] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.2 PC 管理端布局与导航设计文档
+- 新增 PC 管理端 Header、Sidebar、Main Content、Tab 和 Info Panel 布局规则
+- 新增 Tab 多标签工作区规则
+- 新增右侧信息区默认折叠及预留规则
+- 新增 PC 页面导航、状态保留和响应式原则
+
+### Changed
+
+- Task 4.2 状态更新为 Completed / Approved
+- 下一任务更新为 Task 4.3 PC 管理端视觉规范设计
+- Task 4.3 状态保持 Not Started
+- 项目进度和开发流程同步更新
+
+### Design
+
+- PC 管理端采用 Header、Sidebar、Main Content 和 Info Panel 框架
+- Header 高度建议 64px
+- Sidebar 展开宽度建议 260px，折叠宽度建议 72px
+- 正式采用 Tab 多标签工作区，首页 Tab 固定且不可关闭
+- 右侧信息区第一版默认关闭且默认不占用主工作区宽度
+- 右侧信息区第一版只预留功能，不开发具体能力
+- PC 与微信小程序不复用同一页面布局
+- 本次未修改 Frozen 业务规则、数据库逻辑或九阶段路线
+
+### Status
+
+- Phase 4: In Progress
+- Task 4.1: Completed / Approved
+- Task 4.2: Completed / Approved
+- Task 4.3: Not Started
+- Technical Development: Not Started
+
 ## [0.4.0] - 2026-07-20
 
 ### Added

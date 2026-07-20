@@ -76,8 +76,9 @@ Phase 1 业务需求分析
 - 当前阶段：Phase 4 页面设计（UI / Page Design）
 - Phase 4：In Progress
 - Task 4.1 页面架构设计：Completed / Approved
-- 下一任务：Task 4.2
-- Task 4.2：Not Started
+- Task 4.2 PC 管理端布局与导航设计：Completed / Approved
+- 下一任务：Task 4.3 PC 管理端视觉规范设计
+- Task 4.3：Not Started
 - 技术开发：Not Started
 - 数据库设计：Completed / Approved / Frozen
 - 数据库字段名称设计：Completed / Approved
@@ -125,6 +126,7 @@ Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.0 已
 ## Phase 4内部任务进度
 
 1. Task 4.1 页面架构设计（Page Architecture Design）：Completed / Approved；
-2. Task 4.2：Not Started。
+2. Task 4.2 PC 管理端布局与导航设计（PC Layout and Navigation Design）：Completed / Approved；
+3. Task 4.3 PC 管理端视觉规范设计：Not Started。
 
-Phase 4 已正式启动，状态为 In Progress。Task 4.1 已完成并获得批准，正式确认 PC 管理端与微信小程序页面架构、质量验收页面归属及入口权限原则。下一任务为 Task 4.2，未经项目负责人确认不得开始正文设计。技术开发保持 Not Started。
+Phase 4 保持 In Progress。Task 4.1 及 Task 4.2 均已完成并获得批准，PC 管理端布局与导航框架已经确定。下一任务为 Task 4.3 PC 管理端视觉规范设计，必须由项目负责人正式确认启动；启动前不得提前编写正文。技术开发保持 Not Started。
