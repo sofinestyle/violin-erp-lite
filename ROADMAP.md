@@ -103,7 +103,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ### Phase 3：数据库设计（Database Design）
 
-- 状态：In Progress
+- 状态：Completed / Approved / Frozen
 - 目标：将已批准的业务对象和业务流程转化为一致、可追溯的数据设计。
 - 主要输出：
   - 数据对象落地；
@@ -120,7 +120,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ### Phase 4：页面设计（UI / Page Design）
 
-- 状态：Waiting
+- 状态：Not Started
 - 目标：基于已批准的业务流程和数据设计，确定微信小程序及 PC 管理端的页面架构与交互规则。
 - 主要输出：
   - 微信小程序页面架构；
