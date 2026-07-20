@@ -11,6 +11,42 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.3] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.4 首页 Dashboard 页面设计文档
+- 新增待我处理、KPI、图表、最近业务动态和快捷入口设计
+- 新增 Dashboard 权限、跳转、加载、空状态和异常状态设计
+- 新增批准 Task 4.4 首页 Dashboard 页面设计的正式决策
+
+### Changed
+
+- Task 4.4 状态更新为 Completed / Approved
+- 下一任务更新为 Task 4.5 基础资料模块页面设计
+- Task 4.5 状态保持 Not Started
+- 项目进度、文档入口和开发流程同步更新
+
+### Design
+
+- Dashboard 作为用户登录后的默认首页
+- 首页 Tab 固定且不可关闭
+- Dashboard 只展示和跳转，不直接执行业务或修改库存
+- 海外库存等导入数据必须显示数据日期
+- Dashboard 支持局部加载与局部失败，单个区域失败不阻断整个页面
+- Dashboard 内容根据功能权限和数据权限动态展示
+- 本次未修改 Task 4.1、Task 4.2、Task 4.3、Frozen 业务规则、数据库逻辑或九阶段路线
+
+### Status
+
+- Phase 4: In Progress
+- Task 4.1: Completed / Approved
+- Task 4.2: Completed / Approved
+- Task 4.3: Completed / Approved
+- Task 4.4: Completed / Approved
+- Task 4.5: Not Started
+- Technical Development: Not Started
+
 ## [0.4.2] - 2026-07-20
 
 ### Added

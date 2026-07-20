@@ -729,3 +729,34 @@ Approved
 ### 影响
 
 Task 4.3 为后续 PC 管理端页面详细设计提供统一视觉依据。本决定不改变 Task 4.1 页面架构设计，不改变 Task 4.2 PC 管理端布局与导航设计，不改变 Frozen 业务规则、Database Logical Design v1.0 或固定九阶段路线，不启动 Task 4.4 至 Task 4.10 正文设计。本次不编写页面代码或组件，不选择具体组件库或图标库，不创建 API、ORM、DDL、Schema、Migration、Seed 或其他技术文件，不制作 Figma 或交互原型，也不安装依赖。
+
+## DEC-034 批准Task 4.4首页Dashboard页面设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-20
+
+### 决定
+
+- Dashboard 作为用户登录后的默认首页；
+- 首页 Tab 固定且不可关闭，Info Panel 第一版保持默认折叠；
+- Dashboard 包含页面头部、待我处理、KPI 指标卡片、业务趋势与库存结构图表、最近业务动态和快捷入口；
+- 待我处理作为 Dashboard 最高优先级区域；
+- Dashboard 内容根据功能权限、仓库数据权限、店铺数据权限及厂家和厂家仓数据权限动态展示；
+- Dashboard 只展示信息并跳转至对应业务页面，不直接审核、验收、入库、出库或修改库存；
+- Dashboard 不代替统计分析模块；
+- 海外库存等导入型数据必须显示数据日期、更新时间和必要的过期提示；
+- Dashboard 支持局部加载与局部失败，单个区域失败不得阻断其他区域；
+- 本任务不选择具体图表库或前端组件库；
+- Task 4.4 首页 Dashboard 页面设计状态为 Completed / Approved；
+- Phase 4 页面设计状态保持 In Progress；
+- 下一任务为 Task 4.5 基础资料模块页面设计，状态为 Not Started；
+- 技术开发状态保持 Not Started。
+
+### 影响
+
+Task 4.4 为后续 PC 管理端页面详细设计提供首页信息架构、跳转、权限及状态依据。本决定不改变 Task 4.1 页面架构设计、Task 4.2 PC 管理端布局与导航设计或 Task 4.3 PC 管理端视觉规范设计，不改变 Frozen 业务规则、Database Logical Design v1.0 或固定九阶段路线，不启动 Task 4.5 至 Task 4.10 正文设计。本次不编写页面代码或 Dashboard 组件，不创建 API、ORM、DDL、Schema、Migration、Seed 或其他技术文件，不选择或安装图表库、组件库及依赖，不制作 Figma 或可运行原型。
