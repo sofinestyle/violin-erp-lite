@@ -11,6 +11,46 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.8] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.9 出入库管理页面设计文档
+- 新增入库、出库、调拨、盘点、库存调整、销售退货和报损页面设计
+- 新增统一单据详情、页面组件、状态、权限、跳转及异常处理规则
+- 新增批准 Task 4.9 出入库管理页面设计的正式决策
+
+### Changed
+
+- Task 4.9 状态更新为 Completed / Approved
+- 下一任务更新为 Task 4.10 跨境业务页面设计
+- Task 4.10 状态保持 Not Started
+- 项目进度、文档入口和开发流程同步更新
+
+### Design
+
+- 入库、出库及各类库存作业严格映射 Frozen 正式对象、字段和状态
+- 保存草稿、提交审核和查看详情均不得直接修改库存
+- 调拨必须经过在途仓，盘点只确认差异，库存调整完成后才修改正式库存
+- 销售退货必须关联原销售出库单，报损不得由普通其他出库替代
+- 库存流水只追加、不可修改、不可删除并保留来源追溯
+- 本次未新增数据库字段、表、出入库类型或平行业务对象
+
+### Status
+
+- Phase 4: In Progress
+- Task 4.1: Completed / Approved
+- Task 4.2: Completed / Approved
+- Task 4.3: Completed / Approved
+- Task 4.4: Completed / Approved
+- Task 4.5: Completed / Approved
+- Task 4.6: Completed / Approved
+- Task 4.7: Completed / Approved
+- Task 4.8: Completed / Approved
+- Task 4.9: Completed / Approved
+- Task 4.10: Not Started
+- Technical Development: Not Started
+
 ## [0.4.7] - 2026-07-20
 
 ### Added
