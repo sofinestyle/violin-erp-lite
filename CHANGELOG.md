@@ -11,6 +11,39 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.4.0] - 2026-07-20
+
+### Added
+
+- 新增 Task 4.1 页面架构设计文档
+- 新增 Phase 4 启动及 Task 4.1 页面架构设计正式决策
+- 确认 PC 管理端九个一级模块下的页面架构
+- 确认微信小程序“首页、业务、库存、我的”四个主导航
+
+### Changed
+
+- Phase 4 状态更新为 In Progress
+- Task 4.1 页面架构设计状态更新为 Completed / Approved
+- 下一任务更新为 Task 4.2，状态为 Not Started
+- 项目进度、开发流程和文档入口同步至 Phase 4 当前状态
+
+### Design
+
+- 采购验收页面归属采购管理，生产验收页面归属生产管理
+- 微信小程序首页允许统一质量验收快捷入口，并按权限显示采购或生产来源
+- 验收入口按角色权限、仓库数据权限及授权厂家范围动态显示
+- PC 管理端保持九个已批准一级模块，不新增质量验收一级模块
+- 本次不定义 UI 视觉样式、具体布局、表单字段、API 或技术实现
+- 本次未修改 Frozen 业务规则、数据库逻辑或九阶段路线
+
+### Status
+
+- Phase 3: Completed / Approved / Frozen
+- Phase 4 UI / Page Design: In Progress
+- Task 4.1 Page Architecture Design: Completed / Approved
+- Task 4.2: Not Started
+- Technical Development: Not Started
+
 ## [0.3.10] - 2026-07-20
 
 ### Added

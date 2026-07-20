@@ -17,7 +17,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 ## 当前项目状态
 
-- 当前阶段：Phase 3 数据库设计（Completed / Approved / Frozen）
+- 当前阶段：Phase 4 页面设计（UI / Page Design，In Progress）
 - Phase 2 状态：Completed / Approved
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
@@ -38,8 +38,10 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 3.5.5：Completed / Approved
 - Task 3.5.6：Completed / Approved
 - Task 3.5.7：Completed / Approved / Frozen
-- 下一阶段：Phase 4 页面设计（UI / Page Design）
-- Phase 4 状态：Not Started
+- Phase 4 状态：In Progress
+- Task 4.1 页面架构设计：Completed / Approved
+- 下一任务：Task 4.2
+- Task 4.2：Not Started
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -55,7 +57,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 数据库冻结：Completed / Approved / Frozen
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。下一阶段为 Phase 4 页面设计（UI / Page Design），状态为 Not Started；当前等待 ChatGPT 验收 Phase 3，验收通过前不得启动 Phase 4。技术开发尚未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）已正式启动，状态为 In Progress；Task 4.1 页面架构设计已完成并获得批准。下一任务为 Task 4.2，状态为 Not Started。技术开发尚未开始。
 
 ## 九阶段开发路线
 
@@ -64,7 +66,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 | Phase 1 | 业务需求分析 | Closed（Completed） |
 | Phase 2 | 业务流程设计 | Completed / Approved |
 | Phase 3 | 数据库设计 | Completed / Approved / Frozen |
-| Phase 4 | 页面设计 | Not Started |
+| Phase 4 | 页面设计 | In Progress |
 | Phase 5 | 接口设计 | Waiting |
 | Phase 6 | 功能详细设计 | Waiting |
 | Phase 7 | 开发规范与 Codex 执行 | Waiting |
@@ -108,6 +110,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 3.5.5 Check 约束设计（Approved）](docs/phases/phase-03/TASK_3_5_5_CHECK_CONSTRAINT_STANDARD.md)
 - [Task 3.5.6 数据库命名规范（Approved）](docs/phases/phase-03/TASK_3_5_6_DATABASE_NAMING_STANDARD.md)
 - [Task 3.5.7 数据库设计冻结（Frozen）](docs/phases/phase-03/TASK_3_5_7_DATABASE_FREEZE.md)
+- [Task 4.1 页面架构设计（Approved）](docs/phases/phase-04/TASK_4_1_PAGE_ARCHITECTURE_DESIGN.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -117,7 +120,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 3 已完成并冻结，当前等待 ChatGPT 验收。验收通过前不得启动 Phase 4；不得创建 SQL、ORM、DDL、Schema、Migration、Seed、物理 ER 图、API、页面、业务代码、应用框架或安装依赖。
+Phase 4 已正式启动，当前仅进行页面设计。Task 4.2 尚未启动，不得提前编写其正文；不得创建 SQL、ORM、DDL、Schema、Migration、Seed、物理 ER 图、API、页面代码、业务代码、应用框架或安装依赖。
 
 ## 安全说明
 

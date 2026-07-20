@@ -73,8 +73,11 @@ Phase 1 业务需求分析
 - Task 3.5.5：Completed / Approved
 - Task 3.5.6：Completed / Approved
 - Task 3.5.7：Completed / Approved / Frozen
-- Next Phase：Phase 4 页面设计（UI / Page Design）
-- Phase 4：Not Started
+- 当前阶段：Phase 4 页面设计（UI / Page Design）
+- Phase 4：In Progress
+- Task 4.1 页面架构设计：Completed / Approved
+- 下一任务：Task 4.2
+- Task 4.2：Not Started
 - 技术开发：Not Started
 - 数据库设计：Completed / Approved / Frozen
 - 数据库字段名称设计：Completed / Approved
@@ -117,4 +120,11 @@ Task 3.5 内部小任务进度：
 6. Task 3.5.6 数据库命名规范（Database Naming Standard）：Completed / Approved；
 7. Task 3.5.7 Database Freeze：Completed / Approved / Frozen。
 
-Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.0 已冻结。下一阶段为 Phase 4 页面设计（UI / Page Design），状态为 Not Started。当前等待 ChatGPT 验收 Phase 3，验收通过前不得启动 Phase 4；数据库、ORM、DDL、Schema、Migration 和技术开发均未开始，且不预先分配给 Phase 4。
+Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计（UI / Page Design）已正式启动，状态为 In Progress；数据库、ORM、DDL、Schema、Migration 和技术开发均未开始，且不属于当前页面架构设计范围。
+
+## Phase 4内部任务进度
+
+1. Task 4.1 页面架构设计（Page Architecture Design）：Completed / Approved；
+2. Task 4.2：Not Started。
+
+Phase 4 已正式启动，状态为 In Progress。Task 4.1 已完成并获得批准，正式确认 PC 管理端与微信小程序页面架构、质量验收页面归属及入口权限原则。下一任务为 Task 4.2，未经项目负责人确认不得开始正文设计。技术开发保持 Not Started。
