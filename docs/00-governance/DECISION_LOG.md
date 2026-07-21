@@ -1146,3 +1146,30 @@ Approved
 ### 影响
 
 Task 5.4 为出入库、采购退货实际出库、调拨、跨境发运及海外仓查询提供正式接口契约。冲突项等待项目负责人决定调整页面/API 口径或发起正式 DCR。本次未修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文、Approved Phase 4 页面、Task 5.1、Task 5.2、Task 5.3 或 Task 5.5 正文；未新增字段、表、状态、关系、约束、索引或业务对象；未创建真实 API Route，未编写业务代码，未创建 ORM、Schema、DDL、Migration 或 Seed，也未开始 Task 5.5。
+
+## DEC-048 批准Task 5.4并统一跨境业务口径
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- 项目负责人正式批准 Task 5.4，状态更新为 Completed / Approved；
+- 三项跨境业务冲突全部采用页面/API口径调整解决，不发起新的 DCR；
+- 跨境发货只保留 `status`、`approval_status` 和 `shipment_status`，删除独立物流状态、海外收货状态、差异处理状态及其筛选和写接口；
+- 物流信息仅展示承运商、运单号、发运日期和预计到达日期；
+- 取消海外库存历史余额快照、快照差异和快照查询接口，保留当前库存、库存流水、Excel 导入任务、导入明细、导入结果和来源追溯；
+- 取消手工海外收货入口、手工海外收货 API 和手工增加海外仓库存；
+- 跨境发运只执行来源仓库存减少、在途仓库存增加；海外仓库存只能由 Task 5.5 正式 Excel 导入结果形成；
+- Frozen 数据库保持不变，未新增字段、表、状态、关系、约束、索引或业务对象；
+- Phase 5 保持 In Progress，Task 5.5 保持 Waiting；当前下一步为等待项目负责人正式启动 Task 5.5；
+- 技术开发保持 Not Started。
+
+### 影响
+
+Task 4.10 仅同步本次批准的跨境页面口径，状态继续保持 Completed / Approved；Task 5.4 三项冲突全部关闭。本决定不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文、Task 5.1、Task 5.2、Task 5.3 或 Task 5.5 正文，不创建真实 API Route，不编写业务代码，不创建 ORM、Schema、DDL、Migration 或 Seed，也不开始 Task 5.5。

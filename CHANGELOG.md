@@ -11,6 +11,39 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.5.7] - 2026-07-21
+
+### Added
+
+- 新增 DEC-048，正式批准 Task 5.4 并关闭三项跨境业务口径冲突
+
+### Changed
+
+- Task 4.10 删除独立物流状态、海外收货状态、差异处理状态及其筛选，跨境发货只保留 `status`、`approval_status`、`shipment_status`
+- Task 4.10 删除手工海外收货入口、手工海外收货操作及历史余额快照；海外仓库存唯一正式来源调整为 Task 5.5 Excel 导入结果
+- Task 5.4 第 32 章由等待决定更新为项目负责人已决定，三项冲突全部关闭且不发起 DCR
+- Task 5.4 状态由 Completed / Pending Approval 更新为 Completed / Approved
+- Phase 5 保持 In Progress，Task 5.5 保持 Waiting
+- 当前下一步更新为等待项目负责人正式启动 Task 5.5
+- PROJECT、README、ROADMAP、API_SPEC、DECISION_LOG 和 DEVELOPMENT_WORKFLOW 同步当前状态
+
+### Scope
+
+- 未修改 Frozen 数据库，未新增字段、表、状态、关系、约束、索引或业务对象
+- 未修改 Task 5.1、Task 5.2、Task 5.3 或 Task 5.5 正文
+- 未创建真实 API Route，未编写代码，未创建 ORM、Schema、DDL、Migration 或 Seed
+- 未开始 Task 5.5、Phase 6 或技术开发
+
+### Status
+
+- Phase 5 API Design: In Progress
+- Task 5.1: Completed / Approved
+- Task 5.2: Completed / Approved
+- Task 5.3: Completed / Approved
+- Task 5.4: Completed / Approved
+- Task 5.5: Waiting
+- Technical Development: Not Started
+
 ## [0.5.6] - 2026-07-21
 
 ### Added

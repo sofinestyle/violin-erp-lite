@@ -90,9 +90,9 @@ Phase 1 业务需求分析
 - Task 5.1 API 总体规范与安全规则设计：Completed / Approved
 - Task 5.2 基础资料与采购 API：Completed / Approved
 - Task 5.3 生产、质量验收与库存 API：Completed / Approved
-- Task 5.4 出入库与跨境业务 API：Completed / Pending Approval
+- Task 5.4 出入库与跨境业务 API：Completed / Approved
 - Task 5.5 导入、日志、安全与 API 最终收口：Waiting
-- 当前下一步：Task 5.4 GitHub 验收
+- 当前下一步：等待项目负责人正式启动 Task 5.5
 - 技术开发：Not Started
 - 数据库设计：Completed / Approved / Frozen
 - 数据库字段名称设计：Completed / Approved
@@ -135,7 +135,7 @@ Task 3.5 内部小任务进度：
 6. Task 3.5.6 数据库命名规范（Database Naming Standard）：Completed / Approved；
 7. Task 3.5.7 Database Freeze：Completed / Approved / Frozen。
 
-Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅补充既有字段的状态语义，结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 接口设计为 In Progress；Task 5.1、Task 5.2 与 Task 5.3 均已获得批准，Task 5.4 已完成并等待 GitHub 验收。数据库、ORM、DDL、Schema、Migration 和技术开发均未开始。
+Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅补充既有字段的状态语义，结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 接口设计为 In Progress；Task 5.1 至 Task 5.4 均已获得批准，Task 5.4 三项跨境冲突已通过页面/API口径全部关闭且不发起 DCR。数据库、ORM、DDL、Schema、Migration 和技术开发均未开始。
 
 ## Phase 4内部任务进度
 
@@ -150,4 +150,4 @@ Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.1 已
 9. Task 4.9 出入库管理页面设计（Inbound and Outbound Management Page Design）：Completed / Approved；
 10. Task 4.10 跨境业务页面设计（Cross-border Business Page Design）：Completed / Approved。
 
-Phase 4 及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。Phase 5 接口设计状态为 In Progress。Task 5.1、Task 5.2 与 Task 5.3 均为 Completed / Approved；Task 5.4 为 Completed / Pending Approval，当前等待 GitHub 验收；Task 5.5 保持 Waiting，不得开始正文。技术开发保持 Not Started。
+Phase 4 及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。Phase 5 接口设计状态为 In Progress。Task 5.1 至 Task 5.4 均为 Completed / Approved；Task 5.5 保持 Waiting，当前等待项目负责人正式启动，不得开始正文。技术开发保持 Not Started。
