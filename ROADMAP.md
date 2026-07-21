@@ -17,7 +17,7 @@ related_phase: All Phases
 
 ## 2. 当前项目进度
 
-- 当前已完成阶段：Phase 4 页面设计（UI / Page Design，Completed / Approved）
+- 当前已完成阶段：Phase 5 接口设计（API Design，Completed / Approved / Frozen）
 - Phase 2 状态：Completed / Approved
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
@@ -49,15 +49,15 @@ related_phase: All Phases
 - Task 4.8 库存管理页面设计：Completed / Approved
 - Task 4.9 出入库管理页面设计：Completed / Approved
 - Task 4.10 跨境业务页面设计：Completed / Approved
-- 当前阶段：Phase 5 接口设计
-- Phase 5：In Progress
+- 当前阶段：等待 Phase 6 正式启动
+- Phase 5：Completed / Approved / Frozen
 - Task 5.1 API 总体规范与安全规则设计：Completed / Approved
 - Task 5.2 基础资料与采购 API：Completed / Approved
 - Task 5.3 生产、质量验收与库存 API：Completed / Approved
 - Task 5.4 出入库与跨境业务 API：Completed / Approved
 - Task 5.5 导入、附件、日志、安全与 API 最终收口：Completed / Approved
-- Phase 5 Final Consistency Review：Completed / Pending Approval
-- 当前下一步：Phase 5 Final Consistency Review GitHub 验收
+- Phase 5 Final Consistency Review：Completed / Approved
+- 当前下一步：等待项目负责人正式启动 Phase 6
 - 业务需求分析：Approved
 - 业务规则：Frozen
 - 项目治理文档：Approved
@@ -73,7 +73,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 接口设计状态为 In Progress；Task 5.1 至 Task 5.5 均为 Completed / Approved，Phase 5 Final Consistency Review 为 Completed / Pending Approval，Phase 5 的 272 个正式接口已完成一致性复核。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 接口设计、Task 5.1 至 Task 5.5 及 Final Consistency Review 已完成并获得批准；Phase 5 与 API Master Specification v1.0 已正式冻结，272 个正式接口保持不变。
 
 ## 3. 固定九阶段开发路线
 
@@ -156,7 +156,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ### Phase 5：接口设计（API Design）
 
-- 状态：In Progress
+- 状态：Completed / Approved / Frozen
 - 目标：在已批准业务、数据和页面设计基础上，定义系统接口契约及安全、一致性规则。
 - 主要输出：
   - API 目录；
@@ -180,9 +180,9 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 4. Task 5.4 出入库与跨境业务 API：Completed / Approved；
 5. Task 5.5 导入、附件、日志、安全与 API 最终收口：Completed / Approved。
 
-Phase 5 Final Consistency Review：Completed / Pending Approval。Phase 5 保持 In Progress，等待 Review GitHub 验收，不标记为 Frozen。
+Phase 5 Final Consistency Review：Completed / Approved。Phase 5 已通过 Phase Exit Gate 与 Freeze Gate，状态为 Completed / Approved / Frozen。
 
-Task 5.1 至 Task 5.5 已获得项目负责人批准。Phase 5 Final Consistency Review 已完成并等待 GitHub 验收；验收及项目负责人最终批准前不得关闭或冻结 Phase 5，也不得启动 Phase 6。
+Task 5.1 至 Task 5.5 及 Final Consistency Review 均已获得项目负责人批准。API Master Specification v1.0 已正式冻结，后续修改必须经过正式 DCR 或 Change Request。Phase 6 必须等待项目负责人单独正式启动。
 
 ### Phase 6：功能详细设计（Functional Specification）
 
@@ -297,4 +297,4 @@ Violin ERP Lite 采用固定九阶段开发流程。
 
 Phase 3 状态为 Completed / Approved / Frozen，Database Logical Design v1.1 已冻结；DCR-001 未改变数据库逻辑结构。Phase 4 页面设计（UI / Page Design）及 Task 4.1 至 Task 4.10 状态均为 Completed / Approved；Phase 4 未标记为 Frozen。
 
-当前阶段为 Phase 5 接口设计，状态为 In Progress。Task 5.1 至 Task 5.5 状态均为 Completed / Approved；Phase 5 Final Consistency Review 为 Completed / Pending Approval，下一步为该 Review 的 GitHub 验收。不得关闭或冻结 Phase 5，不得开始 Phase 6；Phase 6 保持 Waiting / Not Started。数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及其他技术映射必须等待后续具备相应范围和正式授权的开发阶段启动后执行。
+Phase 5 接口设计状态为 Completed / Approved / Frozen，Task 5.1 至 Task 5.5 与 Final Consistency Review 均为 Completed / Approved。API Master Specification v1.0 已正式冻结，272 个接口保持不变。当前下一步为等待项目负责人正式启动 Phase 6；Phase 6 保持 Waiting / Not Started。数据库、ORM、物理类型、DDL、Schema、Migration、Seed、物理 ER 图及其他技术映射必须等待后续具备相应范围和正式授权的开发阶段启动后执行。

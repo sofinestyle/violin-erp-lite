@@ -1230,3 +1230,30 @@ Approved
 ### 影响
 
 本决定不修改 Frozen BUSINESS_RULES、DATABASE_SPEC 或 Phase 3 正文，不新增数据库字段、表、状态、关系、索引、约束或业务对象，不创建真实 API Route，不编写代码，不安装依赖，不启动 Phase 6。Phase 4 仅修正已批准后续口径对应的引用与文字一致性，不增加页面业务能力。
+
+## DEC-051 批准并冻结Phase 5接口设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- 项目负责人正式批准 Phase 5 Final Consistency Review，状态更新为 Completed / Approved；
+- 项目负责人正式批准 Phase 5 更新为 Completed / Approved / Frozen；
+- API Master Specification v1.0 正式冻结，272 个正式接口保持不变；
+- Task 5.1 至 Task 5.5 全部保持 Completed / Approved；
+- Phase 5 的 Phase Exit Gate 与 Freeze Gate 已全部通过；
+- 当前无 Pending DCR、无 Pending Review、无 Outstanding Issue；
+- API Master Specification v1.0 是 Phase 6 及后续阶段唯一 API 事实来源；
+- Phase 5 正式内容后续不得直接修改，任何变更必须经过正式 DCR 或 Change Request；
+- 禁止通过 Phase 6 文档、页面代码或实现代码绕过已冻结 API 规范；
+- Phase 6 保持 Waiting / Not Started，必须等待项目负责人单独正式启动。
+
+### 影响
+
+本决定只关闭并冻结 Phase 5，不新增、删除、重编号或修改业务接口，不修改 URL、HTTP Method、状态机或错误码；不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文或 Approved Phase 4 页面；不创建真实 API，不编写代码，不安装依赖，不创建 Phase 6 正文。

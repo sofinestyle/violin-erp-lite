@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.6.0] - 2026-07-21
+
+### Changed
+
+- Phase 5 Final Consistency Review 正式批准，状态更新为 Completed / Approved
+- Phase 5 正式更新为 Completed / Approved / Frozen
+- API Master Specification v1.0 正式冻结，作为 Phase 6 及后续阶段唯一 API 事实来源
+- Phase 5 的 Phase Exit Gate 与 Freeze Gate 全部通过
+- 当前下一步更新为等待项目负责人正式启动 Phase 6
+
+### Freeze Result
+
+- Task 5.1 至 Task 5.5 全部保持 Completed / Approved
+- Phase 5 正式接口总数保持 272，不新增、删除、重编号或修改接口
+- 无 Pending DCR、无 Pending Review、无 Outstanding Issue
+- 后续修改 Phase 5 正式内容必须经过正式 DCR 或 Change Request
+
+### Scope
+
+- 未修改业务接口、URL、HTTP Method、状态机或错误码
+- 未修改 Frozen 数据库、BUSINESS_RULES 或 Approved 页面
+- 未创建真实 API，未编写代码，未安装依赖
+- Phase 6 保持 Waiting / Not Started，未创建 Phase 6 正文
+
 ## [0.5.9] - 2026-07-21
 
 ### Added

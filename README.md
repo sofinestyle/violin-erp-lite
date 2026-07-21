@@ -17,7 +17,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 ## 当前项目状态
 
-- 当前已完成阶段：Phase 4 页面设计（UI / Page Design，Completed / Approved）
+- 当前已完成阶段：Phase 5 接口设计（API Design，Completed / Approved / Frozen）
 - Phase 2 状态：Completed / Approved
 - Task 2.1：Completed / Approved
 - Task 2.2：Completed / Approved
@@ -49,15 +49,15 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Task 4.8 库存管理页面设计：Completed / Approved
 - Task 4.9 出入库管理页面设计：Completed / Approved
 - Task 4.10 跨境业务页面设计：Completed / Approved
-- 当前阶段：Phase 5 接口设计
-- Phase 5：In Progress
+- 当前阶段：等待 Phase 6 正式启动
+- Phase 5：Completed / Approved / Frozen
 - Task 5.1 API 总体规范与安全规则设计：Completed / Approved
 - Task 5.2 基础资料与采购 API：Completed / Approved
 - Task 5.3 生产、质量验收与库存 API：Completed / Approved
 - Task 5.4 出入库与跨境业务 API：Completed / Approved
 - Task 5.5 导入、附件、日志、安全与 API 最终收口：Completed / Approved
-- Phase 5 Final Consistency Review：Completed / Pending Approval
-- 当前下一步：Phase 5 Final Consistency Review GitHub 验收
+- Phase 5 Final Consistency Review：Completed / Approved
+- 当前下一步：等待项目负责人正式启动 Phase 6
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -73,7 +73,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 数据库冻结：Completed / Approved / Frozen
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 接口设计状态为 In Progress；Task 5.1 至 Task 5.5 均为 Completed / Approved，Phase 5 Final Consistency Review 为 Completed / Pending Approval，272 个正式接口已完成一致性复核，技术开发尚未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 接口设计、Task 5.1 至 Task 5.5 及 Final Consistency Review 已完成并获得批准；Phase 5 与 API Master Specification v1.0 已正式冻结，272 个正式接口保持不变。Phase 6 为 Waiting / Not Started，技术开发尚未开始。
 
 ## 九阶段开发路线
 
@@ -83,7 +83,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 | Phase 2 | 业务流程设计 | Completed / Approved |
 | Phase 3 | 数据库设计 | Completed / Approved / Frozen |
 | Phase 4 | 页面设计 | Completed / Approved |
-| Phase 5 | 接口设计 | In Progress |
+| Phase 5 | 接口设计 | Completed / Approved / Frozen |
 | Phase 6 | 功能详细设计 | Waiting / Not Started |
 | Phase 7 | 开发规范与 Codex 执行 | Waiting |
 | Phase 8 | 测试方案 | Waiting |
@@ -141,7 +141,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 5.3 生产、质量验收与库存 API（Completed / Approved）](docs/phases/phase-05/TASK_5_3_PRODUCTION_QUALITY_INVENTORY_API.md)
 - [Task 5.4 出入库与跨境业务 API（Completed / Approved）](docs/phases/phase-05/TASK_5_4_INBOUND_OUTBOUND_CROSS_BORDER_API.md)
 - [Task 5.5 导入、附件、日志、安全与 API 最终收口（Completed / Approved）](docs/phases/phase-05/TASK_5_5_IMPORT_LOG_SECURITY_API_FINAL.md)
-- [Phase 5 Final Consistency Review（Completed / Pending Approval）](docs/phases/phase-05/PHASE_5_FINAL_CONSISTENCY_REVIEW.md)
+- [Phase 5 Final Consistency Review（Completed / Approved）](docs/phases/phase-05/PHASE_5_FINAL_CONSISTENCY_REVIEW.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -151,7 +151,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 4 已完成并获得批准，未标记为 Frozen。Phase 5 接口设计为 In Progress，Task 5.1 至 Task 5.5 均已获得批准，Phase 5 Final Consistency Review 已完成并等待 GitHub 验收。未经项目负责人正式指令不得冻结 Phase 5 或启动 Phase 6。不得创建真实 API Route，不得编写页面代码或业务代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得安装依赖。
+Phase 5 已完成、批准并冻结，API Master Specification v1.0 是后续阶段唯一 API 事实来源；任何 Phase 5 正式内容变更必须经过正式 DCR 或 Change Request。Phase 6 为 Waiting / Not Started，未经项目负责人单独正式启动不得创建 Phase 6 正文。不得创建真实 API Route，不得编写页面代码或业务代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得安装依赖。
 
 ## 安全说明
 
