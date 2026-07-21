@@ -11,6 +11,44 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.5.8] - 2026-07-21
+
+### Added
+
+- 完成 Task 5.5 导入、附件、日志、安全与 API 最终收口设计
+- 定义 15 个导入接口、8 个附件接口、4 个日志接口和 5 个安全接口，共 32 个接口
+- 覆盖导入任务、模板、校验、执行、重试、结果、历史和海外仓库存 Excel 导入
+- 统一 Attachment API、六类日志查询与导出、身份认证、权限、Token、Session、重放、幂等、限流和 IP 白名单规则
+- 新增 DEC-049 正式启动并完成 Task 5.5 设计
+- DEVELOPMENT_WORKFLOW 增加 Phase Exit Gate 和 Freeze Gate
+
+### Changed
+
+- API_SPEC 升级为 API Master Specification，统一 Task 5.1 至 Task 5.5 的编号、Header、Request、Response、ErrorCode、Naming、Version、Permission、Log、Import、Attachment 和 Security
+- Phase 5 正式接口总数更新为 272 个
+- Task 5.5 状态由 Waiting 更新为 Completed / Pending Approval
+- Phase 5 保持 In Progress，Task 5.1 至 Task 5.4 保持 Completed / Approved
+- 当前下一步更新为 Task 5.5 GitHub 验收
+- PROJECT、README、ROADMAP、API_SPEC、DECISION_LOG 和 DEVELOPMENT_WORKFLOW 同步当前状态
+
+### Scope
+
+- 未修改 Frozen 数据库，未新增字段、表、状态、关系或业务对象
+- 未修改 Task 5.1、Task 5.2、Task 5.3 或 Task 5.4 正文
+- 未创建真实 API Route，未编写业务代码，未安装依赖
+- 未执行 Phase Final Consistency Review，未开始 Phase 6
+
+### Status
+
+- Phase 5 API Design: In Progress
+- Task 5.1: Completed / Approved
+- Task 5.2: Completed / Approved
+- Task 5.3: Completed / Approved
+- Task 5.4: Completed / Approved
+- Task 5.5: Completed / Pending Approval
+- Current Next Step: Task 5.5 GitHub 验收
+- Technical Development: Not Started
+
 ## [0.5.7] - 2026-07-21
 
 ### Added

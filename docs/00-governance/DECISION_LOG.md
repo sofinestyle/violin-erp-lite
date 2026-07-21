@@ -1173,3 +1173,34 @@ Approved
 ### 影响
 
 Task 4.10 仅同步本次批准的跨境页面口径，状态继续保持 Completed / Approved；Task 5.4 三项冲突全部关闭。本决定不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文、Task 5.1、Task 5.2、Task 5.3 或 Task 5.5 正文，不创建真实 API Route，不编写业务代码，不创建 ORM、Schema、DDL、Migration 或 Seed，也不开始 Task 5.5。
+
+## DEC-049 正式启动并完成Task 5.5设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- 项目负责人正式启动 Task 5.5 导入、附件、日志、安全与 API 最终收口；
+- Task 5.5 设计完成，状态更新为 Completed / Pending Approval；
+- 定义导入接口 15 个、附件接口 8 个、日志接口 4 个、安全接口 5 个，Task 5.5 共 32 个接口；
+- Phase 5 正式接口总数为 272 个；
+- 导入统一复用 `import_tasks`、`import_task_items`，海外仓库存导入同时复用跨境发货、匹配、正式库存和流水对象；
+- 海外仓库存只能由正式 Excel 导入结果形成，不提供手工海外收货或手工增加库存；
+- 附件统一复用 `attachments` 和 `attachment_links`，适用于采购、生产、验收、入库、出库、调拨和跨境业务；
+- Audit Log、Operation Log、Import Log、Export Log、Login Log 和 Security Log 作为统一 `audit_logs` 的查询分类，不新增日志表或业务对象；
+- Authentication、Authorization、Token、Refresh Token、Session、Permission、Replay Protection、Idempotency、Rate Limit、IP White List、Permission Validation 和 Header 安全规则统一适用于所有 API；
+- API_SPEC 升级为 API Master Specification；
+- DEVELOPMENT_WORKFLOW 增加 Phase Exit Gate 和 Freeze Gate，不新增独立治理文档；
+- Phase 5 保持 In Progress，Task 5.1 至 Task 5.4 保持 Completed / Approved；
+- 当前下一步为 Task 5.5 GitHub 验收；本次不执行 Phase Final Consistency Review；
+- 技术开发保持 Not Started。
+
+### 影响
+
+本决定不新增业务模块，不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文或 Task 5.1 至 Task 5.4 正文；不新增数据库字段、表、状态、关系或业务对象；不创建真实 API Route，不编写代码，不安装依赖，不开始 Phase 6。Task 5.5 GitHub 验收通过后，仍须等待项目负责人正式启动 Phase 5 Final Consistency Review。
