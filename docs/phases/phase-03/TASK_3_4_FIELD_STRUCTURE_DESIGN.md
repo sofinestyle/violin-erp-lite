@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-19
+updated_date: 2026-07-21
 related_phase: Phase 3
 ---
 
@@ -210,7 +210,9 @@ production_completion_records
 
 ### 6.10 `production_completion_records`
 
-- `production_order_id`（生产单，必填）、`completion_batch_no`（完工批次号，必填）、`completion_date`（完工日期，必填）、`warehouse_id`（完工后目标仓库，必填）、`total_completed_quantity`（本次总完工量，必填）、`completion_status`（完工记录状态，必填）、`remark`（备注，可选）及一般表公共字段。
+- `production_order_id`（生产单，必填）、`completion_batch_no`（完工批次号，必填）、`completion_date`（完工日期，必填）、`warehouse_id`（完工后目标仓库，必填）、`total_completed_quantity`（本次总完工量，必填）、`completion_status`（分批完工记录生命周期状态，必填；正式值为草稿 Draft、已确认 Confirmed、已撤销 Revoked、已作废 Voided）、`remark`（备注，可选）及一般表公共字段。
+
+`completion_status` 只表达分批完工记录自身的确认、撤销和作废生命周期，不代表生产单进度、验收状态、入库状态或库存状态。DCR-001 仅补充既有字段的正式状态语义，不新增字段、表、关系、索引、外键或业务对象。
 
 ### 6.11 `production_completion_record_items`
 

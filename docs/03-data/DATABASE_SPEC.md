@@ -1,17 +1,17 @@
 ---
 document_name: 数据库规格
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Frozen
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-20
+updated_date: 2026-07-21
 related_phase: Phase 3
 ---
 
 # DATABASE SPEC
 
-Phase 3 数据库设计（Database Design）已完成并冻结，当前状态为 Completed / Approved / Frozen。Database Logical Design v1.0 冻结日期为 2026-07-20。
+Phase 3 数据库设计（Database Design）已完成并冻结，当前状态为 Completed / Approved / Frozen。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 正式批准后，当前冻结版本为 Database Logical Design v1.1。
 
 Task 3.1 业务对象到数据库实体映射、Task 3.2 实体关系详细设计、Task 3.3 数据表结构设计、Task 3.4 字段结构设计及 Task 3.5.1 至 Task 3.5.7 均已完成并获得批准。正式成果参见 [Task 3.1 业务对象到数据库实体映射](../phases/phase-03/TASK_3_1_ENTITY_MAPPING.md)、[Task 3.2 实体关系详细设计](../phases/phase-03/TASK_3_2_ENTITY_RELATIONSHIP_DESIGN.md)、[Task 3.3 数据表结构设计](../phases/phase-03/TASK_3_3_TABLE_STRUCTURE_DESIGN.md)、[Task 3.4 字段结构设计](../phases/phase-03/TASK_3_4_FIELD_STRUCTURE_DESIGN.md)、[Task 3.5.1 字段数据类型规范](../phases/phase-03/TASK_3_5_1_FIELD_TYPE_STANDARD.md)、[Task 3.5.2 主键与唯一约束设计](../phases/phase-03/TASK_3_5_2_PRIMARY_KEY_UNIQUE_CONSTRAINT_DESIGN.md)、[Task 3.5.3 外键关系规范](../phases/phase-03/TASK_3_5_3_FOREIGN_KEY_RELATIONSHIP_STANDARD.md)、[Task 3.5.4 索引设计](../phases/phase-03/TASK_3_5_4_INDEX_DESIGN.md)、[Task 3.5.5 Check 约束设计](../phases/phase-03/TASK_3_5_5_CHECK_CONSTRAINT_STANDARD.md)、[Task 3.5.6 数据库命名规范](../phases/phase-03/TASK_3_5_6_DATABASE_NAMING_STANDARD.md)和 [Task 3.5.7 数据库设计冻结](../phases/phase-03/TASK_3_5_7_DATABASE_FREEZE.md)。本文件作为 Frozen 数据库逻辑规格总入口。
 
@@ -56,4 +56,4 @@ Task 3.5.5 已批准 201 项 Check 逻辑规则，覆盖数值范围、日期先
 
 Task 3.5.6 已统一表名、字段、时间日期、布尔、编码编号、数量金额比率、快照、状态、约束、索引和枚举值格式；已审计 60 张正式逻辑表，保留 5 类已批准兼容项，未新增、删除或重命名任何表或字段。
 
-Task 3.5.7 已将 60 张正式逻辑表、字段业务语义、逻辑类型、主键、唯一约束、外键关系、逻辑索引、Check 规则、命名规范、库存粒度及历史保留原则冻结为 Database Logical Design v1.0。任何数据库逻辑结构变化必须经过 Database Change Request。下一阶段为 Phase 4 页面设计（UI / Page Design），状态为 Not Started；当前等待 ChatGPT 验收 Phase 3。数据库、ORM、DDL、Schema、Migration、Seed 和技术开发均未开始，且本规格不预先将其分配给 Phase 4。
+Task 3.5.7 已将 60 张正式逻辑表、字段业务语义、逻辑类型、主键、唯一约束、外键关系、逻辑索引、Check 规则、命名规范、库存粒度及历史保留原则冻结。DCR-001 仅将既有 `production_completion_records.completion_status` 正式定义为 Draft（草稿）、Confirmed（已确认）、Revoked（已撤销）和 Voided（已作废），Database Logical Design 版本由 v1.0 更新为 v1.1；未新增或删除字段、表、索引、外键、关系或业务对象，数据库逻辑结构保持不变。任何后续数据库逻辑变化必须经过 Database Change Request。数据库、ORM、DDL、Schema、Migration、Seed 和技术开发均未开始。

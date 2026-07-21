@@ -17,8 +17,8 @@ Phase 5 接口设计已由项目负责人正式启动，当前状态为 In Progr
 
 - Task 5.1 API 总体规范与安全规则设计：Completed / Approved；
 - Task 5.2 基础资料与采购 API：Completed / Approved；
-- Task 5.3 生产、质量验收与库存 API：Completed / Pending Approval；
+- Task 5.3 生产、质量验收与库存 API：Completed / Approved；
 - Task 5.4 出入库与跨境业务 API：Waiting；
 - Task 5.5 导入、日志、安全与 API 最终收口：Waiting。
 
-Task 5.1、Task 5.2 和 Task 5.3 正式设计分别参见 [API 总体规范](../phases/phase-05/TASK_5_1_API_DESIGN_PRINCIPLES.md)、[基础资料与采购 API](../phases/phase-05/TASK_5_2_MASTER_DATA_AND_PURCHASE_API.md) 和 [生产、质量验收与库存 API](../phases/phase-05/TASK_5_3_PRODUCTION_QUALITY_INVENTORY_API.md)。Task 5.3 共登记 61 个正式接口：生产 25 个、质量验收 10 个、库存 26 个；分批完工状态机、验收直连完工批次及验收待处理总量三项 Frozen 映射缺口已停止相关设计并登记。Task 5.1、Task 5.2 为 Completed / Approved，Task 5.3 为 Completed / Pending Approval，Task 5.4、Task 5.5 保持 Waiting。未创建真实 API，未修改 Frozen 数据库，技术开发保持 Not Started。
+Task 5.1、Task 5.2 和 Task 5.3 正式设计分别参见 [API 总体规范](../phases/phase-05/TASK_5_1_API_DESIGN_PRINCIPLES.md)、[基础资料与采购 API](../phases/phase-05/TASK_5_2_MASTER_DATA_AND_PURCHASE_API.md) 和 [生产、质量验收与库存 API](../phases/phase-05/TASK_5_3_PRODUCTION_QUALITY_INVENTORY_API.md)。Task 5.3 共登记 65 个正式接口：生产 29 个、质量验收 10 个、库存 26 个。DCR-001 已正式批准，分批完工采用 Draft、Confirmed、Revoked、Voided 状态；验收保持生产订单来源且不建立验收到完工记录关系；验收 API 统一为“验收数量＝合格数量＋不合格数量”，不接收或返回待处理数量。Task 5.1、Task 5.2 和 Task 5.3 均为 Completed / Approved，Task 5.4、Task 5.5 保持 Waiting。未创建真实 API；Database Logical Design 仅将既有字段状态语义更新至 v1.1，未改变数据库结构，技术开发保持 Not Started。

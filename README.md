@@ -53,10 +53,10 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Phase 5：In Progress
 - Task 5.1 API 总体规范与安全规则设计：Completed / Approved
 - Task 5.2 基础资料与采购 API：Completed / Approved
-- Task 5.3 生产、质量验收与库存 API：Completed / Pending Approval
+- Task 5.3 生产、质量验收与库存 API：Completed / Approved
 - Task 5.4 出入库与跨境业务 API：Waiting
 - Task 5.5 导入、日志、安全与 API 最终收口：Waiting
-- 当前下一步：Task 5.3 GitHub 验收
+- 当前下一步：等待项目负责人正式启动 Task 5.4
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -72,7 +72,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 数据库冻结：Completed / Approved / Frozen
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.0 已冻结。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 接口设计状态为 In Progress；Task 5.1 和 Task 5.2 均为 Completed / Approved，Task 5.3 为 Completed / Pending Approval，当前等待 GitHub 验收；Task 5.4 和 Task 5.5 保持 Waiting，技术开发尚未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 接口设计状态为 In Progress；Task 5.1、Task 5.2 和 Task 5.3 均为 Completed / Approved；Task 5.4 和 Task 5.5 保持 Waiting，技术开发尚未开始。
 
 ## 九阶段开发路线
 
@@ -137,7 +137,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 4.10 跨境业务页面设计（Approved）](docs/phases/phase-04/TASK_4_10_CROSS_BORDER_BUSINESS_PAGE_DESIGN.md)
 - [Task 5.1 API 总体规范与安全规则设计（Completed / Approved）](docs/phases/phase-05/TASK_5_1_API_DESIGN_PRINCIPLES.md)
 - [Task 5.2 基础资料与采购 API（Completed / Approved）](docs/phases/phase-05/TASK_5_2_MASTER_DATA_AND_PURCHASE_API.md)
-- [Task 5.3 生产、质量验收与库存 API（Completed / Pending Approval）](docs/phases/phase-05/TASK_5_3_PRODUCTION_QUALITY_INVENTORY_API.md)
+- [Task 5.3 生产、质量验收与库存 API（Completed / Approved）](docs/phases/phase-05/TASK_5_3_PRODUCTION_QUALITY_INVENTORY_API.md)
 - [Task 5.4 出入库与跨境业务 API（Waiting）](docs/phases/phase-05/TASK_5_4_INBOUND_OUTBOUND_CROSS_BORDER_API.md)
 - [Task 5.5 导入、日志、安全与 API 最终收口（Waiting）](docs/phases/phase-05/TASK_5_5_IMPORT_LOG_SECURITY_API_FINAL.md)
 - [变更记录](CHANGELOG.md)
@@ -149,7 +149,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 4 已完成并获得批准，未标记为 Frozen。Phase 5 接口设计为 In Progress，Task 5.1 和 Task 5.2 均已获得批准，Task 5.3 已完成并等待 GitHub 验收；Task 5.4 和 Task 5.5 保持 Waiting，未经项目负责人正式指令不得开始其正文。不得创建真实 API Route，不得编写页面代码或业务代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得安装依赖。
+Phase 4 已完成并获得批准，未标记为 Frozen。Phase 5 接口设计为 In Progress，Task 5.1、Task 5.2 和 Task 5.3 均已获得批准；Task 5.4 和 Task 5.5 保持 Waiting，未经项目负责人正式指令不得开始其正文。不得创建真实 API Route，不得编写页面代码或业务代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得安装依赖。
 
 ## 安全说明
 

@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-19
+updated_date: 2026-07-21
 related_phase: Phase 2
 ---
 
@@ -206,6 +206,32 @@ related_phase: Phase 2
 → 已全部完工
 
 暂停或逾期为生产执行中的异常状态，恢复后根据实际进度继续流转。剩余有效数量正式取消后可以进入已终止。
+
+### 6.1.1 分批完工记录状态
+
+`production_completion_records.completion_status` 的正式状态为：
+
+- 草稿（Draft）；
+- 已确认（Confirmed）；
+- 已撤销（Revoked）；
+- 已作废（Voided）。
+
+正式状态机：
+
+草稿
+├── 提交确认 → 已确认
+└── 作废 → 已作废
+
+已确认
+└── 撤销 → 已撤销（仅无下游业务）
+
+| 当前状态 | 动作 | 目标状态 | 权限 | 前置条件 | 禁止条件 | 错误码 | 日志 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 草稿 | 提交确认 | 已确认 | 分批完工确认权限及目标仓库范围 | 来源生产单有效；明细完整；数量平衡且累计不超计划；版本有效 | 禁止重复确认；禁止无权限或超量确认 | `STATE_PRODUCTION_COMPLETION_ACTION_NOT_ALLOWED`、`VALIDATION_PRODUCTION_COMPLETION_EXCEEDED`、`CONFLICT_VERSION_MISMATCH` | 记录操作者、时间、请求追踪、前后状态及数量摘要 |
+| 草稿 | 作废 | 已作废 | 分批完工作废权限 | 无下游业务；原因必填；版本有效 | 禁止从已确认状态直接作废 | `STATE_PRODUCTION_COMPLETION_ACTION_NOT_ALLOWED`、`CONFLICT_PRODUCTION_COMPLETION_DOWNSTREAM_EXISTS` | 记录原因、操作者、时间、请求追踪及前后状态 |
+| 已确认 | 撤销 | 已撤销 | 分批完工撤销权限 | 不存在验收、入库、发货、库存流水或其他下游业务；原因必填；版本有效 | 禁止存在下游时撤销 | `CONFLICT_PRODUCTION_COMPLETION_DOWNSTREAM_EXISTS`、`CONFLICT_VERSION_MISMATCH` | 记录原因、下游校验结果、操作者、时间、请求追踪及前后状态 |
+
+已作废不得恢复，已撤销不得再次确认，已确认不得再次确认或直接作废。所有状态动作必须使用专用动作并进行服务端权限、状态、前置条件、幂等和并发校验；不得由客户端直接提交任意目标状态，不得物理删除已确认、已撤销或已作废记录。
 
 ### 6.2 完工验收状态
 

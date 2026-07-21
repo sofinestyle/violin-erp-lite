@@ -1,11 +1,11 @@
 ---
 document_name: Task 3.5.7 Database Freeze
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Frozen
 owner: Project Manager
 created_date: 2026-07-20
-updated_date: 2026-07-20
+updated_date: 2026-07-21
 related_phase: Phase 3
 ---
 
@@ -21,7 +21,7 @@ related_phase: Phase 3
 | 前置小任务 | Task 3.5.6：数据库命名规范（Completed / Approved） |
 | 文档状态 | Frozen |
 | 小任务状态 | Completed / Approved / Frozen |
-| 冻结版本 | Database Logical Design v1.0 |
+| 冻结版本 | Database Logical Design v1.1 |
 | 冻结日期 | 2026-07-20 |
 
 ## 2. 冻结目的
@@ -32,7 +32,7 @@ related_phase: Phase 3
 
 ## 3. 冻结范围
 
-Database Logical Design v1.0 正式冻结以下内容：
+Database Logical Design v1.1 正式冻结以下内容：
 
 1. 60 张正式逻辑表及其表名称；
 2. Task 3.4 已批准的字段名称；
@@ -129,9 +129,20 @@ Database Logical Design v1.0 正式冻结以下内容：
 
 下一阶段为 Phase 4：页面设计（UI / Page Design），状态为 Not Started。Phase 4 的范围继续以 Frozen `ROADMAP.md` 既有定义为准，本文件不新增或修改 Phase 4 内部任务。
 
+## 8.1 DCR-001 版本修订
+
+DCR-001 于 2026-07-21 获得项目负责人正式批准。Database Logical Design 由 v1.0 修订为 v1.1，唯一变化为既有字段 `production_completion_records.completion_status` 的正式状态定义：
+
+- Draft（草稿）；
+- Confirmed（已确认）；
+- Revoked（已撤销）；
+- Voided（已作废）。
+
+本次修订未新增或删除字段、表、索引、外键、关系或业务对象，正式逻辑表仍为 60 张，字段数量及数据库逻辑结构保持不变。
+
 ## 9. 正式结论
 
-1. Database Logical Design v1.0 于 2026-07-20 正式冻结。
+1. Database Logical Design v1.0 于 2026-07-20 正式冻结；DCR-001 于 2026-07-21 批准唯一状态语义修订，当前冻结版本为 Database Logical Design v1.1。
 2. 正式逻辑表数量为 60 张。
 3. 业务规则、逻辑表、字段、类型、约束、关系、逻辑索引、命名及历史保留原则纳入冻结范围。
 4. Frozen 数据库逻辑设计作为后续页面设计、技术设计和开发工作的正式输入。

@@ -11,6 +11,40 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.5.5] - 2026-07-21
+
+### Added
+
+- 正式批准唯一 Database Change Request：DCR-001
+- 为既有 `production_completion_records.completion_status` 定义 Draft、Confirmed、Revoked、Voided 四个正式状态及状态机
+- 补充 4 个分批完工写接口，Task 5.3 正式接口总数更新为 65 个
+- 新增 DEC-046 批准 DCR-001 并批准 Task 5.3
+
+### Changed
+
+- Database Logical Design 由 v1.0 更新为 v1.1，唯一变化为既有 `completion_status` 的正式状态定义
+- Task 4.7 增加分批完工的提交确认、撤销和作废按钮，并删除生产验收的来源完工批次页面口径
+- 生产验收保持生产订单来源，不建立验收到完工记录关系
+- 验收 API 统一采用“验收数量＝合格数量＋不合格数量”，删除待处理数量输入输出；既有 Frozen 字段固定为零
+- Task 5.3 状态由 Completed / Pending Approval 更新为 Completed / Approved
+- Phase 5 保持 In Progress；Task 5.4 和 Task 5.5 保持 Waiting
+
+### Scope
+
+- 未新增或删除字段、表、索引、外键、关系或业务对象，数据库逻辑结构保持不变
+- 未修改采购 API、Task 5.1、Task 5.2 或 Task 5.4 正文
+- 未创建真实 API Route，未编写代码，未创建 ORM、Schema、DDL、Migration 或 Seed
+- 未开始 Task 5.4、Phase 6 或技术开发
+
+### Status
+
+- Database Logical Design: v1.1 / Frozen
+- Phase 5 API Design: In Progress
+- Task 5.3: Completed / Approved
+- Task 5.4: Waiting
+- Task 5.5: Waiting
+- Technical Development: Not Started
+
 ## [0.5.4] - 2026-07-21
 
 ### Added

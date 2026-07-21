@@ -1088,3 +1088,32 @@ Approved
 ### 影响
 
 Task 5.3 为生产、质量验收、库存查询、库存流水、库存预警和库存调整提供正式接口契约。三项 Frozen 映射缺口等待项目负责人决定通过口径调整关闭或发起正式变更。本次未修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文、Approved 页面、Task 5.1、Task 5.2、Task 5.4 或 Task 5.5 正文；未新增字段、表、状态、关系、索引或业务对象；未创建真实 API Route，未编写业务代码，未创建 ORM、Schema、DDL、Migration 或 Seed，也未开始 Task 5.4。
+
+## DEC-046 批准DCR-001并批准Task 5.3
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- 正式批准唯一 Database Change Request：DCR-001；
+- DCR-001 仅定义既有 `production_completion_records.completion_status` 的正式状态：Draft（草稿）、Confirmed（已确认）、Revoked（已撤销）、Voided（已作废）；
+- 正式状态机为草稿提交确认至已确认、草稿作废至已作废、已确认在无下游业务时撤销至已撤销；
+- 禁止已确认再次确认、已确认直接作废、已作废恢复及已撤销再次确认；
+- Database Logical Design 由 v1.0 更新为 v1.1；数据库表数量、字段数量、索引、外键、关系和业务对象保持不变；
+- 验收保持生产订单及生产订单明细来源，不建立验收到完工记录关系；
+- 验收 API 统一采用“验收数量＝合格数量＋不合格数量”，不接收或返回待处理数量；既有 Frozen `pending_quantity` 字段由服务端固定为零，不删除字段；
+- Task 4.7 同步分批完工四个状态和提交确认、撤销、作废三个按钮，不增加其他按钮；
+- Task 5.3 共登记 65 个正式接口，其中生产 29 个、质量验收 10 个、库存 26 个；
+- Task 5.3 状态更新为 Completed / Approved；Phase 5 保持 In Progress；
+- Task 5.4 与 Task 5.5 保持 Waiting，当前下一步为等待项目负责人正式启动 Task 5.4；
+- 技术开发保持 Not Started。
+
+### 影响
+
+DCR-001 是本次唯一数据库变更请求，只改变既有字段的正式状态语义，不改变 Frozen 数据库逻辑结构。本决定未修改采购 API、Task 5.1、Task 5.2 或 Task 5.4 正文，未新增字段、表、索引、外键、关系或业务对象；未创建真实 API Route，未编写代码，未创建 ORM、Schema、DDL、Migration 或 Seed，也未开始 Task 5.4。
