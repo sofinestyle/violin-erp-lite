@@ -11,6 +11,51 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.5.4] - 2026-07-21
+
+### Added
+
+- 完成 Task 5.3 生产、质量验收与库存 API 设计文档
+- 定义生产订单、生产进度、生产付款、质量验收、库存查询、库存流水、库存预警和库存调整接口契约
+- 建立生产、验收和库存调整状态转换矩阵、仓库权限矩阵、数量一致性、幂等、并发、错误码、日志、脱敏及页面映射规则
+- 新增正式启动 Task 5.3 并提交 GitHub 验收的决策记录
+
+### Changed
+
+- Task 5.3 状态由 Waiting 更新为 Completed / Pending Approval
+- Phase 5 状态保持 In Progress
+- Task 5.4 和 Task 5.5 状态保持 Waiting
+- 当前下一步更新为 Task 5.3 GitHub 验收
+- PROJECT、README、ROADMAP、API_SPEC、DECISION_LOG 和 DEVELOPMENT_WORKFLOW 同步当前状态
+
+### Design
+
+- 共定义 61 个正式接口，其中生产 25 个、质量验收 10 个、库存 26 个
+- 生产订单与采购订单保持平行，生产单不保存统一目标仓库
+- 验收确认只形成后续入库资格，不直接修改库存
+- 库存调整执行必须在同一事务内完成来源校验、余额条件更新、流水追加、状态历史和审计日志
+- 分批完工写动作因 `completion_status` 缺少正式状态机停止设计
+- 验收单直接关联分批完工记录因 Frozen 关系缺失停止设计
+- 验收待处理数量因主表缺少对应总量且与 Frozen 主表平衡约束冲突，相关写入分支停止设计
+
+### Scope
+
+- 未发起或执行 DCR，三项映射缺口等待项目负责人决定
+- 未修改 Frozen 数据库、Approved 页面或 Task 5.1、Task 5.2 正文
+- 未新增字段、表、状态、关系、索引或业务对象
+- 未创建真实 API Route，未编写业务代码，未创建 ORM、Schema、DDL、Migration 或 Seed
+- 未开始 Task 5.4、Phase 6 或技术开发
+
+### Status
+
+- Phase 5 API Design: In Progress
+- Task 5.1: Completed / Approved
+- Task 5.2: Completed / Approved
+- Task 5.3: Completed / Pending Approval
+- Task 5.4: Waiting
+- Task 5.5: Waiting
+- Technical Development: Not Started
+
 ## [0.5.3] - 2026-07-21
 
 ### Changed

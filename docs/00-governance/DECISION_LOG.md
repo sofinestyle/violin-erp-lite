@@ -1056,3 +1056,35 @@ Approved
 ### 影响
 
 本决定以页面口径修正关闭 Task 5.2 映射冲突，Task 4.5 与 Task 4.6 保持 Completed / Approved。Database Logical Design v1.0 保持 Frozen，未新增或修改数据库字段、表、状态、唯一约束、索引、关系或业务对象。Task 5.1 正文未修改，Task 5.3 未启动。本次未创建真实 API Route，未编写业务代码，未创建 ORM、DDL、Schema、Migration、Seed，也未安装依赖。
+
+## DEC-045 正式启动并完成Task 5.3设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- 项目负责人正式启动 Task 5.3 生产、质量验收与库存 API 设计；
+- Task 5.3 可映射范围设计完成，状态更新为 Completed / Pending Approval；
+- 共登记 61 个正式接口，其中生产 25 个、质量验收 10 个、库存 26 个；
+- 生产订单与采购订单保持平行，不建立直接关系；
+- 生产订单不保存统一目标仓库，目标仓只使用分批完工记录现有字段；
+- 生产进度、质量验收和库存流水均保留历史，不得由普通更新覆盖；
+- 验收确认只形成后续正式入库资格，不直接修改库存；
+- 库存余额不得通过普通接口直接修改，库存调整执行必须原子更新余额并追加流水；
+- `production_completion_records.completion_status` 缺少已批准状态值和转换，分批完工创建、提交、确认写接口停止设计；
+- Frozen 验收结构没有直接关联分批完工记录/明细，验收直连完工批次停止设计；
+- 验收明细存在待处理数量，但验收主表没有待处理总量且主表平衡约束不包含待处理量，待处理量大于零的写入分支停止设计；
+- 上述映射缺口只登记，不发起或执行 DCR，不修改 Frozen 数据库；
+- Phase 5 保持 In Progress，Task 5.1 和 Task 5.2 为 Completed / Approved；
+- Task 5.4 和 Task 5.5 保持 Waiting，当前下一步为 Task 5.3 GitHub 验收；
+- 技术开发保持 Not Started。
+
+### 影响
+
+Task 5.3 为生产、质量验收、库存查询、库存流水、库存预警和库存调整提供正式接口契约。三项 Frozen 映射缺口等待项目负责人决定通过口径调整关闭或发起正式变更。本次未修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文、Approved 页面、Task 5.1、Task 5.2、Task 5.4 或 Task 5.5 正文；未新增字段、表、状态、关系、索引或业务对象；未创建真实 API Route，未编写业务代码，未创建 ORM、Schema、DDL、Migration 或 Seed，也未开始 Task 5.4。
