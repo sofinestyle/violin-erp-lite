@@ -5,11 +5,57 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-20
+updated_date: 2026-07-21
 related_phase: Phase 1
 ---
 
 # CHANGELOG
+
+## [0.5.2] - 2026-07-21
+
+### Added
+
+- 完成 Task 5.2 基础资料与采购管理 API 设计文档
+- 定义产品、SKU、分类、品牌、供应商、生产厂家、仓库、电商平台、店铺和客户快照接口
+- 定义采购订单、采购付款、采购退货、进度、关联验收、关联入库、状态历史和导出接口
+- 新增采购状态转换、权限数据范围、校验、幂等、并发、错误码、日志、脱敏及页面映射规则
+- 新增批准 Task 5.1 并完成 Task 5.2 设计的正式决策
+
+### Changed
+
+- Task 5.1 状态由 Completed / Pending Approval 更新为 Completed / Approved
+- Task 5.2 状态由 Waiting 更新为 Completed / Pending Approval
+- Phase 5 状态保持 In Progress
+- Task 5.3 至 Task 5.5 状态保持 Waiting
+- 当前下一步更新为 Task 5.2 GitHub 验收
+- PROJECT、README、ROADMAP、API_SPEC、DECISION_LOG 和 DEVELOPMENT_WORKFLOW 同步更新当前状态
+
+### Design
+
+- 共定义 103 个接口契约，其中基础资料 74 个、采购管理 29 个
+- 采购单提交、撤回、审核、驳回、反审核、取消和作废均使用专用动作接口
+- 反审核仅在未形成库存流水或任何下游关联记录时允许
+- 采购进度只从采购明细、验收、入库、付款和退货正式记录汇总，客户端不得上传进度
+- 停止设计无法映射 Frozen 数据库的计量单位维护、采购类型/负责人、独立到货登记、采购厂家关系和关闭状态接口
+- 冲突项等待项目负责人选择调整接口/页面口径或发起正式 DCR/Change Request
+
+### Scope
+
+- 本次仅完成接口契约和治理文档
+- 未创建真实 API Route，未编写业务代码
+- 未修改 Frozen 数据库设计或 Approved 页面设计
+- 未新增数据库字段、表、状态、唯一约束、索引、关系或业务对象
+- 未开始 Task 5.3、Phase 6 或技术开发
+
+### Status
+
+- Phase 5 API Design: In Progress
+- Task 5.1: Completed / Approved
+- Task 5.2: Completed / Pending Approval
+- Task 5.3: Waiting
+- Task 5.4: Waiting
+- Task 5.5: Waiting
+- Technical Development: Not Started
 
 ## [0.5.1] - 2026-07-20
 

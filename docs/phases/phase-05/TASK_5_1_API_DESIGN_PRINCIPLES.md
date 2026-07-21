@@ -1,7 +1,7 @@
 ---
 document_name: Task 5.1 API 总体规范与安全规则设计
 version: 1.0
-status: Completed / Pending Approval
+status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
 related_phase: Phase 5
@@ -602,16 +602,16 @@ Task 5.1 达到以下条件后可提交项目负责人验收：
 7. 与 Frozen 业务规则、Frozen 数据库和 Approved 页面设计无冲突；
 8. 未创建真实 API 或业务代码；
 9. 未新增数据库字段、表、状态、索引、关联关系或业务对象；
-10. 文档状态为 Completed / Pending Approval，等待项目负责人验收。
+10. 文档状态为 Completed / Approved，已由项目负责人验收批准。
 
 ## 26. 正式结论
 
 1. Phase 5 已由项目负责人正式启动，状态为 In Progress。
-2. Task 5.1 API 总体规范与安全规则设计已完成，状态为 Completed / Pending Approval。
+2. Task 5.1 API 总体规范与安全规则设计已完成并获得批准，状态为 Completed / Approved。
 3. 本文档作为 Task 5.2 至 Task 5.5 的统一 API 设计依据。
-4. Task 5.2 至 Task 5.5 保持 Waiting，本任务未填写其正文。
+4. Task 5.2 已按后续正式指令完成正文并等待验收；Task 5.3 至 Task 5.5 保持 Waiting。
 5. 本次未发现必须立即提出 Database Change Request 的上游冲突。
 6. 幂等持久化、未知用户登录失败事件持久化等技术映射必须在后续授权阶段验证；如需改变 Frozen 数据库结构，必须提出 Database Change Request。
 7. 本次未编写业务代码，未创建真实 API Route，未修改 Frozen 数据库设计或 Approved 页面设计。
 8. 技术开发保持 Not Started。
-9. 下一步为 Task 5.1 GitHub 验收，不得开始 Task 5.2。
+9. 本文件已完成 GitHub 验收；当前下一步为 Task 5.2 GitHub 验收，不得开始 Task 5.3。

@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-20
+updated_date: 2026-07-21
 related_phase: Phase 1
 ---
 
@@ -997,3 +997,32 @@ Approved
 ### 影响
 
 Task 5.1 作为后续 Phase 5 接口设计任务的统一规则输入，但其状态为 Completed / Pending Approval，不代表已经获得项目负责人验收批准。本决定不开始 Task 5.2，不改变 Phase 1 至 Phase 4 已批准状态，不改变 Frozen 业务规则、Database Logical Design v1.0、Approved 页面设计或固定九阶段路线。本次未创建真实 API Route，未编写业务代码，未新增数据库字段、表、状态、索引、关联关系或业务对象，未创建 ORM、DDL、Schema、Migration、Seed，也未安装依赖。
+
+## DEC-043 批准Task 5.1并完成Task 5.2设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- Task 5.1 API 总体规范与安全规则设计状态更新为 Completed / Approved；
+- 正式启动并完成 Task 5.2 基础资料与采购管理 API 设计，状态为 Completed / Pending Approval；
+- Phase 5 接口设计状态保持 In Progress；
+- Task 5.2 定义产品、SKU、分类、品牌、供应商、生产厂家、仓库、电商平台、店铺、客户快照、采购订单、采购付款和采购退货接口契约；
+- Task 5.2 共登记 103 个接口，其中基础资料 74 个、采购管理 29 个；
+- 采购单提交、撤回、审核、驳回、反审核、取消和作废使用专用动作接口；
+- 反审核只允许在未形成库存流水或后续关联记录时执行；
+- 采购验收、实际入库、实际退货出库、通用附件和正式 Excel 导入的写接口分别留待 Task 5.3 至 Task 5.5；
+- 无法映射 Frozen 数据库的计量单位维护、采购类型/负责人、独立到货登记、采购厂家关系和关闭状态接口停止设计并登记冲突；
+- Task 5.3 至 Task 5.5 保持 Waiting；
+- 当前下一步为 Task 5.2 GitHub 验收；
+- 技术开发状态保持 Not Started。
+
+### 影响
+
+Task 5.2 为后续功能详细设计提供基础资料与采购接口契约。本决定不修改 Frozen 业务规则、Database Logical Design v1.0、Approved 页面正文或固定九阶段路线；不新增数据库字段、表、状态、唯一约束、索引、关系或业务对象。冲突部分必须由项目负责人选择调整接口/页面口径或发起正式 DCR/Change Request 后方可补充。本次未创建真实 API Route，未编写业务代码，未创建 ORM、DDL、Schema、Migration、Seed，未安装依赖，也未开始 Task 5.3。
