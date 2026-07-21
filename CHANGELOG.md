@@ -11,6 +11,48 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.5.6] - 2026-07-21
+
+### Added
+
+- 完成 Task 5.4 出入库与跨境业务 API 设计文档
+- 定义入库、普通出库、采购退货实际出库、调拨、跨境发运、海外仓当前库存及导入结果查询契约
+- 建立入库、出库、调拨和跨境状态矩阵、原子库存事务、权限、幂等、并发、错误码、日志、脱敏及页面映射规则
+- 新增 DEC-047 正式启动 Task 5.4 并提交 GitHub 验收
+
+### Changed
+
+- Task 5.4 状态由 Waiting 更新为 Completed / Pending Approval
+- Phase 5 保持 In Progress，Task 5.5 保持 Waiting
+- 当前下一步更新为 Task 5.4 GitHub 验收
+- PROJECT、README、ROADMAP、API_SPEC、DECISION_LOG 和 DEVELOPMENT_WORKFLOW 同步当前状态
+
+### Design
+
+- 共定义 72 个正式接口：入库 18 个、出库 17 个、调拨 15 个、跨境 22 个
+- 所有库存变化必须原子更新余额、追加流水并同步来源和状态
+- 调拨与跨境发运必须经过正式在途仓；海外仓导入写接口留待 Task 5.5
+- 采购退货实际出库直接执行既有采购退货对象，不重复创建普通出库单
+- 跨境多维状态缺少独立字段、海外历史余额快照缺少正式对象、手工海外收货与 Excel 唯一来源口径冲突已登记并停止冲突部分
+
+### Scope
+
+- 未修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文或 Approved Phase 4 页面正文
+- 未修改 Task 5.1、Task 5.2、Task 5.3 或 Task 5.5 正文
+- 未新增字段、表、状态、关系、约束、索引或业务对象
+- 未创建真实 API Route，未编写代码，未创建 ORM、Schema、DDL、Migration 或 Seed
+- 未开始 Task 5.5、Phase 6 或技术开发
+
+### Status
+
+- Phase 5 API Design: In Progress
+- Task 5.1: Completed / Approved
+- Task 5.2: Completed / Approved
+- Task 5.3: Completed / Approved
+- Task 5.4: Completed / Pending Approval
+- Task 5.5: Waiting
+- Technical Development: Not Started
+
 ## [0.5.5] - 2026-07-21
 
 ### Added

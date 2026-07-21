@@ -1117,3 +1117,32 @@ Approved
 ### 影响
 
 DCR-001 是本次唯一数据库变更请求，只改变既有字段的正式状态语义，不改变 Frozen 数据库逻辑结构。本决定未修改采购 API、Task 5.1、Task 5.2 或 Task 5.4 正文，未新增字段、表、索引、外键、关系或业务对象；未创建真实 API Route，未编写代码，未创建 ORM、Schema、DDL、Migration 或 Seed，也未开始 Task 5.4。
+
+## DEC-047 正式启动并完成Task 5.4设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- 项目负责人正式启动 Task 5.4 出入库与跨境业务 API 设计；
+- Task 5.4 可映射范围设计完成，状态更新为 Completed / Pending Approval；
+- 共登记 72 个正式接口，其中入库 18 个、出库 17 个、调拨 15 个、跨境 22 个；
+- 入库前必须完成正式验收，所有库存变化必须原子更新余额、追加流水并同步来源及状态；
+- 国内销售只登记销售出库，不建立销售订单；采购退货实际出库直接执行既有采购退货对象；
+- 调拨必须经过来源仓、在途仓和目的仓两阶段事务；跨境发运只执行来源仓到在途仓；
+- 海外仓当前库存及导入结果只读查询纳入 Task 5.4，Excel 上传、校验和正式执行留待 Task 5.5；
+- 跨境多维状态缺少独立 Frozen 字段、海外历史余额快照缺少正式对象、手工海外收货与 Excel 唯一来源口径冲突已登记并停止冲突部分；
+- 未发起或执行 DCR，未修改 Frozen 数据库或 Approved 页面；
+- Phase 5 保持 In Progress，Task 5.1 至 Task 5.3 为 Completed / Approved；
+- Task 5.5 保持 Waiting，当前下一步为 Task 5.4 GitHub 验收；
+- 技术开发保持 Not Started。
+
+### 影响
+
+Task 5.4 为出入库、采购退货实际出库、调拨、跨境发运及海外仓查询提供正式接口契约。冲突项等待项目负责人决定调整页面/API 口径或发起正式 DCR。本次未修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文、Approved Phase 4 页面、Task 5.1、Task 5.2、Task 5.3 或 Task 5.5 正文；未新增字段、表、状态、关系、约束、索引或业务对象；未创建真实 API Route，未编写业务代码，未创建 ORM、Schema、DDL、Migration 或 Seed，也未开始 Task 5.5。
