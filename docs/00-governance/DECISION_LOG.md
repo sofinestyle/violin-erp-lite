@@ -1026,3 +1026,33 @@ Approved
 ### 影响
 
 Task 5.2 为后续功能详细设计提供基础资料与采购接口契约。本决定不修改 Frozen 业务规则、Database Logical Design v1.0、Approved 页面正文或固定九阶段路线；不新增数据库字段、表、状态、唯一约束、索引、关系或业务对象。冲突部分必须由项目负责人选择调整接口/页面口径或发起正式 DCR/Change Request 后方可补充。本次未创建真实 API Route，未编写业务代码，未创建 ORM、DDL、Schema、Migration、Seed，未安装依赖，也未开始 Task 5.3。
+
+## DEC-044 修正页面口径并批准Task 5.2
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- 不发起 Database Change Request，不修改 Frozen Database Logical Design v1.0；
+- Task 4.5 取消独立计量单位维护页面和新增、编辑、启用、停用、删除能力，计量单位改为产品和 SKU 表单中的固定受控值选择；
+- Task 4.6 删除采购类型字段、列表列和筛选；
+- Task 4.6 删除独立采购负责人字段、列表列和筛选，责任通过创建人、提交人、审核人及审计记录追溯；
+- 到货入口统一修正为创建采购验收单和查看到货进度，不新增独立到货登记对象；
+- 采购页面不提供厂家筛选、生产任务直达或已生产数量，采购与委外生产保持平行；
+- 采购订单不提供关闭按钮、状态或筛选，正式状态保持草稿、待审核、已审核、已驳回、已完成、已取消和已作废，已完成由系统按业务完成条件判定；
+- Task 5.2 原映射冲突全部关闭，不再阻塞批准；
+- Task 5.2 接口数量经重新核算保持 103 个，其中九类基础资料通用接口 72 个、客户快照只读接口 2 个、采购管理接口 29 个；
+- Task 5.2 状态更新为 Completed / Approved；
+- Phase 5 保持 In Progress，Task 5.1 与 Task 5.2 为 Completed / Approved，Task 5.3 至 Task 5.5 保持 Waiting；
+- 当前下一步为等待项目负责人确认启动 Task 5.3；
+- 技术开发保持 Not Started。
+
+### 影响
+
+本决定以页面口径修正关闭 Task 5.2 映射冲突，Task 4.5 与 Task 4.6 保持 Completed / Approved。Database Logical Design v1.0 保持 Frozen，未新增或修改数据库字段、表、状态、唯一约束、索引、关系或业务对象。Task 5.1 正文未修改，Task 5.3 未启动。本次未创建真实 API Route，未编写业务代码，未创建 ORM、DDL、Schema、Migration、Seed，也未安装依赖。

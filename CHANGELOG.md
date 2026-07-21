@@ -11,6 +11,43 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.5.3] - 2026-07-21
+
+### Changed
+
+- 按项目负责人正式决定修正 Task 4.5 计量单位页面口径：取消独立维护页面及新增、编辑、启用、停用、删除能力，改为产品和 SKU 表单中的固定受控值选择
+- 修正 Task 4.6 采购页面口径：删除采购类型和独立采购负责人字段、列表列及筛选，责任改由创建、提交、审核与审计记录追溯
+- 将到货操作修正为创建采购验收单和查看到货进度，不建立独立到货登记对象
+- 删除采购厂家筛选、生产任务直达、已生产数量，以及采购关闭按钮、状态和筛选
+- Task 5.2 第 26 节由待决冲突更新为项目负责人已决定并全部关闭
+- Task 5.2 状态由 Completed / Pending Approval 更新为 Completed / Approved
+- PROJECT、README、ROADMAP、API_SPEC、DECISION_LOG 和 DEVELOPMENT_WORKFLOW 同步当前状态与下一步
+
+### Design
+
+- 采购订单保留草稿、待审核、已审核、已驳回、已完成、已取消和已作废七个正式状态，已完成由系统按业务完成条件判定
+- 不发起 Database Change Request，不修改 Database Logical Design v1.0
+- 接口数量经逐项复核为 72 个基础资料通用接口、2 个客户快照只读接口和 29 个采购接口，合计仍为 103 个
+- 原冲突能力从未计入正式接口目录，因此修正后接口总数不变
+
+### Scope
+
+- 仅修改 Task 4.5、Task 4.6、Task 5.2 及相关治理与规格文档
+- 未新增数据库字段、表、状态、关系或业务对象
+- 未创建真实 API Route，未编写业务代码，未创建 ORM、DDL、Schema、Migration 或 Seed
+- 未开始 Task 5.3、Phase 6 或技术开发
+
+### Status
+
+- Phase 5 API Design: In Progress
+- Task 5.1: Completed / Approved
+- Task 5.2: Completed / Approved
+- Task 5.3: Waiting
+- Task 5.4: Waiting
+- Task 5.5: Waiting
+- Current Next Step: 等待项目负责人确认启动 Task 5.3
+- Technical Development: Not Started
+
 ## [0.5.2] - 2026-07-21
 
 ### Added
