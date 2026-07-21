@@ -1,7 +1,7 @@
 ---
 document_name: Task 5.5 导入、附件、日志、安全与 API 最终收口
 version: 1.0
-status: Completed / Pending Approval
+status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
 related_phase: Phase 5
@@ -286,7 +286,7 @@ Task 5.1 至 Task 5.5 统一采用：
 
 ## 11. 正式结论
 
-1. Task 5.5 已完成导入、附件、日志、安全及 API 最终收口设计，状态为 Completed / Pending Approval；
+1. Task 5.5 已完成导入、附件、日志、安全及 API 最终收口设计并通过项目负责人批准，状态为 Completed / Approved；
 2. 导入接口 15 个、附件接口 8 个、日志接口 4 个、安全接口 5 个，Task 5.5 共 32 个接口；
 3. Phase 5 当前共登记 272 个正式接口；
 4. 海外仓库存只能由正式 Excel 导入结果形成，导入事务必须保留库存流水和来源追溯；
@@ -296,5 +296,5 @@ Task 5.1 至 Task 5.5 统一采用：
 8. 未修改 Frozen 数据库，未新增字段、表、状态、关系或业务对象；
 9. 未创建真实 API，未编写业务代码，未安装依赖；
 10. Phase 5 保持 In Progress，Task 5.1 至 Task 5.4 保持 Completed / Approved；
-11. 当前下一步为 Task 5.5 GitHub 验收；验收前不得执行 Phase 5 Final Consistency Review；
+11. Phase 5 Final Consistency Review 已完成，当前下一步为该 Review 的 GitHub 验收；不得开始 Phase 6；
 12. 技术开发保持 Not Started。

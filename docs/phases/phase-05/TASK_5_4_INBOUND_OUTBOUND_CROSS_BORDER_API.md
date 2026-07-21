@@ -508,6 +508,6 @@ Task 4.8 当前库存入口、Task 4.9 本 Task 范围页面和 Task 4.10 可映
 8. 三项映射冲突已按项目负责人批准的页面/API 口径全部关闭，不发起 DCR；
 9. 未新增字段、表、状态、关系、约束、索引或业务对象；
 10. 未创建真实 API Route，未编写业务代码，未修改 Frozen 数据库；Task 4.10 仅同步本次批准的页面口径；
-11. Phase 5 保持 In Progress，Task 5.5 保持 Waiting；
-12. 当前下一步为等待项目负责人正式启动 Task 5.5，不得提前开始 Task 5.5；
+11. Phase 5 保持 In Progress，Task 5.5 为 Completed / Approved；
+12. 当前下一步为 Phase 5 Final Consistency Review GitHub 验收，不得开始 Phase 6；
 13. 技术开发保持 Not Started。

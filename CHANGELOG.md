@@ -11,6 +11,34 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.5.9] - 2026-07-21
+
+### Added
+
+- 新增 Phase 5 Final Consistency Review 独立审查文档
+- 新增 DEC-050，记录 Task 5.5 正式批准及 Phase 5 Final Consistency Review 完成
+
+### Changed
+
+- Task 5.5 状态更新为 Completed / Approved
+- 完成 272 个正式接口的数量、编号、路径、HTTP Method、状态、权限、安全、页面与 Frozen 映射复核
+- 完成 10 项一致性修正：4 项 Phase 4 页面/API 文字映射、5 项 Task 5.1 至 Task 5.5 状态与下一步引用、1 项 API_SPEC 状态与审查入口同步
+- PROJECT、README、ROADMAP、DECISION_LOG、DEVELOPMENT_WORKFLOW 和 API_SPEC 同步 Review 状态与下一步
+
+### Review Result
+
+- 未发现重复接口或重复编号；接口总数保持 272
+- 未修正 URL、HTTP Method、状态机、权限或错误码
+- 无 Pending DCR、无 Outstanding Issue、无内容性 Freeze 阻塞问题
+- Phase 5 具备内容冻结条件，但 Review 仍等待 GitHub 验收及项目负责人最终批准
+
+### Scope
+
+- 未修改 Frozen 数据库，未新增字段、表、状态、关系、业务对象或业务接口
+- 未创建真实 API，未编写代码，未安装依赖
+- Phase 5 保持 In Progress，未标记为 Frozen
+- Phase 6 保持 Waiting / Not Started
+
 ## [0.5.8] - 2026-07-21
 
 ### Added

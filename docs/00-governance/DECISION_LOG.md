@@ -1204,3 +1204,29 @@ Approved
 ### 影响
 
 本决定不新增业务模块，不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文或 Task 5.1 至 Task 5.4 正文；不新增数据库字段、表、状态、关系或业务对象；不创建真实 API Route，不编写代码，不安装依赖，不开始 Phase 6。Task 5.5 GitHub 验收通过后，仍须等待项目负责人正式启动 Phase 5 Final Consistency Review。
+
+## DEC-050 批准Task 5.5并完成Phase 5最终一致性审查
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- 项目负责人正式批准 Task 5.5，状态更新为 Completed / Approved；
+- 项目负责人正式启动 Phase 5 Final Consistency Review；
+- Review 已完成，状态为 Completed / Pending Approval，等待 GitHub 验收；
+- Phase 5 的 272 个正式接口已完成数量、编号、路径、HTTP Method、请求响应、状态机、权限、库存事务、导入、附件、日志、安全、页面及 Frozen 映射复核；
+- 未发现重复接口或重复编号，Task 5.2、Task 5.3、Task 5.4、Task 5.5 数量分别保持 103、65、72、32；
+- 完成 10 项一致性修正，不新增或删除正式业务接口；
+- 无 Pending DCR、无 Outstanding Issue、无内容性 Freeze 阻塞问题；
+- Phase 5 已具备内容冻结条件，但 Review 尚待 GitHub 验收和项目负责人最终批准，因此 Phase 5 保持 In Progress，不标记为 Frozen；
+- Phase 6 保持 Waiting / Not Started，当前下一步为 Phase 5 Final Consistency Review GitHub 验收。
+
+### 影响
+
+本决定不修改 Frozen BUSINESS_RULES、DATABASE_SPEC 或 Phase 3 正文，不新增数据库字段、表、状态、关系、索引、约束或业务对象，不创建真实 API Route，不编写代码，不安装依赖，不启动 Phase 6。Phase 4 仅修正已批准后续口径对应的引用与文字一致性，不增加页面业务能力。

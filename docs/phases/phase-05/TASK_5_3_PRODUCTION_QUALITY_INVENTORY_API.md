@@ -480,6 +480,6 @@ DCR-001 已正式批准并完成。Database Logical Design 由 v1.0 更新为 v1
 8. DCR-001 已批准，另两项映射缺口已通过页面/API 口径关闭；
 9. 仅补充既有 `completion_status` 的正式状态定义，未新增字段、表、关系、索引、外键或业务对象；
 10. 未创建真实 API Route，未编写业务代码；Database Logical Design 仅按 DCR-001 更新至 v1.1，Approved Task 4.7 仅同步批准口径；
-11. Phase 5 保持 In Progress，Task 5.4 和 Task 5.5 保持 Waiting；
-12. 当前下一步为等待项目负责人正式启动 Task 5.4；本 Task 不开始 Task 5.4；
+11. Phase 5 保持 In Progress，Task 5.4 和 Task 5.5 均为 Completed / Approved；
+12. 当前下一步为 Phase 5 Final Consistency Review GitHub 验收；本 Task 不开始 Phase 6；
 13. 技术开发保持 Not Started。

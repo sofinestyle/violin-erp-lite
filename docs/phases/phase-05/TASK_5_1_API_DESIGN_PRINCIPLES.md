@@ -609,9 +609,9 @@ Task 5.1 达到以下条件后可提交项目负责人验收：
 1. Phase 5 已由项目负责人正式启动，状态为 In Progress。
 2. Task 5.1 API 总体规范与安全规则设计已完成并获得批准，状态为 Completed / Approved。
 3. 本文档作为 Task 5.2 至 Task 5.5 的统一 API 设计依据。
-4. Task 5.2 已按后续正式指令完成正文并等待验收；Task 5.3 至 Task 5.5 保持 Waiting。
+4. Task 5.2 至 Task 5.5 均已按后续正式指令完成并获得批准；
 5. 本次未发现必须立即提出 Database Change Request 的上游冲突。
 6. 幂等持久化、未知用户登录失败事件持久化等技术映射必须在后续授权阶段验证；如需改变 Frozen 数据库结构，必须提出 Database Change Request。
 7. 本次未编写业务代码，未创建真实 API Route，未修改 Frozen 数据库设计或 Approved 页面设计。
 8. 技术开发保持 Not Started。
-9. 本文件已完成 GitHub 验收；当前下一步为 Task 5.2 GitHub 验收，不得开始 Task 5.3。
+9. 本文件已完成 GitHub 验收；当前下一步为 Phase 5 Final Consistency Review GitHub 验收，不得开始 Phase 6。
