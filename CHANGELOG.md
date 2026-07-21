@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.6.1] - 2026-07-21
+
+### Added
+
+- 正式启动 Phase 6 功能详细设计
+- 新增 Task 6.1 功能详细设计统一规范，定义 16 个强制模板章节
+- Phase 6 采用 Task 6.1、Task 6.2、Task 6.3 加独立 Final Consistency Review 的加速结构
+- 新增 DEC-052，记录 Phase 6 与 Task 6.1 正式启动及设计完成
+
+### Changed
+
+- Phase 6 状态更新为 In Progress
+- Task 6.1 状态更新为 Completed / Pending Approval
+- Task 6.2、Task 6.3 与 Phase 6 Final Consistency Review 保持 Waiting / Not Started
+- 当前下一步更新为 Task 6.1 GitHub 验收
+
+### Scope
+
+- Phase 3 数据库与 API Master Specification v1.0 保持 Frozen
+- 未修改 BUSINESS_RULES、DATABASE_SPEC、API 接口正文、Phase 4 页面或 Phase 5 Task 文档
+- 未新增业务模块、数据库字段、表、关系、状态或 API
+- 未指定最终技术框架或第三方库，未编写代码、创建真实页面或 API Route、安装依赖
+- 未启动 Task 6.2，未创建 Task 6.2 正文
+
 ## [0.6.0] - 2026-07-21
 
 ### Changed

@@ -1257,3 +1257,31 @@ Approved
 ### 影响
 
 本决定只关闭并冻结 Phase 5，不新增、删除、重编号或修改业务接口，不修改 URL、HTTP Method、状态机或错误码；不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、Phase 3 正文或 Approved Phase 4 页面；不创建真实 API，不编写代码，不安装依赖，不创建 Phase 6 正文。
+
+## DEC-052 启动Phase 6并完成Task 6.1统一规范
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-21
+
+### 决定
+
+- 项目负责人正式启动 Phase 6 功能详细设计，Phase 6 状态更新为 In Progress；
+- Phase 6 采用三个 Task 加独立 Final Consistency Review 的加速结构；
+- Task 6.1 为功能详细设计统一规范，Task 6.2 为核心业务功能详细设计，Task 6.3 为公共能力功能详细设计；
+- Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task，不新增 Task 6.4；
+- Task 6.1 已正式启动并完成设计，状态为 Completed / Pending Approval；
+- 通用页面、表单、按钮、API、权限、异常、幂等、库存、导入、附件、日志、性能和验收规则仅在 Task 6.1 定义一次，后续 Task 直接引用；
+- Task 6.2、Task 6.3 与 Final Consistency Review 保持 Waiting / Not Started；
+- 每个 Task 必须先完成 GitHub 验收，未经项目负责人批准不得启动后续 Task；
+- 技术框架、代码结构和具体实现工具留待 Phase 7；
+- Phase 3 数据库和 API Master Specification v1.0 保持 Frozen；
+- 当前下一步为 Task 6.1 GitHub 验收。
+
+### 影响
+
+本决定不新增业务模块，不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、API_SPEC 接口正文、Approved Phase 4 页面或 Phase 5 Task 文档；不新增数据库字段、表、关系、状态或 API；不编写代码，不创建真实页面或 API Route，不安装依赖，不启动或创建 Task 6.2 正文。
