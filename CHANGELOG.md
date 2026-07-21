@@ -5,11 +5,35 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-21
+updated_date: 2026-07-22
 related_phase: Phase 1
 ---
 
 # CHANGELOG
+
+## [0.6.2] - 2026-07-22
+
+### Added
+
+- 新增 Task 6.2 核心业务功能详细设计，完成基础资料、采购管理、生产与质量验收、库存管理、出入库与调拨、跨境业务六个核心模块的功能设计
+- 建立六个模块的页面、动作、状态、权限与 Frozen API 映射，并完成核心业务覆盖矩阵
+- 新增 DEC-053，记录 Task 6.1 正式批准及 Task 6.2 按 Frozen 口径完成
+
+### Changed
+
+- Task 6.1 状态更新为 Completed / Approved
+- Task 6.2 状态更新为 Completed / Pending Approval
+- 采购管理与生产管理保持平行，生产订单独立创建且不直接关联采购订单
+- 采购来源与生产来源仅在质量验收节点汇合，两类验收来源互斥
+- 当前下一步更新为 Task 6.2 GitHub 验收；Task 6.3 与 Phase 6 Final Consistency Review 保持 Waiting / Not Started
+
+### Scope
+
+- 前一版错误指令已在执行前被阻止，未修改文件、未提交且未进入 GitHub；本次不创建正式缺陷记录
+- 未发起 DCR 或 Change Request
+- Frozen 数据库和 API Master Specification v1.0 均未修改，正式接口总数保持 272
+- 未新增业务模块、接口、数据库字段、表、关系、状态或业务对象
+- 未编写代码、创建真实页面或 API、安装依赖，未启动 Task 6.3
 
 ## [0.6.1] - 2026-07-21
 

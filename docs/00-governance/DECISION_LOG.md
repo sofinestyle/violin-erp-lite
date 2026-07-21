@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-21
+updated_date: 2026-07-22
 related_phase: Phase 1
 ---
 
@@ -1285,3 +1285,29 @@ Approved
 ### 影响
 
 本决定不新增业务模块，不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、API_SPEC 接口正文、Approved Phase 4 页面或 Phase 5 Task 文档；不新增数据库字段、表、关系、状态或 API；不编写代码，不创建真实页面或 API Route，不安装依赖，不启动或创建 Task 6.2 正文。
+
+## DEC-053 批准Task 6.1并完成Task 6.2核心业务功能设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 项目负责人正式批准 Task 6.1，状态更新为 Completed / Approved；
+- 项目负责人正式启动并完成 Task 6.2，状态为 Completed / Pending Approval；
+- Task 6.2 按 Task 6.1 的统一规范，集中完成基础资料、采购管理、生产与质量验收、库存管理、出入库与调拨、跨境业务六个核心模块的功能设计；
+- 采购管理与生产管理是平行业务模块，生产订单独立创建，采购订单与生产订单之间不建立页面、数据库或 API 直接关系；
+- 直接采购与委外生产仅在质量验收节点汇合，采购来源与生产来源互斥；
+- 前一版错误指令已在执行前被阻止，未修改文件、未提交且未进入 GitHub，不作为正式项目缺陷记录；
+- 本次不发起 DCR 或 Change Request，Frozen 数据库和 API Master Specification v1.0 保持不变，正式接口总数保持 272；
+- Task 6.3 与 Phase 6 Final Consistency Review 保持 Waiting / Not Started；
+- 当前下一步为 Task 6.2 GitHub 验收。
+
+### 影响
+
+本决定不新增业务模块、接口、数据库字段、表、关系、状态或业务对象，不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、API_SPEC、Approved Phase 4 页面或 Phase 5 Task 正文；不编写代码，不创建真实页面或 API Route，不安装依赖，不启动 Task 6.3。技术框架、代码结构和具体实现工具继续留待 Phase 7。
