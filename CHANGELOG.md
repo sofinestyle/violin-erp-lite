@@ -11,6 +11,29 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.7.0] - 2026-07-22
+
+### Added
+
+- 新增 Task 7.1 开发基线与工程初始化，确认技术架构、技术栈、Monorepo 目录、工程规范、开发顺序和职责边界
+- 新增 DEC-058，记录项目负责人正式启动 Phase 7、Phase 7 内部结构及三方职责边界
+
+### Changed
+
+- Phase 7 状态由 Waiting / Not Started 更新为 In Progress
+- Task 7.1 状态更新为 In Progress，当前任务更新为 Task 7.1 开发基线与工程初始化
+- 技术基线确认为 Next.js、React、TypeScript、Taro、Next.js Route Handler、Prisma、PostgreSQL、Tailwind CSS、shadcn/ui、JWT、RBAC 与 Monorepo
+- Phase 7 采用“6 个 Task + 独立 Final Consistency Review”结构
+- 技术开发仅进入开发规范阶段，业务编码尚未开始；当前下一步为 Task 7.1 GitHub 验收
+
+### Scope
+
+- Phase 6 保持 Completed / Approved / Frozen
+- BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1 和 Phase 6 Functional Specification 均未修改
+- 正式 API 总数保持 315，未新增、删除、重编号或改义任何 API
+- 未新增数据库表、字段、关系、状态、业务对象或业务流程
+- 未创建源代码、真实 API Route、Prisma Schema、Migration、Seed 或工程目录，未安装依赖，未提前执行 Task 7.2
+
 ## [0.6.6] - 2026-07-22
 
 ### Changed

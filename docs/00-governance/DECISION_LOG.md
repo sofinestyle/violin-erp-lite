@@ -1421,3 +1421,31 @@ Approved
 ### 影响
 
 本决定只完成 Phase 6 状态批准、冻结说明和治理关闭，不修改 Phase 6 正文业务规则、Frozen Database Logical Design v1.1、Frozen API Master Specification v1.1 或 Approved 页面；不新增表、字段、关系、状态、页面、模块、接口或业务对象；不编写代码，不创建真实页面、API Route、ORM、Schema、Migration 或 Seed，不安装依赖，不启动 Phase 7。
+
+## DEC-058 启动Phase 7并执行Task 7.1开发基线与工程初始化
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 项目负责人正式批准启动 Phase 7 开发规范与 Codex 执行，Phase 7 状态更新为 In Progress；
+- Task 7.1 开发基线与工程初始化正式启动，状态更新为 In Progress；
+- Phase 7 采用简化后的“6 个 Task + 独立 Final Consistency Review”结构，Final Consistency Review 是 Phase Exit Gate，不作为 Task 7.7；
+- Task 7.1 确认 PC 管理端采用 Next.js、React、TypeScript，微信小程序采用 Taro、React、TypeScript，后端采用 Next.js Route Handler，ORM 采用 Prisma，数据库采用 PostgreSQL，UI 采用 Tailwind CSS 与 shadcn/ui，认证权限采用 JWT 与 RBAC，工程采用 Monorepo；
+- 推荐目录保持 `apps/admin`、`apps/miniapp`、`packages/api`、`packages/database`、`packages/shared` 和 `docs`；
+- Phase 7 六个 Task 依次为：Task 7.1 开发基线与工程初始化、Task 7.2 Monorepo 工程骨架与质量门禁、Task 7.3 数据持久化与后端公共基础、Task 7.4 双端应用壳层与公共能力、Task 7.5 核心业务功能实现、Task 7.6 系统集成与开发收口；
+- 项目经理不承担技术方案判断；技术方案由 ChatGPT 产品经理负责制定与评审，Codex 负责实现；项目经理负责业务确认、测试和最终批准；
+- Phase 6 保持 Completed / Approved / Frozen，Database Logical Design v1.1 与 API Master Specification v1.1 保持 Frozen，正式 API 总数保持 315；
+- 技术开发仅进入开发规范阶段，业务编码尚未开始；
+- 当前任务为 Task 7.1 开发基线与工程初始化，当前下一步为 Task 7.1 GitHub 验收；
+- 未经 Task 7.1 GitHub 验收和项目负责人批准，不得启动 Task 7.2。
+
+### 影响
+
+本决定只建立 Phase 7 开发基线并同步阶段状态，不修改 Frozen BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1、315 个正式 API 或 Phase 6 Functional Specification；不新增数据库表、字段、关系、状态、业务对象或业务流程；不创建源代码、真实 API Route、Prisma Schema、Migration、Seed 或工程目录，不安装依赖，不开发采购、生产、库存、出入库或跨境业务功能。
