@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-19
+updated_date: 2026-07-22
 related_phase: Phase 1
 ---
 
@@ -19,15 +19,20 @@ related_phase: Phase 1
 
 ## 强制读取规则
 
-开始任何任务前，必须依次读取：
+更新到 GitHub `main` 最新代码后，开始任何任务前必须：
 
-1. `PROJECT.md`
-2. `AGENTS.md`
-3. `docs/00-governance/DOCUMENT_PRIORITY.md`
-4. `ROADMAP.md`
-5. `docs/01-business/BUSINESS_RULES.md`
-6. `docs/02-product/SYSTEM_SPEC.md`
-7. 当前 Phase 文档
+1. 读取 `AGENTS.md`；
+2. 运行 `pnpm status:check`；
+3. 检查通过后依次读取：
+   - `docs/00-governance/CURRENT_STATUS.md`；
+   - `ROADMAP.md`；
+   - `PROJECT.md`；
+   - `docs/00-governance/DOCUMENT_PRIORITY.md`；
+   - `docs/01-business/BUSINESS_RULES.md`；
+   - `docs/02-product/SYSTEM_SPEC.md`；
+   - 当前 Phase 文档。
+
+`pnpm status:check` 未通过时必须立即停止，报告不一致内容并等待项目负责人决定，不得继续设计、开发、状态同步或其他写操作。
 
 按任务类型额外读取：
 
@@ -45,6 +50,19 @@ Codex 开始任何任务前必须读取 `ROADMAP.md`，并确认：
 - 下一 Phase；
 - 本次任务是否属于当前 Phase；
 - 是否存在跨阶段内容。
+
+## 当前状态事实来源规则
+
+当前 Phase 与 Task 状态的事实来源优先级为：
+
+1. `docs/00-governance/CURRENT_STATUS.md`：当前状态唯一入口；
+2. `ROADMAP.md`：阶段路线和 Task 边界；
+3. `PROJECT.md`：项目总览；
+4. `README.md`：简要展示。
+
+`docs/05-api/API_SPEC.md`、`docs/00-governance/DECISION_LOG.md` 和 `CHANGELOG.md` 不作为当前状态判断依据。该规则仅适用于当前状态，不改变 Frozen 业务规则、数据库逻辑设计、API Master Specification 或 Phase 6 Functional Specification 的文档优先级。
+
+正式状态治理文件只允许记录 Phase 与 Task，不得记录 Section 状态。状态变更必须先更新 `CURRENT_STATUS.md`，再同步 `ROADMAP.md`、`PROJECT.md` 和 `README.md`，并通过 `pnpm status:check`。
 
 ## 阶段边界规则
 
@@ -118,6 +136,8 @@ Codex 不得自行增加、删除、合并、拆分、重命名或调整九个 P
 每次完成正式开发任务后，必须检查并按需更新：
 
 - 对应 Spec；
+- `docs/00-governance/CURRENT_STATUS.md`；
+- `ROADMAP.md`、`PROJECT.md` 和 `README.md` 的当前状态摘要；
 - `CHANGELOG.md`；
 - 测试记录；
 - `DECISION_LOG.md`；

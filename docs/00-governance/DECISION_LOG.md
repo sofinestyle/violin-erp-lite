@@ -1499,3 +1499,28 @@ Approved
 ### 影响
 
 本决定只同步 Phase 7 Task 状态，不修改 Task 7.1 开发基线正文、Frozen BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1、315 个正式 API 或 Phase 6 Functional Specification；不新增数据库表、字段、关系、状态、业务对象或业务流程；不修改工程代码、依赖或其他实现文件，不执行 Task 7.3 技术开发。
+
+## DEC-061 建立当前状态唯一入口与自动一致性检查
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 新增 `docs/00-governance/CURRENT_STATUS.md`，作为当前 Phase 与 Task 状态的唯一入口；
+- 当前状态判断依次参考 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 和 `README.md`；
+- `API_SPEC.md`、`DECISION_LOG.md` 和 `CHANGELOG.md` 不再承担当前状态判断职责；
+- `README.md` 只展示当前 Phase、Phase 状态、当前 Task 与 Task 状态的简要摘要；
+- 正式状态治理文件只记录 Phase 与 Task，不记录 Section 状态；
+- 新增 `pnpm status:check`，自动核对四份状态文档的当前 Phase、Phase 状态、当前 Task 与当前 Task 状态；
+- `pnpm check` 将 `status:check` 作为第一道质量门禁；
+- Codex 每次任务开始前必须运行 `pnpm status:check`，失败时停止执行并报告。
+
+### 影响
+
+本决定只改进项目状态治理和工程质量门禁，不修改 Frozen BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1 的接口定义与 315 个正式 API、Phase 6 Functional Specification、数据库结构或业务规则；不实现 Prisma、PostgreSQL、真实 API、认证或 ERP 业务代码。

@@ -11,6 +11,27 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.7.6] - 2026-07-22
+
+### Added
+
+- 新增 `docs/00-governance/CURRENT_STATUS.md`，建立当前 Phase 与 Task 状态的唯一入口
+- 新增无外部依赖的 `scripts/check-project-status.mjs` 和根命令 `pnpm status:check`
+- 新增 DEC-061，记录状态事实来源优先级与自动一致性检查决定
+
+### Changed
+
+- `PROJECT.md`、`ROADMAP.md` 和 `README.md` 使用统一的可检查状态摘要，README 不再重复展示全部历史阶段状态
+- `API_SPEC.md` 移除 Phase 6 与 Phase 7 当前进度附注，只保留 API Master Specification v1.1 状态和 315 个正式 API
+- `AGENTS.md` 要求每次任务开始前运行 `pnpm status:check`，并明确检查失败时必须停止
+- `pnpm check` 将 `status:check` 作为第一道质量门禁
+- `DECISION_LOG.md` 只记录治理决定，`CHANGELOG.md` 只记录变化，二者不作为当前状态判断依据
+
+### Scope
+
+- 未修改业务规则、数据库逻辑设计、Phase 6 Frozen 内容或任何 API 定义、编号、请求、响应、权限、错误码与规则
+- 正式 API 总数保持 315，未实现 Prisma、PostgreSQL、真实 API、认证或 ERP 业务代码
+
 ## [0.7.5] - 2026-07-22
 
 ### Changed
