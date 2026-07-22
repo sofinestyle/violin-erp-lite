@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import * as packageEntry from "../src/index";
+import { getPrismaClient } from "../src/index";
 
-describe("@violin-erp/database skeleton", () => {
-  it("remains an empty implementation placeholder", () => {
-    expect(Object.keys(packageEntry)).toEqual([]);
+describe("Prisma Client singleton", () => {
+  it("reuses one client instance within the process", () => {
+    const databaseUrl = "postgresql://test:test@localhost:5432/test";
+
+    expect(getPrismaClient(databaseUrl)).toBe(getPrismaClient(databaseUrl));
   });
 });

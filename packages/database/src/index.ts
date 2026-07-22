@@ -1,2 +1,2 @@
-// Reserved for a future physical mapping of the Frozen database design.
-export {};
+export { checkDatabaseConnection, createPrismaClient, getPrismaClient } from "./client.js";
+export type { PrismaClient } from "./generated/prisma/client.js";

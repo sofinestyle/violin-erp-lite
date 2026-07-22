@@ -11,6 +11,25 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.7.9] - 2026-07-22
+
+### Added
+
+- 完成 Task 7.3 后端公共框架，新增 Frozen-compatible 统一成功/失败响应、基础错误体系、Request ID、请求上下文、结构化安全日志、参数解析与校验入口
+- 新增 Prisma Client 延迟初始化单例与只执行 `SELECT 1` 的数据库连接检查
+- 新增工程健康检查 `GET /api/health`，返回应用及数据库状态，不登记为 `/api/v1` 正式业务接口
+- 新增公共响应、错误安全转换、Request ID 生成与透传、Prisma 单例及健康检查成功/异常测试
+
+### Changed
+
+- `apps/admin` 接入 `packages/api` 与 `packages/database` Workspace 公共包，并配置 Next.js 转译本地 TypeScript 包
+- `packages/api` 与 `packages/database` 保留源码类型入口和构建产物运行时入口，admin 直接启动或构建前统一构建后端依赖包
+
+### Scope
+
+- 本次只建立后端公共技术能力，未实现 315 个正式业务 API、登录、JWT、RBAC、文件上传、Repository、Service、审计日志业务写入、页面或 ERP 业务逻辑
+- 未修改 Frozen 数据库结构、Migration、Seed、BUSINESS_RULES、API Master Specification v1.1、Phase 6 Functional Specification 或当前状态治理文件
+
 ## [0.7.8] - 2026-07-22
 
 ### Added
