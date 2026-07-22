@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.6.3] - 2026-07-22
+
+### Added
+
+- 新增 Task 6.3 公共能力功能详细设计，统一登录与会话、用户角色权限、Excel 导入、附件、导出、日志审计、系统设置、提醒、编号、数据字典、打印、国际化、系统时间及统一交互原则
+- 建立 15 项公共能力的页面、Frozen API、权限、数据范围、审计和失败处理覆盖矩阵
+- 新增 DEC-054，记录 Task 6.2 正式批准及 Task 6.3 按 Approved/Frozen 口径完成
+
+### Changed
+
+- Task 6.2 状态更新为 Completed / Approved
+- Task 6.3 状态更新为 Completed / Pending Approval
+- PC 管理端与微信小程序统一映射现有系统用户身份、角色、权限、数据范围和字段权限
+- 微信小程序首次授权绑定已有启用系统账号，不建立独立微信用户体系
+- 当前下一步更新为 Task 6.3 GitHub 验收；Phase 6 Final Consistency Review 保持 Waiting / Not Started
+
+### Scope
+
+- 无独立 Frozen API 的公共能力仅定义 Approved 产品规则或复用既有业务 API，未虚构接口编号、路径、参数或状态
+- 未发起 DCR 或 Change Request
+- Frozen 数据库和 API Master Specification v1.0 均未修改，正式接口总数保持 272
+- 未新增 OpenID、UnionID、认证字段、业务模块、接口、状态、表、关系或业务对象
+- 未编写代码、创建真实页面/API Route、指定技术框架或安装依赖，未启动 Phase 6 Final Consistency Review 或 Phase 7
+
 ## [0.6.2] - 2026-07-22
 
 ### Added

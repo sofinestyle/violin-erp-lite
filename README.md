@@ -59,10 +59,10 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Phase 5 Final Consistency Review：Completed / Approved
 - Phase 6：In Progress
 - Task 6.1 功能详细设计统一规范：Completed / Approved
-- Task 6.2 核心业务功能详细设计：Completed / Pending Approval
-- Task 6.3 公共能力功能详细设计：Waiting / Not Started
+- Task 6.2 核心业务功能详细设计：Completed / Approved
+- Task 6.3 公共能力功能详细设计：Completed / Pending Approval
 - Phase 6 Final Consistency Review：Waiting / Not Started
-- 当前下一步：Task 6.2 GitHub 验收
+- 当前下一步：Task 6.3 GitHub 验收
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -78,7 +78,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 数据库冻结：Completed / Approved / Frozen
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 与 API Master Specification v1.0 保持 Frozen，272 个正式接口不变。Phase 6 为 In Progress；Task 6.1 为 Completed / Approved，Task 6.2 为 Completed / Pending Approval，Task 6.3 与独立 Final Consistency Review 均为 Waiting / Not Started，技术开发尚未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。Phase 5 与 API Master Specification v1.0 保持 Frozen，272 个正式接口不变。Phase 6 为 In Progress；Task 6.1、Task 6.2 为 Completed / Approved，Task 6.3 为 Completed / Pending Approval，独立 Final Consistency Review 为 Waiting / Not Started，技术开发尚未开始。
 
 ## 九阶段开发路线
 
@@ -148,7 +148,8 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 5.5 导入、附件、日志、安全与 API 最终收口（Completed / Approved）](docs/phases/phase-05/TASK_5_5_IMPORT_LOG_SECURITY_API_FINAL.md)
 - [Phase 5 Final Consistency Review（Completed / Approved）](docs/phases/phase-05/PHASE_5_FINAL_CONSISTENCY_REVIEW.md)
 - [Task 6.1 功能详细设计统一规范（Completed / Approved）](docs/phases/phase-06/TASK_6_1_FUNCTIONAL_DESIGN_STANDARD.md)
-- [Task 6.2 核心业务功能详细设计（Completed / Pending Approval）](docs/phases/phase-06/TASK_6_2_CORE_BUSINESS_FUNCTIONAL_DESIGN.md)
+- [Task 6.2 核心业务功能详细设计（Completed / Approved）](docs/phases/phase-06/TASK_6_2_CORE_BUSINESS_FUNCTIONAL_DESIGN.md)
+- [Task 6.3 公共能力功能详细设计（Completed / Pending Approval）](docs/phases/phase-06/TASK_6_3_COMMON_CAPABILITY_FUNCTIONAL_DESIGN.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -158,7 +159,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 5 已完成、批准并冻结，API Master Specification v1.0 是后续阶段唯一 API 事实来源；任何 Phase 5 正式内容变更必须经过正式 DCR 或 Change Request。Phase 6 为 In Progress，Task 6.1 已批准，Task 6.2 已完成并等待 GitHub 验收；未经项目负责人批准不得启动或创建 Task 6.3 正文，也不得执行 Phase 6 Final Consistency Review。不得创建真实 API Route，不得编写页面代码或业务代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得安装依赖。
+Phase 5 已完成、批准并冻结，API Master Specification v1.0 是后续阶段唯一 API 事实来源；任何 Phase 5 正式内容变更必须经过正式 DCR 或 Change Request。Phase 6 为 In Progress，Task 6.1、Task 6.2 已批准，Task 6.3 已完成并等待 GitHub 验收；未经项目负责人批准不得执行 Phase 6 Final Consistency Review。不得创建真实 API Route，不得编写页面代码或业务代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得安装依赖。
 
 ## 安全说明
 

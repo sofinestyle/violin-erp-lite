@@ -1,7 +1,7 @@
 ---
 document_name: Task 6.2 核心业务功能详细设计
 version: 1.0
-status: Completed / Pending Approval
+status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
 related_phase: Phase 6
@@ -488,7 +488,7 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 ## 14. 正式结论
 
 1. Task 6.1 已获得项目负责人批准，状态为 Completed / Approved；
-2. Task 6.2 六个核心业务模块功能详细设计已完成，状态为 Completed / Pending Approval；
+2. Task 6.2 六个核心业务模块功能详细设计已完成并获得批准，状态为 Completed / Approved；
 3. 采购与生产保持平行，生产订单独立创建，不建立采购—生产直接关系；
 4. 采购来源和生产来源在质量验收节点汇合且一张验收单来源互斥；
 5. 页面动作、状态、权限、库存事务和 Frozen API 映射已完成；
@@ -496,6 +496,6 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 7. Frozen 数据库、API Master Specification v1.0、BUSINESS_RULES 和 Approved 页面保持不变；
 8. API 总数保持 272，未新增业务模块或接口；
 9. 未编写代码、创建真实页面或 API Route、指定技术框架或安装依赖；
-10. Phase 6 保持 In Progress；Task 6.3 与 Phase 6 Final Consistency Review 保持 Waiting / Not Started；
-11. 当前下一步为 Task 6.2 GitHub 验收；
-12. 未经项目负责人批准不得启动 Task 6.3。
+10. Phase 6 保持 In Progress；Task 6.3 为 Completed / Pending Approval，Phase 6 Final Consistency Review 保持 Waiting / Not Started；
+11. 当前下一步为 Task 6.3 GitHub 验收；
+12. 未经项目负责人批准不得启动 Phase 6 Final Consistency Review。

@@ -1311,3 +1311,31 @@ Approved
 ### 影响
 
 本决定不新增业务模块、接口、数据库字段、表、关系、状态或业务对象，不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、API_SPEC、Approved Phase 4 页面或 Phase 5 Task 正文；不编写代码，不创建真实页面或 API Route，不安装依赖，不启动 Task 6.3。技术框架、代码结构和具体实现工具继续留待 Phase 7。
+
+## DEC-054 批准Task 6.2并完成Task 6.3公共能力设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 项目负责人正式批准 Task 6.2，状态更新为 Completed / Approved；
+- 项目负责人正式启动并完成 Task 6.3，状态为 Completed / Pending Approval；
+- 登录、权限、编号、附件、导入、导出、日志、审计、查询、状态动作、异常提示、数据字典、打印、国际化和系统时间采用统一公共能力，不允许业务模块形成平行版本；
+- PC 管理端使用用户名和密码登录，微信小程序支持微信授权登录且首次必须绑定已有启用系统账号；两端统一映射现有用户身份、角色、权限、数据范围和字段权限；
+- 不建立独立微信用户体系，不新增 OpenID、UnionID、Token、Session 或客户端来源数据库字段；认证技术实现留待后续技术阶段；
+- 用户、角色、权限管理继续映射 Frozen 系统对象；无独立 Frozen API 的能力只定义 Approved 产品规则或复用现有业务 API，不虚构接口；
+- Excel 导入统一使用 `IMP-*`，附件统一使用 `ATT-*`，日志统一使用 `LOG-*`，登录会话统一使用 `SEC-*`；
+- Frozen 数据库和 API Master Specification v1.0 保持不变，正式接口总数保持 272；
+- 本次未发现 Frozen 冲突，不发起 DCR 或 Change Request；
+- Phase 6 保持 In Progress，Phase 6 Final Consistency Review 保持 Waiting / Not Started；
+- 当前下一步为 Task 6.3 GitHub 验收。
+
+### 影响
+
+本决定不新增业务模块、接口、状态、数据库字段、表、关系或业务对象，不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、API_SPEC、Approved Phase 4 页面或 Phase 5 Task 正文；不编写代码，不创建真实页面或 API Route，不安装依赖，不启动 Phase 6 Final Consistency Review 或 Phase 7。未经项目负责人批准不得进入 Phase 6 Final Consistency Review。
