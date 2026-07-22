@@ -17,6 +17,7 @@ out/
 .cache/
 .swc/
 coverage/
+*.tsbuildinfo
 
 # Databases
 *.db

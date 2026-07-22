@@ -11,6 +11,36 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.7.3] - 2026-07-22
+
+### Added
+
+- 完成 Task 7.2-B Shared Packages & Unified Engineering Configuration
+- 新增 `packages/api`、`packages/database` 和 `packages/shared` 最小 TypeScript 包骨架
+- 新增根目录 TypeScript 基础配置和无真实值的技术环境变量示例
+
+### Changed
+
+- 三个共享包统一采用 `@violin-erp/*` 命名、`0.0.0` 版本、私有 ESM、exports 和 TypeScript 配置
+- PC 管理端与微信小程序继承统一 TypeScript 基础配置，同时保留各自框架配置
+- 根目录新增统一 `dev`、`build` 和 `typecheck` 脚本
+- `.gitignore` 增加 TypeScript 构建缓存忽略规则
+
+### Verified
+
+- `pnpm install --lockfile=false` 成功，Workspace 正确识别根项目、两个应用和三个共享包，共 6 个项目
+- `pnpm build` 成功，三个共享包、PC 管理端和微信小程序均构建通过
+- `pnpm typecheck` 成功，三个共享包同时及逐包类型检查均通过
+- PC 管理端开发服务器启动成功并返回 HTTP 200，微信小程序编译成功并进入 watch 状态
+
+### Scope
+
+- 三个共享包仅保留未来 Frozen API、Frozen 数据库物理映射及无业务事实共享工具的空占位
+- 当前无包间代码依赖，因此未建立不必要的 TypeScript project references
+- 未安装或配置 Prisma、PostgreSQL、Route Handler、JWT、RBAC、Tailwind CSS、shadcn/ui、ESLint、Prettier、测试框架或 Docker
+- 未实现真实 API、Schema、Migration、Seed、登录、业务页面或 ERP 业务代码
+- 未修改任何 Approved / Frozen 业务、数据库、API、项目治理或开发基线文档
+
 ## [0.7.2] - 2026-07-22
 
 ### Added
