@@ -1449,3 +1449,28 @@ Approved
 ### 影响
 
 本决定只建立 Phase 7 开发基线并同步阶段状态，不修改 Frozen BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1、315 个正式 API 或 Phase 6 Functional Specification；不新增数据库表、字段、关系、状态、业务对象或业务流程；不创建源代码、真实 API Route、Prisma Schema、Migration、Seed 或工程目录，不安装依赖，不开发采购、生产、库存、出入库或跨境业务功能。
+
+## DEC-059 批准Task 7.1并启动Task 7.2
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 项目负责人正式批准 Task 7.1 开发基线与工程初始化，状态更新为 Completed / Approved；
+- Phase 7 保持 In Progress；
+- Task 7.2 Monorepo 工程骨架与质量门禁正式启动，状态更新为 In Progress；
+- 当前正式任务更新为 Task 7.2；
+- Task 7.2-A、Task 7.2-B 和 Task 7.2-C 仅为 Task 7.2 内部执行 Section，不属于正式项目治理状态，不写入 `PROJECT.md`、`README.md` 或 `ROADMAP.md`；
+- 当前内部执行下一步为 Task 7.2-A；
+- Task 7.3 至 Task 7.6 与 Phase 7 Final Consistency Review 保持 Waiting / Not Started；
+- 未经 Task 7.2 GitHub 验收和项目负责人批准，不得启动 Task 7.3。
+
+### 影响
+
+本决定只同步 Phase 7 Task 状态，不修改 Task 7.1 开发基线正文、Frozen BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1、315 个正式 API 或 Phase 6 Functional Specification；不新增数据库表、字段、关系、状态、业务对象或业务流程；不创建工程代码、Schema、Migration、Seed 或其他实现文件，不安装任何依赖。

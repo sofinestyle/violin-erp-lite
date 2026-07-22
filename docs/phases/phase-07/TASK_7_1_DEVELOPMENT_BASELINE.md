@@ -1,7 +1,7 @@
 ---
 document_name: Task 7.1 开发基线与工程初始化
 version: 1.0
-status: In Progress
+status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
 created_date: 2026-07-22
@@ -15,7 +15,7 @@ related_phase: Phase 7
 
 本文建立 Violin ERP Lite 的技术架构、技术栈、Monorepo 目录、工程规范、开发顺序和职责边界，作为 Phase 7 后续工程实施的统一基线。
 
-Phase 7 与 Task 7.1 当前状态均为 In Progress。Task 7.1 只形成开发基线文档和项目状态同步，不创建目录、源代码、真实 API Route、Prisma Schema、Migration、Seed、数据库对象或业务功能，不安装依赖，不提前执行 Task 7.2。
+Phase 7 当前状态为 In Progress，Task 7.1 已完成 GitHub 验收并获得项目负责人批准，状态为 Completed / Approved。Task 7.1 只形成开发基线文档和项目状态同步，不创建目录、源代码、真实 API Route、Prisma Schema、Migration、Seed、数据库对象或业务功能，不安装依赖，不提前执行 Task 7.2。
 
 实现必须依次服从以下正式事实来源：
 
@@ -188,15 +188,15 @@ Phase 7 采用“6 个 Task + 独立 Final Consistency Review”结构。每个 
 
 | 顺序 | Task | 内容 | 当前状态 |
 | --- | --- | --- | --- |
-| 1 | Task 7.1 开发基线与工程初始化 | 确认架构、技术栈、目录、规范、执行顺序和职责；只形成文档 | In Progress |
-| 2 | Task 7.2 Monorepo 工程骨架与质量门禁 | 创建工作区、应用/包骨架、基础脚本、lint、类型检查和测试门禁；不实现业务功能 | Waiting / Not Started |
+| 1 | Task 7.1 开发基线与工程初始化 | 确认架构、技术栈、目录、规范、执行顺序和职责；只形成文档 | Completed / Approved |
+| 2 | Task 7.2 Monorepo 工程骨架与质量门禁 | 创建工作区、应用/包骨架、基础脚本、lint、类型检查和测试门禁；不实现业务功能 | In Progress |
 | 3 | Task 7.3 数据持久化与后端公共基础 | 按 Frozen 数据库建立 Prisma/PostgreSQL 物理映射，并实现 Route Handler、JWT、RBAC、日志和错误处理基础 | Waiting / Not Started |
 | 4 | Task 7.4 双端应用壳层与公共能力 | 实现 PC/微信公共壳层、导航、认证流程及 Phase 6 已批准公共能力 | Waiting / Not Started |
 | 5 | Task 7.5 核心业务功能实现 | 按依赖顺序实现基础资料、采购、生产与验收、库存、出入库与调拨、跨境业务 | Waiting / Not Started |
 | 6 | Task 7.6 系统集成与开发收口 | 完成双端集成、回归修复、安全与一致性加固、文档同步和 Phase 8 测试准备 | Waiting / Not Started |
 | Gate | Phase 7 Final Consistency Review | 核对实现、测试和文档与全部 Approved/Frozen 事实来源一致 | Waiting / Not Started |
 
-上述内容只定义顺序和边界，不代表 Task 7.2 至 Task 7.6 已获启动授权。
+上述内容定义顺序和边界。Task 7.2 已获得正式启动授权；Task 7.3 至 Task 7.6 尚未获得启动授权。
 
 ## 13. 职责边界
 
@@ -215,16 +215,16 @@ Phase 7 采用“6 个 Task + 独立 Final Consistency Review”结构。每个 
 3. 编码、Git、Branch、环境变量、日志和错误处理规范完整；
 4. Codex 边界、Phase 7 原则、六个 Task 顺序和三方职责明确；
 5. Phase 6 保持 Completed / Approved / Frozen；
-6. Phase 7 与 Task 7.1 更新为 In Progress；
+6. Phase 7 保持 In Progress，Task 7.1 更新为 Completed / Approved；
 7. 技术开发仅进入开发规范阶段，业务编码尚未开始；
 8. BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1 和 Phase 6 Functional Specification 未修改；
 9. 正式 API 总数保持 315；
 10. 未创建源代码、工程目录、Schema、Migration、Seed 或依赖；
 11. 未提前执行 Task 7.2；
-12. 当前下一步为 Task 7.1 GitHub 验收。
+12. 当前正式任务为 Task 7.2 Monorepo 工程骨架与质量门禁。
 
 ## 15. 当前结论
 
-项目负责人已正式批准 Phase 7 启动。Phase 7 状态为 In Progress，Task 7.1 状态为 In Progress；本 Task 已形成待 GitHub 验收的开发基线文档。
+项目负责人已正式批准 Phase 7 启动。Phase 7 状态为 In Progress；Task 7.1 已通过 GitHub 验收并获得项目负责人批准，状态为 Completed / Approved；Task 7.2 已正式启动并更新为 In Progress。
 
-本次未修改 Frozen 业务规则、数据库逻辑设计、API Master Specification v1.1、315 个正式 API 或 Phase 6 功能规格，未新增业务对象、数据库结构或业务流程，未编写业务代码。当前下一步仅为 Task 7.1 GitHub 验收，未经批准不得启动 Task 7.2。
+本次状态同步未修改开发基线正文、Frozen 业务规则、数据库逻辑设计、API Master Specification v1.1、315 个正式 API 或 Phase 6 功能规格，未新增业务对象、数据库结构或业务流程，未创建工程代码或安装依赖。当前正式任务为 Task 7.2，未经批准不得启动 Task 7.3。

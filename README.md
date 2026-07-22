@@ -65,9 +65,10 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - API Master Specification v1.1：Completed / Approved / Frozen（正式接口总数 315）
 - Phase 6 Final Consistency Review：Completed / Approved
 - Phase 7：In Progress
-- Task 7.1 开发基线与工程初始化：In Progress
-- 当前任务：Task 7.1 开发基线与工程初始化
-- 当前下一步：Task 7.1 GitHub 验收
+- Task 7.1 开发基线与工程初始化：Completed / Approved
+- Task 7.2 Monorepo 工程骨架与质量门禁：In Progress
+- 当前任务：Task 7.2 Monorepo 工程骨架与质量门禁
+- 当前下一步：Task 7.2 执行
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -81,9 +82,9 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Check 约束设计：Completed / Approved
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
-- 技术开发：仅开发规范阶段已启动，业务编码尚未开始
+- 技术开发：工程初始化阶段已启动，业务编码尚未开始
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。API Change Request 001 已获得批准；库存盘点、销售退货和报损共 43 个接口已纳入 API Master Specification v1.1，正式接口总数为 315，v1.1 状态为 Completed / Approved / Frozen。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen；Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入。项目负责人已正式启动 Phase 7，Phase 7 与 Task 7.1 均为 In Progress；当前任务为 Task 7.1 开发基线与工程初始化，技术开发仅进入开发规范阶段，业务编码尚未开始，当前下一步为 Task 7.1 GitHub 验收。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。API Change Request 001 已获得批准；库存盘点、销售退货和报损共 43 个接口已纳入 API Master Specification v1.1，正式接口总数为 315，v1.1 状态为 Completed / Approved / Frozen。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen；Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入。Phase 7 保持 In Progress，Task 7.1 已完成 GitHub 验收并获得批准，状态为 Completed / Approved；Task 7.2 已正式启动并更新为 In Progress，当前任务为 Task 7.2 Monorepo 工程骨架与质量门禁，工程初始化阶段已启动，业务编码尚未开始。
 
 ## 九阶段开发路线
 
@@ -157,7 +158,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Task 6.3 公共能力功能详细设计（Completed / Approved）](docs/phases/phase-06/TASK_6_3_COMMON_CAPABILITY_FUNCTIONAL_DESIGN.md)
 - [API Change Request 001：补齐库存盘点、销售退货、报损 API（Completed / Approved）](docs/00-governance/API_CHANGE_REQUEST_001.md)
 - [Phase 6 Final Consistency Review（Completed / Approved）](docs/phases/phase-06/PHASE_6_FINAL_CONSISTENCY_REVIEW.md)
-- [Task 7.1 开发基线与工程初始化（In Progress）](docs/phases/phase-07/TASK_7_1_DEVELOPMENT_BASELINE.md)
+- [Task 7.1 开发基线与工程初始化（Completed / Approved）](docs/phases/phase-07/TASK_7_1_DEVELOPMENT_BASELINE.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -167,7 +168,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-API Change Request 001 已正式批准，API Master Specification v1.1 是 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 315；Database Logical Design v1.1 保持 Frozen。Phase 6 已完成、批准并冻结，Task 6.1 至 Task 6.3 是后续技术阶段的正式产品输入；后续修改 Phase 6 正式内容必须经过 DCR 或正式 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。Phase 7 与 Task 7.1 已正式启动，当前只允许完成开发基线文档与状态同步；未经 Task 7.1 GitHub 验收和项目负责人批准，不得启动 Task 7.2，不得创建真实 API Route、页面代码、业务代码、Prisma Schema、Migration、Seed 或安装依赖。
+API Change Request 001 已正式批准，API Master Specification v1.1 是 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 315；Database Logical Design v1.1 保持 Frozen。Phase 6 已完成、批准并冻结，Task 6.1 至 Task 6.3 是后续技术阶段的正式产品输入；后续修改 Phase 6 正式内容必须经过 DCR 或正式 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。Task 7.1 已完成并获得批准，Task 7.2 已正式启动；本次仅同步文档状态，不创建工程代码或安装依赖。Task 7.2 必须按后续正式执行指令推进，未经其 GitHub 验收和项目负责人批准不得启动 Task 7.3。
 
 ## 安全说明
 
