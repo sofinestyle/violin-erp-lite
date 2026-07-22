@@ -1,0 +1,146 @@
+.shell-page {
+  min-height: 100vh;
+  padding: 32px 28px 48px;
+  background: #f5f7fa;
+}
+
+.shell-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.shell-page__eyebrow,
+.shell-page__title {
+  display: block;
+}
+
+.shell-page__eyebrow {
+  margin-bottom: 8px;
+  color: #6b7280;
+  font-size: 24px;
+}
+
+.shell-page__title {
+  color: #1f2937;
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.shell-page__avatar,
+.empty-state__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  background: #2563eb;
+  font-weight: 700;
+}
+
+.shell-page__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  font-size: 28px;
+}
+
+.shell-page__card {
+  overflow: hidden;
+  min-height: 620px;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgb(17 24 39 / 5%);
+}
+
+.empty-state {
+  display: flex;
+  min-height: 620px;
+  padding: 48px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.empty-state__icon {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 28px;
+  border-radius: 32px;
+  font-size: 36px;
+}
+
+.empty-state__title,
+.empty-state__description {
+  display: block;
+}
+
+.empty-state__title {
+  color: #1f2937;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.empty-state__description {
+  max-width: 520px;
+  margin-top: 16px;
+  color: #6b7280;
+  font-size: 26px;
+  line-height: 1.6;
+}
+
+.global-state {
+  display: flex;
+  min-height: 100vh;
+  padding: 48px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  text-align: center;
+}
+
+.global-state__spinner {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 24px;
+  border: 6px solid #dbeafe;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.global-state__title {
+  color: #1f2937;
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.global-state__text {
+  margin-top: 16px;
+  color: #6b7280;
+  font-size: 26px;
+}
+
+.global-state__button {
+  margin-top: 32px;
+  color: #ffffff;
+  background: #2563eb;
+  border: 0;
+}
+
+.network-banner {
+  padding: 16px 24px;
+  color: #92400e;
+  background: #fef3c7;
+  font-size: 24px;
+  text-align: center;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -26,3 +26,4 @@ minimumReleaseAgeExclude:
   - next@16.2.11
   - react-dom@19.2.8
   - react@19.2.8
+  - postcss@8.5.22

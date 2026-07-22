@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "predev": "pnpm --filter @violin-erp/api build && pnpm --filter @violin-erp/shared build",
     "dev": "taro build --type weapp --watch",
+    "prebuild": "pnpm --filter @violin-erp/api build && pnpm --filter @violin-erp/shared build",
     "build": "taro build --type weapp"
   },
   "dependencies": {
@@ -15,6 +17,8 @@
     "@tarojs/runtime": "4.2.1",
     "@tarojs/shared": "4.2.1",
     "@tarojs/taro": "4.2.1",
+    "@violin-erp/api": "workspace:*",
+    "@violin-erp/shared": "workspace:*",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
@@ -22,6 +26,7 @@
     "@babel/core": "7.29.7",
     "@babel/preset-react": "7.29.7",
     "@tarojs/cli": "4.2.1",
+    "@tarojs/taro-loader": "4.2.1",
     "@tarojs/webpack5-runner": "4.2.1",
     "@types/react": "18.3.31",
     "@types/webpack-env": "1.18.8",

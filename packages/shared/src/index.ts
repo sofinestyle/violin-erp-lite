@@ -1,2 +1,2 @@
-// Reserved for shared utilities that do not define business facts.
-export {};
+export * from "./app-config.js";
+export * from "./i18n.js";

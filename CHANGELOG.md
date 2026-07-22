@@ -11,6 +11,33 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.8.3] - 2026-07-22
+
+### Added
+
+- 新增符合 Phase 4 的 PC 管理端应用壳层，包括 Header、Sidebar、Breadcrumb、Tab、默认折叠信息面板、全局加载与错误状态、404、500 及十个一级导航占位入口
+- 新增微信小程序应用壳层及“首页、业务、库存、我的”四个正式 TabBar 占位页面，并提供网络状态与 Update Manager 工程封装
+- 新增固定 Light Theme、空用户、空权限、应用配置 Context，以及复用 Task 7.3-C `PermissionCode` 的双端 Permission Wrapper
+- 新增 PageContainer、PageHeader、Card、EmptyState、TableEmpty、SearchBar、Pagination、Dialog、ConfirmDialog、Toast、Skeleton 和 StatusBadge 通用组件
+- 新增 `zh-CN` 默认、`en-US` 预留的最小 i18n 基础，以及 PC 壳层启动健康检查门控
+
+### Changed
+
+- `AGENTS.md` 补充 Approved / Frozen SSOT 高于 ChatGPT 执行指令、冲突停止报告及禁止使用聊天记忆覆盖正式设计的永久执行规则
+- 补齐 Tailwind CSS、shadcn/ui 组件基础及 Taro 4.2.1 同版本 loader 所需工程依赖，未升级既有核心依赖大版本
+
+### Verified
+
+- PC 壳层启动与 `GET /api/health` 均返回 HTTP 200；一级导航、占位页、信息面板与健康检查失败安全状态通过自动测试和浏览器验证
+- 微信小程序生产编译成功并能进入 watch；TabBar 仅包含“首页、业务、库存、我的”
+- 仓库共 46 项测试通过，其中本次新增 9 项双端壳层测试并更新 1 项共享 i18n 测试
+
+### Scope
+
+- Task 7.4 保持 In Progress，完成后仍需 ChatGPT GitHub 技术验收与项目负责人批准
+- 本次未实现登录、Token 业务流程、Dashboard、ERP 业务页面、315 个正式业务 API、Repository、Service、数据库结构、Migration、Seed 或真实业务审计与上传
+- 未修改 Frozen 业务、产品、角色权限、数据库、API、Phase 4 或 Phase 6 文档，正式 API 总数保持 315
+
 ## [0.8.2] - 2026-07-22
 
 ### Changed
