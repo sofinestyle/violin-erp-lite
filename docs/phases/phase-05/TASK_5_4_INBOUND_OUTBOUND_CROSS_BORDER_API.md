@@ -22,6 +22,7 @@ related_phase: Phase 5
 - 来源仓到在途仓的跨境发运及分批发货；
 - 海外仓当前库存、导入任务、导入明细及发货匹配结果只读查询；
 - 入库、出库、调拨、跨境发运与库存余额、流水的原子事务衔接。
+- API Change Request 001 候选补充的库存盘点、销售退货和报损接口；该补充为 Completed / Pending Approval，批准前不改变 v1.0 Frozen 基线。
 
 本文件不创建真实 API Route，不编写 Controller、Service、Repository 或业务代码，不修改 Frozen 数据库或 Approved 页面。Excel 上传、校验和正式执行留待 Task 5.5。
 
@@ -35,6 +36,9 @@ related_phase: Phase 5
 | 调拨 | BR-014、BR-016、BR-018；Task 2.5 第 12 节 | `transfer_orders`、`transfer_order_items`、来源/在途/目的仓、调出/调入/差异量 | Task 4.9 第 6 节 | 三个仓库范围、调出/调入权限 |
 | 跨境发货 | BR-007、BR-013、BR-018、BR-027 至 BR-030；Task 2.5 第 10 节 | `cross_border_shipments`、`cross_border_shipment_items`、可选生产来源、三仓链路、发货/实收/差异量 | Task 4.10 第 4 至 8 节 | 三仓范围、生产记录、成本权限 |
 | 海外仓与导入结果 | BR-013、BR-014；Task 2.5 第 11 节 | `warehouses`、`inventories`、`inventory_transactions`、`import_tasks`、`import_task_items`、`shipment_import_matches` | Task 4.10 第 9、10、12 节 | 海外仓、店铺、原始数据、导出权限 |
+| 库存盘点 | BR-003 至 BR-005、BR-009、BR-010；Task 2.5 第 13 节 | `stock_counts`、`stock_count_items`、适用库存调整、状态历史与审批 | Task 4.9 第 7 节 | 仓库、盘点执行/复盘/审核/导出权限 |
+| 销售退货 | BR-003、BR-004、BR-006、BR-009；Task 2.5 第 9 节 | `sales_returns`、`sales_return_items`、原销售出库、库存与流水 | Task 4.9 第 9 节 | 店铺、原出库、接收仓、处理/导出权限 |
+| 报损 | BR-003 至 BR-006、BR-009、BR-010、BR-016；Task 2.5 第 14.2 节 | `damage_reports`、`damage_report_items`、库存与流水 | Task 4.9 第 10 节 | 仓库、成本、审核/确认/导出权限 |
 
 字段使用 lowerCamelCase 映射 Frozen snake_case。生产订单没有统一目标仓字段；跨境发货只有可选生产单/生产明细关系，没有完工记录关系；普通出库不建立销售订单；采购退货实际出库直接执行既有采购退货对象，不重复创建 `outbound_orders`。
 
@@ -133,6 +137,18 @@ related_phase: Phase 5
 | `CBR-022` | 海外库存来源追溯 | `GET /api/v1/overseas-inventories/{inventoryId}/source-trace` | PC | 海外仓/流水/导入权限 | 由流水、导入、匹配派生 | 不新增来源字段 |
 
 Task 5.4 共定义 18 + 17 + 15 + 22 = 72 个正式接口。
+
+### 3.5 API Change Request 001 候选补充（43 个）
+
+下列接口仅补齐 Task 4.9 已批准页面能力，完整字段、权限、幂等、库存事务和验收规则见 `docs/00-governance/API_CHANGE_REQUEST_001.md`。在项目负责人 GitHub 验收前，本节状态为 Completed / Pending Approval。
+
+| 模块 | 接口编号、方法与路径 | 数量 |
+| --- | --- | ---: |
+| 库存盘点 | `STC-001 GET /api/v1/stock-counts`；`STC-002 GET /api/v1/stock-counts/{id}`；`STC-003 POST /api/v1/stock-counts`；`STC-004 PATCH /api/v1/stock-counts/{id}`；`STC-005 POST /api/v1/stock-counts/{id}/submit`；`STC-006 POST /api/v1/stock-counts/{id}/withdraw`；`STC-007 POST /api/v1/stock-counts/{id}/approve`；`STC-008 POST /api/v1/stock-counts/{id}/reject`；`STC-009 POST /api/v1/stock-counts/{id}/start`；`STC-010 POST /api/v1/stock-counts/{id}/initial-results`；`STC-011 POST /api/v1/stock-counts/{id}/recount-results`；`STC-012 POST /api/v1/stock-counts/{id}/complete`；`STC-013 POST /api/v1/stock-counts/{id}/cancel`；`STC-014 POST /api/v1/stock-counts/{id}/void`；`STC-015 GET /api/v1/stock-counts/{id}/differences`；`STC-016 GET /api/v1/stock-counts/{id}/status-history`；`STC-017 POST /api/v1/stock-counts/export` | 17 |
+| 销售退货 | `SRT-001 GET /api/v1/sales-returns`；`SRT-002 GET /api/v1/sales-returns/{id}`；`SRT-003 POST /api/v1/sales-returns`；`SRT-004 PATCH /api/v1/sales-returns/{id}`；`SRT-005 POST /api/v1/sales-returns/{id}/submit`；`SRT-006 POST /api/v1/sales-returns/{id}/withdraw`；`SRT-007 POST /api/v1/sales-returns/{id}/approve`；`SRT-008 POST /api/v1/sales-returns/{id}/reject`；`SRT-009 POST /api/v1/sales-returns/{id}/cancel`；`SRT-010 POST /api/v1/sales-returns/{id}/confirm-inbound`；`SRT-011 GET /api/v1/sales-return-eligible-items`；`SRT-012 GET /api/v1/sales-returns/{id}/status-history`；`SRT-013 POST /api/v1/sales-returns/export` | 13 |
+| 报损 | `DMG-001 GET /api/v1/damage-reports`；`DMG-002 GET /api/v1/damage-reports/{id}`；`DMG-003 POST /api/v1/damage-reports`；`DMG-004 PATCH /api/v1/damage-reports/{id}`；`DMG-005 POST /api/v1/damage-reports/{id}/submit`；`DMG-006 POST /api/v1/damage-reports/{id}/withdraw`；`DMG-007 POST /api/v1/damage-reports/{id}/approve`；`DMG-008 POST /api/v1/damage-reports/{id}/reject`；`DMG-009 POST /api/v1/damage-reports/{id}/cancel`；`DMG-010 POST /api/v1/damage-reports/{id}/confirm-outbound`；`DMG-011 POST /api/v1/damage-reports/stock-validation`；`DMG-012 GET /api/v1/damage-reports/{id}/status-history`；`DMG-013 POST /api/v1/damage-reports/export` | 13 |
+
+盘点完成只确认差异，不修改库存；销售退货审核不增加库存，只有 `SRT-010` 形成正式退货库存结果；报损审核不减少库存，只有 `DMG-010` 在防负库存校验后形成正式报损出库。所有库存确认均原子更新余额、单据事实和只追加流水。
 
 ## 4. 入库单查询接口
 
@@ -477,12 +493,15 @@ GET /api/v1/overseas-inventories?warehouseId=018f...504&skuId=018f...512&page=1&
 | 导入任务/结果/匹配只读 | `CBR-018` 至 `CBR-021` | 导入、仓库/店铺权限 | Task 5.5 结果；原始数据脱敏 |
 | Task 4.10 物流信息、导入结果与海外库存 | `CBR-001`、`CBR-002`、`CBR-016` 至 `CBR-022` | 三仓、导入、流水权限 | 物流仅展示；海外库存仅由 Task 5.5 Excel 导入结果形成 |
 | 历史海外库存余额快照/差异快照 | 无正式接口 | 项目负责人已取消 | 保留当前库存、流水、导入历史和来源追溯 |
+| Task 4.9 库存盘点 | `STC-001` 至 `STC-017` | 仓库、执行、复盘、审核、导出 | 盘点完成只确认差异；关联调整沿用 `INV-013` |
+| Task 4.9 销售退货 | `SRT-001` 至 `SRT-013` | 店铺、原出库、接收仓、处理、导出 | 确认退货入库才形成库存与流水 |
+| Task 4.9 报损 | `DMG-001` 至 `DMG-013` | 仓库、成本、审核、确认、导出 | 确认报损出库才扣减库存与追加流水 |
 
-Task 4.8 当前库存入口、Task 4.9 本 Task 范围页面和 Task 4.10 可映射操作均已有接口或明确留待 Task 5.5；Task 4.10 已取消能力不建立接口。
+Task 4.8 当前库存入口、Task 4.9 与 Task 4.10 的可映射操作，在 API Change Request 001 获批后均有正式接口覆盖；Task 4.10 已取消能力不建立接口。
 
 ## 31. 范围排除
 
-本 Task 不包含基础资料、采购单维护、生产单维护、验收单维护、库存调整、盘点、销售退货、报损、Excel 上传/校验/执行、通用附件、平台实时 API、完整销售订单、海外仓实时平台写入、真实 Route、Controller、Service、Repository、ORM、Schema、DDL、Migration、Seed、技术框架、Phase 6 或技术开发。
+本 Task 不包含基础资料、采购单维护、生产单维护、验收单维护、库存调整、Excel 上传/校验/执行、通用附件、平台实时 API、完整销售订单、海外仓实时平台写入、真实 Route、Controller、Service、Repository、ORM、Schema、DDL、Migration、Seed、技术框架或技术开发。库存盘点、销售退货和报损不再属于范围排除，按 API Change Request 001 候选补充处理。
 
 ## 32. 跨境业务口径修正与正式结论
 
@@ -500,7 +519,7 @@ Task 4.8 当前库存入口、Task 4.9 本 Task 范围页面和 Task 4.10 可映
 
 1. Task 5.1、Task 5.2、Task 5.3 均为 Completed / Approved；
 2. Task 5.4 已完成设计并获得项目负责人批准，状态为 Completed / Approved；
-3. 共定义 72 个正式接口：入库 18、出库 17、调拨 15、跨境 22；
+3. v1.0 原定义 72 个正式接口：入库 18、出库 17、调拨 15、跨境 22；API Change Request 001 另补充盘点 17、销售退货 13、报损 13，共 43 个候选接口；
 4. 入库前必须完成正式验收；所有库存变化均通过原子库存事务和只追加流水；
 5. 国内销售只登记销售出库，不建立销售订单；
 6. 调拨严格经过在途仓；跨境发运只执行来源仓到在途仓；
@@ -509,5 +528,5 @@ Task 4.8 当前库存入口、Task 4.9 本 Task 范围页面和 Task 4.10 可映
 9. 未新增字段、表、状态、关系、约束、索引或业务对象；
 10. 未创建真实 API Route，未编写业务代码，未修改 Frozen 数据库；Task 4.10 仅同步本次批准的页面口径；
 11. Phase 5 保持 In Progress，Task 5.5 为 Completed / Approved；
-12. 当前下一步为 Phase 5 Final Consistency Review GitHub 验收，不得开始 Phase 6；
+12. 当前下一步为 API Change Request 001 GitHub 验收；Phase 6 Final Consistency Review 保持 Waiting / Blocked by API CR Approval；
 13. 技术开发保持 Not Started。

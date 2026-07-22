@@ -1339,3 +1339,30 @@ Approved
 ### 影响
 
 本决定不新增业务模块、接口、状态、数据库字段、表、关系或业务对象，不修改 Frozen BUSINESS_RULES、DATABASE_SPEC、API_SPEC、Approved Phase 4 页面或 Phase 5 Task 正文；不编写代码，不创建真实页面或 API Route，不安装依赖，不启动 Phase 6 Final Consistency Review 或 Phase 7。未经项目负责人批准不得进入 Phase 6 Final Consistency Review。
+
+## DEC-055 发起API Change Request 001补齐三类Approved页面接口
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 正式保留 Task 4.9 已批准的库存盘点、销售退货和报损页面及业务流程，不删除、不取消、不降级；
+- 正式发起 API Change Request 001，状态为 Completed / Pending Approval；
+- 确认冲突事实：Task 5.4 将三类能力排除，Phase 5 Final Consistency Review 的页面覆盖结论存在遗漏，Task 6.2 无法建立完整映射；
+- 使用 Frozen Database Logical Design v1.1 既有 `stock_counts`、`stock_count_items`、`sales_returns`、`sales_return_items`、`damage_reports`、`damage_report_items` 及库存/历史对象完成适配；
+- 新增盘点 `STC-*` 17 个、销售退货 `SRT-*` 13 个、报损 `DMG-*` 13 个候选接口，共 43 个；既有 272 个接口不删除、不复用、不改义、不重编号；
+- API Master Specification 更新为 v1.1、Completed / Pending Approval，候选接口总数为 315；v1.0 与原 272 个接口仍是最后批准的 Frozen 基线；
+- 盘点完成只确认差异，不直接修改库存；销售退货与报损的创建、提交和审核不改变库存，只有专用确认动作可以原子形成余额变化与只追加流水；
+- Frozen Database Logical Design v1.1 可以完整支撑本次接口，不发起数据库 DCR，不新增表、字段、关系、状态或业务对象；
+- Task 6.1、Task 6.2 保持 Completed / Approved，Task 6.3 保持 Completed / Pending Approval，Phase 6 保持 In Progress；
+- Phase 6 Final Consistency Review 更新为 Waiting / Blocked by API CR Approval，当前下一步为 API Change Request 001 GitHub 验收。
+
+### 影响
+
+本决定仅授权完成 API Change Request 001 的候选设计和相关文档同步，不直接批准或重新冻结 API Master Specification v1.1。未修改 Frozen 数据库、BUSINESS_RULES 或 Approved 页面，未修改与本缺口无关的接口；未编写代码、创建真实 API Route、ORM、Schema、Migration 或 Seed，未安装依赖，未启动 Phase 6 Final Consistency Review 或 Phase 7。

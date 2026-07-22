@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.6.4] - 2026-07-22
+
+### Added
+
+- 新增 API Change Request 001，正式记录 Approved Task 4.9 的库存盘点、销售退货和报损页面缺少完整 API 覆盖的问题
+- 完成库存盘点 `STC-*` 17 个、销售退货 `SRT-*` 13 个、报损 `DMG-*` 13 个候选接口设计，共新增 43 个
+- 新增 DEC-055，记录 API 覆盖遗漏、数据库适配结论和审批阻塞状态
+
+### Changed
+
+- API Master Specification 更新为 v1.1、Completed / Pending Approval；候选接口总数由 272 更新为 315
+- Task 5.4 删除盘点、销售退货和报损属于范围排除的错误口径，并补充三类接口目录和页面映射
+- Phase 5 Final Consistency Review 修正“Approved 页面全部覆盖”的遗漏结论
+- Task 6.2 补充三类页面的动作、状态、权限、库存事务及 API 映射
+- Phase 6 Final Consistency Review 更新为 Waiting / Blocked by API CR Approval
+- 当前下一步更新为 API Change Request 001 GitHub 验收
+
+### Scope
+
+- API Master Specification v1.0 与原 272 个接口仍是最后批准的 Frozen 基线；v1.1 与 315 个候选接口尚未批准或重新冻结
+- 三类 Approved 页面完整保留；盘点完成不修改库存，销售退货和报损仅由正式确认动作形成库存变化及只追加流水
+- Frozen Database Logical Design v1.1 可以支撑全部新增接口，未发起数据库 DCR，未新增表、字段、关系、状态或业务对象
+- 未修改其他业务接口，未编写代码、创建真实 API Route、安装依赖，未启动 Phase 6 Final Consistency Review 或 Phase 7
+
 ## [0.6.3] - 2026-07-22
 
 ### Added

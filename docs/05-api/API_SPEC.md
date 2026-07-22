@@ -1,11 +1,11 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.0
-status: Completed / Approved / Frozen
+version: 1.1
+status: Completed / Pending Approval
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-21
+updated_date: 2026-07-22
 related_phase: Phase 5
 ---
 
@@ -15,7 +15,7 @@ related_phase: Phase 5
 
 本文件是 Violin ERP Lite Phase 5 正式 API 规范总入口，统一 Task 5.1 至 Task 5.5 的接口编号、Header、请求、响应、分页、排序、筛选、命名、版本、错误码、权限、日志、导入、附件和安全规则。
 
-当前状态：Phase 5 为 Completed / Approved / Frozen；Task 5.1 至 Task 5.5 与 Phase 5 Final Consistency Review 均为 Completed / Approved。API Master Specification v1.0 已正式冻结，正式接口总数保持 272；Phase 6 为 Waiting / Not Started，当前下一步为等待项目负责人正式启动 Phase 6。
+当前修订状态：API Master Specification v1.1 为 Completed / Pending Approval。API Change Request 001 已补齐 Approved 库存盘点、销售退货和报损页面的 43 个候选正式接口，v1.1 候选接口总数为 315；在项目负责人完成 GitHub 验收前，v1.0 与原 272 个接口仍是最后批准的 Frozen 基线。Phase 6 为 In Progress，Final Consistency Review 保持 Waiting / Blocked by API CR Approval，当前下一步为 API Change Request 001 GitHub 验收。
 
 ## 2. 正式文档入口
 
@@ -25,6 +25,7 @@ related_phase: Phase 5
 4. [Task 5.4 出入库与跨境业务 API](../phases/phase-05/TASK_5_4_INBOUND_OUTBOUND_CROSS_BORDER_API.md)
 5. [Task 5.5 导入、附件、日志、安全与 API 最终收口](../phases/phase-05/TASK_5_5_IMPORT_LOG_SECURITY_API_FINAL.md)
 6. [Phase 5 Final Consistency Review](../phases/phase-05/PHASE_5_FINAL_CONSISTENCY_REVIEW.md)
+7. [API Change Request 001：补齐库存盘点、销售退货、报损 API](../00-governance/API_CHANGE_REQUEST_001.md)
 
 发生冲突时，Frozen 业务规则和 Frozen Database Logical Design v1.1 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
 
@@ -37,8 +38,10 @@ related_phase: Phase 5
 | Task 5.4 | 入库 `INB-*` 18；出库 `OUT-*` 17；调拨 `TRF-*` 15；跨境 `CBR-*` 22 | 72 | Completed / Approved |
 | Task 5.5 | 导入 `IMP-*` 15；附件 `ATT-*` 8；日志 `LOG-*` 4；安全 `SEC-*` 5 | 32 | Completed / Approved |
 | 合计 | Phase 5 正式接口 | 272 | Completed / Approved / Frozen |
+| API CR-001 | 库存盘点 `STC-*` 17；销售退货 `SRT-*` 13；报损 `DMG-*` 13 | 43 | Completed / Pending Approval |
+| v1.1 候选合计 | 原 272 个接口与本次 43 个候选接口 | 315 | Completed / Pending Approval |
 
-接口编号在 Phase 5 内唯一且稳定。现有编号不得复用、改义或因排序调整而重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。
+接口编号在 Phase 5 内唯一且稳定。现有编号不得复用、改义或因排序调整而重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。`STC-*`、`SRT-*` 和 `DMG-*` 的完整候选契约以 API Change Request 001 及 Task 5.4 补充章节为准。
 
 ## 4. Version 与 Naming
 
@@ -152,19 +155,21 @@ Audit Log、Operation Log、Import Log、Export Log、Login Log 和 Security Log
 
 ## 15. Security
 
-`SEC-001` 至 `SEC-005` 定义登录、刷新、登出、当前会话和当前权限能力。Authentication、Authorization、Token、Refresh Token、Session、Permission Validation、Replay Protection、Idempotency、Rate Limit、IP White List 和 Header 安全规则适用于全部 272 个接口。
+`SEC-001` 至 `SEC-005` 定义登录、刷新、登出、当前会话和当前权限能力。Authentication、Authorization、Token、Refresh Token、Session、Permission Validation、Replay Protection、Idempotency、Rate Limit、IP White List 和 Header 安全规则适用于 v1.0 的 272 个 Frozen 接口及 v1.1 新增的 43 个候选接口。
 
 Token、Session、网关、限流器、IP 配置及安全遥测的技术实现留待后续阶段，不新增认证、会话、IP 或日志数据库表。生产环境必须使用 HTTPS，并执行最小权限、数据脱敏、文件安全、输入白名单和安全错误处理。
 
-## 16. Phase 5 冻结结论
+## 16. Phase 5 冻结基线与 v1.1 候选修订
 
 1. Task 5.1 至 Task 5.5 为 Completed / Approved；
 2. Phase 5 Final Consistency Review 为 Completed / Approved；
 3. Phase 5 为 Completed / Approved / Frozen；
-4. Phase 5 当前共登记 272 个正式接口；
+4. API Master Specification v1.0 共登记 272 个 Approved/Frozen 接口；
 5. 本文件已升级为 API Master Specification；
 6. 未修改 Frozen 数据库，未新增字段、表、状态、关系或业务对象；
 7. 未创建真实 API，未编写业务代码；
-8. 272 个正式接口的编号、路径、方法、状态、权限、安全及 Frozen 映射已经完成一致性复核；
-9. API Master Specification v1.0 是 Phase 6 及后续阶段唯一 API 事实来源；后续不得直接修改，如需变更必须经过正式 DCR 或 Change Request；
-10. 禁止通过 Phase 6 文档、页面代码或实现代码绕过本规范；当前下一步为等待项目负责人正式启动 Phase 6。
+8. 原 272 个正式接口的编号、路径、方法、状态、权限、安全及 Frozen 映射保持不变；
+9. API Change Request 001 发现并补齐库存盘点、销售退货和报损覆盖遗漏，新增 43 个候选正式接口，v1.1 候选总数为 315；
+10. v1.1 当前为 Completed / Pending Approval，尚未重新冻结；项目负责人 GitHub 验收前，v1.0 仍为最后批准的 Frozen API 基线；
+11. 本次只补齐 Approved 页面能力，不修改 Frozen 数据库，不新增表、字段、关系、状态或业务对象；
+12. 禁止通过 Phase 6 文档、页面代码或实现代码绕过本规范；当前下一步为 API Change Request 001 GitHub 验收，Phase 6 Final Consistency Review 保持阻塞。
