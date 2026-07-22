@@ -11,6 +11,22 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.7.5] - 2026-07-22
+
+### Changed
+
+- Task 7.2 Monorepo 工程骨架与质量门禁已通过 GitHub 技术验收并获得项目负责人批准，状态更新为 Completed / Approved
+- Task 7.3 数据持久化与后端公共基础正式启动，状态更新为 In Progress
+- 当前正式任务更新为 Task 7.3，当前下一步更新为 Task 7.3（正式任务）
+- 新增 DEC-060，记录 Task 7.2 批准与 Task 7.3 启动决定
+
+### Scope
+
+- Phase 7 保持 In Progress；Task 7.4 至 Task 7.6 与 Phase 7 Final Consistency Review 保持 Waiting / Not Started
+- 本次仅同步正式 Phase 与 Task 状态，不记录 Task 7.3 内部执行 Section
+- 未修改 BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1、Phase 6 或 Phase 7 开发基线
+- 未修改工程代码或依赖，未实现任何业务、数据库或 API 内容
+
 ## [0.7.4] - 2026-07-22
 
 ### Added

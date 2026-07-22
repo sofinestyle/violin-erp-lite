@@ -1474,3 +1474,28 @@ Approved
 ### 影响
 
 本决定只同步 Phase 7 Task 状态，不修改 Task 7.1 开发基线正文、Frozen BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1、315 个正式 API 或 Phase 6 Functional Specification；不新增数据库表、字段、关系、状态、业务对象或业务流程；不创建工程代码、Schema、Migration、Seed 或其他实现文件，不安装任何依赖。
+
+## DEC-060 批准Task 7.2并启动Task 7.3
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 项目负责人正式批准 Task 7.2 Monorepo 工程骨架与质量门禁，状态更新为 Completed / Approved；
+- Phase 7 保持 In Progress；
+- Task 7.3 数据持久化与后端公共基础正式启动，状态更新为 In Progress；
+- 当前正式任务更新为 Task 7.3；
+- 当前下一步更新为 Task 7.3（正式任务）；
+- 正式治理文档只记录 Phase 与 Task，不记录 Task 7.3 内部执行 Section；
+- Task 7.4 至 Task 7.6 与 Phase 7 Final Consistency Review 保持 Waiting / Not Started；
+- 未经 Task 7.3 GitHub 验收和项目负责人批准，不得启动 Task 7.4。
+
+### 影响
+
+本决定只同步 Phase 7 Task 状态，不修改 Task 7.1 开发基线正文、Frozen BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1、315 个正式 API 或 Phase 6 Functional Specification；不新增数据库表、字段、关系、状态、业务对象或业务流程；不修改工程代码、依赖或其他实现文件，不执行 Task 7.3 技术开发。
