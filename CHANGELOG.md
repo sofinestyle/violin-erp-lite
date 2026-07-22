@@ -11,6 +11,21 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.8.2] - 2026-07-22
+
+### Changed
+
+- Task 7.3 数据持久化与后端公共基础已通过 GitHub 技术验收并获得项目负责人批准，状态更新为 Completed / Approved
+- Task 7.4 双端应用壳层与公共能力正式启动，状态更新为 In Progress
+- 当前正式任务更新为 Task 7.4，Phase 7 保持 In Progress
+- 新增 DEC-064，记录 Task 7.3 批准与 Task 7.4 启动决定
+
+### Scope
+
+- Task 7.5 至 Task 7.6 与 Phase 7 Final Consistency Review 保持 Waiting / Not Started
+- 本次仅同步正式 Phase 与 Task 状态，未修改工程代码、依赖、Prisma Schema、Migration 或 Seed
+- 未修改 Frozen 业务、数据库、角色权限、API 或 Phase 6 文档，正式 API 总数保持 315
+
 ## [0.8.1] - 2026-07-22
 
 ### Added

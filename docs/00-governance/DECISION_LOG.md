@@ -1572,3 +1572,26 @@ Approved
 ### 影响
 
 本决定只完成角色权限规格的文档治理与 Frozen 输入收口，不修改 BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1、Phase 6 Frozen 内容或 315 个正式 API；不修改 Prisma Schema、Migration、Seed 或工程代码，不执行 Task 7.3-C 开发。
+
+## DEC-064 批准Task 7.3并启动Task 7.4
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 项目负责人正式批准 Task 7.3 数据持久化与后端公共基础，状态更新为 Completed / Approved；
+- Phase 7 保持 In Progress；
+- Task 7.4 双端应用壳层与公共能力正式启动，状态更新为 In Progress；
+- 当前正式任务更新为 Task 7.4；
+- Task 7.5 至 Task 7.6 与 Phase 7 Final Consistency Review 保持 Waiting / Not Started；
+- 未经 Task 7.4 GitHub 验收和项目负责人批准，不得启动 Task 7.5。
+
+### 影响
+
+本决定只同步 Phase 7 Task 状态，不修改 Frozen BUSINESS_RULES、Database Logical Design v1.1、ROLE_PERMISSION_SPEC、API Master Specification v1.1、315 个正式 API 或 Phase 6 Functional Specification；不修改工程代码、依赖、Prisma Schema、Migration 或 Seed，不执行 Task 7.4 技术开发。
