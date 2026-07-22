@@ -11,7 +11,7 @@ import {
   type Logger,
 } from "../src/index";
 
-const REQUEST_ID = "request-test-123";
+const REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 const TIMESTAMP = "2026-07-22T10:00:00.000Z";
 
 function silentLogger(records: LogRecord[] = []): Logger {

@@ -52,6 +52,18 @@ export class UnauthorizedError extends AppError {
   }
 }
 
+export class TokenExpiredError extends AppError {
+  constructor() {
+    super("AUTH_TOKEN_EXPIRED", 401, "访问凭证已过期");
+  }
+}
+
+export class InvalidRefreshTokenError extends AppError {
+  constructor() {
+    super("AUTH_REFRESH_TOKEN_INVALID", 401, "刷新凭证无效或已失效");
+  }
+}
+
 export class ForbiddenError extends AppError {
   constructor(message = "无权执行此操作") {
     super("PERMISSION_FORBIDDEN", 403, message);
@@ -67,6 +79,12 @@ export class InternalServerError extends AppError {
 export class ServiceUnavailableError extends AppError {
   constructor(message = "服务暂不可用，请稍后重试") {
     super("SYSTEM_SERVICE_UNAVAILABLE", 503, message);
+  }
+}
+
+export class AuditUnavailableError extends AppError {
+  constructor() {
+    super("SYSTEM_AUDIT_UNAVAILABLE", 503, "审计记录暂时不可用");
   }
 }
 

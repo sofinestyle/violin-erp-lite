@@ -11,6 +11,33 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.8.1] - 2026-07-22
+
+### Added
+
+- 新增 JWT Access Token / Refresh Token 签发与验证、Token 类型隔离、过期/无效安全错误、密码 scrypt 哈希与当前用户认证上下文
+- 按 Frozen `ROLE_PERMISSION_SPEC.md` 精确展开 5 个角色、244 个权限代码和 6 类数据范围，新增单权限、任一权限与全部权限后端守卫
+- 新增审计事件、深层敏感字段过滤、必须/最佳努力失败策略、内存测试适配器和 Frozen `audit_logs` Prisma 写入适配器
+- 新增上传文件扩展名、MIME、二进制特征、大小、文件名和路径穿越校验，以及本地开发存储与删除适配器
+- 新增认证、RBAC、审计、上传及 Prisma 审计适配器的工程测试
+
+### Changed
+
+- 服务端技术参数新增 JWT 密钥/时限和上传存储/大小的无真实凭据环境变量示例
+- `X-Request-ID` 的合法格式收口为 UUID，以便与 Frozen `audit_logs.request_trace_id` 物理类型一致
+- 新增 `jose 6.2.3` 和 `file-type 20.5.0` 固定依赖及 pnpm lockfile，未放宽现有供应链策略
+
+### Verified
+
+- JWT 签发/验证、Access/Refresh 隔离、过期、篡改、错误密钥和密码哈希测试通过
+- Frozen RBAC 目录为 5 个角色、244 个唯一权限和 6 类数据范围；无空权限角色，无未分配权限
+- 审计敏感信息过滤、写入成功/失败和上传类型、大小、文件名、存储及删除测试通过
+
+### Scope
+
+- 本次只实现 Task 7.3-C 认证、权限、审计和上传公共技术基础，未实现登录/刷新/退出 API、315 个业务 API、Repository、Service、页面或 ERP 业务逻辑
+- 未修改 Prisma Schema、Migration、Seed、Frozen 业务/数据库/API/角色权限/Phase 6 文档或当前状态治理文件，正式 API 总数保持 315
+
 ## [0.8.0] - 2026-07-22
 
 ### Added
