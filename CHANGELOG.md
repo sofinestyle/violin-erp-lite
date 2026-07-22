@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.8.0] - 2026-07-22
+
+### Added
+
+- 将 `ROLE_PERMISSION_SPEC.md` 从占位文档完善为 Completed / Approved / Frozen 正式规格
+- 固定管理员、采购人员、仓库人员、销售人员和公司负责人 5 个正式角色代码
+- 建立 `module.resource.action` 权限代码规范、244 个可追溯正式权限、角色权限矩阵和 6 类数据范围
+- 新增 DEC-063，记录角色权限正式入口、管理员权限边界和冲突停止规则
+
+### Changed
+
+- `DOCUMENT_PRIORITY.md` 明确 `ROLE_PERMISSION_SPEC.md` 是角色代码、权限代码、角色权限映射和数据范围的唯一正式入口
+- API 权限语义继续以 Frozen API Master Specification v1.1 为依据；两者冲突时必须停止
+
+### Verified
+
+- 正式角色 5 个，正式权限 244 个；模块权限数量合计与目录一致
+- 无权限角色、未分配权限和无正式来源权限均为 0
+
+### Scope
+
+- 本次只整理并冻结既有 Approved / Frozen 角色权限语义，不新增业务模块、业务职责、审批流程、数据库对象、页面或 API
+- 未修改 Frozen 业务、数据库、API 或 Phase 6 内容，未修改工程代码，未执行 Task 7.3-C 开发，315 个正式 API 保持不变
+
 ## [0.7.9] - 2026-07-22
 
 ### Added

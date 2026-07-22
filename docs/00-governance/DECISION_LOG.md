@@ -1547,3 +1547,28 @@ Approved
 ### 影响
 
 本决定只补全 Frozen Database Logical Design v1.1 已预留的 `warehouse_type` 枚举代码，不新增、删除或修改数据库表、字段、关系、索引、原有 Check 规则、API 或业务对象；不修改 BUSINESS_RULES、Phase 6 Frozen 内容或 315 个正式 API；不安装 PostgreSQL、Prisma，不创建 Schema、Migration、Seed 或工程代码。
+
+## DEC-063 完成并冻结角色权限规格
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 从已有 Approved / Frozen 业务、Phase 2 职责、Phase 4 页面、Phase 5 API 和 Phase 6 功能详细设计中整理 `ROLE_PERMISSION_SPEC.md` v1.0；
+- 正式角色固定为管理员、采购人员、仓库人员、销售人员和公司负责人 5 类，不将 Phase 2 历史“建议角色”或生产/验收/跨境能力另建新角色；
+- 建立 `module.resource.action` 命名规范和 244 个可追溯正式权限代码，完成角色权限矩阵；
+- 数据范围固定为 `all`、`self_created`、`business_related`、`warehouse`、`store` 和 `manufacturer_derived`；厂家范围只从厂家仓及正式业务关系派生；
+- `administrator` 是全功能权限角色，但不得越过职责分离、数据/字段范围、状态、幂等、并发、库存和审计约束；
+- `ROLE_PERMISSION_SPEC.md` 更新为 Completed / Approved / Frozen，并成为角色代码、权限代码、角色权限映射和数据范围的唯一正式入口；
+- API 权限语义仍以 Frozen API Master Specification v1.1 为依据；两者冲突时必须停止，不得自行覆盖；
+- 一致性核对结果为无权限角色 0、未分配权限 0、无正式来源权限 0。
+
+### 影响
+
+本决定只完成角色权限规格的文档治理与 Frozen 输入收口，不修改 BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1、Phase 6 Frozen 内容或 315 个正式 API；不修改 Prisma Schema、Migration、Seed 或工程代码，不执行 Task 7.3-C 开发。
