@@ -11,6 +11,29 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.6.6] - 2026-07-22
+
+### Changed
+
+- Phase 6 Final Consistency Review 已通过 GitHub 验收并更新为 Completed / Approved
+- Phase 6 功能详细设计正式更新为 Completed / Approved / Frozen
+- Task 6.1、Task 6.2、Task 6.3 保持 Completed / Approved，并成为后续技术阶段的正式产品输入
+- 当前下一步更新为 Phase 7 规划与启动准备；Phase 7 保持 Waiting / Not Started
+- 新增 DEC-057，记录 Phase 6 Phase Exit Gate 与 Freeze Gate 全部通过及正式冻结决定
+
+### Freeze
+
+- API Master Specification v1.1 保持 Completed / Approved / Frozen，是唯一正式 API 事实来源，正式接口总数保持 315
+- Database Logical Design v1.1 保持 Frozen
+- Phase 6 正式内容后续如需修改，必须通过 DCR 或正式 Change Request
+- 禁止通过聊天记忆、代码实现或临时决定覆盖 Frozen 文档
+
+### Scope
+
+- 未修改 Phase 6 正文业务规则、Frozen 数据库、Frozen API 或 Approved 页面
+- 未新增表、字段、关系、状态、页面、模块、接口或业务对象
+- 未编写代码、创建真实页面或 API Route、安装依赖，未启动 Phase 7，未预先设计 Phase 7 Task 结构
+
 ## [0.6.5] - 2026-07-22
 
 ### Added

@@ -218,4 +218,4 @@ Task 6.2 已将三类页面、动作、状态、权限和 API 映射更新为正
 
 库存盘点、销售退货和报损 API 的最小完备设计已完成并获得批准。Frozen Database Logical Design v1.1 可以完整支撑全部接口，无需数据库 DCR。本次新增 43 个正式接口，API Master Specification v1.1 正式总数为 315。
 
-API Change Request 001 状态为 Completed / Approved，API Master Specification v1.1 已重新冻结。库存盘点、销售退货和报损页面全部保留；`STC-*` 17 个、`SRT-*` 13 个、`DMG-*` 13 个接口正式生效。Database Logical Design v1.1 未修改，不需要数据库 DCR。当前下一步为 Phase 6 Final Consistency Review GitHub 验收，不得启动 Phase 7。
+API Change Request 001 状态为 Completed / Approved，API Master Specification v1.1 已重新冻结。库存盘点、销售退货和报损页面全部保留；`STC-*` 17 个、`SRT-*` 13 个、`DMG-*` 13 个接口正式生效。Database Logical Design v1.1 未修改，不需要数据库 DCR。Phase 6 已更新为 Completed / Approved / Frozen；Phase 7 保持 Waiting / Not Started，当前下一步为 Phase 7 规划与启动准备，未经项目负责人后续正式指令不得启动 Phase 7。

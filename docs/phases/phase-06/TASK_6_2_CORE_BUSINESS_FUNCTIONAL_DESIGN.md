@@ -533,6 +533,7 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 7. Frozen 数据库、BUSINESS_RULES 和 Approved 页面保持不变；API Master Specification v1.1 已重新冻结；
 8. 原 272 个接口保持不变，本 Change Request 新增 43 个正式接口，v1.1 正式总数为 315；
 9. 未编写代码、创建真实页面或 API Route、指定技术框架或安装依赖；
-10. Phase 6 保持 In Progress；Task 6.3 为 Completed / Approved，Phase 6 Final Consistency Review 为 Completed / Pending Approval；
-11. 当前下一步为 Phase 6 Final Consistency Review GitHub 验收；
-12. 未经项目负责人最终验收不得冻结 Phase 6 或启动 Phase 7。
+10. Phase 6 为 Completed / Approved / Frozen；Task 6.3 与 Phase 6 Final Consistency Review 均为 Completed / Approved；
+11. Task 6.1、Task 6.2、Task 6.3 均为后续技术阶段的正式产品输入；
+12. 后续修改 Phase 6 正式内容必须通过 DCR 或正式 Change Request，不得由聊天记忆、代码实现或临时决定覆盖；
+13. Phase 7 保持 Waiting / Not Started，当前下一步为 Phase 7 规划与启动准备；未经项目负责人后续正式指令不得启动 Phase 7。

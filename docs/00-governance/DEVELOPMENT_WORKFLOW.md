@@ -73,7 +73,7 @@ Phase 1 业务需求分析
 - Task 3.5.5：Completed / Approved
 - Task 3.5.6：Completed / Approved
 - Task 3.5.7：Completed / Approved / Frozen
-- 当前已完成阶段：Phase 5 接口设计（API Design，Completed / Approved / Frozen）
+- 当前已完成阶段：Phase 6 功能详细设计（Functional Specification，Completed / Approved / Frozen）
 - Phase 4：Completed / Approved
 - Task 4.1 页面架构设计：Completed / Approved
 - Task 4.2 PC 管理端布局与导航设计：Completed / Approved
@@ -85,7 +85,7 @@ Phase 1 业务需求分析
 - Task 4.8 库存管理页面设计：Completed / Approved
 - Task 4.9 出入库管理页面设计：Completed / Approved
 - Task 4.10 跨境业务页面设计：Completed / Approved
-- 当前阶段：Phase 6 功能详细设计
+- 当前阶段：Phase 6 功能详细设计（Completed / Approved / Frozen）
 - Phase 5：Completed / Approved / Frozen
 - Task 5.1 API 总体规范与安全规则设计：Completed / Approved
 - Task 5.2 基础资料与采购 API：Completed / Approved
@@ -93,14 +93,15 @@ Phase 1 业务需求分析
 - Task 5.4 出入库与跨境业务 API：Completed / Approved
 - Task 5.5 导入、附件、日志、安全与 API 最终收口：Completed / Approved
 - Phase 5 Final Consistency Review：Completed / Approved
-- Phase 6：In Progress
+- Phase 6：Completed / Approved / Frozen
 - Task 6.1 功能详细设计统一规范：Completed / Approved
 - Task 6.2 核心业务功能详细设计：Completed / Approved
 - Task 6.3 公共能力功能详细设计：Completed / Approved
 - API Change Request 001：Completed / Approved
 - API Master Specification v1.1：Completed / Approved / Frozen（正式接口总数 315）
-- Phase 6 Final Consistency Review：Completed / Pending Approval
-- 当前下一步：Phase 6 Final Consistency Review GitHub 验收
+- Phase 6 Final Consistency Review：Completed / Approved
+- Phase 7：Waiting / Not Started
+- 当前下一步：Phase 7 规划与启动准备
 - 技术开发：Not Started
 - 数据库设计：Completed / Approved / Frozen
 - 数据库字段名称设计：Completed / Approved
@@ -143,7 +144,7 @@ Task 3.5 内部小任务进度：
 6. Task 3.5.6 数据库命名规范（Database Naming Standard）：Completed / Approved；
 7. Task 3.5.7 Database Freeze：Completed / Approved / Frozen。
 
-Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅补充既有字段的状态语义，结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。API Change Request 001 已正式批准，API Master Specification v1.1 已冻结，正式接口总数为 315。Phase 6 已正式启动并处于 In Progress；Task 6.1 至 Task 6.3 均为 Completed / Approved，独立 Final Consistency Review 为 Completed / Pending Approval。数据库、ORM、DDL、Schema、Migration 和技术开发均未开始。
+Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅补充既有字段的状态语义，结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。API Change Request 001 已正式批准，API Master Specification v1.1 已冻结，正式接口总数为 315。Phase 6 功能详细设计及独立 Final Consistency Review 已通过 GitHub 验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen；Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入。Phase 7 保持 Waiting / Not Started，数据库、ORM、DDL、Schema、Migration 和技术开发均未开始。
 
 ## Phase 4内部任务进度
 
@@ -158,7 +159,7 @@ Phase 3 及 Task 3.5 已完成并获得批准，Database Logical Design v1.1 已
 9. Task 4.9 出入库管理页面设计（Inbound and Outbound Management Page Design）：Completed / Approved；
 10. Task 4.10 跨境业务页面设计（Cross-border Business Page Design）：Completed / Approved。
 
-Phase 4 及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。Phase 5 v1.0 为历史冻结基线；API Change Request 001 已批准，API Master Specification v1.1 已成为 Completed / Approved / Frozen 的正式基线。Phase 6 已正式启动，当前下一步为 Phase 6 Final Consistency Review GitHub 验收，技术开发保持 Not Started。
+Phase 4 及 Task 4.1 至 Task 4.10 均已完成并获得批准，Phase 4 状态为 Completed / Approved，未标记为 Frozen。Phase 5 v1.0 为历史冻结基线；API Change Request 001 已批准，API Master Specification v1.1 已成为 Completed / Approved / Frozen 的正式基线。Phase 6 已完成、批准并冻结，当前下一步为 Phase 7 规划与启动准备；Phase 7 保持 Waiting / Not Started，技术开发保持 Not Started。
 
 ## Phase Exit Gate
 
@@ -206,15 +207,30 @@ Task 完成
 - 项目负责人已正式批准 Phase 5 更新为 Completed / Approved / Frozen；
 - API Master Specification v1.1 已通过 API Change Request 001 正式冻结，正式接口总数为 315。
 
-Phase 5 v1.0 基线曾通过 Phase Exit Gate 与 Freeze Gate。API Change Request 001 已正式批准，API Master Specification v1.1 已成为新的冻结基线，正式接口总数为 315。Phase 6 已由项目负责人正式启动；Task 6.1 至 Task 6.3 已批准，Final Consistency Review 已完成一致性审查，状态为 Completed / Pending Approval。Phase 6 尚未通过 Review GitHub 验收及项目负责人最终 Freeze 批准，因此 Phase 6 必须保持 In Progress。
+Phase 5 v1.0 基线曾通过 Phase Exit Gate 与 Freeze Gate。API Change Request 001 已正式批准，API Master Specification v1.1 已成为新的冻结基线，正式接口总数为 315。
+
+### Phase 6 Freeze Gate 通过记录
+
+- Task 6.1、Task 6.2、Task 6.3 均为 Completed / Approved；
+- GitHub 同步完成；
+- 无 Pending DCR；
+- 无 Pending Review；
+- 无 Pending Change Request；
+- 无 Outstanding Issue；
+- Phase 6 Final Consistency Review 已完成、通过 GitHub 验收并获得批准；
+- 项目负责人已正式批准 Phase 6 更新为 Completed / Approved / Frozen；
+- Database Logical Design v1.1 保持 Frozen；
+- API Master Specification v1.1 保持 Completed / Approved / Frozen，正式接口总数为 315。
+
+Phase 6 的 Phase Exit Gate 与 Freeze Gate 已全部通过。Task 6.1 至 Task 6.3 是后续技术阶段的正式产品输入；后续修改 Phase 6 正式内容必须通过 DCR 或正式 Change Request，不得由聊天记忆、代码实现或临时决定覆盖 Frozen 文档。
 
 ## Phase 6内部任务进度
 
 1. Task 6.1 功能详细设计统一规范：Completed / Approved；
 2. Task 6.2 核心业务功能详细设计：Completed / Approved；
 3. Task 6.3 公共能力功能详细设计：Completed / Approved；
-4. Phase 6 Final Consistency Review：Completed / Pending Approval。
+4. Phase 6 Final Consistency Review：Completed / Approved。
 
 Phase 6 采用三个 Task 加独立 Final Consistency Review 的加速结构。通用功能规则仅在 Task 6.1 定义一次；Final Consistency Review 是 Phase Exit Gate，不作为普通 Task。每个 Task 完成后必须通过 GitHub 验收，未经项目负责人批准不得启动后续 Task。本阶段不设置 Task 6.4。
 
-当前下一步为 Phase 6 Final Consistency Review GitHub 验收。未经 Review 验收和项目负责人最终批准，不得将 Phase 6 标记为 Completed / Approved / Frozen，不得启动 Phase 7。技术框架、代码结构和具体实现工具留待 Phase 7；Phase 3 数据库保持 Frozen，API Master Specification v1.1 保持正式冻结基线。
+Phase 6 状态为 Completed / Approved / Frozen。当前下一步为 Phase 7 规划与启动准备；Phase 7 保持 Waiting / Not Started，未经项目负责人后续正式指令不得启动。技术框架、代码结构和具体实现工具留待 Phase 7；Phase 3 数据库保持 Frozen，API Master Specification v1.1 保持正式冻结基线。

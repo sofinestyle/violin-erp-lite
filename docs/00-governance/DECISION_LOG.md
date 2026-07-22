@@ -1393,3 +1393,31 @@ Approved
 ### 影响
 
 本决定批准 API Change Request 001 已设计的 43 个接口并冻结 API Master Specification v1.1，不新增其他业务模块、接口、表、字段、关系、状态或业务对象，不修改 Frozen Database Logical Design v1.1 或 Approved 页面；不编写代码，不创建真实页面、API Route、ORM、Schema、Migration 或 Seed，不安装依赖，不冻结 Phase 6，不启动 Phase 7。
+
+## DEC-057 批准并冻结Phase 6功能详细设计
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 项目负责人正式批准 Phase 6 Final Consistency Review，状态更新为 Completed / Approved；
+- Phase 6 功能详细设计正式更新为 Completed / Approved / Frozen；
+- Task 6.1、Task 6.2、Task 6.3 均保持 Completed / Approved，并成为后续技术阶段的正式产品输入；
+- Phase 6 的 Phase Exit Gate 与 Freeze Gate 已全部通过，无 Pending DCR、Pending Review、Pending Change Request 或 Outstanding Issue；
+- API Change Request 001 保持 Completed / Approved；
+- API Master Specification v1.1 保持 Completed / Approved / Frozen，是唯一正式 API 事实来源，正式接口总数保持 315；
+- Database Logical Design v1.1 保持 Frozen；
+- 后续如需修改 Phase 6 正式内容，必须通过 DCR 或正式 Change Request；
+- 不得通过聊天记忆、代码实现或临时决定覆盖 Frozen 文档；
+- Phase 7 保持 Waiting / Not Started，当前下一步为 Phase 7 规划与启动准备；
+- 未经项目负责人后续正式指令，不得启动 Phase 7 或预先设计 Phase 7 Task 结构。
+
+### 影响
+
+本决定只完成 Phase 6 状态批准、冻结说明和治理关闭，不修改 Phase 6 正文业务规则、Frozen Database Logical Design v1.1、Frozen API Master Specification v1.1 或 Approved 页面；不新增表、字段、关系、状态、页面、模块、接口或业务对象；不编写代码，不创建真实页面、API Route、ORM、Schema、Migration 或 Seed，不安装依赖，不启动 Phase 7。
