@@ -11,6 +11,29 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.7.2] - 2026-07-22
+
+### Added
+
+- 完成 Task 7.2-A Workspace & Dual App Skeleton，建立 pnpm Monorepo 工作区
+- 新增 `apps/admin` Next.js、React、TypeScript 最小可启动工程骨架
+- 新增 `apps/miniapp` Taro、React、TypeScript 微信小程序最小可启动工程骨架
+- 保留空 `packages` 目录，不创建任何共享 package
+
+### Verified
+
+- `pnpm install` 成功，workspace 正确识别根项目、`apps/admin` 和 `apps/miniapp`
+- PC 管理端开发服务器启动成功，本地请求返回 HTTP 200
+- 微信小程序完成 Taro 微信端编译并进入 watch 状态，非 watch 构建同时通过
+
+### Scope
+
+- Task 7.2-A 仅作为 Task 7.2 内部执行 Section，Task 7.2 保持 In Progress
+- 未修改 `PROJECT.md`、`README.md`、`ROADMAP.md` 或 `DECISION_LOG.md`
+- 未创建 `packages/api`、`packages/database` 或 `packages/shared`
+- 未配置 Prisma、PostgreSQL、Route Handler、JWT、RBAC、Tailwind CSS、shadcn/ui、ESLint、Prettier、Docker、测试框架、Husky 或 Commit Hooks
+- 未实现登录、业务页面、API、Schema、Migration、Seed 或 ERP 业务代码
+
 ## [0.7.1] - 2026-07-22
 
 ### Changed

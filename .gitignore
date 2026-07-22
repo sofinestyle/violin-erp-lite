@@ -9,9 +9,13 @@
 
 # Dependencies and builds
 node_modules/
+.pnpm-store/
 dist/
 build/
 .next/
+out/
+.cache/
+.swc/
 coverage/
 
 # Databases

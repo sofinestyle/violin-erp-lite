@@ -1,0 +1,12 @@
+{
+  "description": "Violin ERP Lite 微信小程序工程骨架",
+  "miniprogramRoot": "dist/",
+  "projectname": "violin-erp-lite-miniapp",
+  "appid": "touristappid",
+  "setting": {
+    "urlCheck": false,
+    "es6": false,
+    "postcss": false,
+    "minified": false
+  }
+}
