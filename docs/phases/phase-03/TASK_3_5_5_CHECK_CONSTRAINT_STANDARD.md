@@ -277,7 +277,7 @@ Check 约束命名为 `ck_<table>_<rule>`。下文表达的是数据库无关的
 | `ck_warehouses_country_required` | 海外仓必须填写 `country_code` |
 | `ck_warehouses_available_stock_role` | 在途仓和待处理仓不得允许形成可用库存 |
 
-仓库类型的具体枚举代码不在本任务中虚构，物理映射时必须引用后续批准的正式枚举集合。
+仓库类型的具体枚举代码以 [数据库枚举规范](../../03-data/DATABASE_ENUM_SPEC.md) 为正式依据，物理映射必须引用其已批准的 `warehouse_type` 枚举集合。
 
 ## 9. Check 与服务层校验边界
 

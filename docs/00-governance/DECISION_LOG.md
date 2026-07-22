@@ -1524,3 +1524,26 @@ Approved
 ### 影响
 
 本决定只改进项目状态治理和工程质量门禁，不修改 Frozen BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1 的接口定义与 315 个正式 API、Phase 6 Functional Specification、数据库结构或业务规则；不实现 Prisma、PostgreSQL、真实 API、认证或 ERP 业务代码。
+
+## DEC-062 批准warehouse_type正式枚举补全
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-22
+
+### 决定
+
+- 项目负责人正式批准 `warehouse_type` 的五个正式枚举代码：`company`、`manufacturer`、`overseas`、`transit` 和 `pending`；
+- `manufacturer` 要求 `manufacturer_id` 非空，`overseas` 要求 `country_code` 非空，`transit` 与 `pending` 要求 `allows_available_stock` 为 `false`；
+- `company`、`manufacturer` 和 `overseas` 可以允许形成可用库存；
+- 新增 `docs/03-data/DATABASE_ENUM_SPEC.md` v1.0，状态为 Completed / Approved / Frozen，作为后续数据库物理映射的正式枚举输入；
+- 后续 PostgreSQL、Prisma Schema、Migration 及相关校验必须使用上述英文代码，不得自行增加其他 `warehouse_type` 值；
+- `TASK_3_5_5_CHECK_CONSTRAINT_STANDARD.md` 原有三条仓库 Check 规则保持不变，仅将预留的枚举输入指向新增正式规范。
+
+### 影响
+
+本决定只补全 Frozen Database Logical Design v1.1 已预留的 `warehouse_type` 枚举代码，不新增、删除或修改数据库表、字段、关系、索引、原有 Check 规则、API 或业务对象；不修改 BUSINESS_RULES、Phase 6 Frozen 内容或 315 个正式 API；不安装 PostgreSQL、Prisma，不创建 Schema、Migration、Seed 或工程代码。

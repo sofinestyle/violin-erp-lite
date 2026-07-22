@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-19
+updated_date: 2026-07-22
 related_phase: Phase 1
 ---
 
@@ -35,12 +35,13 @@ related_phase: Phase 1
 2. `PROJECT.md`
 3. `SYSTEM_SPEC.md`
 4. `DATABASE_SPEC.md`
-5. `FEATURE_LIST.md` 及功能详细 Spec
-6. `ROLE_PERMISSION_SPEC.md`
-7. UI Spec
-8. `API_SPEC.md`
-9. 测试及验收文档
-10. 当前聊天或临时指令
+5. `DATABASE_ENUM_SPEC.md`（数据库物理映射正式枚举输入）
+6. `FEATURE_LIST.md` 及功能详细 Spec
+7. `ROLE_PERMISSION_SPEC.md`
+8. UI Spec
+9. `API_SPEC.md`
+10. 测试及验收文档
+11. 当前聊天或临时指令
 
 ## 同级冲突规则
 

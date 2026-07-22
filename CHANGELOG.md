@@ -11,6 +11,24 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.7.7] - 2026-07-22
+
+### Added
+
+- 新增 Frozen `DATABASE_ENUM_SPEC.md` v1.0，正式定义 `warehouse_type` 的 `company`、`manufacturer`、`overseas`、`transit` 和 `pending` 五个英文代码
+- 新增 DEC-062，记录仓库类型预留枚举补全及物理映射输入决定
+
+### Changed
+
+- `TASK_3_5_5_CHECK_CONSTRAINT_STANDARD.md` 将后续正式枚举集合的预留说明指向 `DATABASE_ENUM_SPEC.md`
+- `DOCUMENT_PRIORITY.md` 将 `DATABASE_ENUM_SPEC.md` 纳入数据库物理映射正式输入
+
+### Scope
+
+- 本次只补全 Frozen 设计已预留的枚举代码，不修改原有三条仓库 Check 规则
+- 未新增、删除或修改数据库表、字段、关系、API 或业务规则；正式 API 总数保持 315
+- 未安装 PostgreSQL 或 Prisma，未创建 Schema、Migration、Seed 或任何工程代码
+
 ## [0.7.6] - 2026-07-22
 
 ### Added
