@@ -11,6 +11,35 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.7.4] - 2026-07-22
+
+### Added
+
+- 完成 Task 7.2-C Quality Gates & Engineering Closure
+- 新增 ESLint、Prettier 和 Vitest 基础配置，统一覆盖根项目、双端应用和三个共享包
+- 新增三个共享包空占位导入测试及根 Workspace 工程清单测试
+
+### Changed
+
+- 根目录新增 `lint`、`lint:fix`、`format`、`format:check`、`test` 和 `check` 脚本
+- `check` 按 `format:check`、`lint`、`typecheck`、`test`、`build` 顺序执行
+- 三个共享包新增独立 `test` 脚本
+- 质量工具锁定为 ESLint 9.39.5、Prettier 3.9.6、TypeScript ESLint 8.65.0、Vitest 0.34.6 和 Vite 4.5.14，保持现有 Node、Next.js、Taro 与 TypeScript 兼容
+
+### Verified
+
+- `pnpm install --lockfile=false` 成功，`pnpm peers check` 无 peer dependency 问题
+- `pnpm format:check`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm build` 和 `pnpm check` 全部通过
+- 三个共享包均可独立构建、类型检查和测试；根 Workspace 工程测试 7 项通过
+- PC 管理端开发服务器启动成功并返回 HTTP 200，微信小程序完成编译并进入 watch 状态
+
+### Closure
+
+- Task 7.2-A、Task 7.2-B 和 Task 7.2-C 已完成，Task 7.2 已达到待 GitHub 技术验收条件
+- Task 7.2 保持 In Progress；下一步仍需 ChatGPT 技术验收及项目负责人批准
+- 未经 Task 7.2 验收和项目负责人批准，不得启动 Task 7.3
+- 未实现业务、数据库、API、认证或权限功能，未修改任何 Approved / Frozen 文档
+
 ## [0.7.3] - 2026-07-22
 
 ### Added

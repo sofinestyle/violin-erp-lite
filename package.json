@@ -10,10 +10,27 @@
     "dev": "pnpm --parallel --filter './apps/*' run dev",
     "build": "pnpm --recursive --filter './packages/*' run build && pnpm --recursive --filter './apps/*' run build",
     "typecheck": "pnpm --recursive --filter './packages/*' run typecheck && pnpm --filter @violin-erp/admin exec next typegen && pnpm --filter @violin-erp/admin exec tsc --noEmit && pnpm --filter @violin-erp/miniapp exec tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm --recursive --filter './packages/*' run test && vitest run",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "dev:admin": "pnpm --filter @violin-erp/admin dev",
     "dev:miniapp": "pnpm --filter @violin-erp/miniapp dev",
     "build:admin": "pnpm --filter @violin-erp/admin build",
     "build:miniapp": "pnpm --filter @violin-erp/miniapp build",
     "workspace:list": "pnpm list --recursive --depth -1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.7.0",
+    "prettier": "3.9.6",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.65.0",
+    "vite": "4.5.14",
+    "vitest": "0.34.6"
   }
 }
