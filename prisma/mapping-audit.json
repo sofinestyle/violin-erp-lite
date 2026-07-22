@@ -1,0 +1,12 @@
+{
+  "tables": 60,
+  "fields": 1128,
+  "primaryKeys": 60,
+  "uniqueConstraints": 71,
+  "specialtyForeignKeys": 122,
+  "commonUserForeignKeys": 161,
+  "foreignKeys": 283,
+  "ordinaryIndexes": 90,
+  "checks": 201,
+  "enums": 2
+}

@@ -18,6 +18,7 @@ out/
 .swc/
 coverage/
 *.tsbuildinfo
+packages/database/src/generated/prisma/
 
 # Databases
 *.db

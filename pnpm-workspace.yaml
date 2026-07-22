@@ -4,12 +4,14 @@ packages:
 verifyDepsBeforeRun: false
 allowBuilds:
   '@parcel/watcher': true
+  '@prisma/engines': true
   '@swc/core': true
   '@tarojs/binding': true
   '@tarojs/cli': true
   core-js: false
   core-js-pure: false
   esbuild: true
+  prisma: true
   sharp: false
 minimumReleaseAgeExclude:
   - '@next/env@16.2.11'

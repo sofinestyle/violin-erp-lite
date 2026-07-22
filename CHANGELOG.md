@@ -11,6 +11,31 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.7.8] - 2026-07-22
+
+### Added
+
+- 完成 Task 7.3 数据库物理映射的初始实施，新增 PostgreSQL 18.4 初始 Migration、Prisma Schema、Prisma Client 生成配置与空 Seed 骨架
+- 新增 `warehouse_type` 五个 Frozen 枚举代码以及 DCR-001 `production_completion_status` 四个正式状态的 PostgreSQL 枚举映射
+- 新增根目录 Prisma 格式、校验、Client 生成、Migration、状态和 Seed 命令
+
+### Changed
+
+- `packages/database` 新增 Prisma Client、PostgreSQL Driver Adapter 和 `pg` 开发依赖
+- `.env.example` 新增无真实值的 `DATABASE_URL` 格式示例，`.gitignore` 忽略本地生成的 Prisma Client
+
+### Verified
+
+- PostgreSQL 物理结构实测包含 60 张正式业务表、60 个主键、71 个业务唯一索引、283 个外键、90 个普通索引与 201 条 Check
+- `ck_warehouses_manufacturer_required`、`ck_warehouses_country_required` 和 `ck_warehouses_available_stock_role` 已在初始 Migration SQL 中实现
+- Prisma format、validate、generate、初始 Migration、空数据库重新 Migration、空 Seed 和 Prisma Client 连接均通过
+
+### Scope
+
+- 本次只实现 Frozen Database Logical Design v1.1 的物理映射，未新增、删除或重命名任何表、字段、关系、状态或业务对象
+- Seed 为空执行骨架，未导入业务数据；未实现 Route Handler、API、JWT、RBAC、Repository、Service 或 ERP 业务逻辑
+- 未修改 Frozen 数据库、业务、API 或 Phase 6 文档，315 个正式 API 保持不变
+
 ## [0.7.7] - 2026-07-22
 
 ### Added
