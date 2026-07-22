@@ -15,7 +15,7 @@ related_phase: Phase 6
 
 所有功能统一引用 [Task 6.1 功能详细设计统一规范](TASK_6_1_FUNCTIONAL_DESIGN_STANDARD.md) 的 16 章模板。页面初始化、分页、Loading、Toast、HTTP 异常、通用权限、未保存保护、幂等和可访问性均直接适用 Task 6.1，本文只描述模块差异。
 
-本文不重新定义业务模块、Approved 页面、Frozen 数据库或 API。Frozen 业务规则、Database Logical Design v1.1、API Master Specification v1.0 与 Approved Phase 4 页面优先。若功能无法映射现有 API，必须停止冲突部分并登记 Change Request，不得临时增加字段、状态、接口或页面事实。
+本文不重新定义业务模块、Approved 页面、Frozen 数据库或 API。Frozen 业务规则、Database Logical Design v1.1、API Master Specification v1.1 与 Approved Phase 4 页面优先。若功能无法映射现有 API，必须停止冲突部分并登记 Change Request，不得临时增加字段、状态、接口或页面事实。
 
 本文不指定前端框架、后端框架、ORM、组件库或第三方技术；技术选型留待 Phase 7。不创建真实页面、API Route 或业务代码。
 
@@ -195,7 +195,7 @@ related_phase: Phase 6
 
 当前库存按仓库、SKU、产品、分类及 Approved 状态查询；余额与流水分开展示，流水可跳转正式来源单据。仓库权限在筛选和聚合前执行，页面只分页加载当前所需数据。
 
-正式库存变化仅可来源于采购入库、生产入库、销售出库、采购退货出库、调拨、跨境发运、库存调整及海外仓库存 Excel 导入。
+正式库存变化仅可来源于采购入库、生产入库、销售出库、采购退货出库、销售退货入库确认、报损出库确认、调拨、跨境发运、库存调整及海外仓库存 Excel 导入。
 
 禁止直接编辑余额、普通 PATCH 修改数量、客户端计算并确认正式库存，以及删除或覆盖库存流水。
 
@@ -442,11 +442,11 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 | 生产 | 生产单、进度、完工、付款 | 独立创建、审核、开始、完工 | `PRO-*` | 生产状态与 DCR-001 | 厂家、记录、金额、目标仓 | 无直接库存；后续验收入库 | 支持 | 状态、进度、完工、付款 |
 | 质量验收 | 验收列表/详情 | 采购或生产互斥来源、确认 | `INS-*` | 验收状态机 | 来源、验收、仓库/厂家范围 | 只形成入库资格 | 支持 | 提交、确认、撤销、作废 |
 | 库存 | 余额、流水、预警、调整 | 查询、预警处理、调整执行 | `INV-*` | 调整与预警状态 | 仓库、成本、记录 | 调整执行原子影响库存 | 调整依据可关联 | 高风险库存与导出 |
-| 库存盘点 | 盘点列表/详情/执行/复盘 | 创建、审核、初盘、复盘、完成 | `STC-*`（API CR-001 Pending Approval） | 盘点任务与差异状态 | 仓库、执行、复盘、审核 | 完成不改库存；后续调整衔接 | 适用正式对象 | 执行、复盘、审核、导出 |
+| 库存盘点 | 盘点列表/详情/执行/复盘 | 创建、审核、初盘、复盘、完成 | `STC-*` | 盘点任务与差异状态 | 仓库、执行、复盘、审核 | 完成不改库存；后续调整衔接 | 适用正式对象 | 执行、复盘、审核、导出 |
 | 入库 | 入库列表/详情 | 创建、审核、确认、冲销 | `INB-*` | 入库状态机 | 来源、目标仓、成本 | 原子增加库存 | 支持 | 审批、确认、冲销 |
 | 出库 | 销售/其他/退货出库 | 创建、审核、确认、冲销 | `OUT-*` | 出库状态机 | 仓库、店铺、个人信息、成本 | 原子减少库存 | 支持 | 审批、确认、冲销 |
-| 销售退货 | 退货列表/详情/处理 | 创建、审核、确认退货入库 | `SRT-*`（API CR-001 Pending Approval） | 销售退货业务与处理状态 | 店铺、原出库、接收仓 | 确认入库原子形成库存结果 | 支持 | 审批、确认、导出 |
-| 报损 | 报损列表/详情 | 创建、审核、确认报损出库 | `DMG-*`（API CR-001 Pending Approval） | 报损状态 | 仓库、成本、记录 | 确认出库原子减少库存 | 支持 | 审批、确认、导出 |
+| 销售退货 | 退货列表/详情/处理 | 创建、审核、确认退货入库 | `SRT-*` | 销售退货业务与处理状态 | 店铺、原出库、接收仓 | 确认入库原子形成库存结果 | 支持 | 审批、确认、导出 |
+| 报损 | 报损列表/详情 | 创建、审核、确认报损出库 | `DMG-*` | 报损状态 | 仓库、成本、记录 | 确认出库原子减少库存 | 支持 | 审批、确认、导出 |
 | 调拨 | 调拨列表/详情 | 审核、调出、调入 | `TRF-*` | 调拨审核与执行状态 | 来源/在途/目的仓、成本 | 分阶段双仓事务 | 支持 | 审批、调出、调入 |
 | 跨境 | 发货、在途、海外库存、导入 | 审核、发运、导入、追溯 | `CBR-*`、`IMP-*` | 三正式发货状态及导入现有状态 | 三仓、生产、导入、成本 | 发运及导入原子事务 | 支持 | 发运、导入、匹配、导出 |
 
@@ -508,9 +508,9 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 
 1. 六个核心业务模块全部覆盖；
 2. 每个模块均引用 Task 6.1；
-3. 页面动作均已建立接口映射；其中 `STC-*`、`SRT-*`、`DMG-*` 等待 API Change Request 001 GitHub 验收后成为重新冻结输入；
+3. 页面动作均已映射 API Master Specification v1.1 正式接口；
 4. 所有状态来自 Approved/Frozen 文档；
-5. 已识别并补齐库存盘点、销售退货和报损 API 遗漏，批准前 Phase 6 Final Consistency Review 保持阻塞；
+5. 库存盘点、销售退货和报损 API 遗漏已由批准的 API Change Request 001 关闭；
 6. 无 API 被错误用于其他业务；
 7. 采购与生产保持平行并在互斥来源验收节点汇合；
 8. 所有库存变化具有正式来源和原子事务；
@@ -519,7 +519,7 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 11. 并发、幂等和重复提交规则完整；
 12. 页面、业务、数据库和 API 保持一致；
 13. 未新增业务模块或数据库对象；
-14. 原 272 个 API 未删除、重编号或改义；API Change Request 001 新增 43 个候选正式接口；
+14. 原 272 个 API 未删除、重编号或改义；API Change Request 001 新增 43 个正式接口；
 15. 未编写代码、创建真实页面或 API Route。
 
 ## 14. 正式结论
@@ -528,11 +528,11 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 2. Task 6.2 六个核心业务模块功能详细设计已完成并获得批准，状态为 Completed / Approved；
 3. 采购与生产保持平行，生产订单独立创建，不建立采购—生产直接关系；
 4. 采购来源和生产来源在质量验收节点汇合且一张验收单来源互斥；
-5. 页面动作、状态、权限和库存事务映射已完成；库存盘点、销售退货和报损映射等待 API Change Request 001 批准；
-6. 未发现其他 Frozen 冲突；API Change Request 001 为 Completed / Pending Approval，不需要数据库 DCR；
-7. Frozen 数据库、BUSINESS_RULES 和 Approved 页面保持不变；API Master Specification v1.1 候选修订等待批准；
-8. 原 272 个接口保持不变，本 Change Request 新增 43 个候选接口，v1.1 候选总数为 315；
+5. 页面动作、状态、权限和库存事务均已映射 API Master Specification v1.1；
+6. 未发现其他 Frozen 冲突；API Change Request 001 为 Completed / Approved，不需要数据库 DCR；
+7. Frozen 数据库、BUSINESS_RULES 和 Approved 页面保持不变；API Master Specification v1.1 已重新冻结；
+8. 原 272 个接口保持不变，本 Change Request 新增 43 个正式接口，v1.1 正式总数为 315；
 9. 未编写代码、创建真实页面或 API Route、指定技术框架或安装依赖；
-10. Phase 6 保持 In Progress；Task 6.3 为 Completed / Pending Approval，Phase 6 Final Consistency Review 为 Waiting / Blocked by API CR Approval；
-11. 当前下一步为 API Change Request 001 GitHub 验收；
-12. 未经项目负责人批准不得启动 Phase 6 Final Consistency Review。
+10. Phase 6 保持 In Progress；Task 6.3 为 Completed / Approved，Phase 6 Final Consistency Review 为 Completed / Pending Approval；
+11. 当前下一步为 Phase 6 Final Consistency Review GitHub 验收；
+12. 未经项目负责人最终验收不得冻结 Phase 6 或启动 Phase 7。

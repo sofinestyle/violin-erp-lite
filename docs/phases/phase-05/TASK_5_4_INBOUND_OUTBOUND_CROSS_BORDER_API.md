@@ -22,7 +22,7 @@ related_phase: Phase 5
 - 来源仓到在途仓的跨境发运及分批发货；
 - 海外仓当前库存、导入任务、导入明细及发货匹配结果只读查询；
 - 入库、出库、调拨、跨境发运与库存余额、流水的原子事务衔接。
-- API Change Request 001 候选补充的库存盘点、销售退货和报损接口；该补充为 Completed / Pending Approval，批准前不改变 v1.0 Frozen 基线。
+- API Change Request 001 正式补充的库存盘点、销售退货和报损接口；该补充为 Completed / Approved，已纳入 API Master Specification v1.1 Frozen 基线。
 
 本文件不创建真实 API Route，不编写 Controller、Service、Repository 或业务代码，不修改 Frozen 数据库或 Approved 页面。Excel 上传、校验和正式执行留待 Task 5.5。
 
@@ -138,9 +138,9 @@ related_phase: Phase 5
 
 Task 5.4 共定义 18 + 17 + 15 + 22 = 72 个正式接口。
 
-### 3.5 API Change Request 001 候选补充（43 个）
+### 3.5 API Change Request 001 正式补充（43 个）
 
-下列接口仅补齐 Task 4.9 已批准页面能力，完整字段、权限、幂等、库存事务和验收规则见 `docs/00-governance/API_CHANGE_REQUEST_001.md`。在项目负责人 GitHub 验收前，本节状态为 Completed / Pending Approval。
+下列接口仅补齐 Task 4.9 已批准页面能力，完整字段、权限、幂等、库存事务和验收规则见 `docs/00-governance/API_CHANGE_REQUEST_001.md`。本节已通过项目负责人 GitHub 验收，状态为 Completed / Approved。
 
 | 模块 | 接口编号、方法与路径 | 数量 |
 | --- | --- | ---: |
@@ -501,7 +501,7 @@ Task 4.8 当前库存入口、Task 4.9 与 Task 4.10 的可映射操作，在 AP
 
 ## 31. 范围排除
 
-本 Task 不包含基础资料、采购单维护、生产单维护、验收单维护、库存调整、Excel 上传/校验/执行、通用附件、平台实时 API、完整销售订单、海外仓实时平台写入、真实 Route、Controller、Service、Repository、ORM、Schema、DDL、Migration、Seed、技术框架或技术开发。库存盘点、销售退货和报损不再属于范围排除，按 API Change Request 001 候选补充处理。
+本 Task 不包含基础资料、采购单维护、生产单维护、验收单维护、库存调整、Excel 上传/校验/执行、通用附件、平台实时 API、完整销售订单、海外仓实时平台写入、真实 Route、Controller、Service、Repository、ORM、Schema、DDL、Migration、Seed、技术框架或技术开发。库存盘点、销售退货和报损不再属于范围排除，按 API Change Request 001 正式补充处理。
 
 ## 32. 跨境业务口径修正与正式结论
 
@@ -519,7 +519,7 @@ Task 4.8 当前库存入口、Task 4.9 与 Task 4.10 的可映射操作，在 AP
 
 1. Task 5.1、Task 5.2、Task 5.3 均为 Completed / Approved；
 2. Task 5.4 已完成设计并获得项目负责人批准，状态为 Completed / Approved；
-3. v1.0 原定义 72 个正式接口：入库 18、出库 17、调拨 15、跨境 22；API Change Request 001 另补充盘点 17、销售退货 13、报损 13，共 43 个候选接口；
+3. v1.0 原定义 72 个正式接口：入库 18、出库 17、调拨 15、跨境 22；API Change Request 001 另补充盘点 17、销售退货 13、报损 13，共 43 个正式接口；
 4. 入库前必须完成正式验收；所有库存变化均通过原子库存事务和只追加流水；
 5. 国内销售只登记销售出库，不建立销售订单；
 6. 调拨严格经过在途仓；跨境发运只执行来源仓到在途仓；
@@ -527,6 +527,6 @@ Task 4.8 当前库存入口、Task 4.9 与 Task 4.10 的可映射操作，在 AP
 8. 三项映射冲突已按项目负责人批准的页面/API 口径全部关闭，不发起 DCR；
 9. 未新增字段、表、状态、关系、约束、索引或业务对象；
 10. 未创建真实 API Route，未编写业务代码，未修改 Frozen 数据库；Task 4.10 仅同步本次批准的页面口径；
-11. Phase 5 保持 In Progress，Task 5.5 为 Completed / Approved；
-12. 当前下一步为 API Change Request 001 GitHub 验收；Phase 6 Final Consistency Review 保持 Waiting / Blocked by API CR Approval；
+11. Phase 5 为 Completed / Approved / Frozen，Task 5.5 为 Completed / Approved；
+12. API Change Request 001 已正式批准；Phase 6 Final Consistency Review 为 Completed / Pending Approval，当前下一步为其 GitHub 验收；
 13. 技术开发保持 Not Started。

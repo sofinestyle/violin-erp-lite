@@ -2,7 +2,7 @@
 document_name: API Master Specification
 project: Violin ERP Lite
 version: 1.1
-status: Completed / Pending Approval
+status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
 updated_date: 2026-07-22
@@ -15,7 +15,7 @@ related_phase: Phase 5
 
 本文件是 Violin ERP Lite Phase 5 正式 API 规范总入口，统一 Task 5.1 至 Task 5.5 的接口编号、Header、请求、响应、分页、排序、筛选、命名、版本、错误码、权限、日志、导入、附件和安全规则。
 
-当前修订状态：API Master Specification v1.1 为 Completed / Pending Approval。API Change Request 001 已补齐 Approved 库存盘点、销售退货和报损页面的 43 个候选正式接口，v1.1 候选接口总数为 315；在项目负责人完成 GitHub 验收前，v1.0 与原 272 个接口仍是最后批准的 Frozen 基线。Phase 6 为 In Progress，Final Consistency Review 保持 Waiting / Blocked by API CR Approval，当前下一步为 API Change Request 001 GitHub 验收。
+当前状态：API Master Specification v1.1 为 Completed / Approved / Frozen，正式接口总数为 315。API Change Request 001 已正式批准，库存盘点、销售退货和报损的 43 个接口已纳入冻结基线；v1.0 与原 272 个接口保留为历史冻结基线。Phase 6 为 In Progress，Final Consistency Review 为 Completed / Pending Approval，当前下一步为 Phase 6 Final Consistency Review GitHub 验收。
 
 ## 2. 正式文档入口
 
@@ -31,17 +31,27 @@ related_phase: Phase 5
 
 ## 3. 接口编号与数量
 
-| Task | 模块与编号 | 数量 | 状态 |
+| 来源 | 模块与编号 | 数量 | 状态 |
 | --- | --- | ---: | --- |
-| Task 5.2 | 基础资料 `MD-*` 74；采购 `PUR-*` 29 | 103 | Completed / Approved |
-| Task 5.3 | 生产 `PRO-*` 29；验收 `INS-*` 10；库存 `INV-*` 26 | 65 | Completed / Approved |
-| Task 5.4 | 入库 `INB-*` 18；出库 `OUT-*` 17；调拨 `TRF-*` 15；跨境 `CBR-*` 22 | 72 | Completed / Approved |
-| Task 5.5 | 导入 `IMP-*` 15；附件 `ATT-*` 8；日志 `LOG-*` 4；安全 `SEC-*` 5 | 32 | Completed / Approved |
-| 合计 | Phase 5 正式接口 | 272 | Completed / Approved / Frozen |
-| API CR-001 | 库存盘点 `STC-*` 17；销售退货 `SRT-*` 13；报损 `DMG-*` 13 | 43 | Completed / Pending Approval |
-| v1.1 候选合计 | 原 272 个接口与本次 43 个候选接口 | 315 | Completed / Pending Approval |
+| Task 5.2 | 基础资料 `MD-*` | 74 | Completed / Approved |
+| Task 5.2 | 采购 `PUR-*` | 29 | Completed / Approved |
+| Task 5.3 | 生产 `PRO-*` | 29 | Completed / Approved |
+| Task 5.3 | 质量验收 `INS-*` | 10 | Completed / Approved |
+| Task 5.3 | 库存 `INV-*` | 26 | Completed / Approved |
+| Task 5.4 | 入库 `INB-*` | 18 | Completed / Approved |
+| Task 5.4 | 出库 `OUT-*` | 17 | Completed / Approved |
+| Task 5.4 | 调拨 `TRF-*` | 15 | Completed / Approved |
+| Task 5.4 | 跨境 `CBR-*` | 22 | Completed / Approved |
+| Task 5.5 | 导入 `IMP-*` | 15 | Completed / Approved |
+| Task 5.5 | 附件 `ATT-*` | 8 | Completed / Approved |
+| Task 5.5 | 日志 `LOG-*` | 4 | Completed / Approved |
+| Task 5.5 | 安全 `SEC-*` | 5 | Completed / Approved |
+| API CR-001 | 库存盘点 `STC-*` | 17 | Completed / Approved |
+| API CR-001 | 销售退货 `SRT-*` | 13 | Completed / Approved |
+| API CR-001 | 报损 `DMG-*` | 13 | Completed / Approved |
+| 合计 | API Master Specification v1.1 正式接口 | 315 | Completed / Approved / Frozen |
 
-接口编号在 Phase 5 内唯一且稳定。现有编号不得复用、改义或因排序调整而重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。`STC-*`、`SRT-*` 和 `DMG-*` 的完整候选契约以 API Change Request 001 及 Task 5.4 补充章节为准。
+逐模块复核结果为 `74 + 29 + 29 + 10 + 26 + 18 + 17 + 15 + 22 + 15 + 8 + 4 + 5 + 17 + 13 + 13 = 315`。接口编号唯一且稳定，不得复用、改义或因排序调整重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。`STC-*`、`SRT-*` 和 `DMG-*` 的完整正式契约以 API Change Request 001 及 Task 5.4 补充章节为准。
 
 ## 4. Version 与 Naming
 
@@ -155,21 +165,21 @@ Audit Log、Operation Log、Import Log、Export Log、Login Log 和 Security Log
 
 ## 15. Security
 
-`SEC-001` 至 `SEC-005` 定义登录、刷新、登出、当前会话和当前权限能力。Authentication、Authorization、Token、Refresh Token、Session、Permission Validation、Replay Protection、Idempotency、Rate Limit、IP White List 和 Header 安全规则适用于 v1.0 的 272 个 Frozen 接口及 v1.1 新增的 43 个候选接口。
+`SEC-001` 至 `SEC-005` 定义登录、刷新、登出、当前会话和当前权限能力。Authentication、Authorization、Token、Refresh Token、Session、Permission Validation、Replay Protection、Idempotency、Rate Limit、IP White List 和 Header 安全规则适用于 v1.1 的全部 315 个 Frozen 接口。
 
 Token、Session、网关、限流器、IP 配置及安全遥测的技术实现留待后续阶段，不新增认证、会话、IP 或日志数据库表。生产环境必须使用 HTTPS，并执行最小权限、数据脱敏、文件安全、输入白名单和安全错误处理。
 
-## 16. Phase 5 冻结基线与 v1.1 候选修订
+## 16. API Master Specification v1.1 冻结结论
 
 1. Task 5.1 至 Task 5.5 为 Completed / Approved；
 2. Phase 5 Final Consistency Review 为 Completed / Approved；
 3. Phase 5 为 Completed / Approved / Frozen；
-4. API Master Specification v1.0 共登记 272 个 Approved/Frozen 接口；
+4. API Master Specification v1.1 共登记 315 个 Completed / Approved / Frozen 正式接口；
 5. 本文件已升级为 API Master Specification；
 6. 未修改 Frozen 数据库，未新增字段、表、状态、关系或业务对象；
 7. 未创建真实 API，未编写业务代码；
 8. 原 272 个正式接口的编号、路径、方法、状态、权限、安全及 Frozen 映射保持不变；
-9. API Change Request 001 发现并补齐库存盘点、销售退货和报损覆盖遗漏，新增 43 个候选正式接口，v1.1 候选总数为 315；
-10. v1.1 当前为 Completed / Pending Approval，尚未重新冻结；项目负责人 GitHub 验收前，v1.0 仍为最后批准的 Frozen API 基线；
+9. API Change Request 001 已正式批准，库存盘点 17、销售退货 13、报损 13，共 43 个新增接口纳入 v1.1；
+10. API Master Specification v1.1 已重新冻结并成为 Phase 6 及后续阶段唯一正式 API 事实来源；v1.0 保留为历史冻结基线；
 11. 本次只补齐 Approved 页面能力，不修改 Frozen 数据库，不新增表、字段、关系、状态或业务对象；
-12. 禁止通过 Phase 6 文档、页面代码或实现代码绕过本规范；当前下一步为 API Change Request 001 GitHub 验收，Phase 6 Final Consistency Review 保持阻塞。
+12. 禁止通过 Phase 6 文档、页面代码或实现代码绕过本规范；后续修改必须经过正式 DCR 或 Change Request；当前下一步为 Phase 6 Final Consistency Review GitHub 验收。

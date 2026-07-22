@@ -11,6 +11,29 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.6.5] - 2026-07-22
+
+### Added
+
+- 新增 Phase 6 Final Consistency Review，完成 Task 6.1 至 Task 6.3 与 Approved/Frozen 事实来源的最终一致性审查
+- 新增 DEC-056，记录 API Change Request 001 正式批准、API Master Specification v1.1 冻结及 Phase 6 Final Consistency Review 完成
+
+### Changed
+
+- API Change Request 001 更新为 Completed / Approved
+- API Master Specification v1.1 更新为 Completed / Approved / Frozen；`STC-*` 17 个、`SRT-*` 13 个、`DMG-*` 13 个接口正式生效，正式接口总数为 315
+- Task 6.3 更新为 Completed / Approved
+- Phase 6 Final Consistency Review 更新为 Completed / Pending Approval；Phase 6 保持 In Progress
+- Phase 4 Approved 页面与 API 覆盖结论完成复核，库存盘点、销售退货和报损页面均有正式 API 支撑
+- 当前下一步更新为 Phase 6 Final Consistency Review GitHub 验收；Phase 7 保持 Waiting / Not Started
+
+### Scope
+
+- Database Logical Design v1.1 保持 Frozen，未新增或修改表、字段、关系、状态或业务对象
+- 除已通过 API Change Request 001 批准的 43 个接口外，本次未新增、删除、重编号或修改业务接口
+- 未发现新的阻塞性冲突、Pending DCR、Pending Change Request 或 Outstanding Issue
+- 未编写代码、创建真实页面或 API Route、安装依赖，未冻结 Phase 6，未启动 Phase 7
+
 ## [0.6.4] - 2026-07-22
 
 ### Added

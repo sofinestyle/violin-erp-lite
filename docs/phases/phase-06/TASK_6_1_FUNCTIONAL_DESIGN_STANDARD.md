@@ -13,7 +13,7 @@ related_phase: Phase 6
 
 本文定义 Phase 6 全系统统一的功能详细设计规范，供 Task 6.2 核心业务功能详细设计和 Task 6.3 公共能力功能详细设计直接引用。通用规则只在本文件定义一次，后续功能文档必须引用本规范并补充具体功能差异。
 
-Phase 6 只定义已批准功能如何运行，不重新定义业务模块、页面、数据库或 API。Frozen 业务规则、Database Logical Design v1.1、API Master Specification v1.0 及 Approved 页面设计的优先级高于本规范。
+Phase 6 只定义已批准功能如何运行，不重新定义业务模块、页面、数据库或 API。Frozen 业务规则、Database Logical Design v1.1、API Master Specification v1.1 及 Approved 页面设计的优先级高于本规范。
 
 发现本规范或后续功能需求无法映射 Frozen 内容时，必须停止冲突部分，不得通过页面逻辑、临时字段或实现代码绕过，并登记正式 DCR 或 Change Request 等待项目负责人裁定。
 
@@ -151,7 +151,7 @@ Task 6.2 和 Task 6.3 的每个功能必须依次包含以下 16 个章节，不
 
 ## 11. API 调用规范
 
-所有功能必须使用状态为 Completed / Approved / Frozen 的 API Master Specification v1.0。
+所有功能必须使用状态为 Completed / Approved / Frozen 的 API Master Specification v1.1。
 
 - 请求携带 `X-Request-ID`；适用写操作携带 `Idempotency-Key`；
 - 前端不得自行修改、推测或缓存为正式状态；
@@ -319,17 +319,17 @@ Task 6.2 与 Task 6.3 必须在各功能的第 16 章将上述标准细化为可
 
 Phase 6 采用三个 Task 加独立 Final Consistency Review：Task 6.1 定义统一规则，Task 6.2 定义核心业务功能，Task 6.3 定义公共能力；Final Consistency Review 是 Phase Exit Gate，不作为普通 Task。
 
-本规范不得修改 Frozen Database Logical Design v1.1 或 API Master Specification v1.0，不得新增业务模块、状态、字段、表、关系或接口。后续发现缺口时必须登记 DCR 或 Change Request；技术框架、代码结构和具体实现工具统一留待 Phase 7。
+本规范不得修改 Frozen Database Logical Design v1.1 或 API Master Specification v1.1，不得新增业务模块、状态、字段、表、关系或接口。后续发现缺口时必须登记 DCR 或 Change Request；技术框架、代码结构和具体实现工具统一留待 Phase 7。
 
 ## 27. 正式结论
 
 1. Phase 6 已由项目负责人正式启动，状态为 In Progress；
 2. Task 6.1 功能详细设计统一规范已完成并获得批准，状态为 Completed / Approved；
 3. 本规范定义 16 个强制功能设计模板章节及页面、表单、按钮、API、权限、异常、幂等、库存、导入、附件、日志、性能和验收规则；
-4. Task 6.2 已完成，状态为 Completed / Pending Approval；Task 6.3 与 Phase 6 Final Consistency Review 均为 Waiting / Not Started；
-5. Task 6.2 已按本规范完成六个核心模块设计并等待 GitHub 验收；
-6. Phase 3 数据库和 Phase 5 API 保持 Frozen；
+4. Task 6.2 与 Task 6.3 均为 Completed / Approved；Phase 6 Final Consistency Review 为 Completed / Pending Approval；
+5. Task 6.2 已按本规范完成六个核心模块设计，Task 6.3 已完成公共能力设计；
+6. Phase 3 数据库和 API Master Specification v1.1 保持 Frozen；
 7. 未新增业务模块、数据库对象、状态或 API；
 8. 未创建真实页面或 API Route，未编写代码，未安装依赖；
-9. 当前下一步为 Task 6.2 GitHub 验收；
-10. 未经项目负责人批准不得启动 Task 6.3。
+9. 当前下一步为 Phase 6 Final Consistency Review GitHub 验收；
+10. 未经项目负责人最终验收不得冻结 Phase 6 或启动 Phase 7。

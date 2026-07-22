@@ -60,10 +60,11 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Phase 6：In Progress
 - Task 6.1 功能详细设计统一规范：Completed / Approved
 - Task 6.2 核心业务功能详细设计：Completed / Approved
-- Task 6.3 公共能力功能详细设计：Completed / Pending Approval
-- API Change Request 001：Completed / Pending Approval
-- Phase 6 Final Consistency Review：Waiting / Blocked by API CR Approval
-- 当前下一步：API Change Request 001 GitHub 验收
+- Task 6.3 公共能力功能详细设计：Completed / Approved
+- API Change Request 001：Completed / Approved
+- API Master Specification v1.1：Completed / Approved / Frozen（正式接口总数 315）
+- Phase 6 Final Consistency Review：Completed / Pending Approval
+- 当前下一步：Phase 6 Final Consistency Review GitHub 验收
 - Phase 1 业务需求分析：Approved
 - BUSINESS_RULES：Frozen
 - 项目治理文件：Approved
@@ -79,7 +80,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - 数据库冻结：Completed / Approved / Frozen
 - 技术开发：Not Started
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。API Master Specification v1.0 与 272 个接口仍是最后批准的 Frozen 基线；API Change Request 001 的 v1.1 候选修订补充 43 个接口、候选总数为 315，等待 GitHub 验收。Phase 6 为 In Progress；Task 6.1、Task 6.2 为 Completed / Approved，Task 6.3 为 Completed / Pending Approval，独立 Final Consistency Review 为 Waiting / Blocked by API CR Approval，技术开发尚未开始。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，Database Logical Design v1.1 已冻结；DCR-001 仅批准既有 `completion_status` 的正式状态定义，数据库结构不变。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。API Change Request 001 已获得批准；库存盘点、销售退货和报损共 43 个接口已纳入 API Master Specification v1.1，正式接口总数为 315，v1.1 状态为 Completed / Approved / Frozen。Phase 6 为 In Progress；Task 6.1 至 Task 6.3 均为 Completed / Approved，独立 Final Consistency Review 为 Completed / Pending Approval，技术开发尚未开始，Phase 7 保持 Waiting / Not Started。
 
 ## 九阶段开发路线
 
@@ -150,8 +151,9 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 - [Phase 5 Final Consistency Review（Completed / Approved）](docs/phases/phase-05/PHASE_5_FINAL_CONSISTENCY_REVIEW.md)
 - [Task 6.1 功能详细设计统一规范（Completed / Approved）](docs/phases/phase-06/TASK_6_1_FUNCTIONAL_DESIGN_STANDARD.md)
 - [Task 6.2 核心业务功能详细设计（Completed / Approved）](docs/phases/phase-06/TASK_6_2_CORE_BUSINESS_FUNCTIONAL_DESIGN.md)
-- [Task 6.3 公共能力功能详细设计（Completed / Pending Approval）](docs/phases/phase-06/TASK_6_3_COMMON_CAPABILITY_FUNCTIONAL_DESIGN.md)
-- [API Change Request 001：补齐库存盘点、销售退货、报损 API（Completed / Pending Approval）](docs/00-governance/API_CHANGE_REQUEST_001.md)
+- [Task 6.3 公共能力功能详细设计（Completed / Approved）](docs/phases/phase-06/TASK_6_3_COMMON_CAPABILITY_FUNCTIONAL_DESIGN.md)
+- [API Change Request 001：补齐库存盘点、销售退货、报损 API（Completed / Approved）](docs/00-governance/API_CHANGE_REQUEST_001.md)
+- [Phase 6 Final Consistency Review（Completed / Pending Approval）](docs/phases/phase-06/PHASE_6_FINAL_CONSISTENCY_REVIEW.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -161,7 +163,7 @@ Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database De
 
 ## 当前禁止事项
 
-Phase 5 的最后批准基线为 API Master Specification v1.0；任何正式内容变更必须经过 DCR 或 Change Request。API Change Request 001 与 API Master Specification v1.1 候选修订为 Completed / Pending Approval，当前下一步为其 GitHub 验收。Phase 6 为 In Progress，Final Consistency Review 因 API CR 审批保持阻塞。不得创建真实 API Route，不得编写页面代码或业务代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得安装依赖。
+API Change Request 001 已正式批准，API Master Specification v1.1 已成为 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 315；任何后续正式内容变更必须经过 DCR 或 Change Request。Phase 6 为 In Progress，Final Consistency Review 为 Completed / Pending Approval，当前下一步为其 GitHub 验收。不得提前冻结 Phase 6 或启动 Phase 7；不得创建真实 API Route，不得编写页面代码或业务代码，不得修改数据库，不得创建 ORM、DDL、Schema、Migration、Seed 或物理 ER 图，不得安装依赖。
 
 ## 安全说明
 

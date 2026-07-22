@@ -2,7 +2,7 @@
 document_name: API Change Request 001：补齐库存盘点、销售退货、报损 API
 project: Violin ERP Lite
 version: 1.0
-status: Completed / Pending Approval
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-22
 updated_date: 2026-07-22
@@ -21,7 +21,7 @@ Phase 6 一致性准备检查发现，Approved Task 4.9 已定义库存盘点、
 2. `TASK_5_4_INBOUND_OUTBOUND_CROSS_BORDER_API.md` 第 31 章错误地将盘点、销售退货和报损排除在范围之外；
 3. `TASK_6_2_CORE_BUSINESS_FUNCTIONAL_DESIGN.md` 因此无法为三类页面建立完整 Frozen API 映射；
 4. `PHASE_5_FINAL_CONSISTENCY_REVIEW.md` 关于 Approved 页面已全部覆盖的结论存在遗漏；
-5. Phase 6 Final Consistency Review 因 API Change Request 001 尚待批准而正式阻塞。
+5. Phase 6 Final Consistency Review 曾因 API Change Request 001 尚待批准而正式阻塞；本 Change Request 获批后该阻塞已解除。
 
 该遗漏不得通过删除或降级页面、前端临时实现、隐藏接口、备注、JSON 扩展字段或复用不匹配接口规避。
 
@@ -177,20 +177,20 @@ Phase 6 一致性准备检查发现，Approved Task 4.9 已定义库存盘点、
 
 ## 12. 对 API 总数的影响
 
-API Master Specification v1.0 的 272 个 Approved/Frozen 接口保持原编号与含义。本次新增候选正式接口 43 个：盘点 17、销售退货 13、报损 13。API Master Specification v1.1 候选总数为 315。
+API Master Specification v1.0 的 272 个历史 Approved/Frozen 接口保持原编号与含义。本次正式新增接口 43 个：盘点 17、销售退货 13、报损 13。API Master Specification v1.1 正式总数为 315。
 
-在项目负责人完成 GitHub 验收前，v1.1 与 315 个接口状态为 Completed / Pending Approval；v1.0 与 272 个接口仍是最后批准的 Frozen 基线。
+项目负责人已完成 GitHub 验收并正式批准本 Change Request；API Master Specification v1.1 与 315 个接口状态为 Completed / Approved / Frozen。v1.0 与 272 个接口保留为历史冻结基线。
 
 ## 13. 对 Phase 5 文档的影响
 
-- API Master Specification 更新为 v1.1、Completed / Pending Approval，并登记 43 个新增接口；
+- API Master Specification 更新为 v1.1、Completed / Approved / Frozen，并登记 43 个正式新增接口；
 - Task 5.4 删除三类能力属于范围排除的错误口径，补充 `STC-*`、`SRT-*`、`DMG-*` 设计；
-- Phase 5 Final Consistency Review 修正“页面全部覆盖”遗漏，并要求本 Change Request 批准后进行补充复核；
+- Phase 5 Final Consistency Review 修正“页面全部覆盖”遗漏，并已在本 Change Request 获批后完成补充复核；
 - Task 5.1、Task 5.2、Task 5.3、Task 5.5 的既有正文和接口不变。
 
 ## 14. 对 Task 6.2 的影响
 
-Task 6.2 补充三类页面、动作、状态、权限和 API 映射，并明确这些映射在 API Change Request 001 批准前为待批准输入。Phase 6 Final Consistency Review 保持 Waiting / Blocked by API CR Approval，不在本次启动。
+Task 6.2 已将三类页面、动作、状态、权限和 API 映射更新为正式输入；API Change Request 001 批准后阻塞解除，Phase 6 Final Consistency Review 已按独立指令执行。
 
 ## 15. 不影响范围
 
@@ -198,9 +198,9 @@ Task 6.2 补充三类页面、动作、状态、权限和 API 映射，并明确
 
 ## 16. 风险与回滚原则
 
-- 批准前风险：Phase 6 页面/API 覆盖仍不完整，Final Consistency Review 必须保持阻塞；
+- 批准结果：三类页面/API 覆盖已完整，原 Final Consistency Review 阻塞已解除；
 - 实现期风险：重复确认、并发库存变化、来源累计超限和权限越界；由幂等、版本、条件更新、事务及审计控制；
-- 文档回滚：如本 Change Request 未获批准，撤回 v1.1 候选补充，以 v1.0 Frozen 的 272 个接口为正式基线，不删除 Approved 页面，也不提交任何实现；
+- 文档回滚：v1.1 已正式冻结，后续不得直接回退或修改；任何变化必须再次经过正式 Change Request；
 - 数据回滚：本任务没有代码或数据写入，不存在数据库迁移或数据回滚。
 
 ## 17. 验收标准
@@ -210,12 +210,12 @@ Task 6.2 补充三类页面、动作、状态、权限和 API 映射，并明确
 3. 所有请求、响应、Header、分页、错误码、权限、幂等、并发、日志和安全遵循 Task 5.1；
 4. 盘点完成不改库存，销售退货和报损仅由正式确认动作改变库存并追加流水；
 5. 仅使用 Frozen 既有表、字段、关系和状态；
-6. API Master v1.1 候选总数准确为 315，既有 272 个接口不变；
-7. Phase 5、Phase 6 和治理文档的变更状态、阻塞原因与下一步一致；
-8. 未编写代码、创建 Route、安装依赖、启动 Final Consistency Review 或 Phase 7。
+6. API Master v1.1 正式总数准确为 315，既有 272 个接口不变；
+7. Phase 5、Phase 6 和治理文档的批准状态与下一步一致；
+8. 未编写代码、创建 Route、安装依赖或启动 Phase 7；Phase 6 Final Consistency Review 已在本 Change Request 获批后按独立正式指令执行。
 
 ## 18. 最终结论
 
-库存盘点、销售退货和报损 API 的最小完备设计已完成。Frozen Database Logical Design v1.1 可以完整支撑全部接口，无需数据库 DCR。本次新增 43 个候选正式接口，API Master Specification v1.1 候选总数为 315。
+库存盘点、销售退货和报损 API 的最小完备设计已完成并获得批准。Frozen Database Logical Design v1.1 可以完整支撑全部接口，无需数据库 DCR。本次新增 43 个正式接口，API Master Specification v1.1 正式总数为 315。
 
-API Change Request 001 状态为 Completed / Pending Approval，必须等待项目负责人完成 GitHub 验收后，方可批准并重新冻结 API Master Specification；当前不得启动 Phase 6 Final Consistency Review 或 Phase 7。
+API Change Request 001 状态为 Completed / Approved，API Master Specification v1.1 已重新冻结。库存盘点、销售退货和报损页面全部保留；`STC-*` 17 个、`SRT-*` 13 个、`DMG-*` 13 个接口正式生效。Database Logical Design v1.1 未修改，不需要数据库 DCR。当前下一步为 Phase 6 Final Consistency Review GitHub 验收，不得启动 Phase 7。
