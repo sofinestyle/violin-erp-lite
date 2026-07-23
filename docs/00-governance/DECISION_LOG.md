@@ -1697,3 +1697,25 @@ Approved
 ### 影响
 
 本决定只补齐既有角色数据范围维护能力的 API 覆盖，不新增业务模块、业务对象、数据库表、字段、关系、枚举、角色、权限代码、数据范围或状态；不修改 BUSINESS_RULES、SYSTEM_SPEC、Database Logical Design v1.1、DATABASE_ENUM_SPEC、ROLE_PERMISSION_SPEC、Phase 4、Phase 6 或工程代码；不修改 Prisma Schema、Migration、Seed 或依赖，不执行 Task 7.5-A 开发。完成 GitHub 技术验收后，方可重新启动 Task 7.5-A。
+
+## DEC-069 永久删除采购类型
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人正式批准 Frozen Consistency Fix 001；
+- 永久删除采购订单中的 `purchase_type` / “采购类型”要求；
+- SKU 与 Category 已能够完整表达采购对象，“采购类型”属于重复业务信息；
+- 从 Phase 6 Task 6.2 采购订单新增与编辑描述中删除“采购类型”；
+- 采购订单字段、页面和接口继续以 Approved Phase 4、Frozen Database Logical Design v1.1 和 API Master Specification v1.1 为准。
+
+### 影响
+
+本决定仅修复 Phase 6 Frozen 文档一致性，不修改数据库表、字段、关系、枚举、约束或索引，不修改 API 定义、路径、请求、响应或 335 个正式 API，不修改 Phase 4 页面、`BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、`DATABASE_SPEC.md`、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md` 或工程代码。

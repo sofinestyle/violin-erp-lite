@@ -11,6 +11,18 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.9.1] - 2026-07-23
+
+### Changed
+
+- 根据 Frozen Consistency Fix 001，从 Phase 6 Task 6.2 采购订单新增与编辑描述中删除“采购类型”
+- Task 6.2 采购功能规格与 Approved Phase 4 页面、Frozen Phase 5 API 和 Database Logical Design v1.1 保持一致
+
+### Scope
+
+- 本次仅修复 Frozen 文档一致性，不修改数据库、API、页面、`BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、`DATABASE_SPEC.md`、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md` 或工程代码
+- 采购订单继续使用供应商、SKU、数量、单价、交期、币种及既有 Approved / Frozen 字段，不新增或删除数据库字段及正式 API
+
 ## [0.9.0] - 2026-07-23
 
 ### Added
