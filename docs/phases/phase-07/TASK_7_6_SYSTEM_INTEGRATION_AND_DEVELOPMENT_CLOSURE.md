@@ -1,7 +1,7 @@
 ---
 document_name: Task 7.6 系统集成与开发收口
 project: Violin ERP Lite
-version: 1.2
+version: 1.3
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-23
@@ -549,29 +549,31 @@ Database Change Request 002 已更新为 Completed / Approved，Database Logical
 
 ## 17. Import Status Code Completion 001
 
-### 17.1 暂停原因
+### 17.1 当前状态
 
-Batch 7.6-C1 实施前确认 Frozen `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 缺少完整英文代码集合，当前 Migration 也没有四项值域 Check。Phase 4 明确要求等待后续正式批准，不得由实现自行新增代码。
+Batch 7.6-C1 实施前确认 Frozen `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 缺少完整英文代码集合，原 Migration 也没有四项值域 Check。项目负责人已批准 Import Status Code Completion 001、Database Change Request 003 和 API Change Request 003；本轮只完成 Database v2.1 正式同步，API v1.3 尚未完成 Documentation Sync 与 Freeze。
 
 因此：
 
 - Batch 7.6-C1：Paused / SSOT Conflict；
 - Task 7.6：继续 In Progress；
 - M-001：Open，48 APIs Remaining；
-- 本轮不实现 IMP、ATT、LOG API，不修改 Route、Service、Repository、测试或数据库。
+- 本轮不实现 IMP、ATT、LOG API，不修改 Route、Service、Repository、测试业务逻辑或 API SSOT。
 
-### 17.2 治理提案
+### 17.2 Database Change Request 003 完成结果
 
-新增三份 `Proposed / Pending Approval` 文件：
+- Database Change Request 003：Completed / Approved；
+- Database Logical Design v2.1：Completed / Approved / Frozen；
+- 四项正式 Check：
+  - `ck_import_tasks_status`；
+  - `ck_import_task_items_validation_status`；
+  - `ck_import_task_items_execution_status`；
+  - `ck_shipment_import_matches_match_status`；
+- 正式前向 Migration：`20260724090000_add_import_status_value_checks`；
+- Mapping Audit：62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、226 Check、2 PostgreSQL Enum；
+- 隔离 PostgreSQL 18 验证全部 Migration 可应用且状态最新，全部批准值可写入，四个字段的非法值均被数据库拒绝；
+- 本次未新增表、字段、默认值、主键、唯一约束、外键、普通索引或 PostgreSQL Enum，未修改历史数据或历史 Migration。
 
-1. `docs/00-governance/IMPORT_STATUS_CODE_COMPLETION_001.md`；
-2. `docs/00-governance/DATABASE_CHANGE_REQUEST_003.md`；
-3. `docs/00-governance/API_CHANGE_REQUEST_003.md`。
+### 17.3 继续暂停与恢复条件
 
-审计建议 DCR-003 增加四项值域 Check，Database Logical Design 建议从 v2.0 升级为 v2.1，Mapping Audit Check 预计从 222 增至 226；API CR-003 只补状态、筛选、动作和错误映射，API Master Specification 建议升级为 v1.3，正式接口总数保持 335。
-
-`failed` 任务状态建议保留，用于表达执行结束且零成功；`partially_matched` 建议保留且只表示数量部分匹配。因匹配表目标外键必填，`unmatched` 和 `conflict` 不建议作为匹配记录状态。“待上传”建议保持 IMP-001 提交前页面状态，不写入数据库/API。
-
-### 17.3 恢复条件
-
-项目负责人批准状态代码、DCR-003 和 API CR-003，完成 Frozen SSOT 同步、独立前向 Migration、Mapping Audit、真实 PostgreSQL 验证及 GitHub 技术验收后，方可另行下令恢复 Batch 7.6-C1。本轮不批准任何 Change Request，也不自行恢复开发。
+Database v2.1 已完成同步与冻结，但 API Change Request 003 Documentation Sync 和 API Master Specification v1.3 Freeze 尚未执行。Batch 7.6-C1 因此继续保持 `Paused / SSOT Conflict`，M-001 继续为 `Open / 48 APIs Remaining`。完成 API v1.3 正式同步、Database v2.1 本轮 GitHub 技术验收并由项目负责人另行下令后，方可恢复 Batch 7.6-C1；本轮不自行恢复开发。

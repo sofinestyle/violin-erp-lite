@@ -1,7 +1,7 @@
 ---
 document_name: 数据库规格
 project: Violin ERP Lite
-version: 2.0
+version: 2.1
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -13,11 +13,11 @@ related_phase: Phase 3 / Phase 7
 
 ## 1. 正式状态
 
-Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计。
+Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计；项目负责人于 2026-07-24 批准 Database Change Request 003，为四个既有导入状态字段增加正式值域 Check。
 
 当前唯一有效版本为：
 
-- Database Logical Design：v2.0；
+- Database Logical Design：v2.1；
 - 状态：Completed / Approved / Frozen；
 - 正式表：62；
 - 正式字段：1160；
@@ -25,10 +25,10 @@ Phase 3 数据库设计（Database Design）已完成并冻结。Database Logica
 - 唯一约束：76；
 - 外键：292；
 - 普通索引：94；
-- Check：222；
+- Check：226；
 - 正式数据库枚举：2。
 
-Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`，不修改既有 60 张表的字段、类型、约束或业务语义。初次 DCR-002 同步的 61 表、1142 字段是 Completion Fix 前的中间历史基线，不是当前正式计数。
+Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`，不修改既有 60 张表的字段、类型、约束或业务语义。初次 DCR-002 同步的 61 表、1142 字段是 Completion Fix 前的中间历史基线，不是当前正式计数。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check；表、字段、主键、唯一约束、外键、普通索引和 PostgreSQL Enum 均不变。
 
 ## 2. 既有正式设计来源
 
@@ -46,9 +46,10 @@ Task 3.1 至 Task 3.5.7 的正式成果继续有效：
 - [Task 3.5.6 数据库命名规范](../phases/phase-03/TASK_3_5_6_DATABASE_NAMING_STANDARD.md)；
 - [Task 3.5.7 数据库设计冻结](../phases/phase-03/TASK_3_5_7_DATABASE_FREEZE.md)；
 - [数据库枚举规范](DATABASE_ENUM_SPEC.md)；
-- [Database Change Request 002](../00-governance/DATABASE_CHANGE_REQUEST_002.md)。
+- [Database Change Request 002](../00-governance/DATABASE_CHANGE_REQUEST_002.md)；
+- [Database Change Request 003](../00-governance/DATABASE_CHANGE_REQUEST_003.md)。
 
-DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；发生冲突时，本文件和已批准 DCR-002 对新增对象的定义优先于历史 v1.1 表数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
+DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；DCR-003 是 v2.0 到 v2.1 的唯一约束增量。发生冲突时，本文件和已批准 Change Request 的对应定义优先于历史版本数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
 
 ## 3. `user_wechat_identities` 正式定位
 
@@ -203,7 +204,22 @@ Check 不替代跨表身份、权限、并发和业务流程校验。
 
 本节只定义数据库支撑，不授权实现认证业务代码。
 
-## 15. Migration 与 Mapping Audit
+## 15. Import 状态值域
+
+Database Logical Design v2.1 为以下四个既有字段冻结局部 Check 代码集合：
+
+| Check | 字段 | 允许值 |
+| --- | --- | --- |
+| `ck_import_tasks_status` | `import_tasks.status` | `pending_validation`, `validation_failed`, `pending_confirmation`, `importing`, `partially_succeeded`, `succeeded`, `cancelled`, `duplicate_file`, `failed` |
+| `ck_import_task_items_validation_status` | `import_task_items.validation_status` | `pending`, `valid`, `warning`, `invalid` |
+| `ck_import_task_items_execution_status` | `import_task_items.execution_status` | `pending`, `processing`, `succeeded`, `failed`, `skipped` |
+| `ck_shipment_import_matches_match_status` | `shipment_import_matches.match_status` | `pending`, `partially_matched`, `matched` |
+
+四个字段继续使用非空 `VARCHAR(50)` 且不设置数据库默认值；创建事实时必须由正式服务显式写入。上述代码是字段级 Check 值域，不是 PostgreSQL Enum，不得增加同义状态或页面中文值。
+
+`pending_upload` 只表示 IMP-001 提交前的页面本地状态，不写入数据库。`partially_matched` 只表示数量部分匹配；`unmatched` 与 `conflict` 不写入具有必填目标外键的 `shipment_import_matches`。
+
+## 16. Migration 与 Mapping Audit
 
 正式物理同步包括：
 
@@ -211,13 +227,14 @@ Check 不替代跨表身份、权限、并发和业务流程校验。
 - `prisma/migrations/20260723150000_add_user_wechat_identities/migration.sql`；
 - `prisma/schema.prisma` 中的 `auth_sessions` 模型、自关联及 `users` 双向关系；
 - `prisma/migrations/20260723160000_add_auth_sessions/migration.sql`；
-- `prisma/mapping-audit.json` 的 v2.0 计数。
+- `prisma/migrations/20260724090000_add_import_status_value_checks/migration.sql`；
+- `prisma/mapping-audit.json` 的 v2.1 计数。
 
-两个 Migration 分别创建空表及其约束、索引、外键和必要循环防护，不回填或猜测任何现有身份，不包含真实 AppID、Secret、OpenID、Token、用户或业务数据。不得修改或重写已提交的 `20260723150000_add_user_wechat_identities`。
+DCR-002 的两个 Migration 分别创建空表及其约束、索引、外键和必要循环防护，不回填或猜测任何现有身份，不包含真实 AppID、Secret、OpenID、Token、用户或业务数据。DCR-003 Migration 在添加四项 Check 前审计现有值；发现未知值时以脱敏行数与 distinct 数量抛出异常并停止，不自动映射、删除或转换数据。不得修改或重写任何历史 Migration。
 
-最终 Mapping Audit 为 62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、222 Check、2 枚举。
+最终 Mapping Audit 为 62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、226 Check、2 枚举。
 
-## 16. 枚举结论
+## 17. 枚举结论
 
 DCR-002 及其 Completion Fix 不新增 PostgreSQL Enum。`user_wechat_identities.status`、`auth_sessions.client_type` 和 `auth_sessions.revocation_actor_type` 均为表内 Check 代码；正式数据库枚举仍只有：
 
@@ -226,8 +243,10 @@ DCR-002 及其 Completion Fix 不新增 PostgreSQL Enum。`user_wechat_identitie
 
 `access_level` 的正式代码继续由 `DATABASE_ENUM_SPEC.md` 管理并通过 Check 物理限制，不改变本次 Mapping Audit 的 PostgreSQL Enum 数量。
 
-## 17. 冻结结论
+Database Change Request 003 的四组 Import 状态同样是字段级 Check 代码集合，不新增 PostgreSQL Enum，也不改变 `DATABASE_ENUM_SPEC.md` 的既有定义或数量。
 
-Database Logical Design v2.0 在 DCR-002 Completion Fix 全部验证通过后完成、批准并冻结。除新增的 `user_wechat_identities` 与 `auth_sessions` 外，v1.1 的表、字段、关系、约束、索引、枚举、库存粒度和历史保留规则全部保持不变。
+## 18. 冻结结论
+
+Database Logical Design v2.1 在 DCR-003 的独立前向 Migration、Mapping Audit 与真实 PostgreSQL 验证通过后完成、批准并冻结。v2.1 只比 v2.0 增加四项 Import 状态值域 Check；既有表、字段、默认值、非空、主键、唯一约束、外键、普通索引、PostgreSQL Enum、库存粒度和历史保留规则全部保持不变。
 
 后续任何表、字段、类型、状态、约束、索引、关系或枚举变化都必须重新提交 Database Change Request。不得通过代码、API、客户端缓存、JSON、备注或临时 Migration 绕过本规范。

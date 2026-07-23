@@ -382,6 +382,7 @@ model ecommerce_platforms {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// DCR-003 keeps validation_status and execution_status as strings; their approved values are enforced by ck_import_task_items_validation_status and ck_import_task_items_execution_status in the v2.1 SQL migration.
 model import_task_items {
   id                                        String                    @id(map: "pk_import_task_items") @default(dbgenerated("uuidv7()")) @db.Uuid
   created_at                                DateTime                  @default(now()) @db.Timestamptz(6)
@@ -413,6 +414,7 @@ model import_task_items {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// DCR-003 keeps status as a string; its approved values are enforced by ck_import_tasks_status in the v2.1 SQL migration.
 model import_tasks {
   id                                   String                    @id(map: "pk_import_tasks") @default(dbgenerated("uuidv7()")) @db.Uuid
   created_at                           DateTime                  @default(now()) @db.Timestamptz(6)
@@ -1570,6 +1572,7 @@ model sales_returns {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// DCR-003 keeps match_status as a string; its approved values are enforced by ck_shipment_import_matches_match_status in the v2.1 SQL migration.
 model shipment_import_matches {
   id                                              String                      @id(map: "pk_shipment_import_matches") @default(dbgenerated("uuidv7()")) @db.Uuid
   created_at                                      DateTime                    @default(now()) @db.Timestamptz(6)

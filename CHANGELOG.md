@@ -5,11 +5,31 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-23
+updated_date: 2026-07-24
 related_phase: Phase 1
 ---
 
 # CHANGELOG
+
+## [0.11.2] - 2026-07-24
+
+### Changed
+
+- Database Change Request 003 已批准并完成，Database Logical Design 由 v2.0 升级并冻结为 v2.1
+- 为 `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 增加四项正式值域 Check
+- Prisma Schema 补充 Check 物理映射说明，Mapping Audit 的 Check 由 222 增至 226
+
+### Verified
+
+- 新增 `20260724090000_add_import_status_value_checks` 独立前向 Migration，在添加约束前审计未知历史值且不自动映射
+- 隔离 PostgreSQL 18 完成全量 Migration、Migration Status、四组全部合法值写入及每个字段非法值拒绝验证
+- 表、字段、主键、唯一约束、外键、普通索引和 PostgreSQL Enum 数量均保持不变
+
+### Scope
+
+- API Master Specification v1.3 尚未执行 Documentation Sync 或 Freeze，API Change Request 003 文件状态保持不变
+- Task 7.6 保持 In Progress，Batch 7.6-C1 继续 `Paused / SSOT Conflict`，M-001 保持 Open / 48 APIs Remaining
+- 本轮未修改 `CURRENT_STATUS.md`、路线、项目状态、README、API、Route、Service、Repository、前端或测试业务逻辑
 
 ## [0.11.1] - 2026-07-24
 
