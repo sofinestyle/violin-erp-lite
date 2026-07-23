@@ -11,6 +11,19 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.9.3] - 2026-07-23
+
+### Changed
+
+- 根据 Frozen Consistency Fix 002，在 Phase 4 Task 4.10 跨境发货新建与编辑表单的物流信息区域补充“运输方式”
+- 跨境发货正式字段清单、物流信息说明与页面表单保持一致
+
+### Scope
+
+- 本次仅修复 Phase 4 跨境业务页面设计的文档内部一致性，不新增业务需求
+- 未修改数据库、API、`BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、`DATABASE_SPEC.md`、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、Phase 5、Phase 6 或工程代码
+- `transport_method` 继续使用既有数据库定义；CBR-003 的覆盖补齐留待独立 API Coverage Completion 004
+
 ## [0.9.2] - 2026-07-23
 
 ### Added

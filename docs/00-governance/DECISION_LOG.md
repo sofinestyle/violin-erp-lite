@@ -1719,3 +1719,25 @@ Approved
 ### 影响
 
 本决定仅修复 Phase 6 Frozen 文档一致性，不修改数据库表、字段、关系、枚举、约束或索引，不修改 API 定义、路径、请求、响应或 335 个正式 API，不修改 Phase 4 页面、`BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、`DATABASE_SPEC.md`、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md` 或工程代码。
+
+## DEC-070 修复跨境运输方式页面设计一致性
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人正式批准 Frozen Consistency Fix 002；
+- Phase 4 Task 4.10 跨境发货正式字段清单中的“运输方式”保持不变；
+- 在跨境发货新建与编辑表单的物流信息区域补充“运输方式”；
+- 同步物流信息说明，使正式字段清单、物流信息区域与页面表单保持一致；
+- 本次不补充或修改 CBR-003，相关 API 覆盖缺口留待独立 API Coverage Completion 004。
+
+### 影响
+
+本决定仅修复 Phase 4 跨境业务页面设计的文档内部一致性，不新增业务需求，不修改数据库表、字段、类型、约束或 Prisma 映射，不修改 API 定义或 335 个正式 API，不修改 `BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、`DATABASE_SPEC.md`、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、Phase 5、Phase 6 或工程代码。
