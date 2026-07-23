@@ -70,6 +70,7 @@ const SENSITIVE_KEYS = new Set([
   "mobile",
   "password",
   "passwordhash",
+  "payeeaccountsnapshot",
   "phone",
   "rawbinary",
   "refreshtoken",

@@ -1,7 +1,16 @@
 import { Text, View } from "@tarojs/components";
+import type { ReactNode } from "react";
 import { EmptyState } from "./empty-state";
 
-export function ShellPage({ title, description }: { title: string; description: string }) {
+export function ShellPage({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children?: ReactNode;
+}) {
   return (
     <View className="shell-page">
       <View className="shell-page__header">
@@ -12,7 +21,7 @@ export function ShellPage({ title, description }: { title: string; description: 
         <View className="shell-page__avatar">V</View>
       </View>
       <View className="shell-page__card">
-        <EmptyState title={`${title}暂未开放`} description={description} />
+        {children ?? <EmptyState title={`${title}暂未开放`} description={description} />}
       </View>
     </View>
   );

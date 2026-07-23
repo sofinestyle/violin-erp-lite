@@ -6,9 +6,11 @@ import {
   JwtService,
   loadJwtConfiguration,
   MasterDataService,
+  matchWorkflowEndpoint,
   parseMasterDataListQuery,
   parseSecurityListQuery,
   SecurityManagementService,
+  WorkflowService,
   withAuthentication,
   type AuthenticationContext,
   type RequestContext,
@@ -18,6 +20,7 @@ import {
   PrismaAuditWriter,
   PrismaMasterDataRepository,
   PrismaSecurityRepository,
+  PrismaWorkflowRepository,
 } from "@violin-erp/database";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -56,7 +59,68 @@ function services() {
   return {
     masterData: new MasterDataService(new PrismaMasterDataRepository(), audit),
     security: new SecurityManagementService(new PrismaSecurityRepository(), audit),
+    workflow: new WorkflowService(new PrismaWorkflowRepository(), audit),
   };
+}
+
+async function dispatchWorkflow(
+  request: Request,
+  context: RequestContext,
+  authentication: AuthenticationContext,
+  segments: string[],
+): Promise<Response | null> {
+  const candidate = matchWorkflowEndpoint(
+    request.method,
+    segments,
+    new URL(request.url).searchParams,
+    {},
+  );
+  if (!candidate) return null;
+  const payload =
+    request.method === "GET" ? {} : ((await body(request)) as Readonly<Record<string, unknown>>);
+  const matched =
+    request.method === "GET"
+      ? candidate
+      : matchWorkflowEndpoint(
+          request.method,
+          segments,
+          new URL(request.url).searchParams,
+          payload,
+        )!;
+  if (matched.command.mutation && !["export"].includes(matched.command.action)) {
+    assertIdempotencyKey(request);
+  }
+  const result = await services().workflow.execute(
+    matched.command,
+    matched.permission,
+    authentication,
+    context,
+  );
+  if (
+    result &&
+    typeof result === "object" &&
+    "items" in result &&
+    Array.isArray((result as { items: unknown }).items)
+  ) {
+    const list = result as {
+      items: unknown[];
+      page: number;
+      pageSize: number;
+      total: number;
+      totalPages: number;
+    };
+    return createSuccessResponse(list.items, context, {
+      meta: {
+        page: list.page,
+        pageSize: list.pageSize,
+        total: list.total,
+        totalPages: list.totalPages,
+      },
+    });
+  }
+  return createSuccessResponse(result, context, {
+    status: matched.command.action.startsWith("create") ? 201 : 200,
+  });
 }
 
 async function dispatchMasterData(
@@ -362,6 +426,8 @@ const handler = createRouteHandler(async (request, context) => {
     if (segments[0] === "users" || segments[0] === "roles" || segments[0] === "permissions") {
       return dispatchSecurity(request, context, authentication, segments);
     }
+    const workflow = await dispatchWorkflow(request, context, authentication, segments);
+    if (workflow) return workflow;
     return dispatchMasterData(request, context, authentication, segments);
   });
 });
