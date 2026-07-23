@@ -1,7 +1,7 @@
 ---
 document_name: Task 7.6 系统集成与开发收口
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-23
@@ -489,3 +489,60 @@ Database Change Request 002 已更新为 Completed / Approved，Database Logical
 - 本轮未修改数据库、Migration、Prisma Schema、Mapping Audit、Route、Service、Repository、JWT、前端、Seed 或测试逻辑；
 - Task 7.6 保持 In Progress，Batch 7.6-B 继续暂停，等待本次 GitHub 技术验收及项目负责人后续正式启动；
 - Phase 7 Final Consistency Review 与 Phase 8 均未启动。
+
+## 16. Batch 7.6-B 统一认证与权限闭环实现
+
+### 16.1 状态与范围
+
+- Batch 7.6-B：Completed / Pending Approval；
+- B-001：Closed，等待 GitHub 技术验收；
+- Task 7.6：继续保持 In Progress；
+- 本批次只实现 Frozen `SEC-001` 至 `SEC-005`、Admin 与 Mini Program 认证链路、实时 RBAC 上下文及认证测试；
+- 未修改 Frozen SSOT、Prisma Schema、Migration、Mapping Audit、Seed、角色权限定义、业务规则或正式 API 数量；
+- 未启动 Batch 7.6-C、7.6-D、7.6-E、Phase 7 Final Consistency Review 或 Phase 8。
+
+### 16.2 服务端认证与会话结果
+
+| 范围 | 实现结果 |
+| --- | --- |
+| `SEC-001` | 单一 `/api/v1/auth/login` 严格处理 `password`、`wechat-bind`、`wechat`；校验客户端类型、互斥字段、账号状态、锁定、有效角色和适用密码策略 |
+| 微信绑定 | 服务端环境配置交换 code；绑定、首个 Session、用户登录事实及审计在同一数据库事务完成；同键同请求复用首次结果，同键不同请求返回 409 |
+| Token | Access Token 仅包含用户、Session、Token Family、客户端及时间 Claims；Refresh Token 使用 48 字节随机值，数据库只保存 HMAC-SHA256 摘要 |
+| `SEC-002` | 每次刷新创建同族新 Session，条件认领前驱；并发刷新最多一个成功；旧 Token 重放以系统操作者语义撤销整族 |
+| `SEC-003` | 校验 Access Token 与 Refresh Token 的用户及 Token Family，一次或重复调用均幂等撤销当前族，不影响其他族，不解绑微信 |
+| `SEC-004` | 返回当前用户、角色、客户端、绑定、密码策略及到期时间的安全摘要，不返回 Hash、内部链或微信标识 |
+| `SEC-005` | 每次请求从当前有效用户角色、244 个 Frozen 权限及显式仓库/店铺关系实时装载；角色名称不会自动产生 `all` 数据范围 |
+| 受保护 API | 验签后继续检查 Session、Token Family、客户端、用户启用/锁定、有效角色及当前权限；前端展示权限不能替代服务端校验 |
+| 安全控制 | 登录、绑定、刷新采用独立脱敏键限流并返回 `SECURITY_RATE_LIMIT_EXCEEDED`；普通日志和审计不记录密码、Token、Hash、微信 code 或明文微信身份 |
+
+### 16.3 双端结果
+
+- Admin 新增登录、登录中、错误提示、会话恢复、单飞刷新、刷新失败统一退出、登出及当前权限装载；
+- Admin 基础资料和工作流请求统一使用认证客户端，Access Token 失效时只刷新一次并重试一次；
+- Mini Program 启动时恢复现有会话或调用 `wx.login` 自动登录，未绑定时进入已有系统账号绑定页；
+- Mini Program 支持带幂等键的首次绑定、自动登录、Session/Permissions 装载、单飞刷新、登出和本地会话清理；
+- AppID、App Secret 和微信 code 交换仅在服务端；客户端不保存 OpenID、UnionID 或 App Secret，也不从微信身份推导权限。
+
+### 16.4 自动化与真实运行证据
+
+正式验证运行时为 Node.js 22.23.1、pnpm 11.12.0 与隔离 PostgreSQL 18.4：
+
+1. 标准测试：25 个测试文件、98 项测试通过；真实数据库条件测试按设计不在无数据库的标准命令中执行；
+2. PostgreSQL Repository 集成：1 个文件、6 项测试通过，覆盖 Session 创建、并发轮换、Replay 整族撤销、登出隔离、微信绑定唯一性、事务回滚、用户停用及审计事实；
+3. HTTP API 集成：1 个文件、2 项测试通过，覆盖 `SEC-001` 至 `SEC-005`、统一包装、Request ID、PC 登录、Mock 微信绑定/自动登录、绑定幂等、Session、Permissions、Refresh、Logout 和撤销后拒绝；
+4. 双端认证客户端：Admin 3 项、Mini Program 4 项自动化测试通过，覆盖登录/绑定、恢复、权限、单飞刷新、刷新失败清理和登出；
+5. 空库三项 Migration 全量状态为最新，Seed、Prisma Generate 与 Validate 通过；未生成或修改数据库结构资产；
+6. 实际启动 Admin 后，Health、密码登录、Session、Permissions、受保护 Products、Refresh 与 Logout 均返回 HTTP 200；登出后旧 Access Token 请求 Session 返回 HTTP 401；
+7. Mock 微信服务仅运行在测试进程，未连接真实微信网络，未保存真实 AppID、Secret、OpenID、Token 或业务数据。
+
+### 16.5 问题更新
+
+| 编号 | 更新结果 |
+| --- | --- |
+| B-001 | Closed：双端、统一 API、`users`、`user_wechat_identities`、`auth_sessions` 与 RBAC 已形成完整认证链路 |
+| M-001 | 由缺失 53 个更新为缺失 48 个；实现覆盖由 282 / 335 更新为 287 / 335，M-001 整体保持 Open |
+| M-002 | Mini Program 认证子链路已关闭；其他已批准业务查询接入仍保持 Open |
+| M-007 | 认证范围已补真实 PostgreSQL 与 HTTP 集成证据；其他核心业务集成测试仍保持 Open |
+| N-003 | PostgreSQL 18 实测通过，但 Prisma 7.9 `adapter-pg` 在关系查询时触发 pg 8.22 的 pg@9 兼容性弃用警告；当前无失败，后续依赖收口需复核 |
+
+当前剩余问题为：Blocker 0；Major 4（M-001、M-002、M-003、M-007）；Minor 1（N-003）；Out of Scope 1（O-002）。原 M-004、M-005、M-006、N-001、N-002 与 O-001 继续保持 Closed，V-001 至 V-009 继续保持 Verified。

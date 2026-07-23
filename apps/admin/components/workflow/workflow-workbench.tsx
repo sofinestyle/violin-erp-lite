@@ -13,6 +13,7 @@ import {
   toast,
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
+import { authenticatedFetch } from "@/lib/auth-client";
 import type { WorkflowView } from "@/lib/workflow";
 
 type Envelope = {
@@ -24,17 +25,11 @@ type Envelope = {
 };
 type Row = Record<string, unknown> & { id: string };
 
-function token() {
-  return globalThis.sessionStorage?.getItem("violin.accessToken") ?? null;
-}
-
 async function request(url: string, init: RequestInit = {}): Promise<Envelope> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
   if (init.body) headers.set("Content-Type", "application/json");
-  const accessToken = token();
-  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
-  const response = await fetch(url, { ...init, headers });
+  const response = await authenticatedFetch(url, { ...init, headers });
   const envelope = (await response.json()) as Envelope;
   if (!response.ok || envelope.success !== true) {
     throw new Error(

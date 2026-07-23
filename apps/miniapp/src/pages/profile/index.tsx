@@ -1,7 +1,23 @@
-import { ShellPage } from "../../components/shell-page";
+import { Button, Text, View } from "@tarojs/components";
+import { useAppContext } from "../../contexts/app-context";
 
 export default function ProfilePage() {
+  const { logout, permissions, user } = useAppContext();
   return (
-    <ShellPage title="我的" description="用户区域仅保留应用壳层占位，未接入登录与用户资料。" />
+    <View className="shell-page">
+      <View className="shell-page__header">
+        <View>
+          <Text className="shell-page__eyebrow">当前会话</Text>
+          <Text className="shell-page__title">{user.displayName}</Text>
+        </View>
+      </View>
+      <View className="shell-page__card mini-entry">
+        <Text className="mini-entry__title">{user.username}</Text>
+        <Text className="mini-entry__description">已加载 {permissions.size} 项当前有效权限</Text>
+        <Button className="mini-entry__button" onClick={() => void logout()}>
+          退出登录
+        </Button>
+      </View>
+    </View>
   );
 }

@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import { errors as joseErrors, jwtVerify, SignJWT } from "jose";
 import {
   InvalidRefreshTokenError,
@@ -9,13 +9,16 @@ import {
 const DURATION_PATTERN = /^(\d+)(s|m|h|d)$/;
 const MINIMUM_SECRET_LENGTH = 32;
 
-export type TokenType = "access" | "refresh";
+export type ClientType = "pc" | "wechat-mini-program";
 
 export type TokenClaims = Readonly<{
+  clientType: ClientType;
   expiresAt: number;
   issuedAt: number;
+  sessionId: string;
   tokenId: string;
-  tokenType: TokenType;
+  tokenFamilyId: string;
+  tokenType: "access";
   userId: string;
 }>;
 
@@ -25,14 +28,14 @@ export type JwtConfiguration = Readonly<{
   audience: string;
   issuer: string;
   refreshExpiresInSeconds: number;
-  refreshSecret: string;
+  refreshPepper: string;
 }>;
 
 export type JwtEnvironment = Readonly<{
   JWT_ACCESS_EXPIRES_IN?: string;
   JWT_ACCESS_SECRET?: string;
   JWT_REFRESH_EXPIRES_IN?: string;
-  JWT_REFRESH_SECRET?: string;
+  JWT_REFRESH_PEPPER?: string;
 }>;
 
 export type JwtServiceOptions = Readonly<{
@@ -74,10 +77,9 @@ function requireSecret(value: string | undefined, name: string): string {
 
 export function loadJwtConfiguration(environment: JwtEnvironment): JwtConfiguration {
   const accessSecret = requireSecret(environment.JWT_ACCESS_SECRET, "JWT_ACCESS_SECRET");
-  const refreshSecret = requireSecret(environment.JWT_REFRESH_SECRET, "JWT_REFRESH_SECRET");
-
-  if (accessSecret === refreshSecret) {
-    throw new Error("JWT access and refresh secrets must be different");
+  const refreshPepper = requireSecret(environment.JWT_REFRESH_PEPPER, "JWT_REFRESH_PEPPER");
+  if (accessSecret === refreshPepper) {
+    throw new Error("JWT access secret and refresh pepper must be different");
   }
 
   return {
@@ -92,21 +94,28 @@ export function loadJwtConfiguration(environment: JwtEnvironment): JwtConfigurat
       environment.JWT_REFRESH_EXPIRES_IN,
       "JWT_REFRESH_EXPIRES_IN",
     ),
-    refreshSecret,
+    refreshPepper,
   };
 }
 
-function tokenError(tokenType: TokenType, error: unknown): Error {
-  if (tokenType === "access" && error instanceof joseErrors.JWTExpired) {
+function tokenError(error: unknown): Error {
+  if (error instanceof joseErrors.JWTExpired) {
     return new TokenExpiredError();
   }
-
-  if (tokenType === "refresh") {
-    return new InvalidRefreshTokenError();
-  }
-
   return new UnauthorizedError();
 }
+
+export type AccessTokenInput = Readonly<{
+  clientType: ClientType;
+  sessionId: string;
+  tokenFamilyId: string;
+  userId: string;
+}>;
+
+export type IssuedRefreshToken = Readonly<{
+  hash: string;
+  token: string;
+}>;
 
 export class JwtService {
   readonly #configuration: JwtConfiguration;
@@ -115,10 +124,9 @@ export class JwtService {
 
   constructor(configuration: JwtConfiguration, options: JwtServiceOptions = {}) {
     requireSecret(configuration.accessSecret, "JWT_ACCESS_SECRET");
-    requireSecret(configuration.refreshSecret, "JWT_REFRESH_SECRET");
-
-    if (configuration.accessSecret === configuration.refreshSecret) {
-      throw new Error("JWT access and refresh secrets must be different");
+    requireSecret(configuration.refreshPepper, "JWT_REFRESH_PEPPER");
+    if (configuration.accessSecret === configuration.refreshPepper) {
+      throw new Error("JWT access secret and refresh pepper must be different");
     }
 
     this.#configuration = configuration;
@@ -126,61 +134,65 @@ export class JwtService {
     this.#now = options.now ?? (() => new Date());
   }
 
-  async signAccessToken(userId: string): Promise<string> {
-    return this.#sign(userId, "access");
-  }
-
-  async signRefreshToken(userId: string): Promise<string> {
-    return this.#sign(userId, "refresh");
-  }
-
-  async verifyAccessToken(token: string): Promise<TokenClaims> {
-    return this.#verify(token, "access");
-  }
-
-  async verifyRefreshToken(token: string): Promise<TokenClaims> {
-    return this.#verify(token, "refresh");
-  }
-
-  async #sign(userId: string, tokenType: TokenType): Promise<string> {
-    if (!userId) {
-      throw new TypeError("userId is required");
+  async signAccessToken(input: AccessTokenInput): Promise<string> {
+    if (!input.userId || !input.sessionId || !input.tokenFamilyId) {
+      throw new TypeError("Access Token identity claims are required");
     }
-
     const issuedAt = Math.floor(this.#now().getTime() / 1000);
-    const expiresIn =
-      tokenType === "access"
-        ? this.#configuration.accessExpiresInSeconds
-        : this.#configuration.refreshExpiresInSeconds;
-    const secret =
-      tokenType === "access" ? this.#configuration.accessSecret : this.#configuration.refreshSecret;
-
-    return new SignJWT({ tokenType })
+    return new SignJWT({
+      clientType: input.clientType,
+      sessionId: input.sessionId,
+      tokenFamilyId: input.tokenFamilyId,
+      tokenType: "access",
+    })
       .setProtectedHeader({ alg: "HS256", typ: "JWT" })
       .setIssuer(this.#configuration.issuer)
       .setAudience(this.#configuration.audience)
-      .setSubject(userId)
+      .setSubject(input.userId)
       .setJti(this.#generateTokenId())
       .setIssuedAt(issuedAt)
-      .setExpirationTime(issuedAt + expiresIn)
-      .sign(new TextEncoder().encode(secret));
+      .setExpirationTime(issuedAt + this.#configuration.accessExpiresInSeconds)
+      .sign(new TextEncoder().encode(this.#configuration.accessSecret));
   }
 
-  async #verify(token: string, expectedType: TokenType): Promise<TokenClaims> {
+  issueRefreshToken(): IssuedRefreshToken {
+    const token = randomBytes(48).toString("base64url");
+    return Object.freeze({ hash: this.hashRefreshToken(token), token });
+  }
+
+  hashRefreshToken(token: string): string {
+    if (!token || token.length > 512) {
+      throw new InvalidRefreshTokenError();
+    }
+    return createHmac("sha256", this.#configuration.refreshPepper).update(token).digest("hex");
+  }
+
+  accessExpiresAt(): Date {
+    return new Date(this.#now().getTime() + this.#configuration.accessExpiresInSeconds * 1000);
+  }
+
+  refreshExpiresAt(): Date {
+    return new Date(this.#now().getTime() + this.#configuration.refreshExpiresInSeconds * 1000);
+  }
+
+  async verifyAccessToken(token: string): Promise<TokenClaims> {
     try {
-      const secret =
-        expectedType === "access"
-          ? this.#configuration.accessSecret
-          : this.#configuration.refreshSecret;
-      const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), {
-        algorithms: ["HS256"],
-        audience: this.#configuration.audience,
-        currentDate: this.#now(),
-        issuer: this.#configuration.issuer,
-      });
+      const { payload } = await jwtVerify(
+        token,
+        new TextEncoder().encode(this.#configuration.accessSecret),
+        {
+          algorithms: ["HS256"],
+          audience: this.#configuration.audience,
+          currentDate: this.#now(),
+          issuer: this.#configuration.issuer,
+        },
+      );
 
       if (
-        payload.tokenType !== expectedType ||
+        payload.tokenType !== "access" ||
+        (payload.clientType !== "pc" && payload.clientType !== "wechat-mini-program") ||
+        typeof payload.sessionId !== "string" ||
+        typeof payload.tokenFamilyId !== "string" ||
         !payload.sub ||
         !payload.jti ||
         payload.iat === undefined ||
@@ -190,14 +202,17 @@ export class JwtService {
       }
 
       return Object.freeze({
+        clientType: payload.clientType,
         expiresAt: payload.exp,
         issuedAt: payload.iat,
+        sessionId: payload.sessionId,
         tokenId: payload.jti,
-        tokenType: expectedType,
+        tokenFamilyId: payload.tokenFamilyId,
+        tokenType: "access",
         userId: payload.sub,
       });
     } catch (error) {
-      throw tokenError(expectedType, error);
+      throw tokenError(error);
     }
   }
 }

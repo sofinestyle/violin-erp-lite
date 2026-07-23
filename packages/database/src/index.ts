@@ -1,6 +1,7 @@
 export { checkDatabaseConnection, createPrismaClient, getPrismaClient } from "./client.js";
 export { PrismaAuditWriter } from "./audit/prisma-audit-writer.js";
 export { createCurrentUserResolver } from "./auth/current-user-resolver.js";
+export { PrismaAuthRepository } from "./auth/prisma-auth-repository.js";
 export { PrismaMasterDataRepository } from "./master-data/prisma-master-data-repository.js";
 export {
   applyInventoryMovements,

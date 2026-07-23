@@ -1,18 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { AppProviders, useAppContext } from "../src/contexts/app-context";
-
-function ContextProbe() {
-  const context = useAppContext();
-  return (
-    <span>
-      {context.theme}:{context.locale}:{context.user === null ? "empty-user" : "user"}:
-      {context.healthEndpoint === null ? "reserved-health" : "configured-health"}
-    </span>
-  );
-}
 
 describe("miniapp application shell", () => {
   it("configures exactly the four approved TabBar entries", () => {
@@ -27,15 +15,12 @@ describe("miniapp application shell", () => {
     expect(configSource).not.toContain("消息");
   });
 
-  it("uses an empty user, empty permissions, fixed light and reserved health capability", () => {
-    const html = renderToStaticMarkup(
-      <AppProviders>
-        <ContextProbe />
-      </AppProviders>,
-    );
-
-    expect(html).toContain("light:zh-CN:empty-user:reserved-health");
-    expect(html).not.toContain("dark");
+  it("starts with a guarded authentication recovery state", () => {
+    const contextPath = fileURLToPath(new URL("../src/contexts/app-context.tsx", import.meta.url));
+    const source = readFileSync(contextPath, "utf8");
+    expect(source).toContain("restoreMiniAppAuthentication");
+    expect(source).toContain("bindMiniAppAuthentication");
+    expect(source).toContain("AUTH_WECHAT_NOT_BOUND");
   });
 
   it("keeps Task 7.5-C miniapp capabilities read-only", () => {

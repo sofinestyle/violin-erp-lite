@@ -11,6 +11,35 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.0] - 2026-07-23
+
+### Added
+
+- 实现 Frozen `SEC-001` 至 `SEC-005` 的统一密码登录、微信绑定/自动登录、Refresh Session 轮换、Token Family 登出、当前会话和当前权限 API
+- 新增基于 `users`、`user_wechat_identities`、`auth_sessions` 与现有 RBAC 的认证 Service、Prisma Repository、微信服务端适配器及统一安全错误
+- 新增 Admin 登录、恢复、单飞刷新、认证失效退出和登出链路
+- 新增 Mini Program 微信自动登录、首次绑定、恢复、单飞刷新、权限装载和登出链路
+- 新增认证单元测试、双端客户端测试、真实 PostgreSQL Repository 集成测试和 `SEC-001` 至 `SEC-005` HTTP 集成测试
+
+### Changed
+
+- Access Token 改为最小 Session Claims，Refresh Token 改为服务端 Pepper 参与的 HMAC 摘要
+- 所有已实现受保护 API 改为逐请求校验当前 Session、Token Family、用户状态、有效角色、权限及显式仓库/店铺范围
+- `.env.example` 与 README 认证说明同步 Refresh Pepper、微信 AppID、App Secret 和微信服务端地址
+- API 实现覆盖由 282 / 335 更新为 287 / 335；B-001 关闭，M-001 剩余 48 个接口
+
+### Verified
+
+- Node.js 22.23.1 下 `status:check`、Lint、Typecheck、标准 Test、Build、Admin/Mini Program 独立 Build、Prisma Generate/Validate 与 Migration Status 通过
+- 隔离 PostgreSQL 18.4 完成 Migration、Seed、认证 Repository 并发/事务测试及真实 Admin HTTP 登录、权限、Refresh、Logout 冒烟验证
+- Mock 微信服务覆盖首次绑定、幂等重试和后续自动登录，不连接真实微信网络
+
+### Scope
+
+- Batch 7.6-B：Completed / Pending Approval；Task 7.6 保持 In Progress
+- 未修改 Frozen SSOT、Prisma Schema、Migration、Mapping Audit、Seed、角色权限定义或 API 总数
+- 未实现剩余 48 个 M-001 接口，未启动后续 Batch、Phase 7 Final Consistency Review 或 Phase 8
+
 ## [0.10.2] - 2026-07-23
 
 ### Changed

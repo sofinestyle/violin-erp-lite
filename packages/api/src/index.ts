@@ -1,5 +1,6 @@
 export * from "./audit/audit.js";
 export * from "./auth/authentication.js";
+export * from "./auth/auth-flow.js";
 export * from "./auth/password.js";
 export * from "./auth/token.js";
 export * from "./authorization/authorization.js";

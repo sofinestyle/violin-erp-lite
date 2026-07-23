@@ -4,7 +4,7 @@ import { GET } from "../app/api/v1/[...segments]/route";
 describe("Frozen v1 API route boundary", () => {
   beforeAll(() => {
     process.env.JWT_ACCESS_SECRET = "test-access-secret-with-at-least-32-characters";
-    process.env.JWT_REFRESH_SECRET = "test-refresh-secret-with-at-least-32-characters";
+    process.env.JWT_REFRESH_PEPPER = "test-refresh-pepper-with-at-least-32-characters";
     process.env.JWT_ACCESS_EXPIRES_IN = "15m";
     process.env.JWT_REFRESH_EXPIRES_IN = "7d";
   });
@@ -42,9 +42,9 @@ describe("Frozen v1 API route boundary", () => {
 
   it("rejects missing credentials before loading runtime configuration", async () => {
     const accessSecret = process.env.JWT_ACCESS_SECRET;
-    const refreshSecret = process.env.JWT_REFRESH_SECRET;
+    const refreshPepper = process.env.JWT_REFRESH_PEPPER;
     delete process.env.JWT_ACCESS_SECRET;
-    delete process.env.JWT_REFRESH_SECRET;
+    delete process.env.JWT_REFRESH_PEPPER;
 
     try {
       const response = await GET(new Request("http://localhost/api/v1/products"));
@@ -60,7 +60,7 @@ describe("Frozen v1 API route boundary", () => {
       });
     } finally {
       process.env.JWT_ACCESS_SECRET = accessSecret;
-      process.env.JWT_REFRESH_SECRET = refreshSecret;
+      process.env.JWT_REFRESH_PEPPER = refreshPepper;
     }
   });
 });

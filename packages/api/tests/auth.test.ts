@@ -10,15 +10,17 @@ import {
 } from "../src/index";
 
 const ACCESS_SECRET = "access-secret-value-with-at-least-32-characters";
-const REFRESH_SECRET = "refresh-secret-value-with-at-least-32-characters";
+const REFRESH_PEPPER = "refresh-pepper-value-with-at-least-32-characters";
 const USER_ID = "11111111-1111-4111-8111-111111111111";
+const SESSION_ID = "22222222-2222-4222-8222-222222222222";
+const FAMILY_ID = "33333333-3333-4333-8333-333333333333";
 
 function configuration() {
   return loadJwtConfiguration({
     JWT_ACCESS_EXPIRES_IN: "15m",
     JWT_ACCESS_SECRET: ACCESS_SECRET,
     JWT_REFRESH_EXPIRES_IN: "7d",
-    JWT_REFRESH_SECRET: REFRESH_SECRET,
+    JWT_REFRESH_PEPPER: REFRESH_PEPPER,
   });
 }
 
@@ -29,7 +31,7 @@ describe("JWT foundation", () => {
         JWT_ACCESS_EXPIRES_IN: "15m",
         JWT_ACCESS_SECRET: "REPLACE_WITH_AT_LEAST_32_RANDOM_CHARACTERS",
         JWT_REFRESH_EXPIRES_IN: "7d",
-        JWT_REFRESH_SECRET: REFRESH_SECRET,
+        JWT_REFRESH_PEPPER: REFRESH_PEPPER,
       }),
     ).toThrow("JWT_ACCESS_SECRET");
     expect(() =>
@@ -37,35 +39,46 @@ describe("JWT foundation", () => {
         JWT_ACCESS_EXPIRES_IN: "15m",
         JWT_ACCESS_SECRET: ACCESS_SECRET,
         JWT_REFRESH_EXPIRES_IN: "7d",
-        JWT_REFRESH_SECRET: ACCESS_SECRET,
+        JWT_REFRESH_PEPPER: ACCESS_SECRET,
       }),
     ).toThrow("must be different");
   });
 
-  it("signs and verifies isolated access and refresh tokens", async () => {
+  it("signs access claims and issues opaque server-keyed refresh credentials", async () => {
     const service = new JwtService(configuration());
-    const accessToken = await service.signAccessToken(USER_ID);
-    const refreshToken = await service.signRefreshToken(USER_ID);
+    const accessToken = await service.signAccessToken({
+      clientType: "pc",
+      sessionId: SESSION_ID,
+      tokenFamilyId: FAMILY_ID,
+      userId: USER_ID,
+    });
+    const refresh = service.issueRefreshToken();
 
     await expect(service.verifyAccessToken(accessToken)).resolves.toMatchObject({
+      clientType: "pc",
+      sessionId: SESSION_ID,
+      tokenFamilyId: FAMILY_ID,
       tokenType: "access",
       userId: USER_ID,
     });
-    await expect(service.verifyRefreshToken(refreshToken)).resolves.toMatchObject({
-      tokenType: "refresh",
-      userId: USER_ID,
-    });
-    await expect(service.verifyRefreshToken(accessToken)).rejects.toMatchObject({
-      code: "AUTH_REFRESH_TOKEN_INVALID",
-    });
-    await expect(service.verifyAccessToken(refreshToken)).rejects.toMatchObject({
+    expect(refresh.token).not.toContain(".");
+    expect(refresh.hash).toHaveLength(64);
+    expect(service.hashRefreshToken(refresh.token)).toBe(refresh.hash);
+    await expect(service.verifyAccessToken(refresh.token)).rejects.toMatchObject({
       code: "AUTH_UNAUTHORIZED",
     });
   });
 
   it("keeps roles, permissions and sensitive data out of token claims", async () => {
     const service = new JwtService(configuration());
-    const payload = decodeJwt(await service.signAccessToken(USER_ID));
+    const payload = decodeJwt(
+      await service.signAccessToken({
+        clientType: "pc",
+        sessionId: SESSION_ID,
+        tokenFamilyId: FAMILY_ID,
+        userId: USER_ID,
+      }),
+    );
 
     expect(payload).toMatchObject({ sub: USER_ID, tokenType: "access" });
     expect(payload).not.toHaveProperty("password");
@@ -77,13 +90,23 @@ describe("JWT foundation", () => {
     const expiredSigner = new JwtService(configuration(), {
       now: () => new Date("2020-01-01T00:00:00.000Z"),
     });
-    const expired = await expiredSigner.signAccessToken(USER_ID);
+    const expired = await expiredSigner.signAccessToken({
+      clientType: "pc",
+      sessionId: SESSION_ID,
+      tokenFamilyId: FAMILY_ID,
+      userId: USER_ID,
+    });
     await expect(new JwtService(configuration()).verifyAccessToken(expired)).rejects.toMatchObject({
       code: "AUTH_TOKEN_EXPIRED",
     });
 
     const service = new JwtService(configuration());
-    const token = await service.signAccessToken(USER_ID);
+    const token = await service.signAccessToken({
+      clientType: "pc",
+      sessionId: SESSION_ID,
+      tokenFamilyId: FAMILY_ID,
+      userId: USER_ID,
+    });
     const tokenParts = token.split(".");
     const signature = tokenParts[2]!;
     const signatureIndex = Math.floor(signature.length / 2);
@@ -106,7 +129,12 @@ describe("JWT foundation", () => {
 
   it("loads the current user on every authenticated request", async () => {
     const service = new JwtService(configuration());
-    const token = await service.signAccessToken(USER_ID);
+    const token = await service.signAccessToken({
+      clientType: "pc",
+      sessionId: SESSION_ID,
+      tokenFamilyId: FAMILY_ID,
+      userId: USER_ID,
+    });
     const user: AuthenticatedUser = {
       dataScopes: ["self_created"],
       permissionCodes: ["purchase.order.read"],

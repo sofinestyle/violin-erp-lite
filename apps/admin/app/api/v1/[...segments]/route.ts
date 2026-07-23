@@ -1,25 +1,38 @@
+import { createHmac } from "node:crypto";
 import {
   AppError,
+  AuthenticationIdempotencyStore,
+  AuthenticationRateLimiter,
+  AuthenticationService,
   assertMasterDataResource,
   createRouteHandler,
   createSuccessResponse,
   extractBearerToken,
+  HttpWechatIdentityAdapter,
   InventoryWorkflowService,
   JwtService,
   loadJwtConfiguration,
+  loadWechatConfiguration,
   MasterDataService,
   matchInventoryWorkflowEndpoint,
   matchWorkflowEndpoint,
   parseMasterDataListQuery,
+  parseLoginRequest,
+  parseRefreshRequest,
   parseSecurityListQuery,
+  recordAuditEvent,
+  requireClientType,
   SecurityManagementService,
   WorkflowService,
   withAuthentication,
+  type AuthRepository,
   type AuthenticationContext,
   type RequestContext,
+  type WechatIdentityAdapter,
 } from "@violin-erp/api";
 import {
   createCurrentUserResolver,
+  PrismaAuthRepository,
   PrismaAuditWriter,
   PrismaInventoryWorkflowRepository,
   PrismaMasterDataRepository,
@@ -43,11 +56,25 @@ function assertUuid(value: string | undefined): string {
   return value;
 }
 
-function assertIdempotencyKey(request: Request): void {
+function requireIdempotencyKey(request: Request): string {
   const key = request.headers.get("Idempotency-Key")?.trim();
   if (!key || key.length > 200) {
     throw new AppError("VALIDATION_IDEMPOTENCY_KEY_REQUIRED", 422, "缺少有效 Idempotency-Key");
   }
+  return key;
+}
+
+const authenticationIdempotency = new AuthenticationIdempotencyStore();
+const authenticationRateLimiter = new AuthenticationRateLimiter();
+
+function authenticationFingerprint(value: unknown, purpose: string): string {
+  const pepper = process.env.JWT_REFRESH_PEPPER?.trim();
+  if (!pepper) throw new AppError("SYSTEM_SERVICE_UNAVAILABLE", 503, "认证服务配置不完整");
+  return createHmac("sha256", pepper)
+    .update(purpose)
+    .update("\0")
+    .update(JSON.stringify(value))
+    .digest("hex");
 }
 
 async function body(request: Request): Promise<unknown> {
@@ -66,6 +93,211 @@ function services() {
     security: new SecurityManagementService(new PrismaSecurityRepository(), audit),
     workflow: new WorkflowService(new PrismaWorkflowRepository(), audit),
   };
+}
+
+const unavailableWechatAdapter: WechatIdentityAdapter = {
+  exchange: async () => {
+    throw new AppError("SYSTEM_SERVICE_UNAVAILABLE", 503, "微信认证服务未配置");
+  },
+};
+
+function jwtService() {
+  return new JwtService(
+    loadJwtConfiguration({
+      ...(process.env.JWT_ACCESS_EXPIRES_IN
+        ? { JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN }
+        : {}),
+      ...(process.env.JWT_ACCESS_SECRET
+        ? { JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET }
+        : {}),
+      ...(process.env.JWT_REFRESH_EXPIRES_IN
+        ? { JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN }
+        : {}),
+      ...(process.env.JWT_REFRESH_PEPPER
+        ? { JWT_REFRESH_PEPPER: process.env.JWT_REFRESH_PEPPER }
+        : {}),
+    }),
+  );
+}
+
+function authService(
+  repository: AuthRepository,
+  jwt: JwtService,
+  withWechat: boolean,
+): AuthenticationService {
+  if (!withWechat) {
+    return new AuthenticationService(repository, jwt, unavailableWechatAdapter, "");
+  }
+  const configuration = loadWechatConfiguration({
+    ...(process.env.WECHAT_API_BASE_URL
+      ? { WECHAT_API_BASE_URL: process.env.WECHAT_API_BASE_URL }
+      : {}),
+    ...(process.env.WECHAT_MINI_PROGRAM_APP_ID
+      ? { WECHAT_MINI_PROGRAM_APP_ID: process.env.WECHAT_MINI_PROGRAM_APP_ID }
+      : {}),
+    ...(process.env.WECHAT_MINI_PROGRAM_APP_SECRET
+      ? { WECHAT_MINI_PROGRAM_APP_SECRET: process.env.WECHAT_MINI_PROGRAM_APP_SECRET }
+      : {}),
+  });
+  return new AuthenticationService(
+    repository,
+    jwt,
+    new HttpWechatIdentityAdapter(configuration),
+    configuration.appId,
+  );
+}
+
+function authenticationContext(
+  record: Awaited<ReturnType<PrismaAuthRepository["resolveSession"]>>,
+) {
+  if (!record) return null;
+  const dataScopes = new Set<
+    "all" | "business_related" | "manufacturer_derived" | "self_created" | "store" | "warehouse"
+  >(["business_related"]);
+  if (record.user.roles.some((role) => role.roleCode === "purchaser")) {
+    dataScopes.add("self_created");
+  }
+  if (record.user.warehouseScopes.length > 0) {
+    dataScopes.add("warehouse");
+    dataScopes.add("manufacturer_derived");
+  }
+  if (record.user.storeScopes.length > 0) dataScopes.add("store");
+  return {
+    session: {
+      accessTokenExpiresAt: record.session.accessTokenExpiresAt,
+      clientType: record.session.clientType,
+      refreshTokenExpiresAt: record.session.refreshTokenExpiresAt,
+    },
+    user: {
+      dataScopes: [...dataScopes],
+      displayName: record.user.displayName,
+      mustChangePassword: record.user.mustChangePassword,
+      permissionCodes: record.user.permissions.map((item) => item.permissionCode),
+      roleCodes: record.user.roles.map((item) => item.roleCode),
+      roles: record.user.roles,
+      storeScopes: record.user.storeScopes,
+      userId: record.user.id,
+      username: record.user.username,
+      warehouseScopes: record.user.warehouseScopes,
+      wechatBound: record.user.wechatBound,
+    },
+  } satisfies AuthenticationContext;
+}
+
+async function dispatchAuthentication(
+  request: Request,
+  context: RequestContext,
+  segments: string[],
+): Promise<Response | null> {
+  if (segments[0] !== "auth" || segments.length !== 2) return null;
+  const action = segments[1];
+  const clientType = requireClientType(request);
+  const repository = new PrismaAuthRepository();
+  const jwt = jwtService();
+
+  if (action === "login" && request.method === "POST") {
+    const input = parseLoginRequest(await body(request));
+    const rateIdentity =
+      input.loginType === "wechat" ? input.wechatCode : input.username.toLocaleLowerCase("en-US");
+    authenticationRateLimiter.consume(
+      authenticationFingerprint(rateIdentity, `login:${input.loginType}`),
+    );
+    const service = authService(repository, jwt, input.loginType !== "password");
+    if (input.loginType === "wechat-bind") {
+      const key = requireIdempotencyKey(request);
+      const fingerprint = authenticationFingerprint(input, "idempotency:wechat-bind");
+      return createSuccessResponse(
+        await authenticationIdempotency.execute(key, fingerprint, () =>
+          service.login(input, clientType, context),
+        ),
+        context,
+      );
+    }
+    return createSuccessResponse(await service.login(input, clientType, context), context);
+  }
+  if (action === "refresh" && request.method === "POST") {
+    const service = authService(repository, jwt, false);
+    const refreshToken = parseRefreshRequest(await body(request));
+    authenticationRateLimiter.consume(jwt.hashRefreshToken(refreshToken));
+    return createSuccessResponse(await service.refresh(refreshToken, clientType, context), context);
+  }
+  if (action === "logout" && request.method === "POST") {
+    const claims = await jwt.verifyAccessToken(extractBearerToken(request));
+    if (claims.clientType !== clientType) {
+      throw new AppError("AUTH_UNAUTHORIZED", 401, "身份认证无效或已失效");
+    }
+    const service = authService(repository, jwt, false);
+    await service.logout(claims, parseRefreshRequest(await body(request)), context);
+    return createSuccessResponse({ loggedOut: true }, context);
+  }
+  if ((action === "session" || action === "permissions") && request.method === "GET") {
+    return withAuthentication(
+      request,
+      jwt,
+      createCurrentUserResolver(),
+      async (authentication) => {
+        if (action === "session") {
+          return createSuccessResponse(
+            {
+              accessTokenExpiresAt: authentication.session!.accessTokenExpiresAt.toISOString(),
+              active: true,
+              clientType: authentication.session!.clientType,
+              displayName: authentication.user.displayName,
+              mustChangePassword: authentication.user.mustChangePassword ?? false,
+              refreshTokenExpiresAt: authentication.session!.refreshTokenExpiresAt.toISOString(),
+              roles: authentication.user.roles ?? [],
+              userId: authentication.user.userId,
+              username: authentication.user.username,
+              wechatBound: authentication.user.wechatBound ?? false,
+            },
+            context,
+          );
+        }
+        const warehouseScopes = authentication.user.warehouseScopes ?? [];
+        const storeScopes = authentication.user.storeScopes ?? [];
+        return createSuccessResponse(
+          {
+            dataScopes: [
+              ...authentication.user.dataScopes
+                .filter((type) => type !== "warehouse" && type !== "store")
+                .map((type) => ({ type })),
+              ...warehouseScopes.map((scope) => ({ ...scope, type: "warehouse" as const })),
+              ...storeScopes.map((scope) => ({ ...scope, type: "store" as const })),
+            ],
+            permissions: authentication.user.permissionCodes.map((permissionCode) => {
+              const [moduleCode, resourceCode, actionCode] = permissionCode.split(".");
+              return {
+                actionCode,
+                moduleCode: `${moduleCode}.${resourceCode}`,
+                permissionCode,
+              };
+            }),
+            roles: authentication.user.roles ?? [],
+            storeScopes: storeScopes.map(({ accessLevel, targetId }) => ({
+              accessLevel,
+              storeId: targetId,
+            })),
+            user: {
+              displayName: authentication.user.displayName,
+              id: authentication.user.userId,
+              username: authentication.user.username,
+            },
+            warehouseScopes: warehouseScopes.map(({ accessLevel, targetId }) => ({
+              accessLevel,
+              warehouseId: targetId,
+            })),
+          },
+          context,
+        );
+      },
+      async (claims, headerClientType) => {
+        const record = await repository.resolveSession(claims, headerClientType);
+        const authentication = authenticationContext(record);
+        return authentication ? { ...authentication, claims } : null;
+      },
+    );
+  }
+  throw new AppError("RESOURCE_NOT_FOUND", 404, "接口不存在");
 }
 
 async function dispatchWorkflow(
@@ -93,7 +325,7 @@ async function dispatchWorkflow(
           payload,
         )!;
   if (matched.command.mutation && !["export"].includes(matched.command.action)) {
-    assertIdempotencyKey(request);
+    requireIdempotencyKey(request);
   }
   const result = await services().workflow.execute(
     matched.command,
@@ -143,7 +375,7 @@ async function dispatchInventoryWorkflow(
     request.method === "GET"
       ? candidate
       : matchInventoryWorkflowEndpoint(request.method, segments, query, payload)!;
-  if (matched.command.mutation) assertIdempotencyKey(request);
+  if (matched.command.mutation) requireIdempotencyKey(request);
   const result = await services().inventoryWorkflow.execute(
     matched.command,
     matched.permission,
@@ -209,7 +441,7 @@ async function dispatchMasterData(
       });
     }
     if (request.method === "POST") {
-      assertIdempotencyKey(request);
+      requireIdempotencyKey(request);
       return createSuccessResponse(
         await endpoint.create(resource, await body(request), authentication, context),
         context,
@@ -258,7 +490,7 @@ async function dispatchMasterData(
     request.method === "POST" &&
     (segments[2] === "enable" || segments[2] === "disable")
   ) {
-    assertIdempotencyKey(request);
+    requireIdempotencyKey(request);
     return createSuccessResponse(
       await endpoint.setActive(
         resource,
@@ -315,7 +547,7 @@ async function dispatchSecurity(
       });
     }
     if (request.method === "POST") {
-      assertIdempotencyKey(request);
+      requireIdempotencyKey(request);
       return createSuccessResponse(
         await endpoint.createUser(await body(request), authentication, context),
         context,
@@ -340,7 +572,7 @@ async function dispatchSecurity(
       });
     }
     if (request.method === "POST") {
-      assertIdempotencyKey(request);
+      requireIdempotencyKey(request);
       return createSuccessResponse(
         await endpoint.createRole(await body(request), authentication, context),
         context,
@@ -361,14 +593,14 @@ async function dispatchSecurity(
       );
     }
     if (relation === "status" && request.method === "PATCH") {
-      assertIdempotencyKey(request);
+      requireIdempotencyKey(request);
       return createSuccessResponse(
         await endpoint.setUserActive(id, await body(request), authentication, context),
         context,
       );
     }
     if (relation === "password" && request.method === "PATCH") {
-      assertIdempotencyKey(request);
+      requireIdempotencyKey(request);
       return createSuccessResponse(
         await endpoint.resetPassword(id, await body(request), authentication, context),
         context,
@@ -384,7 +616,7 @@ async function dispatchSecurity(
       );
     }
     if (relation === "roles" && request.method === "PUT") {
-      assertIdempotencyKey(request);
+      requireIdempotencyKey(request);
       await endpoint.replaceUserRoles(id, await body(request), authentication, context);
       return createSuccessResponse(
         {
@@ -407,7 +639,7 @@ async function dispatchSecurity(
       );
     }
     if (relation === "status" && request.method === "PATCH") {
-      assertIdempotencyKey(request);
+      requireIdempotencyKey(request);
       return createSuccessResponse(
         await endpoint.setRoleActive(id, await body(request), authentication, context),
         context,
@@ -423,7 +655,7 @@ async function dispatchSecurity(
       );
     }
     if (relation === "permissions" && request.method === "PUT") {
-      assertIdempotencyKey(request);
+      requireIdempotencyKey(request);
       await endpoint.replaceRolePermissions(id, await body(request), authentication, context);
       return createSuccessResponse(
         {
@@ -445,7 +677,7 @@ async function dispatchSecurity(
       );
     }
     if ((relation === "warehouses" || relation === "stores") && request.method === "PUT") {
-      assertIdempotencyKey(request);
+      requireIdempotencyKey(request);
       await endpoint.replaceRoleScopes(id, relation, await body(request), authentication, context);
       const role = await endpoint.role(id, authentication, context);
       return createSuccessResponse(
@@ -464,38 +696,54 @@ async function dispatchSecurity(
 
 const handler = createRouteHandler(async (request, context) => {
   const segments = pathSegments(request);
+  const authenticationResponse = await dispatchAuthentication(request, context, segments);
+  if (authenticationResponse) return authenticationResponse;
   extractBearerToken(request);
-  const jwt = new JwtService(
-    loadJwtConfiguration({
-      ...(process.env.JWT_ACCESS_EXPIRES_IN
-        ? { JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN }
-        : {}),
-      ...(process.env.JWT_ACCESS_SECRET
-        ? { JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET }
-        : {}),
-      ...(process.env.JWT_REFRESH_EXPIRES_IN
-        ? { JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN }
-        : {}),
-      ...(process.env.JWT_REFRESH_SECRET
-        ? { JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET }
-        : {}),
-    }),
+  const jwt = jwtService();
+  const repository = new PrismaAuthRepository();
+  return withAuthentication(
+    request,
+    jwt,
+    createCurrentUserResolver(),
+    async (authentication) => {
+      try {
+        if (segments[0] === "users" || segments[0] === "roles" || segments[0] === "permissions") {
+          return await dispatchSecurity(request, context, authentication, segments);
+        }
+        const inventoryWorkflow = await dispatchInventoryWorkflow(
+          request,
+          context,
+          authentication,
+          segments,
+        );
+        if (inventoryWorkflow) return inventoryWorkflow;
+        const workflow = await dispatchWorkflow(request, context, authentication, segments);
+        if (workflow) return workflow;
+        return await dispatchMasterData(request, context, authentication, segments);
+      } catch (error) {
+        if (error instanceof AppError && error.httpStatus === 403 && authentication.claims) {
+          await recordAuditEvent(new PrismaAuditWriter(), {
+            action: "permission.denied",
+            actorUserId: authentication.user.userId,
+            failureReason: "权限校验拒绝",
+            moduleCode: "security",
+            requestId: context.requestId,
+            resourceId: authentication.claims.sessionId,
+            resourceType: "auth_session",
+            result: "failure",
+            timestamp: new Date(context.timestamp),
+            usernameSnapshot: authentication.user.username,
+          });
+        }
+        throw error;
+      }
+    },
+    async (claims, clientType) => {
+      const record = await repository.resolveSession(claims, clientType);
+      const authentication = authenticationContext(record);
+      return authentication ? { ...authentication, claims } : null;
+    },
   );
-  return withAuthentication(request, jwt, createCurrentUserResolver(), async (authentication) => {
-    if (segments[0] === "users" || segments[0] === "roles" || segments[0] === "permissions") {
-      return dispatchSecurity(request, context, authentication, segments);
-    }
-    const inventoryWorkflow = await dispatchInventoryWorkflow(
-      request,
-      context,
-      authentication,
-      segments,
-    );
-    if (inventoryWorkflow) return inventoryWorkflow;
-    const workflow = await dispatchWorkflow(request, context, authentication, segments);
-    if (workflow) return workflow;
-    return dispatchMasterData(request, context, authentication, segments);
-  });
 });
 
 export const GET = handler;

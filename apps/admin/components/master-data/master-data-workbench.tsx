@@ -15,6 +15,7 @@ import {
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/contexts/permission-context";
+import { authenticatedFetch } from "@/lib/auth-client";
 import type { WorkbenchDefinition, WorkbenchField } from "@/lib/master-data";
 
 type ApiEnvelope = Readonly<{
@@ -31,17 +32,11 @@ type RecordItem = Record<string, unknown> & {
   updatedAt?: string;
 };
 
-function accessToken(): string | null {
-  return globalThis.sessionStorage?.getItem("violin.accessToken") ?? null;
-}
-
 async function apiRequest(url: string, init: RequestInit = {}): Promise<ApiEnvelope> {
-  const token = accessToken();
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
   if (init.body) headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-  const response = await fetch(url, { ...init, headers });
+  const response = await authenticatedFetch(url, { ...init, headers });
   const envelope = (await response.json()) as ApiEnvelope;
   if (!response.ok || envelope.success !== true) {
     const suffix = envelope.requestId ? `（Request ID：${envelope.requestId}）` : "";

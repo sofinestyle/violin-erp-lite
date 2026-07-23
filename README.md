@@ -54,11 +54,16 @@ cp .env.example .env
 
 `.env` 已由 Git 忽略。复制后必须：
 
-1. 分别为 `JWT_ACCESS_SECRET` 和 `JWT_REFRESH_SECRET` 生成不同的随机值，且每项至少 32 个字符；
+1. 分别为 `JWT_ACCESS_SECRET` 和 `JWT_REFRESH_PEPPER` 生成不同的随机值，且每项至少 32 个字符；
 2. 为 `SEED_ADMIN_PASSWORD` 设置仅用于本地开发的密码；
 3. 如修改 PostgreSQL 用户、密码、数据库名或端口，同时更新 `DATABASE_URL`。
 
-可使用 `openssl rand -base64 48` 生成 JWT Secret。不得把生成结果、开发管理员密码或真实凭据提交到 Git。
+微信小程序认证还需在服务端 `.env` 配置 `WECHAT_MINI_PROGRAM_APP_ID`、
+`WECHAT_MINI_PROGRAM_APP_SECRET` 和 `WECHAT_API_BASE_URL`。App Secret 只能由 Admin
+服务端使用，不得放入 `TARO_APP_*`、`NEXT_PUBLIC_*` 或客户端代码。自动化测试使用
+可替换的微信适配器，不连接真实微信服务。
+
+可使用 `openssl rand -base64 48` 生成 JWT Secret 和 Refresh Pepper。不得把生成结果、开发管理员密码或真实凭据提交到 Git。
 
 ### PostgreSQL 与数据库初始化
 

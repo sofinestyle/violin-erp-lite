@@ -64,6 +64,39 @@ export class InvalidRefreshTokenError extends AppError {
   }
 }
 
+export class AuthenticationError extends AppError {
+  constructor(code: string, httpStatus: number, message: string) {
+    super(code, httpStatus, message);
+  }
+}
+
+export const authenticationError = {
+  bindingConflict: () =>
+    new AuthenticationError("AUTH_BINDING_CONFLICT", 409, "微信身份绑定发生冲突"),
+  credentialInvalid: () =>
+    new AuthenticationError("AUTH_CREDENTIAL_INVALID", 401, "用户名或密码无效"),
+  passwordChangeRequired: () =>
+    new AuthenticationError("AUTH_PASSWORD_CHANGE_REQUIRED", 403, "账号必须先完成密码修改"),
+  refreshReplay: () =>
+    new AuthenticationError("AUTH_REFRESH_TOKEN_REPLAY", 401, "刷新凭证已重放，会话族已撤销"),
+  sessionRevoked: () => new AuthenticationError("AUTH_SESSION_REVOKED", 401, "当前会话已撤销"),
+  userDisabled: () => new AuthenticationError("AUTH_USER_DISABLED", 403, "用户已停用"),
+  userLocked: () => new AuthenticationError("AUTH_USER_LOCKED", 429, "用户暂时锁定"),
+  wechatAccountBound: () =>
+    new AuthenticationError("AUTH_ACCOUNT_ALREADY_BOUND", 409, "系统账号已有微信绑定"),
+  wechatAlreadyBound: () =>
+    new AuthenticationError("AUTH_WECHAT_ALREADY_BOUND", 409, "微信身份已有绑定"),
+  wechatCodeInvalid: () =>
+    new AuthenticationError("AUTH_WECHAT_CODE_INVALID", 401, "微信授权凭证无效"),
+  wechatNotBound: () =>
+    new AuthenticationError("AUTH_WECHAT_NOT_BOUND", 401, "微信身份尚未绑定系统账号"),
+} as const;
+
+export const securityError = {
+  rateLimitExceeded: () =>
+    new AuthenticationError("SECURITY_RATE_LIMIT_EXCEEDED", 429, "访问频率超出限制"),
+} as const;
+
 export class ForbiddenError extends AppError {
   constructor(message = "无权执行此操作") {
     super("PERMISSION_FORBIDDEN", 403, message);

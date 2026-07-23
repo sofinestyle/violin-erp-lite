@@ -1,8 +1,8 @@
-import Taro from "@tarojs/taro";
 import { Button, Input, Text, View } from "@tarojs/components";
 import { useState } from "react";
 import { EmptyState } from "../../components/empty-state";
 import { GlobalLoading } from "../../components/global-loading";
+import { miniAppApiRequest } from "../../lib/auth-client";
 
 type SkuItem = Readonly<{
   id: string;
@@ -12,19 +12,6 @@ type SkuItem = Readonly<{
   specification?: string | null;
   unit: string;
 }>;
-
-type ApiEnvelope = Readonly<{
-  data?: readonly SkuItem[];
-  error?: { message?: string };
-  requestId?: string;
-  success?: boolean;
-}>;
-
-function apiUrl(path: string): string {
-  const baseUrl = process.env.TARO_APP_API_BASE_URL?.trim().replace(/\/$/, "");
-  if (!baseUrl) throw new Error("小程序 API 地址未配置");
-  return `${baseUrl}${path}`;
-}
 
 export default function SkuQueryPage() {
   const [keyword, setKeyword] = useState("");
@@ -38,19 +25,11 @@ export default function SkuQueryPage() {
     setError("");
     setSearched(true);
     try {
-      const token = Taro.getStorageSync<string>("violin.accessToken");
-      const response = await Taro.request<ApiEnvelope>({
-        url: apiUrl(
+      setItems(
+        await miniAppApiRequest<readonly SkuItem[]>(
           `/api/v1/skus?page=1&pageSize=20&isActive=true&keyword=${encodeURIComponent(keyword.trim())}`,
         ),
-        header: token ? { Authorization: `Bearer ${token}` } : {},
-        method: "GET",
-      });
-      if (response.statusCode >= 400 || response.data.success !== true) {
-        const suffix = response.data.requestId ? `（${response.data.requestId}）` : "";
-        throw new Error(`${response.data.error?.message ?? "查询失败"}${suffix}`);
-      }
-      setItems(response.data.data ?? []);
+      );
     } catch (requestError) {
       setItems([]);
       setError(requestError instanceof Error ? requestError.message : "查询失败");

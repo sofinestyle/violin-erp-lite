@@ -16,6 +16,7 @@ import { type ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, PageContainer, PageHeader, StatusBadge } from "@/components/common";
 import { useUser } from "@/contexts/user-context";
+import { useOptionalAuth } from "@/contexts/auth-context";
 import { getNavigationItem, navigationItems, type NavigationSectionId } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ export function AppShell({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const { user } = useUser();
+  const authentication = useOptionalAuth();
   const activeItem = getNavigationItem(activeSection);
 
   function toggleSidebar() {
@@ -126,12 +128,13 @@ export function AppShell({
             <Button
               variant="ghost"
               className="ml-1 h-10 gap-2 border-l pl-4"
-              aria-label="用户菜单占位"
+              aria-label="退出登录"
+              onClick={() => void authentication?.logout()}
             >
               <span className="grid size-7 place-items-center rounded-full bg-[#EFF6FF] text-[#2563EB]">
                 <UserRound className="size-4" />
               </span>
-              <span>{user?.displayName ?? "未登录（占位）"}</span>
+              <span>{user?.displayName ?? "当前用户"}</span>
               <ChevronDown className="size-4" />
             </Button>
           </div>
