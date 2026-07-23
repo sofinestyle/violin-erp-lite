@@ -1,6 +1,6 @@
 ---
 document_name: Task 5.5 导入、附件、日志、安全与 API 最终收口
-version: 1.0
+version: 1.1
 status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
@@ -25,7 +25,7 @@ related_phase: Phase 5
 | 审计与操作日志 | `audit_logs` | 只追加；日志类型是查询分类，不新增日志表 |
 | 导入日志 | `audit_logs`、`import_tasks`、`import_task_items` | 任务/行结果与审计事件联合投影，不建立平行日志对象 |
 | 导出、登录、安全日志 | `audit_logs` | 仅记录能够合法映射现有用户或受控对象的事件；不得伪造对象标识 |
-| 身份与权限 | `users`、`roles`、`permissions`、`user_roles`、`role_permissions`、`role_warehouses`、`role_stores` | Token、Session、限流和重放保护的技术实现后置，不新增认证表或字段 |
+| 身份与权限 | `users`、`user_wechat_identities`、`auth_sessions`、`roles`、`permissions`、`user_roles`、`role_permissions`、`role_warehouses`、`role_stores` | Database v2.0 正式保存微信映射与认证会话；不得新增平行身份、会话或授权来源 |
 
 接口字段使用 lowerCamelCase 映射 Frozen snake_case。任何派生字段均不得成为新的数据库事实。
 
@@ -207,10 +207,10 @@ Task 5.5 新增接口数为 15 + 8 + 4 + 5 = 32 个。Task 5.2、Task 5.3、Task
 
 - 除登录、刷新等明确入口外，所有 API 必须验证有效认证上下文；
 - 访问凭证短期有效，刷新凭证仅用于刷新；具体格式、签名算法、存储介质和时限由技术阶段确定；
-- Token、Refresh Token、Cookie、Session 标识不得出现在 URL、业务响应、普通日志或错误详情；
-- 刷新必须实施轮换或等效重放保护；登出必须使当前认证上下文失效；
+- Token、Refresh Token、Cookie、Session 标识不得出现在 URL、普通日志或错误详情；只有 `SEC-001`、`SEC-002` 可按 API v1.2 正式成功 DTO 返回新签发 Token；
+- 刷新必须按 API v1.2 与 Database v2.0 每次创建新 Session，旧 Hash 重放撤销整族；登出必须幂等撤销当前 Token Family；
 - 当前会话只返回用户 ID、显示名、安全到期时间、客户端类型和必要风险摘要；
-- 本文不新增 Token 表、Refresh Token 表或 Session 表。
+- 本 Task 原始设计未新增 Token、Refresh Token 或 Session 表；后续获批 DCR-002 已正式新增唯一 `auth_sessions`，不建立平行表。
 
 ### 7.2 Authorization、Permission 与 Permission Validation
 
@@ -273,9 +273,20 @@ Task 5.1 至 Task 5.5 统一采用：
 | `STATE_ATTACHMENT_HISTORY_PROTECTED` | 409 | 正式历史附件禁止解除或删除 |
 | `PERMISSION_ATTACHMENT_DENIED` | 403 | 无附件查看、上传、关联或下载权限 |
 | `PERMISSION_AUDIT_LOG_DENIED` | 403 | 无日志查询或导出权限 |
+| `AUTH_UNAUTHORIZED` | 401 | 缺失、格式错误或无效认证 |
 | `AUTH_CREDENTIAL_INVALID` | 401 | 登录凭证无效 |
 | `AUTH_TOKEN_EXPIRED` | 401 | 访问凭证已过期 |
-| `AUTH_REFRESH_TOKEN_INVALID` | 401 | 刷新凭证无效或已被重放 |
+| `AUTH_REFRESH_TOKEN_INVALID` | 401 | 刷新凭证未知、格式错误、过期或摘要不匹配 |
+| `AUTH_REFRESH_TOKEN_REPLAY` | 401 | 已被替换的刷新凭证再次使用，整族撤销 |
+| `AUTH_SESSION_REVOKED` | 401 | 当前 Session 或 Token Family 已撤销 |
+| `AUTH_USER_DISABLED` | 403 | 系统用户已停用 |
+| `AUTH_USER_LOCKED` | 429 | 用户处于临时锁定 |
+| `AUTH_PASSWORD_CHANGE_REQUIRED` | 403 | 必须完成正式密码变更后才能首次绑定微信 |
+| `AUTH_WECHAT_CODE_INVALID` | 401 | 微信 code 无效、过期、已使用或交换失败 |
+| `AUTH_WECHAT_NOT_BOUND` | 401 | 当前微信身份没有有效绑定 |
+| `AUTH_WECHAT_ALREADY_BOUND` | 409 | 当前微信身份已有有效绑定 |
+| `AUTH_ACCOUNT_ALREADY_BOUND` | 409 | 当前系统用户已有其他有效微信绑定 |
+| `AUTH_BINDING_CONFLICT` | 409 | 并发绑定或绑定版本冲突 |
 | `SECURITY_REPLAY_DETECTED` | 409 | 检测到重放或重复高风险请求 |
 | `SECURITY_IP_NOT_ALLOWED` | 403 | 高风险接口来源 IP 不在允许范围 |
 | `SECURITY_RATE_LIMIT_EXCEEDED` | 429 | 超出访问频率限制 |
@@ -284,7 +295,7 @@ Task 5.1 至 Task 5.5 统一采用：
 
 本 Task 不包含真实导入程序、真实文件存储、Token/Session 技术实现、日志基础设施、限流器、网关、IP 白名单管理、真实 API、代码、ORM、Schema、DDL、Migration、Seed、数据库变更、业务模块扩展、Task 5.1 至 Task 5.4 正文修改、Phase Final Consistency Review、Phase 6 或技术开发。
 
-## 11. 正式结论
+## 11. 原始完成结论（历史）
 
 1. Task 5.5 已完成导入、附件、日志、安全及 API 最终收口设计并通过项目负责人批准，状态为 Completed / Approved；
 2. 导入接口 15 个、附件接口 8 个、日志接口 4 个、安全接口 5 个，Task 5.5 共 32 个接口；
@@ -298,3 +309,25 @@ Task 5.1 至 Task 5.5 统一采用：
 10. Phase 5 保持 In Progress，Task 5.1 至 Task 5.4 保持 Completed / Approved；
 11. Phase 5 Final Consistency Review 已完成，当前下一步为该 Review 的 GitHub 验收；不得开始 Phase 6；
 12. 技术开发保持 Not Started。
+
+## 12. API Change Request 002 正式同步
+
+本节是 Task 5.5 原始完成记录之后的获批增量，发生认证契约冲突时以 API Master Specification v1.2 第 20 节为准。
+
+### 12.1 `SEC-001` 至 `SEC-005`
+
+- `SEC-001` 保持唯一 `POST /api/v1/auth/login`，以 `loginType = password | wechat-bind | wechat` 形成严格互斥的判别式请求；
+- `wechat-bind` 必须携带 `Idempotency-Key`，在同一事务中完成绑定、首个 Session 和审计，提交后向客户端返回 Token；
+- `SEC-002` 使用统一 Refresh DTO，每次成功刷新创建同族新 Session；旧 Hash 重放返回 `AUTH_REFRESH_TOKEN_REPLAY` 并撤销整族；
+- `SEC-003` 要求当前 Access Token 与 Refresh Token，幂等撤销当前 Token Family，不解绑微信、不影响其他令牌族；
+- `SEC-004` 只返回当前用户、客户端、到期时间、绑定状态和角色的安全摘要，不返回 Hash、Token Family 或内部链；
+- `SEC-005` 只从现有 RBAC 返回当前用户、角色、权限、仓库、店铺和数据范围摘要，不能替代业务 API 实时授权。
+
+### 12.2 数据、安全与数量
+
+- `users` 是唯一用户身份，`user_wechat_identities` 是唯一微信映射，`auth_sessions` 是唯一认证会话；
+- Access Token 与 Refresh Token 明文不持久化；Refresh Token 只保存服务端密钥参与的摘要；
+- 登录、绑定、刷新、重放、登出、锁定和停用拒绝按 API v1.2 执行审计、脱敏与限流；
+- API Master Specification v1.2 为 Completed / Approved / Frozen；
+- 本次不新增接口，正式总数保持 335；
+- 本节只同步正式文档，不创建真实 API、业务代码或数据库变更。

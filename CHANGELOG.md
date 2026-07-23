@@ -11,6 +11,29 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.10.2] - 2026-07-23
+
+### Changed
+
+- 正式批准 API Change Request 002，并将 API Master Specification 从 v1.1 升级为 v1.2
+- 补齐 `SEC-001` 的 `password`、`wechat-bind`、`wechat` 判别式请求、统一响应、Validation、幂等、审计和安全规则
+- 补齐 `SEC-002` 的 Session 轮换、Refresh Token 重放整族撤销和数据库事务要求
+- 补齐 `SEC-003` 当前 Token Family 幂等登出、`SEC-004` 安全会话摘要和 `SEC-005` RBAC 权限摘要
+- Authentication SSOT Completion 001 更新为 Completed / Approved
+- 同步 Task 5.5、Task 6.3 和 Task 7.6 的认证契约与边界
+
+### Freeze
+
+- API Master Specification v1.2：Completed / Approved / Frozen
+- 正式接口总数保持 335，不新增路径、编号、权限代码、页面或业务功能
+- Database Logical Design v2.0、角色权限规格和业务规则保持不变
+
+### Scope
+
+- 仓库不维护 OpenAPI / Swagger 文件，本轮无 OpenAPI 资产需要同步
+- 本轮只修改正式文档，不修改数据库、Migration、Prisma Schema、Mapping Audit、API 实现、JWT、前端、Seed 或测试逻辑
+- Task 7.6 保持 In Progress，Batch 7.6-B 继续暂停
+
 ## [0.10.1] - 2026-07-23
 
 ### Added

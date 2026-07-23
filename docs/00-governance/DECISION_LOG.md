@@ -1919,3 +1919,33 @@ Approved
 ### 影响
 
 本决定只补齐数据库认证会话结构，不修改 API 路径、DTO、错误码或总数，不修改 Route、Service、Repository、登录、刷新、登出、JWT、Web、Mini Program、权限、角色或 Seed；不修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。本决定不启动 Batch 7.6-B、Phase 7 Final Consistency Review 或 Phase 8。
+
+## DEC-078 批准API Change Request 002并冻结API v1.2
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人正式批准 API Change Request 002，状态更新为 Completed / Approved；
+- API Master Specification 由 v1.1 升级为 v1.2，状态为 Completed / Approved / Frozen；
+- `SEC-001` 保持唯一 `POST /api/v1/auth/login`，正式采用 `password`、`wechat-bind`、`wechat` 三种严格互斥 `loginType`；
+- 不新增 `/pc-login`、`/wechat-login`、`/bind` 或其他平行认证接口；
+- `SEC-002` 正式使用 Database v2.0 的 `auth_sessions`，每次刷新创建同族新 Session，旧 Refresh Token 重放撤销整个 Token Family；
+- `SEC-003` 幂等撤销当前 Token Family，不解绑微信身份，不影响其他合法令牌族；
+- `SEC-004` 只返回当前会话安全摘要，不返回 Token Hash、Token Family 或内部 Session 链；
+- `SEC-005` 只从现有 RBAC 返回当前用户、角色、权限、仓库、店铺和数据范围摘要；
+- 正式纳入统一认证错误码，不创建已有错误码的同义重复名称；
+- `users`、`user_wechat_identities` 和 `auth_sessions` 分别保持唯一用户身份、微信映射和认证会话来源；
+- Authentication SSOT Completion 001 更新为 Completed / Approved；
+- API 正式接口总数保持 335，角色、权限代码和数据范围不变；
+- Task 7.6 保持 In Progress，Batch 7.6-B 继续暂停，等待 GitHub 技术验收及后续正式启动。
+
+### 影响
+
+本决定只同步 API Change Request、API Master、Task 5.5、Task 6.3、Authentication SSOT 和 Task 7.6 文档；不修改数据库、Migration、Prisma Schema、Mapping Audit、Route、Service、Repository、JWT、Web、Mini Program、Seed 或测试逻辑；不修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`，不启动 Phase 7 Final Consistency Review 或 Phase 8。
