@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-22
+updated_date: 2026-07-23
 related_phase: Phase 1
 ---
 
@@ -1595,3 +1595,27 @@ Approved
 ### 影响
 
 本决定只同步 Phase 7 Task 状态，不修改 Frozen BUSINESS_RULES、Database Logical Design v1.1、ROLE_PERMISSION_SPEC、API Master Specification v1.1、315 个正式 API 或 Phase 6 Functional Specification；不修改工程代码、依赖、Prisma Schema、Migration 或 Seed，不执行 Task 7.4 技术开发。
+
+## DEC-065 批准Task 7.4并启动Task 7.5
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人正式批准 Task 7.4 双端应用壳层与公共能力，状态更新为 Completed / Approved；
+- Phase 7 保持 In Progress；
+- Task 7.5 核心业务功能实现正式启动，状态更新为 In Progress；
+- 当前正式任务更新为 Task 7.5；
+- Task 7.6 与 Phase 7 Final Consistency Review 保持 Waiting / Not Started；
+- 正式治理文档只记录 Phase 与 Task，不记录任何内部执行 Section；
+- 未经 Task 7.5 GitHub 验收和项目负责人批准，不得启动 Task 7.6。
+
+### 影响
+
+本决定只同步 Phase 7 Task 状态，不修改 Frozen BUSINESS_RULES、SYSTEM_SPEC、Database Logical Design v1.1、DATABASE_ENUM_SPEC、ROLE_PERMISSION_SPEC、API Master Specification v1.1、315 个正式 API、Phase 4 Approved 文档或 Phase 6 Functional Specification；不修改工程代码、依赖、Prisma Schema、Migration 或 Seed，不执行 Task 7.5 技术开发。

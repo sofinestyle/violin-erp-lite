@@ -5,11 +5,26 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-22
+updated_date: 2026-07-23
 related_phase: Phase 1
 ---
 
 # CHANGELOG
+
+## [0.8.4] - 2026-07-23
+
+### Changed
+
+- Task 7.4 双端应用壳层与公共能力已通过 GitHub 技术验收并获得项目负责人批准，状态更新为 Completed / Approved
+- Task 7.5 核心业务功能实现正式启动，状态更新为 In Progress
+- 当前正式任务更新为 Task 7.5，Phase 7 保持 In Progress
+- 新增 DEC-065，记录 Task 7.4 批准与 Task 7.5 启动决定
+
+### Scope
+
+- Task 7.6 与 Phase 7 Final Consistency Review 保持 Waiting / Not Started
+- 本次仅同步正式 Phase 与 Task 状态，未修改工程代码、依赖、Prisma Schema、Migration 或 Seed
+- 未修改 Frozen 业务、产品、角色权限、数据库、API、Phase 4 或 Phase 6 文档，正式 API 总数保持 315
 
 ## [0.8.3] - 2026-07-22
 
