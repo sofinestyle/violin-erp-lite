@@ -11,6 +11,26 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.9.7] - 2026-07-23
+
+### Added
+
+- 新增 Task 7.6 系统集成与开发收口正式实施文档
+- 完成 Monorepo、双端应用、API、数据库、权限、业务链路、环境、构建和现有测试的代码现状审计
+- 建立 Blocker、Major、Minor、Verified 与 Out of Scope 五级问题清单及后续内部 Batch 实施计划
+
+### Changed
+
+- 项目负责人正式启动 Task 7.6，Current Task Status 与 Task 7.6 状态更新为 In Progress
+- Phase 7 保持 In Progress，Task 7.5 保持 Completed / Approved，Phase 7 Final Consistency Review 保持 Waiting / Not Started
+- 新增 DEC-073，记录 Task 7.6 启动、审计基线与后续分批执行边界
+
+### Scope
+
+- 本轮只执行 Task 7.6 状态启动、现状审计与实施计划固化，未修改业务代码或测试逻辑
+- 未修改 Prisma Schema、Migration、Seed、依赖或任何 Approved / Frozen 业务规格
+- 未启动任何后续代码整改、Phase 7 Final Consistency Review 或 Phase 8
+
 ## [0.9.6] - 2026-07-23
 
 ### Changed

@@ -20,7 +20,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - Current Phase：Phase 7
 - Phase Status：In Progress
 - Current Task：Task 7.6
-- Current Task Status：Waiting / Not Started
+- Current Task Status：In Progress
 
 完整当前状态以 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md) 为唯一入口。
 
@@ -86,6 +86,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 - [API Change Request 001：补齐库存盘点、销售退货、报损 API（Completed / Approved）](docs/00-governance/API_CHANGE_REQUEST_001.md)
 - [Phase 6 Final Consistency Review（Completed / Approved）](docs/phases/phase-06/PHASE_6_FINAL_CONSISTENCY_REVIEW.md)
 - [Task 7.1 开发基线与工程初始化（Completed / Approved）](docs/phases/phase-07/TASK_7_1_DEVELOPMENT_BASELINE.md)
+- [Task 7.6 系统集成与开发收口（In Progress）](docs/phases/phase-07/TASK_7_6_SYSTEM_INTEGRATION_AND_DEVELOPMENT_CLOSURE.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 

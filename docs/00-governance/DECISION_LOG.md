@@ -1789,3 +1789,27 @@ Approved
 ### 影响
 
 本决定只同步 Task 7.5 批准结果与当前 Task 指向，不修改 Frozen `BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、Database Logical Design v1.1、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、API Master Specification v1.1、Phase 4 或 Phase 6；不修改工程代码、测试、Prisma Schema、Migration、Seed 或依赖，不执行 Task 7.6 开发，不启动 Phase 7 Final Consistency Review。
+
+## DEC-073 正式启动Task 7.6系统集成与开发收口
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人于 2026-07-23 正式启动 Task 7.6 系统集成与开发收口；
+- Task 7.6 状态由 Waiting / Not Started 更新为 In Progress；
+- Phase 7 保持 In Progress，Task 7.5 保持 Completed / Approved；
+- 本轮先建立系统集成现状审计与实施基线，不执行后续代码整改；
+- 后续实施按 Task 7.6 内部 Batch 分批执行，每个 Batch 独立 Commit、Push 并等待 GitHub 技术验收；
+- 正式状态治理文件继续只维护 Phase 与 Task，不维护内部 Batch 状态；
+- Phase 7 Final Consistency Review 保持 Waiting / Not Started，Phase 8 未启动。
+
+### 影响
+
+本决定只启动 Task 7.6 并固化现状审计与后续实施边界，不新增 Phase、Task、业务模块、业务对象、业务规则、数据库结构、枚举、权限或 API；不修改 Frozen `BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、Database Logical Design v1.1、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、API Master Specification v1.1、Phase 4 或 Phase 6；本轮不修改业务代码、测试、Prisma Schema、Migration、Seed 或依赖，不启动 Phase 7 Final Consistency Review 或 Phase 8。
