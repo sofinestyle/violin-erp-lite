@@ -25,22 +25,28 @@ describe("audit foundation", () => {
         authorization: "Bearer secret",
         nested: {
           accessToken: "token-value",
+          bankAccountNo: "6222000000000000",
+          contactEmail: "buyer@example.com",
           databaseUrl: "postgresql://user:password@host/db",
           password: "plain-password",
           phone: "13800000000",
           rawBinary: new Uint8Array([1, 2, 3]),
           safe: "visible",
+          taxIdentifier: "91310000EXAMPLE",
         },
       }),
     ).toEqual({
       authorization: "[REDACTED]",
       nested: {
         accessToken: "[REDACTED]",
+        bankAccountNo: "[REDACTED]",
+        contactEmail: "[REDACTED]",
         databaseUrl: "[REDACTED]",
         password: "[REDACTED]",
         phone: "[REDACTED]",
         rawBinary: "[REDACTED]",
         safe: "visible",
+        taxIdentifier: "[REDACTED]",
       },
     });
   });

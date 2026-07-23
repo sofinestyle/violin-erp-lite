@@ -486,7 +486,12 @@ export const ROLE_PERMISSION_MAP: Readonly<Record<RoleCode, readonly PermissionC
   });
 
 const permissionCodeSet = new Set<string>(PERMISSION_CODES);
+const roleCodeSet = new Set<string>(ROLE_CODES);
 
 export function isPermissionCode(value: string): value is PermissionCode {
   return permissionCodeSet.has(value);
+}
+
+export function isRoleCode(value: string): value is RoleCode {
+  return roleCodeSet.has(value);
 }

@@ -84,7 +84,13 @@ describe("JWT foundation", () => {
 
     const service = new JwtService(configuration());
     const token = await service.signAccessToken(USER_ID);
-    const tampered = `${token.slice(0, -1)}${token.endsWith("a") ? "b" : "a"}`;
+    const tokenParts = token.split(".");
+    const signature = tokenParts[2]!;
+    const signatureIndex = Math.floor(signature.length / 2);
+    const tamperedSignature = `${signature.slice(0, signatureIndex)}${
+      signature[signatureIndex] === "a" ? "b" : "a"
+    }${signature.slice(signatureIndex + 1)}`;
+    const tampered = `${tokenParts[0]}.${tokenParts[1]}.${tamperedSignature}`;
     await expect(service.verifyAccessToken(tampered)).rejects.toMatchObject({
       code: "AUTH_UNAUTHORIZED",
     });

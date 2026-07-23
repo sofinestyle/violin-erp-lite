@@ -52,9 +52,15 @@ const SENSITIVE_KEYS = new Set([
   "address",
   "authorization",
   "bankaccount",
+  "bankaccountname",
+  "bankaccountno",
+  "bankname",
   "binary",
   "connectionstring",
   "contact",
+  "contactemail",
+  "contactname",
+  "contactphone",
   "cookie",
   "databaseurl",
   "email",
@@ -69,6 +75,7 @@ const SENSITIVE_KEYS = new Set([
   "refreshtoken",
   "secret",
   "token",
+  "taxidentifier",
 ]);
 const SENSITIVE_STRING_PATTERN =
   /(?:postgres(?:ql)?:\/\/|bearer\s+\S+|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/i;

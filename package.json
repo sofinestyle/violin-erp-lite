@@ -15,7 +15,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm --recursive --filter './packages/*' run test && vitest run",
+    "test": "pnpm --recursive --filter './packages/*' run build && pnpm --recursive --filter './packages/*' run test && vitest run",
     "check": "pnpm status:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "dev:admin": "pnpm --filter @violin-erp/admin dev",
     "dev:miniapp": "pnpm --filter @violin-erp/miniapp dev",

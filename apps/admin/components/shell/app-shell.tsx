@@ -12,14 +12,26 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, PageContainer, PageHeader, StatusBadge } from "@/components/common";
 import { useUser } from "@/contexts/user-context";
 import { getNavigationItem, navigationItems, type NavigationSectionId } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
-export function AppShell({ activeSection }: { activeSection: NavigationSectionId }) {
+type AppShellProps = Readonly<{
+  activeSection: NavigationSectionId;
+  children?: ReactNode;
+  description?: string;
+  title?: string;
+}>;
+
+export function AppShell({
+  activeSection,
+  children,
+  description = "应用壳层已就绪，当前仅提供导航与公共状态占位。",
+  title,
+}: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
   const { user } = useUser();
@@ -133,13 +145,12 @@ export function AppShell({ activeSection }: { activeSection: NavigationSectionId
 
         <div className="flex flex-1">
           <PageContainer className="flex-1">
-            <PageHeader
-              title={activeItem.label}
-              description="应用壳层已就绪，当前仅提供导航与公共状态占位。"
-            />
-            <Card>
-              <EmptyState />
-            </Card>
+            <PageHeader title={title ?? activeItem.label} description={description} />
+            {children ?? (
+              <Card>
+                <EmptyState />
+              </Card>
+            )}
           </PageContainer>
 
           {infoPanelOpen ? (

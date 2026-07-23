@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.9.0] - 2026-07-23
+
+### Added
+
+- 完成 Task 7.5-A 基础资料 MVP，覆盖 Product、SKU、Category、Brand、Manufacturer、Supplier、Warehouse、Store、User 和 Role 十个正式对象
+- 新增 8 类基础资料的 Repository、Service、DTO/Validation、Mapper 与受控 Route Handler 分派，实现 64 个既有 `MD-*` 正式接口
+- 新增 `SEC-006` 至 `SEC-025` 的用户、角色、权限、用户角色及角色仓库/店铺数据范围实现，数据范围更新仅支持整体 Replace
+- 新增符合 Task 7.4 App Shell 的 PC 基础资料与用户权限页面，提供表格、工具栏、搜索、状态筛选、分页、详情/编辑抽屉、确认 Dialog、空态、加载态和错误态
+- 微信小程序新增 Phase 4 正式规划内的 SKU 查询入口；未增加后台管理能力
+- 新增 Repository、Service、API、Validation、Permission 与 Page 自动化测试
+
+### Changed
+
+- 根目录测试脚本先构建共享包，保证 Workspace 测试使用当前源码对应的发布产物
+- 基础资料写操作统一复用 Task 7.3 的 JWT、RBAC、Permission Guard、Audit、Logger、Response 与 Error 公共能力
+- 仓库与店铺列表在分页前应用 `role_warehouses` 与 `role_stores` 数据范围；`access_level` 仅接受 `read`、`operate`、`manage`
+
+### Scope
+
+- 未实现采购、生产、库存操作、调拨、盘点、报损、出入库、跨境、Dashboard、统计或 AI 能力
+- 未新增 API、数据库表、字段、枚举、约束、索引、Migration 或 Seed
+- 未修改任何 Approved / Frozen 业务、数据库、角色权限、API、Phase 4 或 Phase 6 文档
+- Task 7.5-A 已达到待 GitHub 技术验收条件；未经项目负责人批准不得启动 Task 7.5-B
+
 ## [0.8.7] - 2026-07-23
 
 ### Added

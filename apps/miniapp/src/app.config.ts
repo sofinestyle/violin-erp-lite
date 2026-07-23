@@ -3,6 +3,7 @@ export default defineAppConfig({
     "pages/index/index",
     "pages/business/index",
     "pages/inventory/index",
+    "pages/sku-query/index",
     "pages/profile/index",
   ],
   window: {
