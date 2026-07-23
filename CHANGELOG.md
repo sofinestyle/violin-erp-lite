@@ -11,6 +11,27 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.1] - 2026-07-24
+
+### Added
+
+- 新增 `Import Status Code Completion 001`，审计并提出导入任务、行级校验、行级执行和发货导入匹配四个状态代码集合
+- 新增 `Database Change Request 003` 提案，建议为四个现有状态字段增加值域 Check，并将 Database Logical Design 建议升级为 v2.1
+- 新增 `API Change Request 003` 提案，补充既有 Import API 的状态筛选、动作、重试、取消、汇总和页面映射
+
+### Changed
+
+- Task 7.6 记录 Batch 7.6-C1 因状态代码 SSOT 缺口保持 `Paused / SSOT Conflict`
+- M-001 保持 Open，剩余 48 个 API；Task 7.6 保持 In Progress
+- 建议保留 `failed` 任务状态和仅表示数量部分匹配的 `partially_matched`
+- 建议“待上传”保持 IMP-001 提交前页面状态，`unmatched/conflict` 不写入具有必填目标外键的匹配记录
+
+### Scope
+
+- 三份治理文件均为 Proposed / Pending Approval，不构成 Approved / Frozen 事实
+- 正式 API 总数保持 335；本轮未实现任何 Import、Attachment 或 Audit Log API
+- 未修改 Frozen SSOT、Prisma Schema、Migration、Mapping Audit、业务代码或测试
+
 ## [0.11.0] - 2026-07-23
 
 ### Added

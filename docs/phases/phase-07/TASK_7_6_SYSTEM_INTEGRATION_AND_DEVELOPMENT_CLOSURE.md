@@ -1,11 +1,11 @@
 ---
 document_name: Task 7.6 系统集成与开发收口
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-23
-updated_date: 2026-07-23
+updated_date: 2026-07-24
 related_phase: Phase 7
 ---
 
@@ -546,3 +546,32 @@ Database Change Request 002 已更新为 Completed / Approved，Database Logical
 | N-003 | PostgreSQL 18 实测通过，但 Prisma 7.9 `adapter-pg` 在关系查询时触发 pg 8.22 的 pg@9 兼容性弃用警告；当前无失败，后续依赖收口需复核 |
 
 当前剩余问题为：Blocker 0；Major 4（M-001、M-002、M-003、M-007）；Minor 1（N-003）；Out of Scope 1（O-002）。原 M-004、M-005、M-006、N-001、N-002 与 O-001 继续保持 Closed，V-001 至 V-009 继续保持 Verified。
+
+## 17. Import Status Code Completion 001
+
+### 17.1 暂停原因
+
+Batch 7.6-C1 实施前确认 Frozen `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 缺少完整英文代码集合，当前 Migration 也没有四项值域 Check。Phase 4 明确要求等待后续正式批准，不得由实现自行新增代码。
+
+因此：
+
+- Batch 7.6-C1：Paused / SSOT Conflict；
+- Task 7.6：继续 In Progress；
+- M-001：Open，48 APIs Remaining；
+- 本轮不实现 IMP、ATT、LOG API，不修改 Route、Service、Repository、测试或数据库。
+
+### 17.2 治理提案
+
+新增三份 `Proposed / Pending Approval` 文件：
+
+1. `docs/00-governance/IMPORT_STATUS_CODE_COMPLETION_001.md`；
+2. `docs/00-governance/DATABASE_CHANGE_REQUEST_003.md`；
+3. `docs/00-governance/API_CHANGE_REQUEST_003.md`。
+
+审计建议 DCR-003 增加四项值域 Check，Database Logical Design 建议从 v2.0 升级为 v2.1，Mapping Audit Check 预计从 222 增至 226；API CR-003 只补状态、筛选、动作和错误映射，API Master Specification 建议升级为 v1.3，正式接口总数保持 335。
+
+`failed` 任务状态建议保留，用于表达执行结束且零成功；`partially_matched` 建议保留且只表示数量部分匹配。因匹配表目标外键必填，`unmatched` 和 `conflict` 不建议作为匹配记录状态。“待上传”建议保持 IMP-001 提交前页面状态，不写入数据库/API。
+
+### 17.3 恢复条件
+
+项目负责人批准状态代码、DCR-003 和 API CR-003，完成 Frozen SSOT 同步、独立前向 Migration、Mapping Audit、真实 PostgreSQL 验证及 GitHub 技术验收后，方可另行下令恢复 Batch 7.6-C1。本轮不批准任何 Change Request，也不自行恢复开发。
