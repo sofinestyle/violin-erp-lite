@@ -11,6 +11,21 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.9.6] - 2026-07-23
+
+### Changed
+
+- Task 7.5-A、Task 7.5-B 和 Task 7.5-C 的开发成果均已完成并通过 GitHub 技术验收
+- 项目负责人正式批准 Task 7.5 核心业务功能实现，状态更新为 Completed / Approved
+- Current Task 切换至 Task 7.6 系统集成与开发收口，Task 7.6 保持 Waiting / Not Started
+- 新增 DEC-072，记录 Task 7.5 批准及当前任务切换决定
+
+### Scope
+
+- Phase 7 保持 In Progress，Phase 7 Final Consistency Review 保持 Waiting / Not Started
+- 本次仅执行 Documentation Status Sync，未启动 Task 7.6 或 Phase 7 Final Consistency Review
+- 未修改工程代码、测试、Prisma Schema、Migration、Seed、依赖或任何 Approved / Frozen 业务规格
+
 ## [0.9.5] - 2026-07-23
 
 ### Added

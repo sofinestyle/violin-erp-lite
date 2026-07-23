@@ -1764,3 +1764,28 @@ Approved
 ### 影响
 
 本决定只补齐既有数据库必填字段在 `CBR-003` 中的正式 API 覆盖，不修改数据库表、字段、类型、约束、Prisma Schema 或 Migration，不新增枚举、默认值、业务对象或业务规则，不修改 `BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、`DATABASE_SPEC.md`、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、Phase 4、Phase 5、Phase 6 或工程代码。
+
+## DEC-072 批准Task 7.5并将当前任务切换至Task 7.6
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- Task 7.5-A、Task 7.5-B 和 Task 7.5-C 的开发成果均已完成并通过 GitHub 技术验收；
+- 项目负责人正式批准 Task 7.5 核心业务功能实现，状态更新为 Completed / Approved；
+- Phase 7 保持 In Progress；
+- 当前正式任务切换至 Task 7.6 系统集成与开发收口；
+- Task 7.6 尚未启动，状态保持 Waiting / Not Started；
+- Phase 7 Final Consistency Review 尚未启动，状态保持 Waiting / Not Started；
+- 正式治理文档只维护 Phase 与 Task 状态，不维护 Task 7.5 内部执行 Section 状态；
+- 未经项目负责人后续正式指令，不得启动 Task 7.6。
+
+### 影响
+
+本决定只同步 Task 7.5 批准结果与当前 Task 指向，不修改 Frozen `BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、Database Logical Design v1.1、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、API Master Specification v1.1、Phase 4 或 Phase 6；不修改工程代码、测试、Prisma Schema、Migration、Seed 或依赖，不执行 Task 7.6 开发，不启动 Phase 7 Final Consistency Review。
