@@ -1839,3 +1839,28 @@ Approved
 ### 影响
 
 本决定只固化开发运行、Seed、安全错误边界和非业务工程配置，不新增或修改 API 定义、数据库 Schema、Migration、业务规则、枚举、角色、权限代码、角色权限映射、页面功能、Mini Program 功能或 Dashboard；不修改任何 Frozen 文档，不连接真实业务数据库，不启动 Phase 7 Final Consistency Review 或 Phase 8。
+
+## DEC-075 记录微信认证SSOT冲突并暂停Batch 7.6-B冲突部分
+
+### 状态
+
+Pending Approval
+
+### 日期
+
+2026-07-23
+
+### 记录
+
+- Approved Phase 6 要求 PC 使用用户名和密码调用 `SEC-001`，微信小程序首次授权绑定已有系统账号并在后续自动登录；
+- 当前 Frozen API 未定义密码登录、微信首次绑定和微信自动登录三种模式的完整 Request DTO；
+- 当前 Frozen Database Logical Design v1.1 没有微信身份与 `users.id` 的持久映射对象；
+- 仅使用客户端缓存、Redis、进程缓存或复用 `users` 展示字段，均不能形成可信、完整、可审计且支持并发约束的正式身份来源；
+- 正式建立 `AUTHENTICATION_SSOT_COMPLETION_001.md`、`API_CHANGE_REQUEST_002.md` 和 `DATABASE_CHANGE_REQUEST_002.md`，三份文件状态均为 Proposed / Pending Approval；
+- 正式推荐但尚未批准的方向是：`users` 保持唯一用户身份；新增最小 `user_wechat_identities` 映射表；既有 `SEC-001` 使用 `password`、`wechat-bind`、`wechat` 三种判别模式；不新增 API 路径，API 总数建议保持 335；
+- Batch 7.6-B 的认证冲突部分暂停，等待项目负责人批准、数据库/API SSOT 更新并重新冻结、Frozen Consistency Review 与 GitHub 技术验收；
+- Task 7.6 继续保持 In Progress，Phase 7 Final Consistency Review 与 Phase 8 均未启动。
+
+### 影响
+
+本记录只固化已发现的冲突、待批准治理入口和暂停边界，不批准任何推荐方案，不修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md`、`README.md`、Frozen / Approved 业务规格、数据库、枚举、权限、API 或 Phase 5 / Phase 6 正式定义；不修改 Prisma Schema、Migration、Mapping Audit、Seed、业务代码或测试。提案在项目负责人批准和正式变更流程完成前不生效。

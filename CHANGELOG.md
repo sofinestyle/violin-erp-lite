@@ -11,6 +11,25 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.9.9] - 2026-07-23
+
+### Added
+
+- 新增 `Authentication SSOT Completion 001`，记录 Approved 微信首次绑定、自动登录与当前 Frozen API / Database SSOT 之间的实现缺口及正式推荐方案
+- 新增 `API Change Request 002`，提议在既有 `SEC-001` 中以 `password`、`wechat-bind`、`wechat` 三种判别模式补齐统一认证契约
+- 新增 `Database Change Request 002`，提议以 `user_wechat_identities` 建立微信身份到既有 `users.id` 的可审计持久映射
+
+### Changed
+
+- Task 7.6 实施文档记录认证 SSOT 阻塞、治理入口和 Batch 7.6-B 暂停边界
+- 新增 DEC-075，记录冲突发现、提案状态及批准前禁止开发
+
+### Scope
+
+- 三份新增治理文件均为 Proposed / Pending Approval，不构成 Approved / Frozen 事实
+- Task 7.6 保持 In Progress；Batch 7.6-B 的冲突部分保持暂停
+- 未修改任何 Frozen / Approved 正式规格、API 数量、Prisma Schema、Migration、Mapping Audit、Seed、业务代码或测试
+
 ## [0.9.8] - 2026-07-23
 
 ### Added
