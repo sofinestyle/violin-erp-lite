@@ -26,4 +26,17 @@ describe("Frozen v1 API route boundary", () => {
     });
     expect(body.timestamp).toBeTruthy();
   });
+
+  it("protects Task 7.5-C inventory APIs through the same route boundary", async () => {
+    const response = await GET(new Request("http://localhost/api/v1/inventories"));
+    const body = (await response.json()) as {
+      error: { code: string };
+      success: boolean;
+    };
+    expect(response.status).toBe(401);
+    expect(body).toMatchObject({
+      success: false,
+      error: { code: "AUTH_UNAUTHORIZED" },
+    });
+  });
 });

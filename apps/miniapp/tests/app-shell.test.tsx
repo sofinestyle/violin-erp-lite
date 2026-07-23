@@ -37,4 +37,17 @@ describe("miniapp application shell", () => {
     expect(html).toContain("light:zh-CN:empty-user:reserved-health");
     expect(html).not.toContain("dark");
   });
+
+  it("keeps Task 7.5-C miniapp capabilities read-only", () => {
+    const inventoryPath = fileURLToPath(
+      new URL("../src/pages/inventory/index.tsx", import.meta.url),
+    );
+    const source = readFileSync(inventoryPath, "utf8");
+    expect(source).toContain("库存余额查询");
+    expect(source).toContain("库存流水查询");
+    expect(source).toContain("出入库查询");
+    expect(source).toContain("跨境查询");
+    expect(source).not.toContain("新增");
+    expect(source).not.toContain("审批");
+  });
 });

@@ -221,18 +221,45 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
               {rows.map((row) => (
                 <tr className="border-t" key={row.id}>
                   <td className="px-4 py-3 font-medium">
-                    {display(row.documentNo ?? row.paymentNo ?? row.completionBatchNo)}
+                    {display(
+                      row.documentNo ??
+                        row.transactionNo ??
+                        row.alertNo ??
+                        row.skuCode ??
+                        row.taskNo ??
+                        row.paymentNo ??
+                        row.completionBatchNo,
+                    )}
                   </td>
                   <td className="px-4 py-3">
-                    {display(row.documentDate ?? row.paymentDate ?? row.completionDate)}
+                    {display(
+                      row.documentDate ??
+                        row.transactionAt ??
+                        row.generatedAt ??
+                        row.updatedAt ??
+                        row.paymentDate ??
+                        row.completionDate,
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge tone="info">
-                      {display(row.status ?? row.paymentStatus ?? row.completionStatus)}
+                      {display(
+                        row.status ??
+                          row.alertStatus ??
+                          row.validationStatus ??
+                          row.paymentStatus ??
+                          row.completionStatus,
+                      )}
                     </StatusBadge>
                   </td>
                   <td className="px-4 py-3">
-                    {display(row.totalQuantity ?? row.totalCompletedQuantity)}
+                    {display(
+                      row.totalQuantity ??
+                        row.onHandQuantity ??
+                        row.quantity ??
+                        row.totalRows ??
+                        row.totalCompletedQuantity,
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Button variant="ghost" onClick={() => void openDetail(row)}>

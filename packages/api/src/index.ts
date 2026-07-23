@@ -7,6 +7,7 @@ export * from "./authorization/permissions.js";
 export * from "./errors/app-error.js";
 export * from "./logging/logger.js";
 export * from "./master-data/master-data.js";
+export * from "./inventory-workflow/inventory-workflow.js";
 export * from "./request-context/request-context.js";
 export * from "./response/api-response.js";
 export * from "./route-handler/health-check.js";

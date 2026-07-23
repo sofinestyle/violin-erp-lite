@@ -23,6 +23,22 @@ export default function InventoryPage() {
           进入查询
         </Button>
       </View>
+      <View className="shell-page__card mini-entry">
+        <Text className="mini-entry__title">库存余额查询</Text>
+        <Text className="mini-entry__description">按授权仓库只读查询库存余额与可用数量。</Text>
+      </View>
+      <View className="shell-page__card mini-entry">
+        <Text className="mini-entry__title">库存流水查询</Text>
+        <Text className="mini-entry__description">只读追溯正式库存事务及来源单据。</Text>
+      </View>
+      <View className="shell-page__card mini-entry">
+        <Text className="mini-entry__title">出入库查询</Text>
+        <Text className="mini-entry__description">只读查看调拨、国内出库与销售退货记录。</Text>
+      </View>
+      <View className="shell-page__card mini-entry">
+        <Text className="mini-entry__title">跨境查询</Text>
+        <Text className="mini-entry__description">只读查看跨境发货和海外仓库存来源。</Text>
+      </View>
     </View>
   );
 }

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { inboundViews, procurementViews, productionViews } from "@/lib/workflow";
+import {
+  crossBorderViews,
+  inboundViews,
+  inventoryViews,
+  procurementViews,
+  productionViews,
+  warehouseOperationViews,
+} from "@/lib/workflow";
 
 describe("Parallel workflow pages", () => {
   it("keeps procurement and production routes independent", () => {
@@ -23,5 +30,30 @@ describe("Parallel workflow pages", () => {
   it("limits inbound confirmation workbench to purchase and production sources", () => {
     expect(inboundViews.map((view) => view.sourceType)).toEqual(["purchase", "production"]);
     expect(inboundViews.some((view) => view.apiPath.includes("other"))).toBe(false);
+  });
+
+  it("exposes the complete Task 7.5-C PC workbenches inside the existing shell", () => {
+    expect(inventoryViews.map((view) => view.id)).toEqual([
+      "inventory-balances",
+      "inventory-ledger",
+      "inventory-adjustments",
+      "inventory-alerts",
+    ]);
+    expect(warehouseOperationViews.map((view) => view.id)).toEqual([
+      "transfer-orders",
+      "stock-counts",
+      "damage-reports",
+      "domestic-outbound",
+      "sales-returns",
+    ]);
+    expect(crossBorderViews.map((view) => view.id)).toEqual([
+      "cross-border-shipments",
+      "overseas-inventories",
+      "overseas-imports",
+    ]);
+    expect(
+      warehouseOperationViews.find((view) => view.id === "domestic-outbound")?.apiPath,
+    ).toContain("outboundType=domestic_sales");
+    expect(crossBorderViews[0]?.description).toContain("运输方式");
   });
 });

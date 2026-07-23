@@ -4,7 +4,13 @@ import { HealthGate } from "@/components/shell/health-gate";
 import { AppProviders } from "@/contexts/app-providers";
 import { isNavigationSection } from "@/lib/navigation";
 import { WorkflowHub } from "@/components/workflow/workflow-hub";
-import { inboundViews, procurementViews, productionViews } from "@/lib/workflow";
+import {
+  crossBorderViews,
+  inventoryViews,
+  procurementViews,
+  productionViews,
+  warehouseOperationViews,
+} from "@/lib/workflow";
 
 type WorkspacePlaceholderPageProps = {
   params: Promise<{ section: string }>;
@@ -22,18 +28,20 @@ export default async function WorkspacePlaceholderPage({ params }: WorkspacePlac
       ? procurementViews
       : section === "production"
         ? productionViews
-        : section === "warehouse-operations"
-          ? inboundViews
-          : null;
+        : section === "inventory"
+          ? inventoryViews
+          : section === "warehouse-operations"
+            ? warehouseOperationViews
+            : section === "cross-border"
+              ? crossBorderViews
+              : null;
 
   return (
     <AppProviders>
       <HealthGate>
         <AppShell
           activeSection={section}
-          {...(workflowViews
-            ? { description: "采购与生产分别保持独立来源，验收确认后进入对应正式入库。" }
-            : {})}
+          {...(workflowViews ? { description: "严格依据正式 API 与权限的数据工作台。" } : {})}
         >
           {workflowViews ? <WorkflowHub views={workflowViews} /> : undefined}
         </AppShell>

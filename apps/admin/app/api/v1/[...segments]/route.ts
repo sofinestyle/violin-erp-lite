@@ -3,9 +3,11 @@ import {
   assertMasterDataResource,
   createRouteHandler,
   createSuccessResponse,
+  InventoryWorkflowService,
   JwtService,
   loadJwtConfiguration,
   MasterDataService,
+  matchInventoryWorkflowEndpoint,
   matchWorkflowEndpoint,
   parseMasterDataListQuery,
   parseSecurityListQuery,
@@ -18,6 +20,7 @@ import {
 import {
   createCurrentUserResolver,
   PrismaAuditWriter,
+  PrismaInventoryWorkflowRepository,
   PrismaMasterDataRepository,
   PrismaSecurityRepository,
   PrismaWorkflowRepository,
@@ -58,6 +61,7 @@ function services() {
   const audit = new PrismaAuditWriter();
   return {
     masterData: new MasterDataService(new PrismaMasterDataRepository(), audit),
+    inventoryWorkflow: new InventoryWorkflowService(new PrismaInventoryWorkflowRepository(), audit),
     security: new SecurityManagementService(new PrismaSecurityRepository(), audit),
     workflow: new WorkflowService(new PrismaWorkflowRepository(), audit),
   };
@@ -116,6 +120,59 @@ async function dispatchWorkflow(
         total: list.total,
         totalPages: list.totalPages,
       },
+    });
+  }
+  return createSuccessResponse(result, context, {
+    status: matched.command.action.startsWith("create") ? 201 : 200,
+  });
+}
+
+async function dispatchInventoryWorkflow(
+  request: Request,
+  context: RequestContext,
+  authentication: AuthenticationContext,
+  segments: string[],
+): Promise<Response | null> {
+  const query = new URL(request.url).searchParams;
+  const candidate = matchInventoryWorkflowEndpoint(request.method, segments, query, {});
+  if (!candidate) return null;
+  const payload =
+    request.method === "GET" ? {} : ((await body(request)) as Readonly<Record<string, unknown>>);
+  const matched =
+    request.method === "GET"
+      ? candidate
+      : matchInventoryWorkflowEndpoint(request.method, segments, query, payload)!;
+  if (matched.command.mutation) assertIdempotencyKey(request);
+  const result = await services().inventoryWorkflow.execute(
+    matched.command,
+    matched.permission,
+    authentication,
+    context,
+  );
+  if (
+    result &&
+    typeof result === "object" &&
+    "items" in result &&
+    Array.isArray((result as { items: unknown }).items)
+  ) {
+    const list = result as {
+      items: unknown[];
+      page?: number;
+      pageSize?: number;
+      total?: number;
+      totalPages?: number;
+    };
+    return createSuccessResponse(list.items, context, {
+      ...(list.page && list.pageSize && list.total !== undefined && list.totalPages !== undefined
+        ? {
+            meta: {
+              page: list.page,
+              pageSize: list.pageSize,
+              total: list.total,
+              totalPages: list.totalPages,
+            },
+          }
+        : {}),
     });
   }
   return createSuccessResponse(result, context, {
@@ -426,6 +483,13 @@ const handler = createRouteHandler(async (request, context) => {
     if (segments[0] === "users" || segments[0] === "roles" || segments[0] === "permissions") {
       return dispatchSecurity(request, context, authentication, segments);
     }
+    const inventoryWorkflow = await dispatchInventoryWorkflow(
+      request,
+      context,
+      authentication,
+      segments,
+    );
+    if (inventoryWorkflow) return inventoryWorkflow;
     const workflow = await dispatchWorkflow(request, context, authentication, segments);
     if (workflow) return workflow;
     return dispatchMasterData(request, context, authentication, segments);
