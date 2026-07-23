@@ -69,7 +69,7 @@ Task 7.6 不新增 Phase 6 未批准的新业务功能，不修改 Frozen 业务
 - 未设置 `DATABASE_URL` 时，`pnpm db:validate` 与 `pnpm db:generate` 在加载 `prisma.config.ts` 时失败；
 - 使用仅存在于进程内的无敏感占位连接串后，`pnpm db:validate` 与 `pnpm db:generate` 均通过；
 - `prisma/schema.prisma`、`prisma/migrations/20260722000000_initial/migration.sql`、`prisma/mapping-audit.json` 和 `prisma/seed.ts` 已读取；
-- `mapping-audit.json` 记录 60 张表、1128 个字段、283 个外键、90 个普通索引和 201 个 Check 约束；
+- 初始审计时的 v1.1 `mapping-audit.json` 记录 60 张表、1128 个字段、283 个外键、90 个普通索引和 201 个 Check 约束；
 - 使用不可连接的本机占位 PostgreSQL 地址执行 `pnpm db:migrate:status` 失败，未对真实数据库执行 Migration 或 Seed。
 
 ### 3.3 质量与构建
@@ -380,7 +380,7 @@ Batch 7.6-B 认证链路实施前复核确认：
 
 - Approved Phase 6 要求 PC 密码登录、微信首次绑定已有系统账号和后续微信自动登录；
 - Frozen `SEC-001` 至 `SEC-005` 未定义三种登录模式的完整 DTO 和微信兼容边界；
-- Frozen Database Logical Design v1.1 没有微信身份到 `users.id` 的可持久映射；
+- 历史 Frozen Database Logical Design v1.1 没有微信身份到 `users.id` 的可持久映射；
 - 现有 Mini Program Context 仍为空会话壳层，不能以客户端缓存作为身份事实；
 - 现有 `users`、角色、权限和数据范围必须继续作为唯一身份与授权来源。
 
@@ -394,12 +394,36 @@ Batch 7.6-B 认证链路实施前复核确认：
 2. `docs/00-governance/API_CHANGE_REQUEST_002.md`；
 3. `docs/00-governance/DATABASE_CHANGE_REQUEST_002.md`。
 
-三份文件状态均为 Proposed / Pending Approval。推荐新增最小 `user_wechat_identities` 映射表，并在既有 `SEC-001` 中使用 `password`、`wechat-bind`、`wechat` 三种判别模式；该推荐尚未批准，不是开发输入。
+Database Change Request 002 已更新为 Completed / Approved，Database Logical Design v2.0 已完成、批准并冻结。Authentication SSOT Completion 001 当前为 Database Approved / API Pending Approval；API Change Request 002 仍为 Proposed / Pending Approval。`SEC-001` 三种判别模式仍不是开发输入。
 
 ### 12.3 暂停与恢复条件
 
 - Batch 7.6-B 的认证冲突部分保持暂停，不修改认证业务代码、测试、Prisma Schema、Migration、Mapping Audit 或 Seed；
 - Task 7.6 正式状态保持 In Progress；
 - 不在正式状态治理文件维护内部 Batch 状态；
-- 项目负责人批准提案、Database Change Request 和 API Change Request，数据库/API SSOT 更新并重新冻结，Phase 6 同步、Frozen Consistency Review 和 GitHub 技术验收全部通过后，方可重新启动 Batch 7.6-B；
+- API Change Request 002 获批、API SSOT 更新并重新冻结，Phase 6 同步、Frozen Consistency Review 和 GitHub 技术验收全部通过后，方可重新启动 Batch 7.6-B；
 - Phase 7 Final Consistency Review 与 Phase 8 均不启动。
+
+## 13. Database Change Request 002 同步记录
+
+### 13.1 正式结果
+
+- Database Logical Design：v2.0，Completed / Approved / Frozen；
+- 新增对象：`user_wechat_identities`；
+- `users` 继续是唯一系统用户身份，不建立平行微信用户体系；
+- 正式结构：14 个字段、1 个主键、3 个当前有效绑定部分唯一约束、4 个 RESTRICT 外键、7 项 Check、1 个普通索引；
+- 正式计数：61 表、1142 字段、61 主键、74 唯一约束、287 外键、91 普通索引、208 Check、2 枚举；
+- `status` 使用表内 Check，不新增数据库枚举；
+- 现有用户不回填微信身份。
+
+### 13.2 物理同步
+
+- `prisma/schema.prisma` 已加入正式模型和 `users` 双向关系；
+- 新增 `prisma/migrations/20260723150000_add_user_wechat_identities/migration.sql`；
+- `prisma/mapping-audit.json` 已同步 v2.0 计数；
+- PostgreSQL 18.4 一次性隔离集群已顺序执行初始 Migration 与 DCR-002 Migration，实测得到 61 表、1142 字段及新表 14 字段、1 主键、4 外键、7 Check、3 部分唯一索引、1 普通索引；
+- Migration 不包含真实 AppID、Secret、OpenID、用户或业务数据。
+
+### 13.3 边界
+
+本次只关闭认证 SSOT 的数据库阻塞，不修改 API、Route、Service、Repository、登录、JWT、Web、Mini Program、Seed 或业务逻辑。API Change Request 002 仍待批准，Batch 7.6-B 继续暂停，Task 7.6 保持 In Progress。

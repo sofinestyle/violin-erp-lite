@@ -1873,6 +1873,30 @@ model user_roles {
   @@index([role_id], map: "idx_user_roles_role_id")
 }
 
+/// This table contains check constraints and partial unique indexes which require additional migration setup.
+model user_wechat_identities {
+  id                                             String    @id(map: "pk_user_wechat_identities") @default(dbgenerated("uuidv7()")) @db.Uuid
+  user_id                                        String    @db.Uuid
+  openid                                         String    @db.VarChar(128)
+  unionid                                        String?   @db.VarChar(128)
+  mini_program_appid                             String    @db.VarChar(100)
+  status                                         String    @db.VarChar(50)
+  bound_at                                       DateTime  @db.Timestamptz(6)
+  last_login_at                                  DateTime? @db.Timestamptz(6)
+  unbound_at                                     DateTime? @db.Timestamptz(6)
+  unbound_by                                     String?   @db.Uuid
+  created_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  created_by                                     String    @db.Uuid
+  updated_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_by                                     String    @db.Uuid
+  users_user_wechat_identities_user_idTousers    users     @relation("user_wechat_identities_user_idTousers", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_user_wechat_identities_user_id")
+  users_user_wechat_identities_unbound_byTousers users?    @relation("user_wechat_identities_unbound_byTousers", fields: [unbound_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_user_wechat_identities_unbound_by")
+  users_user_wechat_identities_created_byTousers users     @relation("user_wechat_identities_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_user_wechat_identities_created_by")
+  users_user_wechat_identities_updated_byTousers users     @relation("user_wechat_identities_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_user_wechat_identities_updated_by")
+
+  @@index([status, updated_at], map: "idx_user_wechat_identities_status_updated_at")
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model users {
@@ -2066,6 +2090,10 @@ model users {
   user_roles_user_roles_created_byTousers                                                 user_roles[]                         @relation("user_roles_created_byTousers")
   user_roles_user_roles_updated_byTousers                                                 user_roles[]                         @relation("user_roles_updated_byTousers")
   user_roles_user_roles_user_idTousers                                                    user_roles[]                         @relation("user_roles_user_idTousers")
+  user_wechat_identities_user_wechat_identities_user_idTousers                            user_wechat_identities[]             @relation("user_wechat_identities_user_idTousers")
+  user_wechat_identities_user_wechat_identities_unbound_byTousers                         user_wechat_identities[]             @relation("user_wechat_identities_unbound_byTousers")
+  user_wechat_identities_user_wechat_identities_created_byTousers                         user_wechat_identities[]             @relation("user_wechat_identities_created_byTousers")
+  user_wechat_identities_user_wechat_identities_updated_byTousers                         user_wechat_identities[]             @relation("user_wechat_identities_updated_byTousers")
   users_users_created_byTousers                                                           users                                @relation("users_created_byTousers", fields: [created_by], references: [id], onUpdate: Restrict, map: "fk_users_created_by")
   other_users_users_created_byTousers                                                     users[]                              @relation("users_created_byTousers")
   users_users_disabled_byTousers                                                          users?                               @relation("users_disabled_byTousers", fields: [disabled_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_users_disabled_by")

@@ -1864,3 +1864,30 @@ Pending Approval
 ### 影响
 
 本记录只固化已发现的冲突、待批准治理入口和暂停边界，不批准任何推荐方案，不修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md`、`README.md`、Frozen / Approved 业务规格、数据库、枚举、权限、API 或 Phase 5 / Phase 6 正式定义；不修改 Prisma Schema、Migration、Mapping Audit、Seed、业务代码或测试。提案在项目负责人批准和正式变更流程完成前不生效。
+
+## DEC-076 批准DCR-002并冻结Database Logical Design v2.0
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人正式批准 Database Change Request 002，状态更新为 Completed / Approved；
+- Database Logical Design 由 v1.1 升级为 v2.0，状态为 Completed / Approved / Frozen；
+- 正式新增 `user_wechat_identities`，只映射微信身份到既有 `users.id`，不建立平行微信用户体系；
+- 正式批准 14 个字段、1 个 UUID v7 主键、3 个当前有效绑定部分唯一约束、4 个 RESTRICT 外键、7 项 Check 和 1 个普通索引；
+- 首版每个环境只支持一个服务端配置的小程序 AppID，每个用户只允许一个当前有效微信绑定；
+- `status` 使用 `active`、`unbound`、`disabled` 三个表内 Check 代码，不新增 PostgreSQL Enum；
+- 不回填或猜测任何现有用户的微信身份，不物理删除绑定历史；
+- Prisma Schema、正式 Migration 和 Mapping Audit 同步为 61 表、1142 字段、61 主键、74 唯一约束、287 外键、91 普通索引、208 Check、2 枚举；
+- Authentication SSOT Completion 001 的数据库部分已批准，API Change Request 002 仍为 Proposed / Pending Approval；
+- Task 7.6 保持 In Progress，Batch 7.6-B 仍未开始。
+
+### 影响
+
+本决定只同步 Database Logical Design v2.0 及对应物理数据库结构，不修改业务规则、API、权限、Route、Service、Repository、登录、JWT、Web、Mini Program、Seed 或业务逻辑；不修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。API SSOT、Phase 6 同步、Frozen Consistency Review 和 GitHub 技术验收完成前，不得开始 Batch 7.6-B。

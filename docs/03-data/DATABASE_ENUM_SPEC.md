@@ -1,7 +1,7 @@
 ---
 document_name: 数据库枚举规范
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-22
@@ -13,9 +13,9 @@ related_phase: Phase 3
 
 ## 1. 文档目的
 
-本文档统一维护 Frozen Database Logical Design v1.1 已预留的正式枚举代码，作为数据库物理映射、DTO 和 Validation 的唯一正式枚举输入。当前覆盖 `warehouse_type` 与 `access_level`。
+本文档统一维护 Frozen Database Logical Design v2.0 的正式枚举代码，作为数据库物理映射、DTO 和 Validation 的唯一正式枚举输入。当前覆盖 `warehouse_type` 与 `access_level`。
 
-枚举补全不新增、删除或修改任何数据库表、字段、关系、索引、Check 规则或业务对象，不改变已批准业务语义。
+Database Change Request 002 新增的 `user_wechat_identities.status` 是表内 Check 约束的局部生命周期代码，不新增 PostgreSQL Enum，也不扩展本文件的正式枚举集合。
 
 ## 2. `warehouse_type` 正式枚举
 
@@ -50,7 +50,7 @@ related_phase: Phase 3
 | `warehouse_type IN ('transit', 'pending')` | `allows_available_stock` 必须为 `false` | `ck_warehouses_available_stock_role` |
 | `warehouse_type IN ('company', 'manufacturer', 'overseas')` | 可以允许形成可用库存 | 由仓库类型与 `allows_available_stock` 组合语义控制 |
 
-表中 `allows_available_stock` 是 Frozen Database Logical Design v1.1 已批准字段名，不新增平行字段或别名。
+表中 `allows_available_stock` 是 Frozen Database Logical Design v2.0 继承的已批准字段名，不新增平行字段或别名。
 
 ## 5. 物理映射要求
 
@@ -63,9 +63,10 @@ related_phase: Phase 3
 
 ## 6. 正式结论
 
-- 文档版本：v1.0；
+- 文档版本：v1.1；
 - 文档状态：Completed / Approved / Frozen；
 - `warehouse_type` 正式枚举数量：5；
 - `access_level` 正式枚举数量：3；
 - 数据库表、字段、关系及原有 Check 规则修改数量：0；
+- DCR-002 新增 PostgreSQL Enum 数量：0；
 - 后续数据库物理映射、DTO 和 Validation 必须以本文档为 `warehouse_type` 与 `access_level` 枚举的唯一正式输入。

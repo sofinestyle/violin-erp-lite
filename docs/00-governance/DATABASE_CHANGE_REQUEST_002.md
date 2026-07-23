@@ -1,8 +1,8 @@
 ---
 document_name: Database Change Request 002：微信身份映射对象
 project: Violin ERP Lite
-version: 1.0
-status: Proposed / Pending Approval
+version: 2.0
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-23
 updated_date: 2026-07-23
@@ -11,7 +11,17 @@ related_phase: Phase 3 / Phase 6 / Phase 7
 
 # Database Change Request 002：微信身份映射对象
 
-> 本文件是待项目负责人批准的数据库变更请求，不修改或替代当前 Frozen Database Logical Design v1.1。
+> 项目负责人已于 2026-07-23 正式批准本 Database Change Request。本文定义 Database Logical Design v1.1 到 v2.0 的唯一结构增量。
+
+## 0. 批准结果
+
+- Database Change Request 002：Completed / Approved；
+- Database Logical Design：v2.0，Completed / Approved / Frozen；
+- 正式新增：`user_wechat_identities`；
+- 正式计数：61 表、1142 字段、61 主键、74 唯一约束、287 外键、91 普通索引、208 Check、2 枚举；
+- Prisma Schema、正式 Migration 与 Mapping Audit 已同步；
+- 不修改 API、权限、业务逻辑或既有 60 张表；
+- Batch 7.6-B 仍未开始。
 
 ## 1. 变更原因
 
@@ -24,11 +34,11 @@ Approved Phase 6 要求微信首次授权绑定已有系统账号，后续微信
 
 临时微信 code 会过期且只能单次使用；客户端缓存、Redis 或进程内缓存都不能提供数据库 FK、唯一约束、重启恢复、解绑历史和并发绑定保证。把 OpenID 偷存到用户名、名称、邮箱、手机号、备注或 JSON 会改变既有字段语义并绕过 Frozen 变更控制。
 
-因此建议新增最小映射表，而不是修改 `users` 或建立平行微信用户表。
+因此正式新增最小映射表，而不是修改 `users` 或建立平行微信用户表。
 
 ## 2. 新表业务必要性与边界
 
-建议表名：`user_wechat_identities`。
+正式表名：`user_wechat_identities`。
 
 该表只回答“当前微信身份映射到哪个既有 `users.id`”：
 
@@ -58,7 +68,7 @@ Approved Phase 6 要求微信首次授权绑定已有系统账号，后续微信
 | `updated_at` | TIMESTAMPTZ(6) | 是 | `CURRENT_TIMESTAMP` | 最近更新时间 |
 | `updated_by` | UUID | 是 | 无 | 最近操作人 |
 
-OpenID、UnionID 和 AppID 长度是本 DCR 的提议值，批准前需由项目负责人确认。数据库不为 `status` 设置隐式激活默认值，避免漏传时意外启用。
+OpenID、UnionID 和 AppID 长度已按本表正式字段定义批准。数据库不为 `status` 设置隐式激活默认值，避免漏传时意外启用。
 
 ## 4. 主键与唯一约束
 
@@ -69,7 +79,7 @@ OpenID、UnionID 和 AppID 长度是本 DCR 的提议值，批准前需由项目
 
 ### 4.2 当前有效绑定唯一约束
 
-为保留解绑历史，建议使用部分唯一索引/约束：
+为保留解绑历史，正式使用部分唯一索引/约束：
 
 1. `uq_user_wechat_identities_active_openid_appid`：`(openid, mini_program_appid) WHERE status = 'active'`；
 2. `uq_user_wechat_identities_active_user_id`：`(user_id) WHERE status = 'active'`；
@@ -92,7 +102,7 @@ OpenID、UnionID 和 AppID 长度是本 DCR 的提议值，批准前需由项目
 
 ## 6. Check 约束
 
-建议至少建立：
+正式建立：
 
 1. `status IN ('active', 'unbound', 'disabled')`；
 2. `openid = btrim(openid) AND length(openid) > 0`，且 `mini_program_appid` 同样非空、无首尾空白；
@@ -102,11 +112,11 @@ OpenID、UnionID 和 AppID 长度是本 DCR 的提议值，批准前需由项目
 6. `last_login_at IS NULL OR last_login_at >= bound_at`；
 7. `status = 'unbound'` 时 `unbound_at`、`unbound_by` 均非空；其他状态两者均为空，且 `unbound_at >= bound_at`。
 
-具体是否合并字符串和生命周期 Check 由获批后的数据库映射生成规则决定，但不得降低上述语义。
+物理 Migration 按上述 7 类语义建立 7 项命名 Check。
 
 ## 7. 普通索引
 
-建议新增：
+正式新增：
 
 - `idx_user_wechat_identities_status_updated_at (status, updated_at)`，用于运维审计和生命周期查询。
 
@@ -144,7 +154,7 @@ OpenID、UnionID 和 AppID 长度是本 DCR 的提议值，批准前需由项目
 
 ## 11. Migration 方案
 
-批准后建议单独生成一个前向 Migration：
+本次正式生成一个前向 Migration：
 
 1. 创建 `user_wechat_identities`；
 2. 创建主键、4 个外键、3 个当前有效绑定部分唯一约束、1 个普通索引和 Check；
@@ -152,7 +162,7 @@ OpenID、UnionID 和 AppID 长度是本 DCR 的提议值，批准前需由项目
 4. 运行 `prisma generate`、Schema Validate、Migration Deploy/Status；
 5. 在空库和从当前 v1.1 升级的数据库分别验证；
 6. 验证并发双绑、停用、解绑历史及 FK/Check 失败；
-7. 重新生成并核对 Mapping Audit。
+7. 同步并核对 Mapping Audit。
 
 Migration 不写真实 AppID、Secret、OpenID、用户或业务数据。
 
@@ -164,11 +174,11 @@ Migration 不写真实 AppID、Secret、OpenID、用户或业务数据。
 - 表产生任何绑定历史后，不允许破坏性 Drop；应关闭微信登录、保留数据与审计，再提交正式回滚 DCR/Migration；
 - 任何数据修复必须有项目负责人批准和可追溯脚本，不允许手工改表。
 
-## 13. 对 Mapping Audit 的影响
+## 13. Mapping Audit 正式结果
 
-当前 `prisma/mapping-audit.json` 基线：
+`prisma/mapping-audit.json` 已从 v1.1 基线同步至 v2.0：
 
-| 项目 | 当前 | 本提案预计 | 预计变化 |
+| 项目 | v1.1 | v2.0 | 变化 |
 | --- | ---: | ---: | ---: |
 | 表 | 60 | 61 | +1 |
 | 字段 | 1128 | 1142 | +14 |
@@ -179,13 +189,13 @@ Migration 不写真实 AppID、Secret、OpenID、用户或业务数据。
 | Check | 201 | 208 | +7 |
 | 枚举 | 2 | 2 | 0 |
 
-预计值只用于影响审计，不是已批准结果。获批实现时必须以正式生成器和 Migration 实际结果重新核对；部分唯一约束的计数口径若与当前审计工具不同，必须显式解释，不得手工改 JSON 掩盖差异。
+上述计数已与 `DATABASE_SPEC.md`、Prisma Schema 和正式 Migration 核对。三个部分唯一索引按正式唯一约束计数，普通索引只计 `idx_user_wechat_identities_status_updated_at`。
 
-## 14. Database Logical Design 版本建议
+## 14. Database Logical Design 版本决定
 
-新增一张正式身份映射表、14 个字段及关系属于逻辑结构变化，建议 Database Logical Design 从 v1.1 升级为 v2.0 并重新冻结。现有 60 张表、1128 个字段的 v1.1 继续保留为历史冻结基线。
+新增一张正式身份映射表、14 个字段及关系属于逻辑结构变化，Database Logical Design 已从 v1.1 升级为 v2.0 并重新冻结。现有 60 张表、1128 个字段的 v1.1 继续保留为历史冻结基线。
 
-`status` 建议作为本表受 Check 约束的局部技术生命周期代码，不新增 PostgreSQL Enum，也不改变 `DATABASE_ENUM_SPEC.md` 当前 `warehouse_type`、`access_level` 两个正式枚举。若项目负责人要求把该状态提升为跨对象正式枚举，需在批准时明确同步 `DATABASE_ENUM_SPEC.md`。
+`status` 正式作为本表受 Check 约束的局部生命周期代码，不新增 PostgreSQL Enum，也不扩展 `DATABASE_ENUM_SPEC.md` 的正式枚举集合。
 
 ## 15. 非平行微信用户体系证明
 
@@ -199,21 +209,23 @@ Migration 不写真实 AppID、Secret、OpenID、用户或业务数据。
 
 ## 16. 不影响范围
 
-本请求不修改业务规则、用户/角色/权限定义、既有 60 张表的字段含义、库存、采购、生产、验收、出入库、跨境、Dashboard、API 路径、API 数量、Seed 或真实数据；不创建 Schema、Migration 或代码。
+本请求不修改业务规则、用户/角色/权限定义、既有 60 张表的字段含义、库存、采购、生产、验收、出入库、跨境、Dashboard、API 路径、API 数量、Seed 或真实数据。仅同步 Prisma Schema、正式 Migration 和 Mapping Audit，不创建业务代码。
 
-## 17. 待确认事项
+## 17. 批准决定与保留事项
 
-1. 是否批准表名和 14 个字段；
-2. 是否批准首版单 AppID、每个用户一个当前有效绑定；
-3. 是否批准三个部分唯一约束，特别是可选 UnionID 的当前有效唯一性；
-4. 是否批准 `active`、`unbound`、`disabled` 三个局部状态及不修改数据库枚举规范；
-5. 是否批准不物理删除、重新绑定新建历史行；
-6. 是否批准 4 个 RESTRICT 外键、7 类 Check 和 1 个普通索引；
-7. 是否批准不回填现有用户；
-8. 是否批准 Database Logical Design 目标版本 v2.0；
-9. 是否需要为管理员解绑/重新绑定另行批准页面、权限和 API；
-10. 是否需要另建安全事件持久化对象以覆盖无法映射 `audit_logs.object_id` 的未知身份失败。
+项目负责人已批准：
 
-## 18. 提案结论
+1. `user_wechat_identities` 表名和 14 个字段；
+2. 首版单 AppID、每个用户一个当前有效绑定；
+3. 三个当前有效绑定部分唯一约束；
+4. `active`、`unbound`、`disabled` 三个局部状态且不新增数据库枚举；
+5. 不物理删除，重新绑定创建新的历史行；
+6. 4 个 RESTRICT 外键、7 项 Check 和 1 个普通索引；
+7. 不回填现有用户；
+8. Database Logical Design v2.0。
 
-建议批准 `user_wechat_identities` 作为唯一微信身份映射对象。它以最小数据库结构满足持久映射、并发唯一性、停用/解绑历史和审计要求，同时保留 `users` 为唯一系统用户。项目负责人批准、数据库 SSOT 更新并重新冻结前，不得创建表、Schema 或 Migration。
+管理员解绑/重新绑定的页面、权限和 API，以及未知身份失败事件的独立持久化对象均未在本 DCR 中批准；如确有需要，必须另行走正式变更流程。
+
+## 18. 正式结论
+
+`user_wechat_identities` 已正式批准为唯一微信身份映射对象。它以最小数据库结构满足持久映射、并发唯一性、停用/解绑历史和审计要求，同时保留 `users` 为唯一系统用户。Database Logical Design v2.0、Prisma Schema、Migration 和 Mapping Audit 已完成同步；本批准不授权 API 或认证业务开发。

@@ -11,6 +11,28 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.10.0] - 2026-07-23
+
+### Added
+
+- 正式新增 `user_wechat_identities` 微信身份映射表，包含 14 个字段、1 个主键、3 个当前有效绑定部分唯一约束、4 个 RESTRICT 外键、7 项 Check 和 1 个普通索引
+- 新增 `20260723150000_add_user_wechat_identities` 正式前向 Migration
+
+### Changed
+
+- Database Change Request 002 更新为 Completed / Approved
+- Database Logical Design 由 v1.1 升级并重新冻结为 v2.0
+- Prisma Schema、`prisma/mapping-audit.json` 和数据库枚举规范引用同步至 v2.0
+- Database Mapping Audit 更新为 61 表、1142 字段、61 主键、74 唯一约束、287 外键、91 普通索引、208 Check、2 枚举
+- Authentication SSOT Completion 001 更新为 Database Approved / API Pending Approval
+- Task 7.6 文档记录数据库阻塞关闭及 API 变更仍待批准
+
+### Scope
+
+- Task 7.6 保持 In Progress，Batch 7.6-B 仍未开始
+- 未修改 API、Route、Service、Repository、登录、JWT、Web、Mini Program、权限、Seed 或业务逻辑
+- 未修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`
+
 ## [0.9.9] - 2026-07-23
 
 ### Added
