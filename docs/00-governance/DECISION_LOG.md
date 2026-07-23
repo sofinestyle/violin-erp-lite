@@ -1671,3 +1671,29 @@ Approved
 ### 影响
 
 本决定只补全 Frozen Database Logical Design v1.1 已预留的 `access_level` 枚举集合，不新增业务对象、业务规则、数据库表、字段、关系、索引或其他枚举；不修改 BUSINESS_RULES、SYSTEM_SPEC、ROLE_PERMISSION_SPEC、Phase 4、Phase 5、Phase 6、Prisma Schema、Migration、Seed、API 或工程代码。完成 GitHub 技术验收后，方可执行 API Coverage Completion 003。
+
+## DEC-068 完成角色数据范围API覆盖补齐
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人正式批准 API Coverage Completion 003；
+- 新增 `SEC-022` 至 `SEC-025` 共 4 个正式接口，覆盖角色仓库范围查询/整体替换及角色店铺范围查询/整体替换；
+- 四个接口只映射既有 `role_warehouses` 与 `role_stores`，不新增关系表或平行数据来源；
+- `accessLevel` 直接引用 Frozen `DATABASE_ENUM_SPEC.md`，只允许 `read`、`operate`、`manage`；
+- 两个 PUT 接口采用原子 Replace，禁止 Append、Remove 或 Patch 语义；
+- 权限继续复用既有 `security.role.read`、`security.role.assign`、`security.permission.read` 和 `security.permission.assign`，不新增权限代码；
+- 仓库与店铺数据范围继续使用 Frozen `warehouse` 和 `store`，不新增 Data Scope；
+- API Master Specification v1.1 正式接口总数由 331 更新为 335，并重新确认为 Completed / Approved / Frozen；
+- 既有 331 个正式接口不删除、不重编号、不改义。
+
+### 影响
+
+本决定只补齐既有角色数据范围维护能力的 API 覆盖，不新增业务模块、业务对象、数据库表、字段、关系、枚举、角色、权限代码、数据范围或状态；不修改 BUSINESS_RULES、SYSTEM_SPEC、Database Logical Design v1.1、DATABASE_ENUM_SPEC、ROLE_PERMISSION_SPEC、Phase 4、Phase 6 或工程代码；不修改 Prisma Schema、Migration、Seed 或依赖，不执行 Task 7.5-A 开发。完成 GitHub 技术验收后，方可重新启动 Task 7.5-A。

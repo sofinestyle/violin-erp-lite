@@ -95,7 +95,7 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 ## 当前禁止事项
 
-API Master Specification v1.1 是 Completed / Approved / Frozen 的唯一 API 事实来源；API Coverage Completion 002 已补齐用户、角色与权限管理接口，正式接口总数为 331。Database Logical Design v1.1 与 Phase 6 Functional Specification 保持 Frozen。后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
+API Master Specification v1.1 是 Completed / Approved / Frozen 的唯一 API 事实来源；API Coverage Completion 002 已补齐用户、角色与权限管理接口，API Coverage Completion 003 已补齐角色仓库与店铺数据范围维护接口，正式接口总数为 335。Database Logical Design v1.1、DATABASE_ENUM_SPEC 与 Phase 6 Functional Specification 保持 Frozen。后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
 
 ## 安全说明
 

@@ -11,6 +11,28 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.8.7] - 2026-07-23
+
+### Added
+
+- 通过 API Coverage Completion 003 补齐角色仓库与店铺数据范围维护 `SEC-022` 至 `SEC-025` 共 4 个正式接口
+- 新增角色仓库范围查询/整体替换及角色店铺范围查询/整体替换契约
+- 每个接口已定义 Request、Response、DTO、Validation、Permission、Error Code 与 Audit
+
+### Changed
+
+- `accessLevel` Validation 统一引用 Frozen `DATABASE_ENUM_SPEC.md`，只接受 `read`、`operate`、`manage`
+- 两个 PUT 接口采用原子 Replace，禁止 Append、Remove 或 Patch 语义
+- API Master Specification v1.1 正式接口总数由 331 更新为 335，并重新确认为 Completed / Approved / Frozen
+- `PROJECT.md`、`ROADMAP.md` 和 `README.md` 同步 API Coverage Completion 003 及 335 个正式接口
+- 新增 DEC-068，记录角色数据范围 API 覆盖补齐决定
+
+### Scope
+
+- 本次只补齐既有 `role_warehouses` 与 `role_stores` 关系的正式 API 覆盖，不新增业务对象、数据库表、字段、关系、枚举、角色、权限代码或数据范围
+- 未修改 BUSINESS_RULES、SYSTEM_SPEC、DATABASE_SPEC、DATABASE_ENUM_SPEC、ROLE_PERMISSION_SPEC、Phase 4 或 Phase 6
+- 未修改工程代码、Prisma Schema、Migration、Seed 或依赖，未启动 Task 7.5-A
+
 ## [0.8.6] - 2026-07-23
 
 ### Added
