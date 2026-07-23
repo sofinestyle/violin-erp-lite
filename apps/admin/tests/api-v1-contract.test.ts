@@ -39,4 +39,28 @@ describe("Frozen v1 API route boundary", () => {
       error: { code: "AUTH_UNAUTHORIZED" },
     });
   });
+
+  it("rejects missing credentials before loading runtime configuration", async () => {
+    const accessSecret = process.env.JWT_ACCESS_SECRET;
+    const refreshSecret = process.env.JWT_REFRESH_SECRET;
+    delete process.env.JWT_ACCESS_SECRET;
+    delete process.env.JWT_REFRESH_SECRET;
+
+    try {
+      const response = await GET(new Request("http://localhost/api/v1/products"));
+      const body = (await response.json()) as {
+        error: { code: string };
+        success: boolean;
+      };
+
+      expect(response.status).toBe(401);
+      expect(body).toMatchObject({
+        success: false,
+        error: { code: "AUTH_UNAUTHORIZED" },
+      });
+    } finally {
+      process.env.JWT_ACCESS_SECRET = accessSecret;
+      process.env.JWT_REFRESH_SECRET = refreshSecret;
+    }
+  });
 });

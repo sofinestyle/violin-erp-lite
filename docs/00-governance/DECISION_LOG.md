@@ -1813,3 +1813,29 @@ Approved
 ### 影响
 
 本决定只启动 Task 7.6 并固化现状审计与后续实施边界，不新增 Phase、Task、业务模块、业务对象、业务规则、数据库结构、枚举、权限或 API；不修改 Frozen `BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、Database Logical Design v1.1、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、API Master Specification v1.1、Phase 4 或 Phase 6；本轮不修改业务代码、测试、Prisma Schema、Migration、Seed 或依赖，不启动 Phase 7 Final Consistency Review 或 Phase 8。
+
+## DEC-074 固化Task 7.6开发运行基线
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- Task 7.6 开发环境统一使用 Node.js 22.x、pnpm 11.x 与 PostgreSQL 18.x；
+- PostgreSQL 18 是现有 Frozen Migration 使用 `uuidv7()` 的最低正式开发版本；
+- 仓库提供不连接真实业务数据库的 Compose 开发基线，同时允许使用隔离的本机 PostgreSQL 18；
+- 开发 Seed 只建立 Frozen `administrator` 角色、244 个正式权限、角色权限关系及一个环境变量驱动的开发管理员；
+- 开发管理员密码不得写入代码、`.env.example`、文档、日志或 Git，必须由未跟踪环境变量 `SEED_ADMIN_PASSWORD` 提供；
+- Seed 必须幂等，不导入产品、SKU、供应商、仓库、库存或其他真实业务数据；
+- 受保护 API 必须先拒绝缺失或格式错误的 Bearer Header，再初始化 JWT 与数据库依赖；数据库不可用时 Health 返回 503，未登录请求返回 401；
+- `apps/admin-web` 与 `apps/mini-program` 早期空目录不属于正式 workspace，予以删除；
+- 本决定不改变 Task 7.6 的 In Progress 状态，不启动后续内部 Batch。
+
+### 影响
+
+本决定只固化开发运行、Seed、安全错误边界和非业务工程配置，不新增或修改 API 定义、数据库 Schema、Migration、业务规则、枚举、角色、权限代码、角色权限映射、页面功能、Mini Program 功能或 Dashboard；不修改任何 Frozen 文档，不连接真实业务数据库，不启动 Phase 7 Final Consistency Review 或 Phase 8。

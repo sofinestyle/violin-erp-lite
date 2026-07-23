@@ -32,6 +32,97 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 本仓库用于保存项目正式文档、阶段成果、后续源代码和变更记录，并作为检查文档与实现一致性、识别需求偏移、追溯决策及审计 Git 提交的统一载体。
 
+## 本地开发基线
+
+### 前置版本
+
+- Node.js：22.x LTS；仓库通过 `.nvmrc` 和 `package.json#engines` 限定为 22.x。
+- pnpm：11.12.0；使用 Corepack 时可执行 `corepack enable`。
+- PostgreSQL：18.x。初始 Migration 使用 PostgreSQL 18 的 `uuidv7()`。
+- Docker Desktop 或兼容 Docker Compose：推荐用于隔离的本地 PostgreSQL；也可使用独立的本机 PostgreSQL 18。
+
+不要连接真实业务数据库，不要把真实账号、密码、JWT Secret 或业务数据写入仓库。
+
+### 安装与环境变量
+
+```bash
+nvm use
+corepack enable
+pnpm install --frozen-lockfile
+cp .env.example .env
+```
+
+`.env` 已由 Git 忽略。复制后必须：
+
+1. 分别为 `JWT_ACCESS_SECRET` 和 `JWT_REFRESH_SECRET` 生成不同的随机值，且每项至少 32 个字符；
+2. 为 `SEED_ADMIN_PASSWORD` 设置仅用于本地开发的密码；
+3. 如修改 PostgreSQL 用户、密码、数据库名或端口，同时更新 `DATABASE_URL`。
+
+可使用 `openssl rand -base64 48` 生成 JWT Secret。不得把生成结果、开发管理员密码或真实凭据提交到 Git。
+
+### PostgreSQL 与数据库初始化
+
+推荐使用仓库内 Compose 基线：
+
+```bash
+pnpm db:up
+pnpm db:setup
+```
+
+`db:setup` 依次执行 Prisma Client Generate、现有 Migration 部署和幂等 Seed。Seed 只建立 Frozen 权限目录、正式 `administrator` 角色及一个由环境变量定义的开发管理员，不写入真实业务数据；重复执行不会创建重复记录。
+
+需要逐步执行时使用：
+
+```bash
+pnpm db:generate
+pnpm db:validate
+pnpm db:migrate:deploy
+pnpm db:migrate:status
+pnpm db:seed
+```
+
+停止本地容器但保留数据卷：
+
+```bash
+pnpm db:down
+```
+
+如使用本机 PostgreSQL 18，请自行建立空数据库，并将 `DATABASE_URL` 指向该隔离开发数据库后执行相同的 Generate、Migration 和 Seed 命令。
+
+### 启动 Admin
+
+```bash
+pnpm dev:admin
+```
+
+默认地址为 `http://localhost:3000`。数据库就绪后，可执行：
+
+```bash
+curl --fail http://localhost:3000/api/health
+```
+
+成功响应同时包含 Application `ok` 与 Database `connected`。数据库不可用时 Health Check 返回 HTTP 503；未携带有效登录凭据访问受保护 API 返回 HTTP 401。
+
+### 启动 Mini Program
+
+另开终端执行：
+
+```bash
+pnpm dev:miniapp
+```
+
+编译产物位于 `apps/miniapp/dist`，使用微信开发者工具打开该目录。`TARO_APP_API_BASE_URL` 必须指向 Mini Program 可访问的 Admin API 地址；真机调试不能使用手机自身的 `localhost`。
+
+### 常见错误
+
+- `Unsupported engine`：当前 Node 不是 22.x；执行 `nvm use` 后重新安装依赖。
+- `DATABASE_URL is required`：尚未创建 `.env`，或连接串为空。
+- `uuidv7() does not exist`：PostgreSQL 版本低于 18；切换到 PostgreSQL 18 后重新建立空开发数据库。
+- `P1001`、Health Check 503：PostgreSQL 未启动、端口不一致或 `DATABASE_URL` 不可达；先检查 `pnpm db:up` 和 `pnpm db:migrate:status`。
+- Seed 提示缺少变量：在未跟踪的 `.env` 中设置 `SEED_ADMIN_PASSWORD`，不要修改 `.env.example` 填入密码。
+- Admin 端口占用：停止占用 3000 端口的进程，或按 Next.js 支持方式显式指定其他端口，并同步 Mini Program API 地址。
+- Mini Program 请求失败：确认 Admin 已启动、API 地址可从模拟器或真机访问，并检查微信开发者工具的本地调试设置。
+
 ## 项目角色
 
 - ChatGPT：Product Manager，负责需求、流程、规划、设计、PRD、验收标准及文档检查。

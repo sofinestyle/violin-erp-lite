@@ -3,6 +3,7 @@ import {
   assertMasterDataResource,
   createRouteHandler,
   createSuccessResponse,
+  extractBearerToken,
   InventoryWorkflowService,
   JwtService,
   loadJwtConfiguration,
@@ -463,6 +464,7 @@ async function dispatchSecurity(
 
 const handler = createRouteHandler(async (request, context) => {
   const segments = pathSegments(request);
+  extractBearerToken(request);
   const jwt = new JwtService(
     loadJwtConfiguration({
       ...(process.env.JWT_ACCESS_EXPIRES_IN

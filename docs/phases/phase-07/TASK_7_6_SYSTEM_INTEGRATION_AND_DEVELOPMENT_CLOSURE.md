@@ -294,3 +294,80 @@ Task 7.6 只有同时满足以下条件，才具备申请完成与 GitHub 技术
 Task 7.6 已正式启动并进入 In Progress。本轮完成现状审计与实施计划固化，未执行任何业务代码、测试逻辑、Prisma Schema、Migration、Seed 或依赖修改。
 
 下一步建议从 Batch 7.6-A 开始，先建立可重复的数据库、环境、Seed、启动和测试运行基线；该 Batch 必须在本轮 GitHub 技术验收通过并获得项目负责人明确指令后方可执行。
+
+## 11. Batch 7.6-A 实施记录
+
+### 11.1 实施范围
+
+本次实施严格限定为运行基线与依赖联通：
+
+- README 开发运行说明；
+- `.env.example` 最小开发配置；
+- Node 与 pnpm Engine；
+- PostgreSQL 18 Compose 基线；
+- Prisma 开发 Seed；
+- 未登录请求认证前置边界；
+- 历史空目录清理；
+- 对应测试、CHANGELOG 与 DECISION LOG。
+
+未修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md`、Frozen 业务规格、API 定义、Prisma Schema、Migration、页面功能、Mini Program 功能或 Dashboard。Task 7.6 保持 In Progress。
+
+### 11.2 运行基线
+
+| 项目 | 固化结果 |
+| --- | --- |
+| Node.js | 22.x；由 `.nvmrc` 与 `package.json#engines` 约束 |
+| pnpm | 11.12.0；`packageManager` 与 Engine 均已声明 |
+| PostgreSQL | 18.x；满足现有 Migration 的 `uuidv7()` 要求 |
+| 容器基线 | `compose.yaml` 提供隔离 PostgreSQL 18、Health Check、端口与持久卷 |
+| 环境变量 | `.env.example` 覆盖双端环境、数据库、JWT、Seed 与上传配置；真实 Secret 和管理员密码保持为空 |
+| 数据库脚本 | 新增 `db:up`、`db:down`、`db:setup`，保留 Generate、Validate、Migration、Status 与 Seed 独立命令 |
+| Seed | 环境变量驱动；创建 1 个 `administrator` 角色、244 个 Frozen 权限、完整管理员权限映射和 1 个开发管理员 |
+| 认证边界 | 缺失或格式错误的 Bearer Header 在 JWT 与数据库依赖初始化前返回 401 |
+
+### 11.3 真实 PostgreSQL 验证
+
+使用本机隔离的 PostgreSQL 18.4 临时集群完成以下验证，未连接真实业务数据库：
+
+1. `pnpm db:generate`：通过；
+2. `pnpm db:validate`：通过；
+3. `pnpm db:migrate:deploy`：初始 Migration 成功应用；
+4. `pnpm db:migrate:status`：Database schema is up to date；
+5. `pnpm db:seed` 连续执行两次：均通过；
+6. 两次 Seed 后数据库计数保持：
+   - `users = 1`；
+   - `roles = 1`；
+   - `permissions = 244`；
+   - `user_roles = 1`；
+   - `role_permissions = 244`；
+7. 数据库可用时 `/api/health` 返回 HTTP 200 与 `database.connected`；
+8. 数据库停止后 `/api/health` 返回 HTTP 503 与 `SYSTEM_SERVICE_UNAVAILABLE`；
+9. 数据库可用或停止时，无 Authorization Header 的 `/api/v1/products` 均返回 HTTP 401 与 `AUTH_UNAUTHORIZED`。
+
+开发 Seed 未输出、记录或提交管理员密码；测试使用的临时凭据和临时数据库不属于仓库内容。
+
+### 11.4 问题关闭
+
+本次关闭以下初始审计问题：
+
+| 编号 | 关闭证据 |
+| --- | --- |
+| M-004 | README、`.env.example`、Compose 与数据库脚本形成可重复开发说明和最小配置 |
+| M-005 | 幂等 Seed 建立正式管理员角色、244 权限、环境变量开发管理员及关系 |
+| M-006 | 数据库不可用实测 Health 503、未登录 API 401；新增认证前置自动化测试 |
+| N-001 | 无引用的两个历史空目录已删除 |
+| N-002 | Node Engine 固定为 22.x，pnpm 固定为 11.x；不再把 Node 26 作为受支持运行基线 |
+| O-001 | 隔离 PostgreSQL 18 已完成 Migration、Seed、Health 与认证边界真实验证 |
+
+### 11.5 剩余问题
+
+当前仍需后续内部 Batch 处理：
+
+- B-001：Frozen 登录、刷新、登出、当前会话及当前权限 API 与双端会话链路；
+- M-001：其余正式 API 实现覆盖；
+- M-002：Mini Program 真实业务查询接入；
+- M-003：Web Dashboard 与统计占位；
+- M-007：核心业务真实 PostgreSQL 端到端集成测试；
+- O-002：Phase 8 全量测试方案，继续保持 Out of Scope。
+
+原有 V-001 至 V-009 继续保持 Verified。Batch 7.6-A 完成后停止，等待 GitHub 技术验收，不自行开始 Batch 7.6-B。

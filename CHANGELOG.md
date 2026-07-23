@@ -11,6 +11,29 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.9.8] - 2026-07-23
+
+### Added
+
+- 建立 Node.js 22、pnpm 11.12.0 与 PostgreSQL 18 的正式开发运行基线
+- 新增 `.nvmrc`、PostgreSQL 18 Compose 配置及数据库启动、停止和初始化脚本
+- 新增无真实业务数据的幂等开发 Seed，由环境变量初始化开发管理员，并建立 Frozen `administrator` 角色与 244 个正式权限
+- README 补齐环境变量、数据库初始化、Prisma、Migration、Seed、双端启动、Health Check 与常见错误说明
+
+### Changed
+
+- `.env.example` 补齐所有开发变量说明、最小本地配置及无明文管理员密码的 Seed 配置
+- 受保护 API 在初始化 JWT 与数据库依赖前先校验 Bearer Header，数据库不可用时 Health 保持 503，未登录请求保持 401
+- Node Engine 固定为 22.x，pnpm Engine 固定为 11.x，避免使用未验证的 Node 26 测试 worker
+- 删除未被 workspace 或代码引用的 `apps/admin-web` 与 `apps/mini-program` 历史空目录
+- Task 7.6 文档记录 Batch 7.6-A 的实施结果、真实 PostgreSQL 验证证据及剩余问题
+
+### Scope
+
+- Task 7.6 保持 In Progress，未修改 `CURRENT_STATUS.md`、`ROADMAP.md` 或 `PROJECT.md`
+- 未修改业务规则、API 定义、Prisma Schema、Migration、权限规格、页面功能、Mini Program 功能或 Dashboard
+- 未写入真实账号、密码、密钥、业务数据或真实业务数据库
+
 ## [0.9.7] - 2026-07-23
 
 ### Added
