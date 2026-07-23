@@ -106,6 +106,39 @@ model audit_logs {
   @@index([user_id, created_at], map: "idx_audit_logs_user_id_created_at")
 }
 
+/// Refresh credentials are stored only as server-keyed one-way digests. Rotation creates a new row and preserves the replaced row for replay detection.
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model auth_sessions {
+  id                                    String         @id(map: "pk_auth_sessions") @default(dbgenerated("uuidv7()")) @db.Uuid
+  user_id                               String         @db.Uuid
+  client_type                           String         @db.VarChar(50)
+  token_family_id                       String         @db.Uuid
+  refresh_token_hash                    String         @unique(map: "uq_auth_sessions_refresh_token_hash") @db.VarChar(128)
+  refresh_token_expires_at              DateTime       @db.Timestamptz(6)
+  access_token_expires_at               DateTime       @db.Timestamptz(6)
+  issued_at                             DateTime       @db.Timestamptz(6)
+  last_refreshed_at                     DateTime?      @db.Timestamptz(6)
+  revoked_at                            DateTime?      @db.Timestamptz(6)
+  revoked_by                            String?        @db.Uuid
+  revocation_actor_type                 String?        @db.VarChar(50)
+  revocation_reason                     String?        @db.VarChar(1000)
+  replaced_by_session_id                String?        @unique(map: "uq_auth_sessions_replaced_by_session_id") @db.Uuid
+  created_at                            DateTime       @default(now()) @db.Timestamptz(6)
+  created_by                            String         @db.Uuid
+  updated_at                            DateTime       @default(now()) @db.Timestamptz(6)
+  updated_by                            String?        @db.Uuid
+  users_auth_sessions_user_idTousers    users          @relation("auth_sessions_user_idTousers", fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_auth_sessions_user_id")
+  users_auth_sessions_revoked_byTousers users?         @relation("auth_sessions_revoked_byTousers", fields: [revoked_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_auth_sessions_revoked_by")
+  users_auth_sessions_created_byTousers users          @relation("auth_sessions_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_auth_sessions_created_by")
+  users_auth_sessions_updated_byTousers users?         @relation("auth_sessions_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_auth_sessions_updated_by")
+  replaced_by_session                   auth_sessions? @relation("auth_sessions_rotation", fields: [replaced_by_session_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_auth_sessions_replaced_by_session_id")
+  replaces                              auth_sessions? @relation("auth_sessions_rotation")
+
+  @@index([user_id, revoked_at, refresh_token_expires_at], map: "idx_auth_sessions_user_revoked_refresh_expiry")
+  @@index([token_family_id, revoked_at], map: "idx_auth_sessions_family_revoked")
+  @@index([client_type, updated_at], map: "idx_auth_sessions_client_type_updated_at")
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model backup_tasks {
   id              String    @id(map: "pk_backup_tasks") @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1926,6 +1959,10 @@ model users {
   attachments_attachments_updated_byTousers                                               attachments[]                        @relation("attachments_updated_byTousers")
   attachments_attachments_uploaded_byTousers                                              attachments[]                        @relation("attachments_uploaded_byTousers")
   audit_logs                                                                              audit_logs[]
+  auth_sessions_auth_sessions_user_idTousers                                              auth_sessions[]                      @relation("auth_sessions_user_idTousers")
+  auth_sessions_auth_sessions_revoked_byTousers                                           auth_sessions[]                      @relation("auth_sessions_revoked_byTousers")
+  auth_sessions_auth_sessions_created_byTousers                                           auth_sessions[]                      @relation("auth_sessions_created_byTousers")
+  auth_sessions_auth_sessions_updated_byTousers                                           auth_sessions[]                      @relation("auth_sessions_updated_byTousers")
   backup_tasks                                                                            backup_tasks[]
   brands_brands_created_byTousers                                                         brands[]                             @relation("brands_created_byTousers")
   brands_brands_disabled_byTousers                                                        brands[]                             @relation("brands_disabled_byTousers")

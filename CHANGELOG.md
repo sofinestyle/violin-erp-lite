@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.10.1] - 2026-07-23
+
+### Added
+
+- 为 Database Change Request 002 新增认证会话持久化 Completion Fix，正式加入 `auth_sessions`
+- 新增 `20260723160000_add_auth_sessions` 独立前向 Migration
+- 新增每次刷新创建新 Session 行的轮换链、Refresh Token 安全摘要、令牌族撤销和循环防护
+
+### Changed
+
+- Database Logical Design 版本保持 v2.0，并在 Completion Fix 验证通过后保持 Completed / Approved / Frozen
+- Prisma Schema 与 Mapping Audit 同步为 62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、222 Check、2 枚举
+- Authentication SSOT Completion 001 同步为 Database Approved / API Pending Approval；API Change Request 002 状态不变
+
+### Verified
+
+- 在隔离 PostgreSQL 18 上验证空库全量 Migration、v2.0 基线增量升级、Migration Status、约束、RESTRICT 外键、轮换并发、重放历史和族撤销
+- `user_wechat_identities` 的既有 Schema 与 Migration 未修改
+
+### Scope
+
+- 本轮只补齐数据库认证会话结构，不修改 API、Route、Service、Repository、登录、刷新、登出、JWT、Web、Mini Program、权限或 Seed
+- Batch 7.6-B 继续暂停，Task 7.6 保持 In Progress
+
 ## [0.10.0] - 2026-07-23
 
 ### Added

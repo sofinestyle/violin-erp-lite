@@ -404,7 +404,7 @@ Database Change Request 002 已更新为 Completed / Approved，Database Logical
 - API Change Request 002 获批、API SSOT 更新并重新冻结，Phase 6 同步、Frozen Consistency Review 和 GitHub 技术验收全部通过后，方可重新启动 Batch 7.6-B；
 - Phase 7 Final Consistency Review 与 Phase 8 均不启动。
 
-## 13. Database Change Request 002 同步记录
+## 13. Database Change Request 002 初次同步记录
 
 ### 13.1 正式结果
 
@@ -427,3 +427,36 @@ Database Change Request 002 已更新为 Completed / Approved，Database Logical
 ### 13.3 边界
 
 本次只关闭认证 SSOT 的数据库阻塞，不修改 API、Route、Service、Repository、登录、JWT、Web、Mini Program、Seed 或业务逻辑。API Change Request 002 仍待批准，Batch 7.6-B 继续暂停，Task 7.6 保持 In Progress。
+
+以上是 Completion Fix 前的初次同步历史记录。后续审计确认该 61 表基线尚不能持久化 Refresh Token 轮换、旧凭证重放和登出撤销，最终正式结果由第 14 节取代。
+
+## 14. Database Change Request 002 Completion Fix
+
+### 14.1 正式结果
+
+- Database Logical Design 版本保持 v2.0，Completion Fix 验证通过后状态保持 Completed / Approved / Frozen；
+- 新增最小认证会话对象 `auth_sessions`，采用每次刷新创建新 Session 行的轮换模型；
+- `users` 继续是唯一用户身份，`user_wechat_identities` 继续只管理微信身份映射，RBAC 继续是授权唯一事实来源；
+- Refresh Token 只保存服务端密钥参与的确定性单向摘要，不保存 Access Token 或 Refresh Token 明文；
+- 正式结构：18 个字段、1 个 UUID v7 主键、2 个唯一约束、5 个 RESTRICT 外键、14 项 Check、3 个普通索引及轮换循环防护；
+- 最终计数：62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、222 Check、2 枚举；
+- 不新增 `refresh_token_version`、`last_used_at`、`wechat_identity_id` 或平行 Refresh Token 表。
+
+### 14.2 轮换、重放与登出支撑
+
+- 并发刷新在事务中先插入后继，再条件认领未撤销、未替换、未到期的前驱；零行认领回滚整个事务；
+- 旧行、旧 Hash 和 `replaced_by_session_id` 保留，旧 Token 再次出现时可识别重放；
+- 重放按 `token_family_id` 以系统操作者撤销整族，`revoked_by` 和 `updated_by` 为空，避免伪造系统用户；
+- 登出按当前令牌族幂等撤销，使用真实用户操作者，不解绑微信身份，不影响其他令牌族；
+- 用户停用后的刷新必须在后续 Service 实现中重新读取 `users` 当前状态；本次索引支持快速定位该用户活动会话。
+
+### 14.3 物理同步与边界
+
+- 新增独立前向 Migration `20260723160000_add_auth_sessions`，未修改既有微信身份 Migration；
+- Prisma Schema、Migration、Mapping Audit 和 Database SSOT 已同步；
+- PostgreSQL 18.4 空库全量 Migration、初次 v2.0 基线增量升级及 Migration Status 均通过；
+- 实测有效 Session、明文 Token 字段缺失、Hash 唯一性、时间与撤销 Check、自引用和循环防护、RESTRICT 删除保护均符合设计；
+- 同一旧 Refresh Token 的双事务并发轮换实测为一成功一回滚；旧行历史、系统重放整族撤销和用户登出幂等撤销均通过；
+- 本轮未修改 API、Route、Service、Repository、登录、刷新、登出、JWT、Web、Mini Program、权限或 Seed；
+- API Change Request 002 仍为 Proposed / Pending Approval，Authentication SSOT Completion 001 整体仍未完成；
+- Batch 7.6-B 继续暂停，Task 7.6 保持 In Progress；Phase 7 Final Consistency Review 与 Phase 8 均未启动。

@@ -1,7 +1,7 @@
 ---
 document_name: 数据库枚举规范
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-22
@@ -15,7 +15,7 @@ related_phase: Phase 3
 
 本文档统一维护 Frozen Database Logical Design v2.0 的正式枚举代码，作为数据库物理映射、DTO 和 Validation 的唯一正式枚举输入。当前覆盖 `warehouse_type` 与 `access_level`。
 
-Database Change Request 002 新增的 `user_wechat_identities.status` 是表内 Check 约束的局部生命周期代码，不新增 PostgreSQL Enum，也不扩展本文件的正式枚举集合。
+Database Change Request 002 及其 Completion Fix 新增的 `user_wechat_identities.status`、`auth_sessions.client_type` 和 `auth_sessions.revocation_actor_type` 都是表内 Check 约束的局部代码，不新增 PostgreSQL Enum，也不扩展本文件的正式枚举集合。
 
 ## 2. `warehouse_type` 正式枚举
 
@@ -59,14 +59,15 @@ Database Change Request 002 新增的 `user_wechat_identities.status` 是表内 
 3. 物理映射必须限制 `access_level` 只能取 `read`、`operate`、`manage` 三个正式值。
 4. 物理映射必须实现与三条已批准仓库 Check 规则一致的同行约束。
 5. 本文档不授权新增其他枚举值、字段、关系或业务规则。
-6. 如后续需要变更枚举集合或语义，必须经项目负责人批准并完成正式变更流程。
+6. `auth_sessions.client_type` 只允许 `pc`、`wechat-mini-program`，`auth_sessions.revocation_actor_type` 只允许 `user`、`system`；二者由表内 Check 管理，不是 PostgreSQL Enum。
+7. 如后续需要变更枚举集合或语义，必须经项目负责人批准并完成正式变更流程。
 
 ## 6. 正式结论
 
-- 文档版本：v1.1；
+- 文档版本：v1.2；
 - 文档状态：Completed / Approved / Frozen；
 - `warehouse_type` 正式枚举数量：5；
 - `access_level` 正式枚举数量：3；
 - 数据库表、字段、关系及原有 Check 规则修改数量：0；
-- DCR-002 新增 PostgreSQL Enum 数量：0；
+- DCR-002 及其 Completion Fix 新增 PostgreSQL Enum 数量：0；
 - 后续数据库物理映射、DTO 和 Validation 必须以本文档为 `warehouse_type` 与 `access_level` 枚举的唯一正式输入。

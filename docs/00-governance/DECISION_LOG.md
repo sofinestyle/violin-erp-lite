@@ -1891,3 +1891,31 @@ Approved
 ### 影响
 
 本决定只同步 Database Logical Design v2.0 及对应物理数据库结构，不修改业务规则、API、权限、Route、Service、Repository、登录、JWT、Web、Mini Program、Seed 或业务逻辑；不修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。API SSOT、Phase 6 同步、Frozen Consistency Review 和 GitHub 技术验收完成前，不得开始 Batch 7.6-B。
+
+## DEC-077 完成DCR-002认证会话持久化修正
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人批准 Database Change Request 002 Completion Fix，补齐初次同步未覆盖的认证会话持久化；
+- Database Logical Design 版本保持 v2.0，并只在本 Completion Fix 全部验证通过后保持 Completed / Approved / Frozen；
+- 正式新增 `auth_sessions`，采用每次刷新创建新 Session 行的模型，不新增平行 Refresh Token 表；
+- `users` 继续是唯一用户身份，`user_wechat_identities` 继续只保存微信身份映射，RBAC 继续是授权唯一事实来源；
+- Refresh Token 只保存服务端密钥参与的确定性单向摘要，不保存 Access Token、Refresh Token、Secret、密码或微信凭据明文；
+- 轮换通过同族新行、旧行的唯一后继引用和数据库事务持久化；旧行与旧 Hash 保留用于重放识别；
+- 重放以系统操作者撤销整个令牌族，不伪造系统用户；登出以当前用户作为操作者幂等撤销当前令牌族；
+- 正式批准 18 个字段、1 个 UUID v7 主键、2 个唯一约束、5 个 RESTRICT 外键、14 项 Check、3 个普通索引和轮换循环防护；
+- Prisma Schema、独立前向 Migration 和 Mapping Audit 同步为 62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、222 Check、2 枚举；
+- API Change Request 002 仍为 Proposed / Pending Approval，Authentication SSOT Completion 001 整体仍未完成；
+- Task 7.6 保持 In Progress，Batch 7.6-B 继续暂停。
+
+### 影响
+
+本决定只补齐数据库认证会话结构，不修改 API 路径、DTO、错误码或总数，不修改 Route、Service、Repository、登录、刷新、登出、JWT、Web、Mini Program、权限、角色或 Seed；不修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。本决定不启动 Batch 7.6-B、Phase 7 Final Consistency Review 或 Phase 8。

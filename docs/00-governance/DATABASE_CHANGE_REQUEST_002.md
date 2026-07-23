@@ -1,7 +1,7 @@
 ---
 document_name: Database Change Request 002：微信身份映射对象
 project: Violin ERP Lite
-version: 2.0
+version: 2.1
 status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-23
@@ -11,14 +11,14 @@ related_phase: Phase 3 / Phase 6 / Phase 7
 
 # Database Change Request 002：微信身份映射对象
 
-> 项目负责人已于 2026-07-23 正式批准本 Database Change Request。本文定义 Database Logical Design v1.1 到 v2.0 的唯一结构增量。
+> 项目负责人已于 2026-07-23 正式批准本 Database Change Request 及其 Completion Fix。本文定义 Database Logical Design v1.1 到 v2.0 的完整结构增量；初次同步只加入微信身份映射，Completion Fix 补齐认证会话持久化。
 
 ## 0. 批准结果
 
 - Database Change Request 002：Completed / Approved；
 - Database Logical Design：v2.0，Completed / Approved / Frozen；
-- 正式新增：`user_wechat_identities`；
-- 正式计数：61 表、1142 字段、61 主键、74 唯一约束、287 外键、91 普通索引、208 Check、2 枚举；
+- 正式新增：`user_wechat_identities`、`auth_sessions`；
+- 正式计数：62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、222 Check、2 枚举；
 - Prisma Schema、正式 Migration 与 Mapping Audit 已同步；
 - 不修改 API、权限、业务逻辑或既有 60 张表；
 - Batch 7.6-B 仍未开始。
@@ -176,7 +176,7 @@ Migration 不写真实 AppID、Secret、OpenID、用户或业务数据。
 
 ## 13. Mapping Audit 正式结果
 
-`prisma/mapping-audit.json` 已从 v1.1 基线同步至 v2.0：
+初次 DCR-002 同步结果如下；该结果是 Completion Fix 前的中间历史基线，不再是当前正式计数：
 
 | 项目 | v1.1 | v2.0 | 变化 |
 | --- | ---: | ---: | ---: |
@@ -189,11 +189,11 @@ Migration 不写真实 AppID、Secret、OpenID、用户或业务数据。
 | Check | 201 | 208 | +7 |
 | 枚举 | 2 | 2 | 0 |
 
-上述计数已与 `DATABASE_SPEC.md`、Prisma Schema 和正式 Migration 核对。三个部分唯一索引按正式唯一约束计数，普通索引只计 `idx_user_wechat_identities_status_updated_at`。
+三个部分唯一索引按正式唯一约束计数，普通索引只计 `idx_user_wechat_identities_status_updated_at`。Completion Fix 的最终计数见第 24 节。
 
 ## 14. Database Logical Design 版本决定
 
-新增一张正式身份映射表、14 个字段及关系属于逻辑结构变化，Database Logical Design 已从 v1.1 升级为 v2.0 并重新冻结。现有 60 张表、1128 个字段的 v1.1 继续保留为历史冻结基线。
+新增正式身份映射和认证会话持久化对象属于同一项认证 SSOT 补齐，Database Logical Design 从 v1.1 升级为 v2.0 并在 Completion Fix 验证通过后重新冻结。现有 60 张表、1128 个字段的 v1.1 继续保留为历史冻结基线。
 
 `status` 正式作为本表受 Check 约束的局部生命周期代码，不新增 PostgreSQL Enum，也不扩展 `DATABASE_ENUM_SPEC.md` 的正式枚举集合。
 
@@ -226,6 +226,152 @@ Migration 不写真实 AppID、Secret、OpenID、用户或业务数据。
 
 管理员解绑/重新绑定的页面、权限和 API，以及未知身份失败事件的独立持久化对象均未在本 DCR 中批准；如确有需要，必须另行走正式变更流程。
 
-## 18. 正式结论
+## 18. 初次同步结论与 Completion Fix 原因
 
-`user_wechat_identities` 已正式批准为唯一微信身份映射对象。它以最小数据库结构满足持久映射、并发唯一性、停用/解绑历史和审计要求，同时保留 `users` 为唯一系统用户。Database Logical Design v2.0、Prisma Schema、Migration 和 Mapping Audit 已完成同步；本批准不授权 API 或认证业务开发。
+初次同步正式批准 `user_wechat_identities` 为唯一微信身份映射对象，但当时的 61 表结论尚不能持久化 Refresh Token 轮换、旧凭证重放和登出撤销状态，不能完整支撑已批准的 `SEC-002` 与 `SEC-003`。因此不得把初次同步描述为数据库认证设计已经完整完成。
+
+项目负责人随后批准本 Completion Fix：在不改变 Database Logical Design v2.0 版本号、不修改 API 和不开始 Batch 7.6-B 的前提下，新增最小 `auth_sessions` 对象。只有第 24 节验证全部通过后，v2.0 的 Completed / Approved / Frozen 状态才成立。
+
+## 19. `auth_sessions` 定位与轮换模型
+
+正式采用**模型 A：每次刷新创建新 Session 行**：
+
+- 同一次登录及其全部刷新轮换使用同一个 `token_family_id`；
+- 每个 Session 行只持有一个 Refresh Token 的服务端密钥单向摘要；
+- 刷新时先创建后继行，再以条件更新原行的 `replaced_by_session_id` 完成唯一认领；
+- 原行和旧摘要永久保留，因而能够识别旧 Refresh Token 再次出现；
+- 活动 Session 定义为 `revoked_at IS NULL AND replaced_by_session_id IS NULL`；
+- 不采用覆盖同一行 Hash 的模型 B，因为覆盖会丢失旧凭证的持久重放证据；
+- 不新增平行 Refresh Token 表。
+
+`auth_sessions` 只管理认证会话和令牌生命周期。`users` 仍是唯一用户身份，`user_wechat_identities` 仍只管理微信映射，RBAC 仍是授权唯一事实来源。会话不保存权限副本、OpenID、UnionID 或 AppID Secret。
+
+## 20. `auth_sessions` 字段
+
+| 字段 | PostgreSQL 类型 | 必填 | 默认值 | 正式语义 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | `uuidv7()` | Session 主键 |
+| `user_id` | `uuid` | 是 | 无 | 唯一系统用户 |
+| `client_type` | `varchar(50)` | 是 | 无 | `pc` 或 `wechat-mini-program`；不得用于授权 |
+| `token_family_id` | `uuid` | 是 | 无 | 同一次登录及全部轮换共享的不可预测族标识 |
+| `refresh_token_hash` | `varchar(128)` | 是 | 无 | 服务端密钥参与的确定性单向摘要，不是明文 Token |
+| `refresh_token_expires_at` | `timestamptz(6)` | 是 | 无 | Refresh Token 到期时间 |
+| `access_token_expires_at` | `timestamptz(6)` | 是 | 无 | 对应 Access Token 到期时间 |
+| `issued_at` | `timestamptz(6)` | 是 | 无 | 本轮令牌签发时间 |
+| `last_refreshed_at` | `timestamptz(6)` | 否 | `NULL` | 原行被成功轮换的时间 |
+| `revoked_at` | `timestamptz(6)` | 否 | `NULL` | 撤销时间 |
+| `revoked_by` | `uuid` | 否 | `NULL` | 用户操作触发撤销时的系统用户 |
+| `revocation_actor_type` | `varchar(50)` | 否 | `NULL` | 撤销时为 `user` 或 `system` |
+| `revocation_reason` | `varchar(1000)` | 否 | `NULL` | 非空、去除首尾空白的撤销原因 |
+| `replaced_by_session_id` | `uuid` | 否 | `NULL` | 指向唯一后继 Session |
+| `created_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 创建时间 |
+| `created_by` | `uuid` | 是 | 无 | 登录或刷新对应的已知系统用户 |
+| `updated_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 更新时间 |
+| `updated_by` | `uuid` | 否 | `NULL` | 用户操作更新时的系统用户 |
+
+不新增 `refresh_token_version`：每行本身就是一个轮换版本；不新增 `last_used_at`：`last_refreshed_at` 已表达旧凭证被消费；不新增 `wechat_identity_id`：`user_id` 与 `client_type` 已足够关联会话主体和客户端类型，复制微信映射关系没有必要。
+
+`updated_by` 允许为空是认证技术表的正式例外：重放保护等系统安全动作使用 `revocation_actor_type = 'system'`、`revoked_by = NULL`、`updated_by = NULL`，不得为未知攻击事件伪造系统用户。用户主动登出使用 `user` 和真实 `users.id`。
+
+## 21. 主键、唯一约束、索引与外键
+
+- 主键：`pk_auth_sessions (id)`；
+- 唯一约束：`uq_auth_sessions_refresh_token_hash (refresh_token_hash)`；
+- 唯一约束：`uq_auth_sessions_replaced_by_session_id (replaced_by_session_id)`，保证一个后继只能替换一个前驱；
+- 普通索引：`idx_auth_sessions_user_revoked_refresh_expiry (user_id, revoked_at, refresh_token_expires_at)`；
+- 普通索引：`idx_auth_sessions_family_revoked (token_family_id, revoked_at)`；
+- 普通索引：`idx_auth_sessions_client_type_updated_at (client_type, updated_at)`。
+
+`token_family_id` 在同族轮换行中必须重复，因此不唯一；它由族撤销索引覆盖。`id` 已是主键，不建立冗余 `(token_family_id, id)` 唯一约束；Hash 和后继外键已由唯一约束提供索引，不创建重复普通索引。
+
+| 外键 | 引用 | 更新 | 删除 |
+| --- | --- | --- | --- |
+| `fk_auth_sessions_user_id` | `user_id → users.id` | RESTRICT | RESTRICT |
+| `fk_auth_sessions_revoked_by` | `revoked_by → users.id` | RESTRICT | RESTRICT |
+| `fk_auth_sessions_created_by` | `created_by → users.id` | RESTRICT | RESTRICT |
+| `fk_auth_sessions_updated_by` | `updated_by → users.id` | RESTRICT | RESTRICT |
+| `fk_auth_sessions_replaced_by_session_id` | `replaced_by_session_id → auth_sessions.id` | RESTRICT | RESTRICT |
+
+全部外键禁止级联删除。
+
+## 22. Check、循环防护与事务并发
+
+正式新增 14 项命名 Check：
+
+1. `client_type` 只允许 `pc`、`wechat-mini-program`；
+2. `refresh_token_hash` 去除首尾空白后必须非空且数据库值无首尾空白；
+3. Refresh 到期不得早于 Access 到期；
+4. `issued_at` 不得晚于 Access 到期；
+5. `issued_at` 不得晚于 Refresh 到期；
+6. `last_refreshed_at` 为空或不早于 `issued_at`；
+7. `revocation_actor_type` 为空或只允许 `user`、`system`；
+8. 撤销时间、操作者类型和非空原因必须整体为空或整体存在；
+9. `user` 撤销必须有 `revoked_by`，`system` 撤销必须没有 `revoked_by`；
+10. `revoked_at` 为空或不早于 `issued_at`；
+11. `replaced_by_session_id` 不得等于自身；
+12. 被替换行必须具有 `last_refreshed_at`；
+13. `issued_at` 不早于 `created_at`；
+14. `updated_at` 不早于 `created_at`。
+
+同表循环由 `trg_auth_sessions_rotation_acyclic` 及 `check_auth_session_rotation_cycle()` 在写入时阻止；自引用同时由 Check 阻止。
+
+同一 Refresh Token 的并发轮换使用单个数据库事务：
+
+1. 事务插入预生成 UUID 的后继 Session；
+2. 以 `id`、未撤销、未替换、未到期为条件更新前驱，写入后继 ID 和刷新时间；
+3. 必须验证前驱恰好更新一行；零行时抛错并回滚，包括刚插入的后继；
+4. 数据库行锁与唯一约束使并发请求中最多一个提交成功；
+5. 失败请求随后仍能用唯一 Hash 找到保留的旧行，并将其识别为重放；
+6. 不以应用内存、Redis 锁或客户端状态作为最终裁决。
+
+轮换链只允许从前驱指向新建后继；已设置的 `replaced_by_session_id` 不得改写。该写入规则属于后续获批 Service 实现约束，本轮只固化数据库支撑且不实现业务代码。
+
+## 23. 对认证 API 语义的数据库支撑
+
+- `SEC-001`：登录成功后为 PC 或微信小程序创建首个 Session；微信映射仍由 `user_wechat_identities` 管理；
+- `SEC-002`：按唯一 Hash 定位 Session，验证用户状态、到期、撤销和替换事实，在事务内轮换；旧 Hash 重放后按 `token_family_id` 以系统操作者撤销整族；
+- `SEC-003`：按当前 `token_family_id` 幂等撤销整族，使用用户操作者，不解绑微信身份，也不影响其他令牌族；
+- `SEC-004`：可从 Session 形成非敏感摘要，不返回 Hash、内部后继 ID 或令牌族内部细节；
+- 用户停用：刷新必须重新读取 `users` 当前状态并拒绝；数据库索引支持按 `user_id` 定位活动会话，是否即时批量撤销留待 API / Service 正式实现明确。
+
+Access Token 和 Refresh Token 明文均不入库；JWT Secret、密码、微信 code、Session Key、OpenID、UnionID 和 AppID Secret 也不进入本表。
+
+## 24. Completion Fix Migration 与 Mapping Audit
+
+新增独立前向 Migration：
+
+- `20260723160000_add_auth_sessions`；
+- 只创建 `auth_sessions`、相关约束、索引、循环防护函数和触发器；
+- 不修改 `20260723150000_add_user_wechat_identities` 或任何既有业务表；
+- 不写 Token、用户或业务数据。
+
+最终 Mapping Audit：
+
+| 项目 | v1.1 | DCR-002 初次同步 | v2.0 Completion Fix | 相对初次同步 |
+| --- | ---: | ---: | ---: | ---: |
+| 表 | 60 | 61 | 62 | +1 |
+| 字段 | 1128 | 1142 | 1160 | +18 |
+| 主键 | 60 | 61 | 62 | +1 |
+| 唯一约束 | 71 | 74 | 76 | +2 |
+| 外键 | 283 | 287 | 292 | +5 |
+| 普通索引 | 90 | 91 | 94 | +3 |
+| Check | 201 | 208 | 222 | +14 |
+| 枚举 | 2 | 2 | 2 | 0 |
+
+其中 5 个外键包括 4 个用户外键和 1 个同表轮换外键；`revocation_actor_type` 与 `client_type` 均为表内 Check 代码，不新增 PostgreSQL Enum。
+
+PostgreSQL 18.4 隔离验证结果：
+
+- 空库通过 Prisma 顺序部署全部 3 个 Migration，`prisma migrate status` 返回 up to date；
+- 从初次 v2.0 的前两个 Migration 基线独立执行 `20260723160000_add_auth_sessions` 成功；
+- 真实 Catalog 得到 62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、222 Check、2 枚举；
+- 有效 Session 创建成功，表中不存在 `access_token` 或 `refresh_token` 明文字段；
+- 重复 Hash、错误到期顺序、撤销字段不一致、自引用、轮换循环和用户删除均被正式约束拒绝；
+- 两个并发事务使用同一旧 Hash 轮换时，一个提交、一个回滚，最终只存在一个后继和一个活动 Session；
+- 旧行与旧 Hash 保留，重放后整族系统撤销成功；用户登出整族撤销具备幂等性且不影响其他令牌族。
+
+## 25. Completion Fix 正式结论
+
+`user_wechat_identities` 与 `auth_sessions` 共同构成 Database Logical Design v2.0 的认证持久化边界：前者只映射微信外部身份，后者只保留会话轮换、重放与撤销事实，二者均指向现有 `users`，不形成平行用户或授权体系。
+
+Database Logical Design v2.0、Prisma Schema、两个独立前向 Migration 和 Mapping Audit 在本 Completion Fix 验证通过后正式保持 Completed / Approved / Frozen。本批准不修改或批准 API Change Request 002，不授权 Route、Service、Repository、登录、刷新、登出、JWT、Web 或 Mini Program 开发；Batch 7.6-B 继续暂停。

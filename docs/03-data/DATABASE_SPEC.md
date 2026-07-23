@@ -19,16 +19,16 @@ Phase 3 数据库设计（Database Design）已完成并冻结。Database Logica
 
 - Database Logical Design：v2.0；
 - 状态：Completed / Approved / Frozen；
-- 正式表：61；
-- 正式字段：1142；
-- 主键：61；
-- 唯一约束：74；
-- 外键：287；
-- 普通索引：91；
-- Check：208；
+- 正式表：62；
+- 正式字段：1160；
+- 主键：62；
+- 唯一约束：76；
+- 外键：292；
+- 普通索引：94；
+- Check：222；
 - 正式数据库枚举：2。
 
-Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 只按 DCR-002 新增 `user_wechat_identities`，不修改既有 60 张表的字段、类型、约束或业务语义。
+Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`，不修改既有 60 张表的字段、类型、约束或业务语义。初次 DCR-002 同步的 61 表、1142 字段是 Completion Fix 前的中间历史基线，不是当前正式计数。
 
 ## 2. 既有正式设计来源
 
@@ -48,7 +48,7 @@ Task 3.1 至 Task 3.5.7 的正式成果继续有效：
 - [数据库枚举规范](DATABASE_ENUM_SPEC.md)；
 - [Database Change Request 002](../00-governance/DATABASE_CHANGE_REQUEST_002.md)。
 
-DCR-002 是 v1.1 到 v2.0 的唯一结构增量；发生冲突时，本文件和已批准 DCR-002 对新增对象的定义优先于历史 v1.1 表数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
+DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；发生冲突时，本文件和已批准 DCR-002 对新增对象的定义优先于历史 v1.1 表数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
 
 ## 3. `user_wechat_identities` 正式定位
 
@@ -127,27 +127,107 @@ Check 不替代跨表身份、权限、并发和业务流程校验。
 - 绑定、解绑、停用和重新绑定必须写适用审计，OpenID、UnionID 及任何凭据不得写入日志原文；
 - 当前尚未批准解绑或重新绑定 API，本数据库结构不授权相关业务开发。
 
-## 9. Migration 与 Mapping Audit
+## 9. `auth_sessions` 正式定位
+
+`auth_sessions` 是认证会话和令牌生命周期的持久事实，不是用户或授权副本：
+
+- `users` 继续是唯一用户身份，刷新和受保护请求必须校验其当前状态；
+- `user_wechat_identities` 继续只保存微信身份映射，会话表不复制 OpenID、UnionID 或 AppID Secret；
+- 角色、权限、仓库和店铺范围仍只来自现有 RBAC；
+- PC 与微信小程序复用同一模型，通过 `client_type` 区分，但该字段不得用于授权；
+- 不保存 Access Token 或 Refresh Token 明文，只保存服务端密钥参与的确定性单向摘要；
+- 正式采用每次刷新创建新 Session 行的轮换模型，保留旧行用于重放识别；
+- 不建立平行 Refresh Token 表。
+
+## 10. `auth_sessions` 正式字段
+
+| 字段 | PostgreSQL 类型 | 必填 | 默认值 | 正式语义 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | `uuidv7()` | 主键 |
+| `user_id` | `uuid` | 是 | 无 | 唯一系统用户 |
+| `client_type` | `varchar(50)` | 是 | 无 | `pc` 或 `wechat-mini-program` |
+| `token_family_id` | `uuid` | 是 | 无 | 登录及全部刷新轮换共享的令牌族 |
+| `refresh_token_hash` | `varchar(128)` | 是 | 无 | Refresh Token 的服务端密钥单向摘要 |
+| `refresh_token_expires_at` | `timestamptz(6)` | 是 | 无 | Refresh Token 到期时间 |
+| `access_token_expires_at` | `timestamptz(6)` | 是 | 无 | 对应 Access Token 到期时间 |
+| `issued_at` | `timestamptz(6)` | 是 | 无 | 令牌签发时间 |
+| `last_refreshed_at` | `timestamptz(6)` | 否 | `NULL` | 本行被成功轮换的时间 |
+| `revoked_at` | `timestamptz(6)` | 否 | `NULL` | 撤销时间 |
+| `revoked_by` | `uuid` | 否 | `NULL` | 用户操作撤销时的系统用户 |
+| `revocation_actor_type` | `varchar(50)` | 否 | `NULL` | 撤销时为 `user` 或 `system` |
+| `revocation_reason` | `varchar(1000)` | 否 | `NULL` | 撤销原因 |
+| `replaced_by_session_id` | `uuid` | 否 | `NULL` | 唯一后继 Session |
+| `created_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 创建时间 |
+| `created_by` | `uuid` | 是 | 无 | 创建对应的已知系统用户 |
+| `updated_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 更新时间 |
+| `updated_by` | `uuid` | 否 | `NULL` | 用户操作更新时的系统用户 |
+
+`updated_by` 可空是本技术表的正式例外：系统重放保护使用 `revocation_actor_type = 'system'` 且不伪造用户；用户主动登出必须使用真实 `users.id`。
+
+## 11. `auth_sessions` 约束与索引
+
+- 主键：`pk_auth_sessions (id)`；
+- 唯一约束：`uq_auth_sessions_refresh_token_hash (refresh_token_hash)`；
+- 唯一约束：`uq_auth_sessions_replaced_by_session_id (replaced_by_session_id)`；
+- 普通索引：`idx_auth_sessions_user_revoked_refresh_expiry (user_id, revoked_at, refresh_token_expires_at)`；
+- 普通索引：`idx_auth_sessions_family_revoked (token_family_id, revoked_at)`；
+- 普通索引：`idx_auth_sessions_client_type_updated_at (client_type, updated_at)`。
+
+`token_family_id` 必须允许同族多行，故不唯一；它由族撤销索引覆盖。活动 Session 定义为 `revoked_at IS NULL AND replaced_by_session_id IS NULL`。
+
+## 12. `auth_sessions` 外键
+
+| 外键 | 引用 | 更新 | 删除 |
+| --- | --- | --- | --- |
+| `fk_auth_sessions_user_id` | `user_id → users.id` | RESTRICT | RESTRICT |
+| `fk_auth_sessions_revoked_by` | `revoked_by → users.id` | RESTRICT | RESTRICT |
+| `fk_auth_sessions_created_by` | `created_by → users.id` | RESTRICT | RESTRICT |
+| `fk_auth_sessions_updated_by` | `updated_by → users.id` | RESTRICT | RESTRICT |
+| `fk_auth_sessions_replaced_by_session_id` | `replaced_by_session_id → auth_sessions.id` | RESTRICT | RESTRICT |
+
+不得使用级联删除。
+
+## 13. `auth_sessions` Check 与循环防护
+
+正式新增 14 项 Check，覆盖客户端类型、Hash 非空、Refresh/Access 到期顺序、签发时间、刷新时间、撤销字段组合、撤销操作者一致性、撤销时间、自引用、被替换记录刷新时间、创建和更新时间。
+
+具体命名与逻辑以 DCR-002 第 22 节和正式 Migration 为准。同表多行循环由 `trg_auth_sessions_rotation_acyclic` 与 `check_auth_session_rotation_cycle()` 阻止。
+
+## 14. 轮换、重放与撤销持久化
+
+- 刷新必须在数据库事务中先插入后继，再条件认领未撤销、未替换、未到期的前驱；零行认领必须回滚整个事务；
+- 数据库行锁、Hash 唯一约束和后继唯一约束保证同一旧 Refresh Token 的并发轮换最多一个提交；
+- 旧行及 Hash 保留，旧 Token 再次出现时按 `token_family_id` 以系统操作者撤销整族；
+- 登出按当前 `token_family_id` 幂等撤销整族，使用用户操作者，不解绑微信身份，不影响其他令牌族；
+- 用户停用后刷新必须读取 `users` 状态并拒绝；是否即时批量撤销由后续获批 API / Service 实现明确。
+
+本节只定义数据库支撑，不授权实现认证业务代码。
+
+## 15. Migration 与 Mapping Audit
 
 正式物理同步包括：
 
 - `prisma/schema.prisma` 中的 `user_wechat_identities` 模型及 `users` 双向关系；
 - `prisma/migrations/20260723150000_add_user_wechat_identities/migration.sql`；
+- `prisma/schema.prisma` 中的 `auth_sessions` 模型、自关联及 `users` 双向关系；
+- `prisma/migrations/20260723160000_add_auth_sessions/migration.sql`；
 - `prisma/mapping-audit.json` 的 v2.0 计数。
 
-Migration 只创建空表、约束、索引和外键，不回填或猜测任何现有微信身份，不包含真实 AppID、Secret、OpenID、用户或业务数据。
+两个 Migration 分别创建空表及其约束、索引、外键和必要循环防护，不回填或猜测任何现有身份，不包含真实 AppID、Secret、OpenID、Token、用户或业务数据。不得修改或重写已提交的 `20260723150000_add_user_wechat_identities`。
 
-## 10. 枚举结论
+最终 Mapping Audit 为 62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、222 Check、2 枚举。
 
-DCR-002 不新增 PostgreSQL Enum。`status` 是本表受 Check 约束的局部生命周期代码；正式数据库枚举仍只有：
+## 16. 枚举结论
+
+DCR-002 及其 Completion Fix 不新增 PostgreSQL Enum。`user_wechat_identities.status`、`auth_sessions.client_type` 和 `auth_sessions.revocation_actor_type` 均为表内 Check 代码；正式数据库枚举仍只有：
 
 - `warehouse_type`；
 - `production_completion_status`。
 
 `access_level` 的正式代码继续由 `DATABASE_ENUM_SPEC.md` 管理并通过 Check 物理限制，不改变本次 Mapping Audit 的 PostgreSQL Enum 数量。
 
-## 11. 冻结结论
+## 17. 冻结结论
 
-Database Logical Design v2.0 已完成、批准并冻结。除 DCR-002 新增的 `user_wechat_identities` 外，v1.1 的表、字段、关系、约束、索引、枚举、库存粒度和历史保留规则全部保持不变。
+Database Logical Design v2.0 在 DCR-002 Completion Fix 全部验证通过后完成、批准并冻结。除新增的 `user_wechat_identities` 与 `auth_sessions` 外，v1.1 的表、字段、关系、约束、索引、枚举、库存粒度和历史保留规则全部保持不变。
 
 后续任何表、字段、类型、状态、约束、索引、关系或枚举变化都必须重新提交 Database Change Request。不得通过代码、API、客户端缓存、JSON、备注或临时 Migration 绕过本规范。
