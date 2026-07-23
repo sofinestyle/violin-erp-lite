@@ -11,6 +11,20 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.9.4] - 2026-07-23
+
+### Changed
+
+- 通过 API Coverage Completion 004，在 `CBR-003` 创建跨境发货单 Request DTO 中补充必填 `transportMethod`
+- `transportMethod` 类型为 `string`、最大长度 50，直接映射 `cross_border_shipments.transport_method`（`VARCHAR(50) NOT NULL`）
+- `CBR-003` 成功响应返回持久化后的 `transportMethod`，不使用默认值或派生值
+
+### Scope
+
+- `transportMethod` 不建立枚举、不限制固定字符串、不设置默认值
+- 本次未新增 API，`CBR-*` 仍为 22 个，API Master Specification v1.1 正式接口总数保持 335
+- 未修改数据库、业务规则、`SYSTEM_SPEC.md`、`DATABASE_SPEC.md`、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、Phase 4、Phase 5、Phase 6 或工程代码
+
 ## [0.9.3] - 2026-07-23
 
 ### Changed

@@ -1741,3 +1741,26 @@ Approved
 ### 影响
 
 本决定仅修复 Phase 4 跨境业务页面设计的文档内部一致性，不新增业务需求，不修改数据库表、字段、类型、约束或 Prisma 映射，不修改 API 定义或 335 个正式 API，不修改 `BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、`DATABASE_SPEC.md`、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、Phase 5、Phase 6 或工程代码。
+
+## DEC-071 补齐CBR-003运输方式API覆盖
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人正式批准 API Coverage Completion 004；
+- 在既有 `CBR-003 POST /api/v1/cross-border-shipments` Request DTO 中增加必填 `transportMethod`；
+- `transportMethod` 使用 `string`，最大长度为 50，直接映射 `cross_border_shipments.transport_method`（`VARCHAR(50) NOT NULL`）；
+- `transportMethod` 不建立枚举、不限制固定字符串、不设置默认值；
+- `CBR-003` 成功响应返回数据库持久化后的 `transportMethod`；
+- 本次不新增接口，`CBR-*` 数量保持 22，API Master Specification v1.1 正式接口总数保持 335。
+
+### 影响
+
+本决定只补齐既有数据库必填字段在 `CBR-003` 中的正式 API 覆盖，不修改数据库表、字段、类型、约束、Prisma Schema 或 Migration，不新增枚举、默认值、业务对象或业务规则，不修改 `BUSINESS_RULES.md`、`SYSTEM_SPEC.md`、`DATABASE_SPEC.md`、`DATABASE_ENUM_SPEC.md`、`ROLE_PERMISSION_SPEC.md`、Phase 4、Phase 5、Phase 6 或工程代码。
