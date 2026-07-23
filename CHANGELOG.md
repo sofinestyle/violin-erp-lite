@@ -11,6 +11,25 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.8.6] - 2026-07-23
+
+### Added
+
+- 通过 SSOT Completion 001 补全 `access_level` 的三个正式枚举代码：`read`、`operate`、`manage`
+- 明确 `read` 仅允许查看，`operate` 允许业务操作但不允许管理权限，`manage` 允许全部业务操作及配置管理
+
+### Changed
+
+- `DATABASE_ENUM_SPEC.md` 成为 `warehouse_type` 与 `access_level` 正式枚举的唯一维护入口
+- `DATABASE_SPEC.md`、Task 3.5.1 与 Task 3.5.5 仅同步统一枚举入口引用，不重复维护枚举集合
+- 新增 DEC-067，记录 `access_level` 正式枚举补全与冻结决定
+
+### Scope
+
+- 本次只补全 Frozen Database Logical Design v1.1 已预留的 `access_level` 枚举集合，不新增业务对象、业务规则、数据库表、字段、关系、索引或其他枚举
+- 未修改 BUSINESS_RULES、SYSTEM_SPEC、ROLE_PERMISSION_SPEC、Phase 4、Phase 5、Phase 6 或工程代码
+- 未修改 Prisma Schema、Migration、Seed 或 API；Task 7.5 保持 In Progress
+
 ## [0.8.5] - 2026-07-23
 
 ### Added

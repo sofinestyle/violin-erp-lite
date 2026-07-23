@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-19
+updated_date: 2026-07-23
 related_phase: Phase 3
 ---
 
@@ -286,7 +286,7 @@ related_phase: Phase 3
 2. 数据库存储稳定代码，不存中文显示名称。
 3. 中文名称由应用层字典转换。
 4. 已正式使用的枚举代码不得直接改名。
-5. 枚举值集合留待 Task 3.5.5 Check 约束设计确定。
+5. 已完成正式补全的枚举值集合统一以 [数据库枚举规范](../../03-data/DATABASE_ENUM_SPEC.md) 为唯一入口，本文件不重复维护。
 
 代码形式示例：`draft`、`submitted`、`approved`、`completed`、`cancelled`。
 

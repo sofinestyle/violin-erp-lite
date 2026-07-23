@@ -1645,3 +1645,29 @@ Approved
 ### 影响
 
 本决定只补齐既有 Approved 用户、角色与权限管理能力的 API 覆盖，不新增业务模块、业务对象、角色、权限代码、数据库表、字段、关系或状态；不修改 BUSINESS_RULES、SYSTEM_SPEC、Database Logical Design v1.1、DATABASE_ENUM_SPEC、ROLE_PERMISSION_SPEC、Phase 6 Frozen 内容或工程代码；不修改 Prisma Schema、Migration、Seed 或依赖，不执行 Task 7.5-A 开发。完成 GitHub 技术验收后，方可重新启动 Task 7.5-A。
+
+## DEC-067 完成并冻结access_level正式枚举
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人正式批准 SSOT Completion 001；
+- `access_level` 的唯一正式枚举代码为 `read`、`operate` 和 `manage`；
+- `read` 仅允许查看，不允许新增、修改、删除或审批；
+- `operate` 允许新增、修改及执行业务处理，不允许管理权限；
+- `manage` 允许全部业务操作及配置管理；
+- `access_level` 继续映射既有 `role_warehouses.access_level` 与 `role_stores.access_level`，不新增数据范围或关系；
+- `DATABASE_ENUM_SPEC.md` 作为 `warehouse_type` 与 `access_level` 正式枚举的唯一维护入口；
+- 数据库物理映射、DTO 和 Validation 必须使用上述英文代码，不得自行增加、重命名或使用同义代码；
+- `DATABASE_SPEC.md`、Task 3.5.1 与 Task 3.5.5 只引用统一枚举入口，不重复维护枚举集合。
+
+### 影响
+
+本决定只补全 Frozen Database Logical Design v1.1 已预留的 `access_level` 枚举集合，不新增业务对象、业务规则、数据库表、字段、关系、索引或其他枚举；不修改 BUSINESS_RULES、SYSTEM_SPEC、ROLE_PERMISSION_SPEC、Phase 4、Phase 5、Phase 6、Prisma Schema、Migration、Seed、API 或工程代码。完成 GitHub 技术验收后，方可执行 API Coverage Completion 003。

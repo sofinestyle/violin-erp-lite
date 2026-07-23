@@ -5,7 +5,7 @@ version: 1.0
 status: Approved
 owner: Project Manager
 created_date: 2026-07-20
-updated_date: 2026-07-20
+updated_date: 2026-07-23
 related_phase: Phase 3
 ---
 
@@ -40,7 +40,7 @@ Check 约束命名为 `ck_<table>_<rule>`。下文表达的是数据库无关的
 - `difference_quantity`、`adjustment_quantity` 等可能表达方向的变化量不机械限制为非负；
 - Task 3.4 不存在 `unavailable_quantity`，库存余额公式使用正式字段 `pending_quantity`；
 - 验收来源使用正式字段 `purchase_order_id` 与 `production_order_id`，不新增 `source_document_id`；
-- 具体枚举代码不在本任务虚构，条件规则以对应业务类型或动作发生时表达。
+- 具体枚举代码不在本任务重复维护，已完成正式补全的枚举值集合统一以 [数据库枚举规范](../../03-data/DATABASE_ENUM_SPEC.md) 为唯一入口；条件规则以对应业务类型或动作发生时表达。
 
 ## 4. 公共结构规则（44 项）
 
