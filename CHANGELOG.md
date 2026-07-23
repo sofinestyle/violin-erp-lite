@@ -11,6 +11,28 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.8.5] - 2026-07-23
+
+### Added
+
+- 通过 API Coverage Completion 002 补齐用户、角色与权限管理 `SEC-006` 至 `SEC-021` 共 16 个正式接口
+- 用户管理新增列表、详情、创建、更新、状态更新和密码重置接口
+- 角色管理新增列表、详情、创建、更新、状态更新、角色权限查询/替换及用户角色查询/替换接口
+- 权限管理新增正式权限目录分页查询接口
+- 每个新增接口已定义 Request、Response、DTO、Validation、Permission、Error Code、Audit 及适用分页规则
+
+### Changed
+
+- API Master Specification v1.1 正式接口总数由 315 更新为 331，并重新确认为 Completed / Approved / Frozen
+- `PROJECT.md`、`ROADMAP.md` 和 `README.md` 同步 API Coverage Completion 002 及 331 个正式接口
+- 新增 DEC-066，记录用户、角色与权限管理 API 覆盖补齐决定
+
+### Scope
+
+- 本次只补齐既有 Approved 用户、角色与权限管理能力的 API 覆盖，不新增业务模块、业务对象、角色、权限代码、数据库表、字段、关系或状态
+- 未修改 BUSINESS_RULES、SYSTEM_SPEC、DATABASE_SPEC、DATABASE_ENUM_SPEC、ROLE_PERMISSION_SPEC 或 Phase 6 Frozen 内容
+- 未修改工程代码、依赖、Prisma Schema、Migration 或 Seed，未执行 Task 7.5-A 开发
+
 ## [0.8.4] - 2026-07-23
 
 ### Changed

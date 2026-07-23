@@ -1619,3 +1619,29 @@ Approved
 ### 影响
 
 本决定只同步 Phase 7 Task 状态，不修改 Frozen BUSINESS_RULES、SYSTEM_SPEC、Database Logical Design v1.1、DATABASE_ENUM_SPEC、ROLE_PERMISSION_SPEC、API Master Specification v1.1、315 个正式 API、Phase 4 Approved 文档或 Phase 6 Functional Specification；不修改工程代码、依赖、Prisma Schema、Migration 或 Seed，不执行 Task 7.5 技术开发。
+
+## DEC-066 完成用户与角色管理API覆盖补齐
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-23
+
+### 决定
+
+- 项目负责人正式批准 API Coverage Completion 002；
+- 在 API Master Specification v1.1 中新增 `SEC-006` 至 `SEC-021` 共 16 个正式接口；
+- 用户管理覆盖列表、详情、创建、更新、启停状态和密码重置；
+- 角色管理覆盖列表、详情、创建、更新、启停状态、角色权限查询与替换；
+- 用户角色覆盖查询与替换，权限管理覆盖正式权限目录查询；
+- 新增接口只映射 Frozen `users`、`roles`、`permissions`、`user_roles` 和 `role_permissions`；
+- 正式角色代码继续限定为 ROLE_PERMISSION_SPEC 已冻结的 5 个代码，正式权限代码继续限定为已冻结的 244 个代码；
+- API Master Specification v1.1 正式接口总数由 315 更新为 331，并重新确认为 Completed / Approved / Frozen；
+- 既有 315 个正式接口不删除、不重编号、不改义。
+
+### 影响
+
+本决定只补齐既有 Approved 用户、角色与权限管理能力的 API 覆盖，不新增业务模块、业务对象、角色、权限代码、数据库表、字段、关系或状态；不修改 BUSINESS_RULES、SYSTEM_SPEC、Database Logical Design v1.1、DATABASE_ENUM_SPEC、ROLE_PERMISSION_SPEC、Phase 6 Frozen 内容或工程代码；不修改 Prisma Schema、Migration、Seed 或依赖，不执行 Task 7.5-A 开发。完成 GitHub 技术验收后，方可重新启动 Task 7.5-A。
