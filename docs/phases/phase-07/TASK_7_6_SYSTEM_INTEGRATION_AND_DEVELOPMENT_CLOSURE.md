@@ -1,7 +1,7 @@
 ---
 document_name: Task 7.6 系统集成与开发收口
 project: Violin ERP Lite
-version: 1.3
+version: 1.4
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-23
@@ -549,16 +549,16 @@ Database Change Request 002 已更新为 Completed / Approved，Database Logical
 
 ## 17. Import Status Code Completion 001
 
-### 17.1 当前状态
+### 17.1 治理发现与当前状态
 
-Batch 7.6-C1 实施前确认 Frozen `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 缺少完整英文代码集合，原 Migration 也没有四项值域 Check。项目负责人已批准 Import Status Code Completion 001、Database Change Request 003 和 API Change Request 003；本轮只完成 Database v2.1 正式同步，API v1.3 尚未完成 Documentation Sync 与 Freeze。
+Batch 7.6-C1 实施前确认 Frozen `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 缺少完整英文代码集合，原 Migration 也没有四项值域 Check。项目负责人已批准 Import Status Code Completion 001、Database Change Request 003 和 API Change Request 003；Database v2.1 与 API v1.3 的 Documentation Sync 与 Freeze 现均已完成。
 
 因此：
 
-- Batch 7.6-C1：Paused / SSOT Conflict；
+- Batch 7.6-C1：Ready to Resume / Pending Execution；
 - Task 7.6：继续 In Progress；
 - M-001：Open，48 APIs Remaining；
-- 本轮不实现 IMP、ATT、LOG API，不修改 Route、Service、Repository、测试业务逻辑或 API SSOT。
+- 本轮不实现 IMP、ATT、LOG API，不修改 Route、Service、Repository 或测试业务逻辑。
 
 ### 17.2 Database Change Request 003 完成结果
 
@@ -574,6 +574,12 @@ Batch 7.6-C1 实施前确认 Frozen `import_tasks.status`、`import_task_items.v
 - 隔离 PostgreSQL 18 验证全部 Migration 可应用且状态最新，全部批准值可写入，四个字段的非法值均被数据库拒绝；
 - 本次未新增表、字段、默认值、主键、唯一约束、外键、普通索引或 PostgreSQL Enum，未修改历史数据或历史 Migration。
 
-### 17.3 继续暂停与恢复条件
+### 17.3 API Change Request 003 完成结果
 
-Database v2.1 已完成同步与冻结，但 API Change Request 003 Documentation Sync 和 API Master Specification v1.3 Freeze 尚未执行。Batch 7.6-C1 因此继续保持 `Paused / SSOT Conflict`，M-001 继续为 `Open / 48 APIs Remaining`。完成 API v1.3 正式同步、Database v2.1 本轮 GitHub 技术验收并由项目负责人另行下令后，方可恢复 Batch 7.6-C1；本轮不自行恢复开发。
+- API Change Request 003：Completed / Approved；
+- API Master Specification v1.3：Completed / Approved / Frozen；
+- `IMP-001` 至 `IMP-015` 补齐四组状态、筛选、响应、取消、校验、执行、重试、汇总、统计和重复文件边界；
+- `CBR-018` 至 `CBR-021` 同步任务、详情、行结果和匹配结果投影，`CBR-022` 保持来源追溯；
+- API 正式总数保持 335，未新增 API、DTO、权限、错误码或业务功能；
+- M-001 继续为 `Open / 48 APIs Remaining`；
+- Batch 7.6-C1 当前为 `Ready to Resume / Pending Execution`，本轮未执行其代码实现；须等待本次 GitHub 技术验收及项目负责人另行下令。

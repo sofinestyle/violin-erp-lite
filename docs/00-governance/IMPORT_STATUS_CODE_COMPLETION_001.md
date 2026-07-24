@@ -1,28 +1,28 @@
 ---
 document_name: Import Status Code Completion 001：导入状态代码补齐提案
 project: Violin ERP Lite
-version: 1.0
-status: Proposed / Pending Approval
+version: 1.1
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-24
 updated_date: 2026-07-24
 related_phase: Phase 3 / Phase 4 / Phase 5 / Phase 6 / Phase 7
 ---
 
-# Import Status Code Completion 001：导入状态代码补齐提案
+# Import Status Code Completion 001：导入状态代码补齐决定
 
-> 本文件是待项目负责人批准的治理提案，不是 Approved / Frozen 事实。批准并完成 DCR-003、API CR-003 的正式同步和物理迁移前，不得据此恢复 Batch 7.6-C1 或实现 Import API。
+> 项目负责人已于 2026-07-24 批准本状态代码补齐决定、DCR-003 与 API CR-003。Database v2.1 和 API v1.3 已完成正式同步并冻结；本文件是四组 Import 状态及中文映射的已批准正式输入。
 
 ## 1. 冲突背景
 
-Batch 7.6-C1 实施前发现：
+Batch 7.6-C1 实施前的原始审计发现：
 
 - Frozen `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 均为必填 `VARCHAR(50)`；
-- Approved Phase 4 已给出导入任务的九项中文展示语义，但明确说明三个行级/匹配字段的完整代码集合尚未批准；
+- Approved Phase 4 已给出导入任务的九项中文展示语义，但当时明确说明三个行级/匹配字段的完整代码集合尚未批准；
 - Frozen API v1.2 要求校验、执行、重试、取消、筛选和结果响应使用受控状态，却没有定义完整英文代码；
-- 当前 Migration 没有上述四个字段的值域 Check。
+- 当时的 Migration 没有上述四个字段的值域 Check。
 
-因此直接实现会自行创造数据库代码和 API 状态。Batch 7.6-C1 必须保持 `Paused / SSOT Conflict`。
+因此当时直接实现会自行创造数据库代码和 API 状态。该冲突现已由 Database v2.1 与 API v1.3 正式关闭。
 
 ## 2. 影响范围
 
@@ -39,7 +39,7 @@ Batch 7.6-C1 实施前发现：
 - IMP-005 只允许未执行任务取消；
 - Phase 4 的“待上传”发生在用户尚未完成 IMP-001 文件提交之前；而数据库任务要求 `file_name`、`file_reference` 非空。
 
-## 4. 四个字段推荐代码集合
+## 4. 四个字段正式代码集合
 
 ### 4.1 `import_tasks.status`
 
@@ -172,26 +172,26 @@ IMP-005 只允许 `pending_validation`、`validation_failed`、`pending_confirma
 | 待确认匹配、部分匹配、已匹配 | 第 4.4 节对应代码 |
 | 未匹配、匹配异常 | 无匹配记录 + 导入行安全错误结果派生，不伪造匹配记录 |
 
-## 12. 数据库 Check 审计
+## 12. 数据库 Check 审计结果
 
-当前 Check 只有：
+批准前 Check 只有：
 
 - `import_tasks`：更新时间、计数非负、计数平衡、开始/完成时间；
 - `import_task_items`：行号、更新时间、结果对象字段成组；
 - `shipment_import_matches`：更新时间、匹配/实收数量非负。
 
-四个目标状态字段均没有值域 Check，现有 Check **未完整支持**推荐集合，属于情况 B。
+该缺口已由 DCR-003 与 `20260724090000_add_import_status_value_checks` 关闭。Database v2.1 已建立四项正式值域 Check，Mapping Audit Check 由 222 增至 226。
 
-## 13. Change Request 判断
+## 13. Change Request 完成结果
 
-- 必须提出 `DATABASE_CHANGE_REQUEST_003.md`：增加四项值域 Check，不新增表、字段、枚举或默认值；
-- 必须提出 `API_CHANGE_REQUEST_003.md`：补状态代码、筛选、流转、汇总、重试和页面映射；
-- 两份提案均保持 `Proposed / Pending Approval`；
-- 批准前不得修改 Database/API Frozen SSOT、Schema、Migration、Mapping Audit 或实现。
+- `DATABASE_CHANGE_REQUEST_003.md`：Completed / Approved，Database v2.1 已增加四项值域 Check；
+- `API_CHANGE_REQUEST_003.md`：Completed / Approved，API v1.3 已补状态代码、筛选、流转、汇总、重试和页面映射；
+- Database v2.1 与 API v1.3 均为 Completed / Approved / Frozen；
+- 本次批准不授权绕过后续 Batch 的独立执行与 GitHub 技术验收。
 
-## 14. 推荐方案与迁移影响
+## 14. 正式方案与迁移影响
 
-建议 Database Logical Design 从 v2.0 升级为 v2.1。表、字段、主键、唯一约束、外键、普通索引和 PostgreSQL Enum 数量不变；Check 预计从 222 增至 226。
+Database Logical Design 已从 v2.0 升级为 v2.1。表、字段、主键、唯一约束、外键、普通索引和 PostgreSQL Enum 数量不变；Check 已从 222 增至 226。
 
 正式 Migration 前必须查询四个字段的现有 distinct 值。未知值存在时 Migration 必须失败并输出脱敏计数，等待项目负责人批准数据映射；不得静默改写历史状态。当前仓库 Seed 不创建导入数据，但不能据此推断所有部署库为空。
 
@@ -204,14 +204,14 @@ IMP-005 只允许 `pending_validation`、`validation_failed`、`pending_confirma
 5. 任务计数若非事务重算，可能与行级事实不一致；
 6. 重复文件内容摘要的持久技术方案仍须遵守现有 API 幂等边界，不得把摘要偷存到无关字段。
 
-## 16. 待项目负责人批准事项
+## 16. 批准结论
 
-1. 四个字段的推荐代码集合与中文映射；
+1. 四个字段的正式代码集合与中文映射已批准；
 2. `failed` 任务状态保留；
 3. `pending_upload` 仅为创建前页面状态，不作为数据库/API 代码；
 4. `partially_matched` 仅表示数量部分匹配；
 5. `unmatched/conflict` 不进入匹配表状态；
-6. DCR-003、Database Logical Design v2.1 及 Check 222 → 226；
-7. API CR-003、API Master Specification 建议升级 v1.3，接口总数保持 335；
+6. DCR-003、Database Logical Design v2.1 及 Check 222 → 226 已完成；
+7. API CR-003、API Master Specification v1.3 已完成，接口总数保持 335；
 8. 历史未知状态不自动迁移；
-9. 批准、正式同步和物理 Migration 验收完成后，才可另行恢复 Batch 7.6-C1。
+9. Batch 7.6-C1 更新为 Ready to Resume / Pending Execution，仍须项目负责人另行下令执行。

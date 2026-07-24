@@ -1,8 +1,8 @@
 ---
 document_name: API Change Request 003：导入状态代码与动作边界
 project: Violin ERP Lite
-version: 1.0
-status: Proposed / Pending Approval
+version: 1.1
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-24
 updated_date: 2026-07-24
@@ -11,7 +11,7 @@ related_phase: Phase 5 / Phase 6 / Phase 7
 
 # API Change Request 003：导入状态代码与动作边界
 
-> 本文件是待批准提案，不修改当前 Frozen API Master Specification v1.2。批准并完成正式同步前，不得实现 Import API。
+> 项目负责人已于 2026-07-24 批准本 Change Request。Database Logical Design v2.1 依赖已满足，API Master Specification v1.3 已完成正式同步并冻结。
 
 ## 1. 变更原因与边界
 
@@ -26,7 +26,7 @@ API v1.2 已定义 IMP-001—IMP-015 及 CBR-018—CBR-021 的路径、方法、
 - 错误码；
 - 正式接口总数 335。
 
-## 2. 正式状态候选
+## 2. 正式状态集合
 
 ### 2.1 任务状态
 
@@ -111,30 +111,31 @@ API 返回英文代码，页面使用 `IMPORT_STATUS_CODE_COMPLETION_001.md` 第
 - `IMPORT_EXECUTION_PARTIAL_FAILED`；
 - `CONFLICT_IMPORT_JOB_MODIFIED`。
 
-本提案新增错误码数量为 0。
+本变更新增错误码数量为 0。
 
-## 9. 版本与数量建议
+## 9. 版本与数量
 
-建议 API Master Specification 从 v1.2 升级为 **v1.3**：这是向既有 DTO 状态字段补充受控值、筛选和动作边界的兼容性契约增量。正式接口总数仍为 335。
+API Master Specification 正式从 v1.2 升级为 **v1.3**：这是向既有 DTO 状态字段补充受控值、筛选和动作边界的兼容性契约增量。正式接口总数仍为 335。
 
-## 10. 依赖与批准顺序
+## 10. 依赖与完成顺序
 
-API CR-003 依赖 DCR-003 的值域集合。建议顺序：
+API CR-003 依赖 DCR-003 的值域集合，已按以下顺序完成：
 
 1. 项目负责人同时审查状态补齐提案、DCR-003 和 API CR-003；
 2. 批准 DCR-003 并同步 Database Logical Design v2.1；
 3. 批准 API CR-003 并同步 API Master Specification v1.3、Phase 4/5/6 适用引用；
 4. 生成并验证前向 Migration；
-5. GitHub 技术验收通过后，由项目负责人另行恢复 Batch 7.6-C1。
+5. 本轮文档同步完成后，Batch 7.6-C1 更新为 Ready to Resume / Pending Execution，仍须由项目负责人另行下令执行。
 
-## 11. 待批准事项
+## 11. 完成与冻结结果
 
-1. 四个状态集合及页面映射；
-2. `failed` 任务状态；
-3. `pending_upload` 不作为数据库/API 状态；
-4. `partially_matched` 只表示数量部分匹配；
-5. `unmatched/conflict` 不进入匹配表；
-6. 动作、重试、取消及汇总计算规则；
-7. API Master Specification 建议升级为 v1.3；
-8. API 总数保持 335；
-9. 批准前 Batch 7.6-C1 继续暂停。
+1. 四个状态集合、页面映射、筛选及行级流转已正式生效；
+2. `failed` 任务状态已保留；
+3. `pending_upload` 只作为 IMP-001 提交前客户端状态，不作为数据库/API 状态；
+4. `partially_matched` 只表示数量部分匹配，`unmatched/conflict` 不进入匹配表状态；
+5. IMP-005、IMP-009、IMP-011、IMP-012 的取消、校验、执行与重试边界已同步；
+6. 汇总统计规则已同步，客户端不得提交目标状态；
+7. Database Logical Design v2.1 依赖已满足；
+8. API Master Specification v1.3 已完成、批准并冻结，API 总数保持 335；
+9. 未新增 API、DTO 字段、权限代码、错误码或数据库对象；
+10. API Change Request 003 最终状态为 Completed / Approved。

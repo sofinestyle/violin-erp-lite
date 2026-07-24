@@ -1,6 +1,6 @@
 ---
 document_name: Task 5.5 导入、附件、日志、安全与 API 最终收口
-version: 1.1
+version: 1.2
 status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
@@ -25,7 +25,7 @@ related_phase: Phase 5
 | 审计与操作日志 | `audit_logs` | 只追加；日志类型是查询分类，不新增日志表 |
 | 导入日志 | `audit_logs`、`import_tasks`、`import_task_items` | 任务/行结果与审计事件联合投影，不建立平行日志对象 |
 | 导出、登录、安全日志 | `audit_logs` | 仅记录能够合法映射现有用户或受控对象的事件；不得伪造对象标识 |
-| 身份与权限 | `users`、`user_wechat_identities`、`auth_sessions`、`roles`、`permissions`、`user_roles`、`role_permissions`、`role_warehouses`、`role_stores` | Database v2.0 正式保存微信映射与认证会话；不得新增平行身份、会话或授权来源 |
+| 身份与权限 | `users`、`user_wechat_identities`、`auth_sessions`、`roles`、`permissions`、`user_roles`、`role_permissions`、`role_warehouses`、`role_stores` | Database v2.1 正式保存微信映射与认证会话；不得新增平行身份、会话或授权来源 |
 
 接口字段使用 lowerCamelCase 映射 Frozen snake_case。任何派生字段均不得成为新的数据库事实。
 
@@ -331,3 +331,35 @@ Task 5.1 至 Task 5.5 统一采用：
 - API Master Specification v1.2 为 Completed / Approved / Frozen；
 - 本次不新增接口，正式总数保持 335；
 - 本节只同步正式文档，不创建真实 API、业务代码或数据库变更。
+
+## 13. API Change Request 003 正式同步
+
+本节是获批的 Import Status Code Completion 001、Database Change Request 003 和 API Change Request 003 的正式增量；导入契约以 API Master Specification v1.3 第 21 节、数据库值域以 Database Logical Design v2.1 为准。
+
+### 13.1 正式状态集合
+
+- 任务状态：`pending_validation`、`validation_failed`、`pending_confirmation`、`importing`、`partially_succeeded`、`succeeded`、`cancelled`、`duplicate_file`、`failed`；
+- 行校验状态：`pending`、`valid`、`warning`、`invalid`；
+- 行执行状态：`pending`、`processing`、`succeeded`、`failed`、`skipped`；
+- 匹配状态：`pending`、`partially_matched`、`matched`。
+
+### 13.2 动作、行级与汇总边界
+
+| 接口 | 正式动作边界 |
+| --- | --- |
+| `IMP-005` | 仅 `pending_validation`、`validation_failed`、`pending_confirmation` 可幂等取消 |
+| `IMP-009` | 从 `pending_validation` 开始校验；完成后进入 `validation_failed` 或 `pending_confirmation` |
+| `IMP-011` | 仅 `pending_confirmation` 可执行；先进入 `importing`，再按行结果汇总为 `succeeded`、`partially_succeeded` 或 `failed` |
+| `IMP-012` | 仅 `partially_succeeded` 或 `failed` 且存在可重试失败行时执行；不得重试成功或跳过行 |
+
+行校验由 `pending` 进入 `valid`、`warning` 或 `invalid`；只有 `valid`、`warning` 行可进入执行。行执行由 `pending` 进入 `processing`，最终为 `succeeded`、`failed` 或 `skipped`。匹配记录只使用 `pending`、`partially_matched`、`matched`；无法建立合法目标外键的未匹配或冲突行保留在导入明细错误中，不创建伪匹配记录。
+
+`totalRows`、`successRows`、`failedRows`、`warningRows` 必须由正式行记录聚合并满足 API v1.3 的一致性规则。重复文件按文件内容摘要、导入类型及目标范围识别，进入 `duplicate_file` 后不得校验或执行。
+
+### 13.3 跨境投影与冻结结论
+
+- `CBR-018` 为导入任务列表投影，`CBR-019` 为任务详情投影，`CBR-020` 为行结果投影，`CBR-021` 为发货导入匹配结果；
+- `CBR-022` 保持跨境来源追溯，不改义、不计入本次状态同步范围；
+- `IMP-001` 至 `IMP-015` 保持 15 个，未新增 DTO、权限、错误码或路径；
+- API Master Specification v1.3 为 Completed / Approved / Frozen，正式接口总数保持 335；
+- 本次仅同步正式文档，未创建 API、业务代码或数据库变更。

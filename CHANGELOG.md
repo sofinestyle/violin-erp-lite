@@ -11,6 +11,26 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.3] - 2026-07-24
+
+### Changed
+
+- API Change Request 003 已批准并完成，API Master Specification 由 v1.2 升级并冻结为 v1.3
+- `IMP-001` 至 `IMP-015` 正式同步任务、行校验、行执行和匹配四组状态，以及取消、校验、执行、重试、汇总和重复文件边界
+- Task 4.10、Task 5.5、Task 6.2、Task 6.3 与 Task 7.6 已同步 Database v2.1 / API v1.3 的 Import 契约
+
+### Verified
+
+- `IMP-001` 至 `IMP-015` 保持 15 个；API 正式总数保持 335
+- 未新增或改义 API、DTO、权限、错误码、数据库对象或业务功能
+- `CBR-018` 至 `CBR-021` 的任务、详情、行结果和匹配结果投影与正式状态一致，`CBR-022` 保持来源追溯
+
+### Scope
+
+- Task 7.6 保持 In Progress，M-001 保持 Open / 48 APIs Remaining
+- Batch 7.6-C1 从 `Paused / SSOT Conflict` 更新为 `Ready to Resume / Pending Execution`，本轮尚未实现该批次 27 个 API
+- 本轮未修改 `CURRENT_STATUS.md`、路线、项目状态、README、数据库、Route、Service、Repository、前端或测试
+
 ## [0.11.2] - 2026-07-24
 
 ### Changed

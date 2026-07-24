@@ -1,7 +1,7 @@
 ---
 document_name: Task 4.10 跨境业务页面设计
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Approved
 owner: Project Manager
 created_date: 2026-07-20
@@ -128,12 +128,19 @@ related_phase: Phase 4
 - `status`：通用单据状态；
 - `approval_status`：审核状态；
 - `shipment_status`：发货执行状态；
-- 海外库存导入任务状态：待上传、待校验、校验失败、待确认、导入中、部分成功、导入成功、已取消、重复文件；
+- 海外库存导入任务状态：待校验、校验失败、待确认、导入中、部分成功、导入成功、已取消、重复文件、失败；
 - 仓库类型至少包括公司仓、厂家仓、海外仓、在途仓和待处理仓。
 
 物流信息仅展示承运商、运单号、运输方式、发运日期和预计到达日期，不形成独立物流状态。
 
-`validation_status`、`execution_status` 和 `match_status` 是 Frozen 正式字段，但现有 Approved/Frozen 文档未列出其完整枚举代码集合。本任务只以受控字段呈现校验、执行和匹配结果，并将未匹配、部分匹配、匹配异常、执行失败等作为页面语义提示；不得将这些提示擅自写成新的数据库枚举值。完整代码映射必须等待后续正式规格确认，且不得改变 Frozen 字段语义。
+API v1.3 与 Database v2.1 已正式冻结完整代码映射：
+
+- 任务状态：`pending_validation`、`validation_failed`、`pending_confirmation`、`importing`、`partially_succeeded`、`succeeded`、`cancelled`、`duplicate_file`、`failed`；
+- 校验状态：`pending`、`valid`、`warning`、`invalid`；
+- 执行状态：`pending`、`processing`、`succeeded`、`failed`、`skipped`；
+- 匹配状态：`pending`、`partially_matched`、`matched`。
+
+“待上传”只表示调用 `IMP-001` 前的页面本地状态，不写入 `import_tasks.status`。未匹配或冲突行作为导入明细错误展示；没有合法目标外键时不得创建伪造的匹配记录。
 
 ## 4. 跨境发货列表
 
@@ -254,7 +261,7 @@ SKU 数量、海外实收总数量和差异总数量均由 `cross_border_shipmen
 
 表格展示任务编号、导入类型、文件名、目标仓库或店铺、总行数、成功行数、失败行数、警告行数、任务状态、开始时间、完成时间、错误摘要和操作。
 
-任务状态严格使用待上传、待校验、校验失败、待确认、导入中、部分成功、导入成功、已取消和重复文件。
+任务状态严格使用待校验、校验失败、待确认、导入中、部分成功、导入成功、已取消、重复文件和失败；待上传仅为调用 `IMP-001` 前的页面本地状态。
 
 ### 9.2 新建导入任务
 
@@ -277,7 +284,7 @@ SKU 数量、海外实收总数量和差异总数量均由 `cross_border_shipmen
 - 无法匹配的 SKU 不得自动创建；
 - 校验失败或重复文件不得进入执行状态；
 - 执行结果必须关联正式结果单据或发货明细匹配记录；
-- `validation_status` 和 `execution_status` 只使用后续正式批准的受控值，本任务不新增枚举代码。
+- `validation_status` 只使用 `pending`、`valid`、`warning`、`invalid`；`execution_status` 只使用 `pending`、`processing`、`succeeded`、`failed`、`skipped`。
 
 ## 10. 发货明细匹配
 
@@ -299,7 +306,7 @@ SKU 数量、海外实收总数量和差异总数量均由 `cross_border_shipmen
 - 未匹配、部分匹配和异常匹配必须明确展示；
 - 确认匹配后记录匹配用户和匹配时间；
 - 匹配记录不得物理删除；
-- `match_status` 只使用后续正式批准的受控值，本任务不新增枚举代码。
+- `match_status` 只使用 `pending`、`partially_matched`、`matched`。
 
 ## 11. 跨境执行跟踪
 

@@ -1,6 +1,6 @@
 ---
 document_name: Task 6.2 核心业务功能详细设计
-version: 1.0
+version: 1.1
 status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
@@ -15,7 +15,7 @@ related_phase: Phase 6
 
 所有功能统一引用 [Task 6.1 功能详细设计统一规范](TASK_6_1_FUNCTIONAL_DESIGN_STANDARD.md) 的 16 章模板。页面初始化、分页、Loading、Toast、HTTP 异常、通用权限、未保存保护、幂等和可访问性均直接适用 Task 6.1，本文只描述模块差异。
 
-本文不重新定义业务模块、Approved 页面、Frozen 数据库或 API。Frozen 业务规则、Database Logical Design v1.1、API Master Specification v1.1 与 Approved Phase 4 页面优先。若功能无法映射现有 API，必须停止冲突部分并登记 Change Request，不得临时增加字段、状态、接口或页面事实。
+本文不重新定义业务模块、Approved 页面、Frozen 数据库或 API。Frozen 业务规则、Database Logical Design v2.1、API Master Specification v1.3 与 Approved Phase 4 页面优先。若功能无法映射现有 API，必须停止冲突部分并登记 Change Request，不得临时增加字段、状态、接口或页面事实。
 
 本文不指定前端框架、后端框架、ORM、组件库或第三方技术；技术选型留待 Phase 7。不创建真实页面、API Route 或业务代码。
 
@@ -365,6 +365,19 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 | 导入匹配/来源 | 查看匹配及追溯 | 发货、导入、流水权限 | `CBR-021`、`CBR-022` | 返回明细级来源链 | 不新增来源字段 |
 | 通用导入任务 | 创建、查询、模板、校验、执行、重试、结果、历史 | 导入及海外仓权限 | `IMP-001`—`IMP-015` | 形成正式导入任务和结果 | 重复执行、匹配或库存冲突拒绝 |
 
+### 8.5 Import 状态与动作正式映射
+
+API v1.3 与 Database v2.1 正式规定：
+
+- 任务状态：`pending_validation`、`validation_failed`、`pending_confirmation`、`importing`、`partially_succeeded`、`succeeded`、`cancelled`、`duplicate_file`、`failed`；
+- 校验状态：`pending`、`valid`、`warning`、`invalid`；
+- 执行状态：`pending`、`processing`、`succeeded`、`failed`、`skipped`；
+- 匹配状态：`pending`、`partially_matched`、`matched`。
+
+`IMP-009` 从待校验进入校验失败或待确认；`IMP-011` 只从待确认进入导入中，并按行结果汇总为成功、部分成功或失败；`IMP-012` 只重试部分成功或失败任务中的可重试失败行；`IMP-005` 只取消尚未执行的待校验、校验失败或待确认任务。重复文件不得校验或执行。
+
+`CBR-018`、`CBR-019`、`CBR-020` 分别投影任务列表、任务详情和行结果，`CBR-021` 投影匹配结果；`CBR-022` 保持来源追溯。所有统计从正式任务明细与匹配记录聚合，不建立平行状态或结果事实。
+
 ## 9. 六模块统一 16 章模板
 
 本节按 Task 6.1 强制模板逐章覆盖六个模块；各章的模块细节、动作和 API 以第 3 至 8 节为准。
@@ -508,7 +521,7 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 
 1. 六个核心业务模块全部覆盖；
 2. 每个模块均引用 Task 6.1；
-3. 页面动作均已映射 API Master Specification v1.1 正式接口；
+3. 页面动作均已映射 API Master Specification v1.3 正式接口；
 4. 所有状态来自 Approved/Frozen 文档；
 5. 库存盘点、销售退货和报损 API 遗漏已由批准的 API Change Request 001 关闭；
 6. 无 API 被错误用于其他业务；
@@ -528,10 +541,10 @@ Task 5.4 的 `CBR-018`—`CBR-020` 是跨境业务专用只读投影；Task 5.5 
 2. Task 6.2 六个核心业务模块功能详细设计已完成并获得批准，状态为 Completed / Approved；
 3. 采购与生产保持平行，生产订单独立创建，不建立采购—生产直接关系；
 4. 采购来源和生产来源在质量验收节点汇合且一张验收单来源互斥；
-5. 页面动作、状态、权限和库存事务均已映射 API Master Specification v1.1；
+5. 页面动作、状态、权限和库存事务均已映射 API Master Specification v1.3；
 6. 未发现其他 Frozen 冲突；API Change Request 001 为 Completed / Approved，不需要数据库 DCR；
-7. Frozen 数据库、BUSINESS_RULES 和 Approved 页面保持不变；API Master Specification v1.1 已重新冻结；
-8. 原 272 个接口保持不变，本 Change Request 新增 43 个正式接口，v1.1 正式总数为 315；
+7. Frozen 数据库、BUSINESS_RULES 和 Approved 页面保持不变；API Master Specification v1.3 已冻结；
+8. 原 272 个接口保持不变，API Change Request 001 新增 43 个正式接口；后续正式变更后 v1.3 总数为 335；
 9. 未编写代码、创建真实页面或 API Route、指定技术框架或安装依赖；
 10. Phase 6 为 Completed / Approved / Frozen；Task 6.3 与 Phase 6 Final Consistency Review 均为 Completed / Approved；
 11. Task 6.1、Task 6.2、Task 6.3 均为后续技术阶段的正式产品输入；
