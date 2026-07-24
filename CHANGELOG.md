@@ -11,6 +11,33 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.4] - 2026-07-24
+
+### Added
+
+- 新增 `IMPORT_FILE_DEDUPLICATION_AND_IDEMPOTENCY_PERSISTENCE_COMPLETION_001.md`，记录 Import 文件摘要、数据库并发去重、通用幂等持久化及文件补偿的技术审计
+- 新增 `DATABASE_CHANGE_REQUEST_004.md`，以 `Proposed / Pending Approval` 提议 Database Logical Design v2.2
+- 新增 `API_CHANGE_REQUEST_004.md`，以 `Proposed / Pending Approval` 提议补充幂等 processing 与 Import 重复竞争的外部行为
+
+### Changed
+
+- Task 7.6 记录 Batch 7.6-C1 因持久化 SSOT 缺口暂停
+- M-001 保持 `Open / 48 APIs Remaining`，Task 7.6 保持 In Progress
+
+### Verified
+
+- 确认上传层已有 SHA-256 checksum，但 Import Task 未持久化该摘要
+- 确认当前无通用持久化幂等记录，认证内存 Map 不能作为业务事实来源
+- 确认 Storage Metadata 与 `attachments.checksum` 均不能替代 Import 去重 SSOT
+- 确认 API v1.3 未明确 processing 重复请求的外部结果，因此需要 API CR-004
+
+### Scope
+
+- 本轮只完成技术审计和正式 Change Request 提案
+- Database 保持 v2.1 Frozen，API 保持 v1.3 Frozen，接口总数保持 335
+- 未修改 Frozen SSOT、Prisma Schema、Migration、Mapping Audit、业务代码或测试
+- Batch 7.6-C1 更新为 `Paused / Persistence SSOT Conflict`，未实现其 27 个 API
+
 ## [0.11.3] - 2026-07-24
 
 ### Changed

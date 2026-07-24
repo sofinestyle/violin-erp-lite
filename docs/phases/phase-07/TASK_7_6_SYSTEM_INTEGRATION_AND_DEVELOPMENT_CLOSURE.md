@@ -1,7 +1,7 @@
 ---
 document_name: Task 7.6 系统集成与开发收口
 project: Violin ERP Lite
-version: 1.4
+version: 1.5
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-23
@@ -583,3 +583,36 @@ Batch 7.6-C1 实施前确认 Frozen `import_tasks.status`、`import_task_items.v
 - API 正式总数保持 335，未新增 API、DTO、权限、错误码或业务功能；
 - M-001 继续为 `Open / 48 APIs Remaining`；
 - Batch 7.6-C1 当前为 `Ready to Resume / Pending Execution`，本轮未执行其代码实现；须等待本次 GitHub 技术验收及项目负责人另行下令。
+
+## 18. Import 文件去重与幂等持久化 SSOT 冲突
+
+### 18.1 技术审计结论
+
+Batch 7.6-C1 恢复执行前进一步确认：
+
+- 上传模块已计算 SHA-256 checksum，但 `import_tasks` 无 `file_checksum`；
+- Storage Adapter 只有 `store/delete`，Local Storage 只保存随机 Storage Key 对应二进制；
+- 当前无通用、跨进程持久化的 Idempotency Record；
+- 认证专用内存 Map 不能支撑业务 API 幂等；
+- `attachments.checksum` 不能替代 Import Task 摘要，且 Import—Attachment 无获批强制关系；
+- 数据库没有按摘要、导入类型、目标范围的并发唯一裁决；
+- API v1.3 未明确 processing 重复请求和租约恢复的外部行为。
+
+完整证据、方案和风险记录在 `IMPORT_FILE_DEDUPLICATION_AND_IDEMPOTENCY_PERSISTENCE_COMPLETION_001.md`。
+
+### 18.2 治理提案
+
+本轮新增但未批准：
+
+- `DATABASE_CHANGE_REQUEST_004.md`：建议 Database v2.2，新增 `import_tasks.file_checksum`、两个目标范围部分唯一索引、目标 XOR Check 和通用 `idempotency_records`；
+- `API_CHANGE_REQUEST_004.md`：建议 API v1.4，仅补充 processing 409、租约恢复与 Import 唯一竞争的外部行为。
+
+两份 CR 均为 `Proposed / Pending Approval`。Database 仍为 v2.1 Frozen，API 仍为 v1.3 Frozen；本轮未修改 SSOT、Schema、Migration、Mapping Audit、代码或测试。
+
+### 18.3 当前执行状态
+
+- Task 7.6：In Progress；
+- Batch 7.6-C1：`Paused / Persistence SSOT Conflict`；
+- M-001：`Open / 48 APIs Remaining`；
+- Batch 7.6-C1 的 27 个 IMP/ATT/LOG API 尚未实现；
+- 等待 ChatGPT 技术审查及项目负责人批准 DCR-004、API CR-004，并完成正式 SSOT 同步后再决定恢复。
