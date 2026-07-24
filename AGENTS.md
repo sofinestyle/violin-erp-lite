@@ -1,11 +1,11 @@
 ---
 document_name: Codex项目执行约束
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-22
+updated_date: 2026-07-24
 related_phase: Phase 1
 ---
 
@@ -86,7 +86,7 @@ Codex 开始任何任务前必须读取 `ROADMAP.md`，并确认：
 
 `ROADMAP.md` 状态为 Frozen。
 
-Codex 不得自行增加、删除、合并、拆分、重命名或调整九个 Phase，不得跳过 Phase，也不得在当前 Phase 完成前执行后续 Phase 内容。任何路线或阶段状态变更必须由项目负责人批准并完成正式变更流程。
+Codex 不得自行增加、删除、合并、拆分、重命名或调整十个 Phase，不得跳过 Phase，也不得在当前 Phase 完成前执行后续 Phase 内容。任何路线或阶段状态变更必须由项目负责人批准并完成正式变更流程。Phase Renumbering Change Request 001 已按正式流程批准；当前十阶段路线以 Frozen `ROADMAP.md` v2.0 为准。
 
 ## 项目语言规范
 

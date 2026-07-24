@@ -13,6 +13,7 @@ const statusFiles = [
 
 const fieldLabels = ["Current Phase", "Phase Status", "Current Task", "Current Task Status"];
 const sectionIdentifierPattern = /\bTask\s+\d+\.\d+-[A-Z]\b/u;
+const expectedPhaseRoute = Array.from({ length: 10 }, (_, index) => `Phase ${index + 1}`);
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
@@ -78,6 +79,25 @@ function readProjectPhaseStatus(content, phase) {
   return match[1].trim();
 }
 
+function readRoadmapPhaseRoute(content) {
+  return [...content.matchAll(/^### (Phase \d+)：/gmu)].map((match) => match[1]);
+}
+
+function readProjectPhaseRoute(content) {
+  return [...content.matchAll(/^\| (Phase \d+) \|/gmu)].map((match) => match[1]);
+}
+
+function validatePhaseRoute(actual, file) {
+  if (
+    actual.length !== expectedPhaseRoute.length ||
+    actual.some((phase, index) => phase !== expectedPhaseRoute[index])
+  ) {
+    throw new Error(
+      `${file} 的正式路线为 “${actual.join(", ")}”，应为 “${expectedPhaseRoute.join(", ")}”。`,
+    );
+  }
+}
+
 async function readProjectFile(file) {
   return readFile(path.join(projectRoot, file), "utf8");
 }
@@ -87,6 +107,9 @@ async function main() {
     statusFiles.map(async (file) => [file, await readProjectFile(file)]),
   );
   const documents = Object.fromEntries(entries);
+
+  validatePhaseRoute(readRoadmapPhaseRoute(documents["ROADMAP.md"]), "ROADMAP.md");
+  validatePhaseRoute(readProjectPhaseRoute(documents["PROJECT.md"]), "PROJECT.md");
 
   for (const [file, content] of entries) {
     if (sectionIdentifierPattern.test(content)) {

@@ -6,7 +6,7 @@ status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-24
 updated_date: 2026-07-24
-related_phase: Phase 3 / Phase 7
+related_phase: Phase 3 / Phase 8
 ---
 
 # Database Change Request 003：导入状态代码值域约束

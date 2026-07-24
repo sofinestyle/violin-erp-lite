@@ -6,7 +6,7 @@ status: Proposed / Pending Approval
 owner: Project Manager
 created_date: 2026-07-24
 updated_date: 2026-07-24
-related_phase: Phase 3 / Phase 7
+related_phase: Phase 3 / Phase 8
 ---
 
 # Database Change Request 004：Import 文件去重与通用幂等持久化

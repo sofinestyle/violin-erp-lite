@@ -6,7 +6,7 @@ status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-24
 updated_date: 2026-07-24
-related_phase: Phase 5 / Phase 6 / Phase 7
+related_phase: Phase 5 / Phase 6 / Phase 8
 ---
 
 # API Change Request 003：导入状态代码与动作边界
@@ -125,7 +125,7 @@ API CR-003 依赖 DCR-003 的值域集合，已按以下顺序完成：
 2. 批准 DCR-003 并同步 Database Logical Design v2.1；
 3. 批准 API CR-003 并同步 API Master Specification v1.3、Phase 4/5/6 适用引用；
 4. 生成并验证前向 Migration；
-5. 本轮文档同步完成后，Batch 7.6-C1 更新为 Ready to Resume / Pending Execution，仍须由项目负责人另行下令执行。
+5. 本轮文档同步完成后，Batch 8.6-C1 更新为 Ready to Resume / Pending Execution，仍须由项目负责人另行下令执行。
 
 ## 11. 完成与冻结结果
 

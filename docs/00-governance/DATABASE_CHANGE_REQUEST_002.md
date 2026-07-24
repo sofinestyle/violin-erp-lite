@@ -6,7 +6,7 @@ status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-23
 updated_date: 2026-07-23
-related_phase: Phase 3 / Phase 6 / Phase 7
+related_phase: Phase 3 / Phase 6 / Phase 8
 ---
 
 # Database Change Request 002：微信身份映射对象
@@ -21,7 +21,7 @@ related_phase: Phase 3 / Phase 6 / Phase 7
 - 正式计数：62 表、1160 字段、62 主键、76 唯一约束、292 外键、94 普通索引、222 Check、2 枚举；
 - Prisma Schema、正式 Migration 与 Mapping Audit 已同步；
 - 不修改 API、权限、业务逻辑或既有 60 张表；
-- Batch 7.6-B 仍未开始。
+- Batch 8.6-B 仍未开始。
 
 ## 1. 变更原因
 
@@ -230,7 +230,7 @@ Migration 不写真实 AppID、Secret、OpenID、用户或业务数据。
 
 初次同步正式批准 `user_wechat_identities` 为唯一微信身份映射对象，但当时的 61 表结论尚不能持久化 Refresh Token 轮换、旧凭证重放和登出撤销状态，不能完整支撑已批准的 `SEC-002` 与 `SEC-003`。因此不得把初次同步描述为数据库认证设计已经完整完成。
 
-项目负责人随后批准本 Completion Fix：在不改变 Database Logical Design v2.0 版本号、不修改 API 和不开始 Batch 7.6-B 的前提下，新增最小 `auth_sessions` 对象。只有第 24 节验证全部通过后，v2.0 的 Completed / Approved / Frozen 状态才成立。
+项目负责人随后批准本 Completion Fix：在不改变 Database Logical Design v2.0 版本号、不修改 API 和不开始 Batch 8.6-B 的前提下，新增最小 `auth_sessions` 对象。只有第 24 节验证全部通过后，v2.0 的 Completed / Approved / Frozen 状态才成立。
 
 ## 19. `auth_sessions` 定位与轮换模型
 
@@ -374,4 +374,4 @@ PostgreSQL 18.4 隔离验证结果：
 
 `user_wechat_identities` 与 `auth_sessions` 共同构成 Database Logical Design v2.0 的认证持久化边界：前者只映射微信外部身份，后者只保留会话轮换、重放与撤销事实，二者均指向现有 `users`，不形成平行用户或授权体系。
 
-Database Logical Design v2.0、Prisma Schema、两个独立前向 Migration 和 Mapping Audit 在本 Completion Fix 验证通过后正式保持 Completed / Approved / Frozen。本批准不修改或批准 API Change Request 002，不授权 Route、Service、Repository、登录、刷新、登出、JWT、Web 或 Mini Program 开发；Batch 7.6-B 继续暂停。
+Database Logical Design v2.0、Prisma Schema、两个独立前向 Migration 和 Mapping Audit 在本 Completion Fix 验证通过后正式保持 Completed / Approved / Frozen。本批准不修改或批准 API Change Request 002，不授权 Route、Service、Repository、登录、刷新、登出、JWT、Web 或 Mini Program 开发；Batch 8.6-B 继续暂停。

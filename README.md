@@ -1,11 +1,11 @@
 ---
 document_name: 项目说明
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-23
+updated_date: 2026-07-24
 related_phase: Phase 1
 ---
 
@@ -19,14 +19,14 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 - Current Phase：Phase 7
 - Phase Status：In Progress
-- Current Task：Task 7.6
+- Current Task：Task 7.1
 - Current Task Status：In Progress
 
 完整当前状态以 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md) 为唯一入口。
 
-## 九阶段开发路线
+## 十阶段开发路线
 
-九个阶段的数量、名称和顺序已经冻结，阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
+十个阶段的数量、名称和顺序已经冻结。当前为 Phase 7 Platform Foundation / Task 7.1；Phase 8 Application Development、Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
 
 ## 仓库用途
 
@@ -181,8 +181,13 @@ pnpm dev:miniapp
 - [Task 6.3 公共能力功能详细设计（Completed / Approved）](docs/phases/phase-06/TASK_6_3_COMMON_CAPABILITY_FUNCTIONAL_DESIGN.md)
 - [API Change Request 001：补齐库存盘点、销售退货、报损 API（Completed / Approved）](docs/00-governance/API_CHANGE_REQUEST_001.md)
 - [Phase 6 Final Consistency Review（Completed / Approved）](docs/phases/phase-06/PHASE_6_FINAL_CONSISTENCY_REVIEW.md)
-- [Task 7.1 开发基线与工程初始化（Completed / Approved）](docs/phases/phase-07/TASK_7_1_DEVELOPMENT_BASELINE.md)
-- [Task 7.6 系统集成与开发收口（In Progress）](docs/phases/phase-07/TASK_7_6_SYSTEM_INTEGRATION_AND_DEVELOPMENT_CLOSURE.md)
+- [Phase 7 Platform Foundation（In Progress）](docs/phases/phase-07/PHASE_7_PLATFORM_FOUNDATION.md)
+- [Task 7.1 Platform Baseline & Existing Capability Audit（In Progress）](docs/phases/phase-07/TASK_7_1_PLATFORM_BASELINE_AND_EXISTING_CAPABILITY_AUDIT.md)
+- [Phase 8 Application Development（Waiting / Not Started）](docs/phases/phase-08/PHASE_8_APPLICATION_DEVELOPMENT.md)
+- [Task 8.1 开发基线与工程初始化（Completed / Approved）](docs/phases/phase-08/TASK_8_1_DEVELOPMENT_BASELINE.md)
+- [Task 8.6 系统集成与开发收口（Waiting / Not Started）](docs/phases/phase-08/TASK_8_6_SYSTEM_INTEGRATION_AND_DEVELOPMENT_CLOSURE.md)
+- [Phase 9 Test Plan & System Integration（Waiting / Not Started）](docs/phases/phase-09/PHASE_9_TEST_PLAN_AND_SYSTEM_INTEGRATION.md)
+- [Phase 10 Release & Acceptance（Waiting / Not Started）](docs/phases/phase-10/PHASE_10_RELEASE_AND_ACCEPTANCE.md)
 - [变更记录](CHANGELOG.md)
 - [正式决策记录](docs/00-governance/DECISION_LOG.md)
 
@@ -192,7 +197,7 @@ pnpm dev:miniapp
 
 ## 当前禁止事项
 
-API Master Specification v1.1 是 Completed / Approved / Frozen 的唯一 API 事实来源；API Coverage Completion 002 已补齐用户、角色与权限管理接口，API Coverage Completion 003 已补齐角色仓库与店铺数据范围维护接口，正式接口总数为 335。Database Logical Design v1.1、DATABASE_ENUM_SPEC 与 Phase 6 Functional Specification 保持 Frozen。后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
+API Master Specification v1.3 是 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 335。Database Logical Design v2.1、DATABASE_ENUM_SPEC 与 Phase 6 Functional Specification 保持 Frozen。DCR-004 与 API CR-004 继续为 Proposed / Pending Approval；后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
 
 ## 安全说明
 

@@ -6,7 +6,7 @@ status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-24
 updated_date: 2026-07-24
-related_phase: Phase 3 / Phase 4 / Phase 5 / Phase 6 / Phase 7
+related_phase: Phase 3 / Phase 4 / Phase 5 / Phase 6 / Phase 8
 ---
 
 # Import Status Code Completion 001：导入状态代码补齐决定
@@ -15,7 +15,7 @@ related_phase: Phase 3 / Phase 4 / Phase 5 / Phase 6 / Phase 7
 
 ## 1. 冲突背景
 
-Batch 7.6-C1 实施前的原始审计发现：
+Batch 8.6-C1 实施前的原始审计发现：
 
 - Frozen `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 均为必填 `VARCHAR(50)`；
 - Approved Phase 4 已给出导入任务的九项中文展示语义，但当时明确说明三个行级/匹配字段的完整代码集合尚未批准；
@@ -214,4 +214,4 @@ Database Logical Design 已从 v2.0 升级为 v2.1。表、字段、主键、唯
 6. DCR-003、Database Logical Design v2.1 及 Check 222 → 226 已完成；
 7. API CR-003、API Master Specification v1.3 已完成，接口总数保持 335；
 8. 历史未知状态不自动迁移；
-9. Batch 7.6-C1 更新为 Ready to Resume / Pending Execution，仍须项目负责人另行下令执行。
+9. Batch 8.6-C1 更新为 Ready to Resume / Pending Execution，仍须项目负责人另行下令执行。

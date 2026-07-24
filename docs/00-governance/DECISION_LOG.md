@@ -1,11 +1,11 @@
 ---
 document_name: 正式决策记录
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-23
+updated_date: 2026-07-24
 related_phase: Phase 1
 ---
 
@@ -1949,3 +1949,30 @@ Approved
 ### 影响
 
 本决定只同步 API Change Request、API Master、Task 5.5、Task 6.3、Authentication SSOT 和 Task 7.6 文档；不修改数据库、Migration、Prisma Schema、Mapping Audit、Route、Service、Repository、JWT、Web、Mini Program、Seed 或测试逻辑；不修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`，不启动 Phase 7 Final Consistency Review 或 Phase 8。
+
+## DEC-079 批准十阶段路线并启动Platform Foundation
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-24
+
+### 决定
+
+- 项目负责人正式批准 Phase Renumbering Change Request 001，状态更新为 Completed / Approved；
+- Frozen `ROADMAP.md` 从九阶段升级为十阶段，并在 Phase 6 与 Application Development 之间新增 Phase 7 Platform Foundation；
+- 新 Phase 7 与 Task 7.1 Platform Baseline & Existing Capability Audit 正式启动，状态均为 In Progress；
+- Task 7.2 至 Task 7.9 为 Waiting / Not Started，Task 7.9 是普通正式 Task；
+- 原 Phase 7 / Task 7.1 至 Task 7.6 迁移为 Phase 8 / Task 8.1 至 Task 8.6，已完成成果、批准事实和 Git 历史保持有效；
+- 原 Phase 8 Test Plan 迁入 Phase 9 Test Plan & System Integration；
+- 原 Phase 9 Acceptance & Release 顺延为 Phase 10 Release & Acceptance；
+- Phase 8、Phase 9 与 Phase 10 均为 Waiting / Not Started；
+- 内部 Batch 状态不写入正式状态治理文件，只在对应 Task 文档与 CHANGELOG 中维护；
+- DEC-001 至 DEC-078 中的旧 Phase/Task 编号是决定形成时的历史事实，现行编号按本决定与 Change Request 的映射解释。
+
+### 影响
+
+本决定只修改治理文档、Phase/Task 文件路径、标题、编号引用和状态检查配置。Database Logical Design v2.1、API Master Specification v1.3 和 335 个正式 API 保持不变；DCR-004 与 API CR-004 继续为 Proposed / Pending Approval；不修改业务代码、数据库、Prisma、Migration、Mapping Audit、API 或测试逻辑。Phase 7 完成并批准前不得启动 Phase 8。

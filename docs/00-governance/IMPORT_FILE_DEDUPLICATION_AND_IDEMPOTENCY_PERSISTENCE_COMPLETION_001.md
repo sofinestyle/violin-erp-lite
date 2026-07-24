@@ -6,16 +6,16 @@ status: Proposed / Pending Approval
 owner: Project Manager
 created_date: 2026-07-24
 updated_date: 2026-07-24
-related_phase: Phase 3 / Phase 5 / Phase 7
+related_phase: Phase 3 / Phase 5 / Phase 8
 ---
 
 # Import File Deduplication and Idempotency Persistence Completion 001
 
-> 本文件只记录技术审计和待批准方案，不构成数据库或 API 变更批准。Database Logical Design 仍为 v2.1，API Master Specification 仍为 v1.3；Batch 7.6-C1 在正式变更完成前保持暂停。
+> 本文件只记录技术审计和待批准方案，不构成数据库或 API 变更批准。Database Logical Design 仍为 v2.1，API Master Specification 仍为 v1.3；迁移后的 Batch 8.6-C1 状态以 Task 8.6 与 `CHANGELOG.md` 为唯一记录。
 
 ## 1. 冲突背景
 
-Batch 7.6-C1 在实现 `IMP-001`—`IMP-015` 前发现三个无法在现有 Frozen SSOT 下可靠完成的持久化缺口：
+Batch 8.6-C1 在实现 `IMP-001`—`IMP-015` 前发现三个无法在现有 Frozen SSOT 下可靠完成的持久化缺口：
 
 1. 上传层已经计算文件内容摘要，但 `import_tasks` 没有保存 Import 原始文件摘要的字段；
 2. 当前没有可供所有写 API 共用、跨进程生效的幂等记录；
@@ -255,4 +255,4 @@ subject:user:{authenticatedUserId}|action:{apiId}
 7. API CR-004 的 processing 409 与重复文件竞争外部行为；
 8. 历史 `import_tasks` 摘要回填策略、保留期、租约时长、Response 大小上限等实施参数。
 
-批准前不得修改 Frozen Database/API SSOT、Prisma Schema、Migration、Mapping Audit 或业务实现；Batch 7.6-C1 保持 `Paused / Persistence SSOT Conflict`。
+批准前不得修改 Frozen Database/API SSOT、Prisma Schema、Migration、Mapping Audit 或业务实现；迁移后的 Batch 8.6-C1 状态以 Task 8.6 与 `CHANGELOG.md` 为唯一记录。

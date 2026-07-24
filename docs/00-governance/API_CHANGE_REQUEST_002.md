@@ -6,7 +6,7 @@ status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-23
 updated_date: 2026-07-23
-related_phase: Phase 5 / Phase 6 / Phase 7
+related_phase: Phase 5 / Phase 6 / Phase 8
 ---
 
 # API Change Request 002：微信登录与统一认证契约补齐
@@ -22,13 +22,13 @@ related_phase: Phase 5 / Phase 6 / Phase 7
 - Database Logical Design v2.0、角色、权限、页面和业务规则不变；
 - Authentication SSOT Completion 001：Completed / Approved；
 - 本轮不创建 Route、Service、Repository、JWT 或前端实现；
-- Task 7.6 保持 In Progress，Batch 7.6-B 仍未开始。
+- Task 8.6 保持 In Progress，Batch 8.6-B 仍未开始。
 
 ## 1. 变更原因与边界
 
 `SEC-001 POST /api/v1/auth/login` 已冻结为统一登录入口，Approved Phase 6 要求同时支持 PC 密码登录、微信首次绑定和微信自动登录，但 v1.1 未定义三种模式的 Request DTO。本次正式只补齐现有 `SEC-001` 至 `SEC-005`，不增加路径、编号、页面、权限代码或业务功能。
 
-本变更依赖的 Database Change Request 002 及其 Completion Fix 已完成、批准并同步为 Frozen Database Logical Design v2.0。API 与数据库 SSOT 现已闭合；Batch 7.6-B 仍须等待本次 GitHub 技术验收后由项目负责人另行启动。
+本变更依赖的 Database Change Request 002 及其 Completion Fix 已完成、批准并同步为 Frozen Database Logical Design v2.0。API 与数据库 SSOT 现已闭合；Batch 8.6-B 仍须等待本次 GitHub 技术验收后由项目负责人另行启动。
 
 ## 2. 通用约束
 
@@ -284,7 +284,7 @@ related_phase: Phase 5 / Phase 6 / Phase 7
 2. 本 API Change Request 已批准；
 3. API Master Specification、Phase 5 Task 5.5、Phase 6 Task 6.3 和 Authentication SSOT Completion 001 已同步；
 4. Authentication SSOT Completion 001 已更新为 Completed / Approved；
-5. 本轮完成后仍须等待 GitHub 技术验收，不自动启动 Batch 7.6-B。
+5. 本轮完成后仍须等待 GitHub 技术验收，不自动启动 Batch 8.6-B。
 
 ## 16. 正式批准决定
 
@@ -298,4 +298,4 @@ related_phase: Phase 5 / Phase 6 / Phase 7
 
 ## 17. 正式结论
 
-正式保留唯一 `SEC-001`，以三种 `loginType` 形成判别式联合契约；`SEC-002` 至 `SEC-005` 作为双端统一会话与权限链路。不新增 API，总数保持 335。API Master Specification v1.2 已完成、批准并冻结；本轮只同步文档，不授权或启动 Batch 7.6-B 代码开发。
+正式保留唯一 `SEC-001`，以三种 `loginType` 形成判别式联合契约；`SEC-002` 至 `SEC-005` 作为双端统一会话与权限链路。不新增 API，总数保持 335。API Master Specification v1.2 已完成、批准并冻结；本轮只同步文档，不授权或启动 Batch 8.6-B 代码开发。

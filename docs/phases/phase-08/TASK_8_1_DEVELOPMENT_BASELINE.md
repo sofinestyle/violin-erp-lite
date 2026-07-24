@@ -1,21 +1,23 @@
 ---
-document_name: Task 7.1 开发基线与工程初始化
-version: 1.0
+document_name: Task 8.1 开发基线与工程初始化
+version: 1.1
 status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
 created_date: 2026-07-22
-updated_date: 2026-07-22
-related_phase: Phase 7
+updated_date: 2026-07-24
+related_phase: Phase 8
 ---
 
-# Task 7.1：开发基线与工程初始化（Development Baseline & Project Initialization）
+# Task 8.1：开发基线与工程初始化（Development Baseline & Project Initialization）
+
+> 本文件由原 Task 7.1 机械迁移而来。正文记录的是该 Task 执行时的历史状态与基线；迁移后的 Phase 8 当前为 Waiting / Not Started，Task 8.1 的 Completed / Approved 历史事实保持有效。当前正式状态以 `CURRENT_STATUS.md`、`ROADMAP.md` 与 `PHASE_8_APPLICATION_DEVELOPMENT.md` 为准。
 
 ## 1. 文档目的与任务边界
 
-本文建立 Violin ERP Lite 的技术架构、技术栈、Monorepo 目录、工程规范、开发顺序和职责边界，作为 Phase 7 后续工程实施的统一基线。
+本文建立 Violin ERP Lite 的技术架构、技术栈、Monorepo 目录、工程规范、开发顺序和职责边界，作为 Phase 8 后续工程实施的统一基线。
 
-Phase 7 当前状态为 In Progress，Task 7.1 已完成 GitHub 验收并获得项目负责人批准，状态为 Completed / Approved。Task 7.1 只形成开发基线文档和项目状态同步，不创建目录、源代码、真实 API Route、Prisma Schema、Migration、Seed、数据库对象或业务功能，不安装依赖，不提前执行 Task 7.2。
+Task 8.1 执行时，原 Phase 7 处于 In Progress；Task 8.1 已完成 GitHub 验收并获得项目负责人批准，状态为 Completed / Approved。Task 8.1 只形成开发基线文档和项目状态同步，不创建目录、源代码、真实 API Route、Prisma Schema、Migration、Seed、数据库对象或业务功能，不安装依赖，不提前执行后续 Task。
 
 实现必须依次服从以下正式事实来源：
 
@@ -85,7 +87,7 @@ docs/                    # Approved/Frozen 规格、阶段文档与治理记录
 - `packages/api` 只能映射 Frozen API，不形成第二套接口定义；
 - `packages/database` 只能映射 Frozen 数据库，不形成第二套数据模型；
 - `packages/shared` 不得承载库存余额、单据状态或权限判定等服务端正式事实；
-- 业务模块目录只能在对应 Phase 7 Task 获得批准后创建。
+- 业务模块目录只能在对应 Phase 8 Task 获得批准后创建。
 
 ## 5. 编码与命名规范
 
@@ -127,7 +129,7 @@ docs/                    # Approved/Frozen 规格、阶段文档与治理记录
 
 ## 7. Branch 规范
 
-- 默认开发分支使用 `codex/phase-7-task-7-x-short-description`；
+- 默认开发分支使用 `codex/phase-8-task-7-x-short-description`；
 - 分支必须从最新 `origin/main` 创建，并在工作前确认无未授权修改；
 - 一个分支原则上对应一个 Task 或一个经批准的独立修复；
 - 未经项目负责人明确授权不得直接推送 `main`；
@@ -167,7 +169,7 @@ docs/                    # Approved/Frozen 规格、阶段文档与治理记录
 - 网络结果不确定时先查询正式结果，禁止无条件重放写操作；
 - 客户端只展示安全、可执行的提示，不通过本地状态伪造成功。
 
-## 11. Codex 执行边界与 Phase 7 开发原则
+## 11. Codex 执行边界与 Phase 8 开发原则
 
 1. 每次工作前读取 GitHub `main` 最新 Approved/Frozen 文档；
 2. 只执行当前已批准 Task，不提前执行下一 Task；
@@ -180,23 +182,23 @@ docs/                    # Approved/Frozen 规格、阶段文档与治理记录
 9. 修改范围、验证结果和风险必须在每次提交报告中明确；
 10. 每个 Task 完成后推送 GitHub，等待 ChatGPT GitHub 验收和项目负责人批准；
 11. 不提交敏感信息、真实经营数据或未经批准的依赖；
-12. Task 7.1 期间不得创建代码、目录、依赖或执行 Task 7.2。
+12. Task 8.1 期间不得创建代码、目录、依赖或执行 Task 8.2。
 
-## 12. Phase 7 六个 Task 的开发顺序
+## 12. Phase 8 六个 Task 的开发顺序
 
-Phase 7 采用“6 个 Task + 独立 Final Consistency Review”结构。每个 Task 必须依次完成 GitHub 验收和批准，Final Consistency Review 是 Phase Exit Gate，不作为 Task 7.7。
+Phase 8 采用“6 个 Task + 独立 Final Consistency Review”结构。每个 Task 必须依次完成 GitHub 验收和批准，Final Consistency Review 是 Phase Exit Gate，不作为 Task 8.7。
 
 | 顺序 | Task | 内容 | 当前状态 |
 | --- | --- | --- | --- |
-| 1 | Task 7.1 开发基线与工程初始化 | 确认架构、技术栈、目录、规范、执行顺序和职责；只形成文档 | Completed / Approved |
-| 2 | Task 7.2 Monorepo 工程骨架与质量门禁 | 创建工作区、应用/包骨架、基础脚本、lint、类型检查和测试门禁；不实现业务功能 | In Progress |
-| 3 | Task 7.3 数据持久化与后端公共基础 | 按 Frozen 数据库建立 Prisma/PostgreSQL 物理映射，并实现 Route Handler、JWT、RBAC、日志和错误处理基础 | Waiting / Not Started |
-| 4 | Task 7.4 双端应用壳层与公共能力 | 实现 PC/微信公共壳层、导航、认证流程及 Phase 6 已批准公共能力 | Waiting / Not Started |
-| 5 | Task 7.5 核心业务功能实现 | 按依赖顺序实现基础资料、采购、生产与验收、库存、出入库与调拨、跨境业务 | Waiting / Not Started |
-| 6 | Task 7.6 系统集成与开发收口 | 完成双端集成、回归修复、安全与一致性加固、文档同步和 Phase 8 测试准备 | Waiting / Not Started |
-| Gate | Phase 7 Final Consistency Review | 核对实现、测试和文档与全部 Approved/Frozen 事实来源一致 | Waiting / Not Started |
+| 1 | Task 8.1 开发基线与工程初始化 | 确认架构、技术栈、目录、规范、执行顺序和职责；只形成文档 | Completed / Approved |
+| 2 | Task 8.2 Monorepo 工程骨架与质量门禁 | 创建工作区、应用/包骨架、基础脚本、lint、类型检查和测试门禁；不实现业务功能 | In Progress |
+| 3 | Task 8.3 数据持久化与后端公共基础 | 按 Frozen 数据库建立 Prisma/PostgreSQL 物理映射，并实现 Route Handler、JWT、RBAC、日志和错误处理基础 | Waiting / Not Started |
+| 4 | Task 8.4 双端应用壳层与公共能力 | 实现 PC/微信公共壳层、导航、认证流程及 Phase 6 已批准公共能力 | Waiting / Not Started |
+| 5 | Task 8.5 核心业务功能实现 | 按依赖顺序实现基础资料、采购、生产与验收、库存、出入库与调拨、跨境业务 | Waiting / Not Started |
+| 6 | Task 8.6 系统集成与开发收口 | 完成双端集成、回归修复、安全与一致性加固、文档同步和 Phase 9 测试准备 | Waiting / Not Started |
+| Gate | Phase 8 Final Consistency Review | 核对实现、测试和文档与全部 Approved/Frozen 事实来源一致 | Waiting / Not Started |
 
-上述内容定义顺序和边界。Task 7.2 已获得正式启动授权；Task 7.3 至 Task 7.6 尚未获得启动授权。
+上述内容定义顺序和边界。Task 8.2 已获得正式启动授权；Task 8.3 至 Task 8.6 尚未获得启动授权。
 
 ## 13. 职责边界
 
@@ -208,23 +210,23 @@ Phase 7 采用“6 个 Task + 独立 Final Consistency Review”结构。每个 
 
 技术方案由 ChatGPT 产品经理负责制定与评审，Codex 负责实现；项目经理负责业务确认、测试和最终批准。任何角色发现实现与 Frozen 事实来源冲突时，都必须停止冲突部分并进入正式变更流程。
 
-## 14. Task 7.1 验收标准
+## 14. Task 8.1 验收标准
 
 1. 技术架构和技术栈与项目负责人授权完全一致；
 2. Monorepo 目录保留 `apps/admin`、`apps/miniapp`、`packages/api`、`packages/database`、`packages/shared` 和 `docs`；
 3. 编码、Git、Branch、环境变量、日志和错误处理规范完整；
-4. Codex 边界、Phase 7 原则、六个 Task 顺序和三方职责明确；
+4. Codex 边界、Phase 8 原则、六个 Task 顺序和三方职责明确；
 5. Phase 6 保持 Completed / Approved / Frozen；
-6. Phase 7 保持 In Progress，Task 7.1 更新为 Completed / Approved；
+6. Phase 8 保持 In Progress，Task 8.1 更新为 Completed / Approved；
 7. 技术开发仅进入开发规范阶段，业务编码尚未开始；
 8. BUSINESS_RULES、Database Logical Design v1.1、API Master Specification v1.1 和 Phase 6 Functional Specification 未修改；
 9. 正式 API 总数保持 315；
 10. 未创建源代码、工程目录、Schema、Migration、Seed 或依赖；
-11. 未提前执行 Task 7.2；
-12. 当前正式任务为 Task 7.2 Monorepo 工程骨架与质量门禁。
+11. 未提前执行 Task 8.2；
+12. 当前正式任务为 Task 8.2 Monorepo 工程骨架与质量门禁。
 
 ## 15. 当前结论
 
-项目负责人已正式批准 Phase 7 启动。Phase 7 状态为 In Progress；Task 7.1 已通过 GitHub 验收并获得项目负责人批准，状态为 Completed / Approved；Task 7.2 已正式启动并更新为 In Progress。
+项目负责人已正式批准 Phase 8 启动。Phase 8 状态为 In Progress；Task 8.1 已通过 GitHub 验收并获得项目负责人批准，状态为 Completed / Approved；Task 8.2 已正式启动并更新为 In Progress。
 
-本次状态同步未修改开发基线正文、Frozen 业务规则、数据库逻辑设计、API Master Specification v1.1、315 个正式 API 或 Phase 6 功能规格，未新增业务对象、数据库结构或业务流程，未创建工程代码或安装依赖。当前正式任务为 Task 7.2，未经批准不得启动 Task 7.3。
+本次状态同步未修改开发基线正文、Frozen 业务规则、数据库逻辑设计、API Master Specification v1.1、315 个正式 API 或 Phase 6 功能规格，未新增业务对象、数据库结构或业务流程，未创建工程代码或安装依赖。当前正式任务为 Task 8.2，未经批准不得启动 Task 8.3。

@@ -11,6 +11,37 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.6] - 2026-07-24
+
+### Added
+
+- 新增 Phase 7 Platform Foundation 正式目录、阶段入口与 Task 7.1 Platform Baseline & Existing Capability Audit 文档
+- 新增 Phase 8 Application Development、Phase 9 Test Plan & System Integration、Phase 10 Release & Acceptance 阶段入口
+
+### Changed
+
+- Phase Renumbering Change Request 001 已批准并更新为 `Completed / Approved`
+- Frozen `ROADMAP.md` 从九阶段原子升级为十阶段路线
+- 原 Phase 7 / Task 7.1 至 Task 7.6 迁移为 Phase 8 / Task 8.1 至 Task 8.6，原 Phase 7 Final Consistency Review 迁移为 Phase 8 Final Consistency Review
+- 原 Phase 8 Test Plan 迁入 Phase 9 Test Plan & System Integration，原 Phase 9 Acceptance & Release 顺延为 Phase 10 Release & Acceptance
+- Current Phase 更新为 Phase 7 Platform Foundation / In Progress，Current Task 更新为 Task 7.1 / In Progress
+- Phase 8、Phase 9 与 Phase 10 更新为 `Waiting / Not Started`
+- 原 Batch 7.6-C1 迁移为 Batch 8.6-C1，状态保持 `Paused / Persistence SSOT Conflict`
+- 状态检查脚本增加 ROADMAP 与 PROJECT 十阶段编号、数量及顺序校验
+
+### Preserved
+
+- 原 Phase 7 已完成工程成果、批准事实、Commit SHA、日期和 Git 历史均不删除、不重做
+- 本条之前的 CHANGELOG 与 DECISION_LOG 旧 Phase/Task 编号保留其历史语义，现行编号按批准的迁移映射解释
+- Database v2.1、API v1.3 与 335 个正式 API 保持 Frozen 基线
+- DCR-004 与 API CR-004 继续为 `Proposed / Pending Approval`
+
+### Scope
+
+- 只修改治理文档、Phase/Task 文件路径、标题、编号引用和状态检查配置
+- 未修改业务代码、数据库、Prisma、Migration、Mapping Audit、API 或测试逻辑
+- Phase 8 Application Development 未启动
+
 ## [0.11.5] - 2026-07-24
 
 ### Added
