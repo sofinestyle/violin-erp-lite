@@ -1,7 +1,7 @@
 ---
 document_name: Task 7.6 系统集成与开发收口
 project: Violin ERP Lite
-version: 1.5
+version: 1.6
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-23
@@ -616,3 +616,30 @@ Batch 7.6-C1 恢复执行前进一步确认：
 - M-001：`Open / 48 APIs Remaining`；
 - Batch 7.6-C1 的 27 个 IMP/ATT/LOG API 尚未实现；
 - 等待 ChatGPT 技术审查及项目负责人批准 DCR-004、API CR-004，并完成正式 SSOT 同步后再决定恢复。
+
+## 19. Phase Renumbering Change Request 001 等待批准
+
+### 19.1 提案范围
+
+本轮建立 `PHASE_RENUMBERING_CHANGE_REQUEST_001.md`，建议在 Phase 6 与应用开发之间新增 Platform Foundation，并将固定九阶段路线调整为十阶段：
+
+- 新 Phase 7：Platform Foundation；
+- 原 Phase 7 / Task 7.x：迁移为 Phase 8 / Task 8.x；
+- 原 Phase 8 Test Plan：迁入 Phase 9 Test Plan & System Integration；
+- 原 Phase 9 Acceptance & Release：顺延为 Phase 10 Release & Acceptance。
+
+提案状态为 `Proposed / Pending Approval`，不构成路线或编号变更。
+
+### 19.2 当前边界
+
+- Frozen `ROADMAP.md`、`PROJECT.md`、`README.md` 与 `CURRENT_STATUS.md` 均未修改；
+- 当前正式状态仍为 Phase 7 / Task 7.6 In Progress；
+- Batch 7.6-C1 继续为 `Paused / Persistence SSOT Conflict`，且不写入正式状态治理文件；
+- M-001 继续为 `Open / 48 APIs Remaining`；
+- 当前业务开发继续暂停；
+- DCR-004 与 API CR-004 继续为 Proposed / Pending Approval；
+- 本轮未修改 Phase/Task 编号、代码、数据库、API、测试或 Frozen SSOT。
+
+### 19.3 后续 Gate
+
+只有在 ChatGPT 技术审查、项目负责人批准及独立 Phase Renumbering Documentation Sync 通过 GitHub 验收后，才能切换到新十阶段路线。新 Phase 7 Platform Foundation 的首个 Task 仍需项目负责人另行正式启动；在 Platform Foundation 完成前不得恢复迁移后的 Phase 8 Application Development。

@@ -11,6 +11,25 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.5] - 2026-07-24
+
+### Added
+
+- 新增 `PHASE_RENUMBERING_CHANGE_REQUEST_001.md`，以 `Proposed / Pending Approval` 提议引入 Platform Foundation 并将固定九阶段路线调整为十阶段
+- 提案记录新 Phase 7 的九项候选规划，以及原 Phase 7/Task 7.x、原 Phase 8 Test Plan 和原 Phase 9 的迁移规则
+
+### Changed
+
+- Task 7.6 记录等待路线变更技术审查和项目负责人批准
+- 当前业务开发与 Batch 7.6-C1 继续暂停，不执行 Phase/Task 重编号
+
+### Scope
+
+- Frozen `ROADMAP.md`、`PROJECT.md`、`README.md`、`CURRENT_STATUS.md` 和 `DECISION_LOG.md` 均未修改
+- 当前九阶段路线、Phase 7 / Task 7.6 状态和全部既有编号继续有效
+- Database 保持 v2.1 Frozen，API 保持 v1.3 Frozen，正式 API 总数保持 335
+- 未修改代码、数据库、Prisma、Migration、Mapping Audit、API、测试或已完成工程成果
+
 ## [0.11.4] - 2026-07-24
 
 ### Added
