@@ -54,6 +54,33 @@ describe("Attachment multipart and query DTO", () => {
     expect(parsed.file.content).toEqual(Uint8Array.from(PNG_BYTES));
   });
 
+  it("parses API v1.6 Product Attachment DTO without adding fields", async () => {
+    const form = new FormData();
+    form.set("file", new File([PNG_BYTES], "product.png", { type: "image/png" }));
+    form.set("objectType", "product");
+    form.set("objectId", OBJECT_ID);
+    form.set("attachmentCategory", "general_business_document");
+
+    const parsed = await parseAttachmentUploadRequest(
+      new Request("http://localhost/api/v1/attachments", { body: form, method: "POST" }),
+      categories,
+    );
+
+    expect(parsed).toMatchObject({
+      attachmentCategory: "general_business_document",
+      objectId: OBJECT_ID,
+      objectType: "product",
+      sortOrder: 0,
+    });
+    expect(() =>
+      parseCreateAttachmentLink({
+        attachmentCategory: "general_business_document",
+        objectId: OBJECT_ID,
+        objectType: "product",
+      }),
+    ).not.toThrow();
+  });
+
   it("rejects multiple files, arbitrary Object Type and invalid query fields", async () => {
     const form = new FormData();
     form.append("file", new File([PNG_BYTES], "one.png", { type: "image/png" }));

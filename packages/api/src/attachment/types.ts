@@ -19,6 +19,7 @@ export const ATTACHMENT_OBJECT_TYPES = [
   "transfer_order",
   "cross_border_shipment",
   "import_task",
+  "product",
 ] as const;
 
 export type AttachmentObjectType = (typeof ATTACHMENT_OBJECT_TYPES)[number];

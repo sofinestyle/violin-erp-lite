@@ -77,10 +77,12 @@ function access(
 describe("Attachment registries", () => {
   const categories = new AttachmentCategoryRegistry();
 
-  it("freezes exactly 17 Object Types behind one registry", () => {
-    expect(ATTACHMENT_OBJECT_TYPES).toHaveLength(17);
+  it("freezes exactly 18 Object Types behind one registry including API CR-006 product", () => {
+    expect(ATTACHMENT_OBJECT_TYPES).toHaveLength(18);
+    expect(ATTACHMENT_OBJECT_TYPES).toContain("product");
     expect(Object.keys(ATTACHMENT_OBJECT_DEFINITIONS)).toEqual([...ATTACHMENT_OBJECT_TYPES]);
-    expect(new AttachmentObjectRegistry(new MemoryObjectReader([])).size).toBe(17);
+    expect(ATTACHMENT_OBJECT_DEFINITIONS.product.permissionResource).toBe("master.product");
+    expect(new AttachmentObjectRegistry(new MemoryObjectReader([])).size).toBe(18);
   });
 
   it("freezes exactly 10 Categories and their approved matrices", () => {
@@ -90,6 +92,10 @@ describe("Attachment registries", () => {
     expect(categories.isEvidence("inspection_evidence")).toBe(true);
     expect(categories.allowObjectType("inspection_evidence", "inspection_order")).toBe(true);
     expect(categories.allowObjectType("inspection_evidence", "purchase_order")).toBe(false);
+    expect(categories.allowObjectType("general_business_document", "product")).toBe(true);
+    expect(categories.allowObjectType("inspection_evidence", "product")).toBe(false);
+    expect(categories.allowObjectType("payment_voucher", "product")).toBe(false);
+    expect(categories.allowObjectType("import_source_file", "product")).toBe(false);
     expect(categories.canDelete("import_source_file", { hasLinks: false, protected: false })).toBe(
       false,
     );
@@ -144,6 +150,7 @@ describe("Attachment validator", () => {
         warehouseIds: ["warehouse-1"],
       }),
       snapshot("import_task"),
+      snapshot("product", { state: "violin" }),
     ]),
   );
   const validator = new AttachmentValidator(objects);
@@ -163,6 +170,32 @@ describe("Attachment validator", () => {
       objectType: "purchase_order",
       protected: false,
     });
+  });
+
+  it("supports Product Attachment only through general_business_document per API v1.6", async () => {
+    await expect(
+      validator.validate({
+        access: access(["attachment.file.link", "master.product.update"]),
+        attachmentCategory: "general_business_document",
+        objectId: OBJECT_ID,
+        objectType: "product",
+        operation: "link",
+      }),
+    ).resolves.toMatchObject({
+      category: "general_business_document",
+      objectType: "product",
+      protected: false,
+    });
+
+    await expect(
+      validator.validate({
+        access: access(["attachment.file.link", "master.product.update"]),
+        attachmentCategory: "payment_voucher",
+        objectId: OBJECT_ID,
+        objectType: "product",
+        operation: "link",
+      }),
+    ).rejects.toBeInstanceOf(AttachmentCategoryMismatchError);
   });
 
   it("rejects unsupported Object Types before object loading", async () => {

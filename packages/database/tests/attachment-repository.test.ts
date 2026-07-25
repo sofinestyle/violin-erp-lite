@@ -171,8 +171,9 @@ describe("Prisma Attachment Link repository", () => {
 });
 
 describe("Prisma Attachment Object reader", () => {
-  it("maps all 17 Frozen Object Types without a service-level switch", () => {
-    expect(PRISMA_ATTACHMENT_OBJECT_TYPES).toHaveLength(17);
+  it("maps all 18 Frozen Object Types without a service-level switch", () => {
+    expect(PRISMA_ATTACHMENT_OBJECT_TYPES).toHaveLength(18);
+    expect(PRISMA_ATTACHMENT_OBJECT_TYPES).toContain("product");
   });
 
   it("loads the object and validates item ownership through configured delegates", async () => {
@@ -204,6 +205,37 @@ describe("Prisma Attachment Object reader", () => {
       objectType: "purchase_order",
       protectionActivated: false,
       state: "draft",
+    });
+  });
+
+  it("loads API v1.6 Product Attachment objects and derives history protection from references", async () => {
+    const findUnique = vi.fn().mockResolvedValue({
+      created_by: USER_ID,
+      disabled_by: null,
+      id: "22222222-2222-4222-8222-222222222222",
+      product_type: "violin",
+      updated_at: NOW,
+      updated_by: USER_ID,
+    });
+    const noReferences = vi.fn().mockResolvedValue(0);
+    const oneReference = vi.fn().mockResolvedValue(1);
+    const reader = new PrismaAttachmentObjectReader({
+      product_manufacturers: { count: noReferences },
+      product_suppliers: { count: noReferences },
+      products: { findUnique },
+      skus: { count: oneReference },
+    } as unknown as PrismaClient);
+
+    await expect(
+      reader.load("product", "22222222-2222-4222-8222-222222222222"),
+    ).resolves.toMatchObject({
+      itemExists: true,
+      objectType: "product",
+      protectionActivated: true,
+      state: "violin",
+    });
+    expect(oneReference).toHaveBeenCalledWith({
+      where: { product_id: "22222222-2222-4222-8222-222222222222" },
     });
   });
 });

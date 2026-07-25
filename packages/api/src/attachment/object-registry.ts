@@ -47,6 +47,7 @@ export const ATTACHMENT_OBJECT_DEFINITIONS: Readonly<
   transfer_order: definition("transfer_order", "transfer.order"),
   cross_border_shipment: definition("cross_border_shipment", "cross-border.shipment"),
   import_task: definition("import_task", "import.task", false),
+  product: definition("product", "master.product"),
 };
 
 const READ_ACTION = "read";

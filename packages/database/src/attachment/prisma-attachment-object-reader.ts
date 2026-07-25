@@ -9,6 +9,7 @@ import type { PrismaClient } from "../generated/prisma/client.js";
 
 type JsonRecord = Record<string, unknown>;
 type DynamicDelegate = Readonly<{
+  count(args: JsonRecord): Promise<number>;
   findFirst(args: JsonRecord): Promise<JsonRecord | null>;
   findUnique(args: JsonRecord): Promise<JsonRecord | null>;
 }>;
@@ -31,6 +32,7 @@ type ObjectMapping = Readonly<{
   model: string;
   parentScope?: ParentScope;
   protectionFields?: readonly string[];
+  protectionRelations?: readonly Readonly<{ foreignKey: string; model: string }>[];
   relatedUserFields?: readonly string[];
   stateFields?: readonly string[];
   storeFields?: readonly string[];
@@ -210,6 +212,17 @@ const OBJECT_MAPPINGS: Readonly<Record<AttachmentObjectType, ObjectMapping>> = {
     storeFields: ["store_id"],
     warehouseFields: ["warehouse_id"],
   },
+  product: {
+    model: "products",
+    protectionRelations: [
+      { foreignKey: "product_id", model: "skus" },
+      { foreignKey: "product_id", model: "product_suppliers" },
+      { foreignKey: "product_id", model: "product_manufacturers" },
+    ],
+    protectionFields: [],
+    relatedUserFields: ["created_by", "updated_by", "disabled_by"],
+    stateFields: ["product_type"],
+  },
 };
 
 function strings(row: JsonRecord, fields: readonly string[] = []): string[] {
@@ -233,6 +246,20 @@ async function parentRow(
   const id = row[parent.foreignKey];
   if (typeof id !== "string") return null;
   return client[parent.model]!.findUnique({ where: { id } });
+}
+
+async function hasProtectionRelation(
+  client: DynamicClient,
+  objectId: string,
+  relations: ObjectMapping["protectionRelations"],
+): Promise<boolean> {
+  if (!relations?.length) return false;
+  const counts = await Promise.all(
+    relations.map((relation) =>
+      client[relation.model]!.count({ where: { [relation.foreignKey]: objectId } }),
+    ),
+  );
+  return counts.some((count) => count > 0);
 }
 
 export class PrismaAttachmentObjectReader implements AttachmentObjectReader {
@@ -280,6 +307,7 @@ export class PrismaAttachmentObjectReader implements AttachmentObjectReader {
       objectType,
       protectionActivated:
         Boolean(mapping.alwaysProtected) ||
+        (await hasProtectionRelation(this.#client, String(row.id), mapping.protectionRelations)) ||
         (mapping.protectionFields ?? []).some(
           (field) => row[field] !== null && row[field] !== undefined,
         ),
