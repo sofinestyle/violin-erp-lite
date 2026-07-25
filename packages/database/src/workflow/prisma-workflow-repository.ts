@@ -60,6 +60,14 @@ function decimal(value: unknown, field: string): number {
   return parsed;
 }
 
+function positiveDecimal(value: unknown, field: string): number {
+  const parsed = decimal(value, field);
+  if (parsed <= 0) {
+    throw new ValidationError(`${field} 必须大于 0`, [{ field, message: "数值必须大于 0" }]);
+  }
+  return parsed;
+}
+
 function text(payload: WorkflowPayload, key: string, nullable = false): string | null {
   const value = payload[key];
   if (nullable && (value === null || value === undefined || value === "")) return null;
@@ -69,6 +77,10 @@ function text(payload: WorkflowPayload, key: string, nullable = false): string |
   return value.trim();
 }
 
+function requiredText(payload: WorkflowPayload, key: string): string {
+  return text(payload, key) as string;
+}
+
 function date(payload: WorkflowPayload, key: string): Date {
   const value = text(payload, key);
   const parsed = new Date(`${value}T00:00:00.000Z`);
@@ -76,6 +88,10 @@ function date(payload: WorkflowPayload, key: string): Date {
     throw new ValidationError(`${key} 日期无效`, [{ field: key, message: "日期格式无效" }]);
   }
   return parsed;
+}
+
+function optionalDate(payload: WorkflowPayload, key: string): Date | null {
+  return payload[key] ? date(payload, key) : null;
 }
 
 function items(payload: WorkflowPayload): JsonRecord[] {
@@ -237,6 +253,14 @@ async function skuSnapshots(client: DynamicClient, sourceItems: JsonRecord[]) {
   return map;
 }
 
+async function activeSupplier(client: DynamicClient, supplierId: string): Promise<JsonRecord> {
+  const supplier = await client.suppliers!.findFirst({
+    where: { id: supplierId, is_active: true },
+  });
+  if (!supplier) throw new ValidationError("供应商不存在或已停用");
+  return supplier;
+}
+
 function commonItem(
   source: JsonRecord,
   snapshot: JsonRecord,
@@ -261,16 +285,22 @@ function commonItem(
 
 async function createPurchase(client: DynamicClient, payload: WorkflowPayload, actor: string) {
   const sourceItems = items(payload);
+  const documentDate = date(payload, "documentDate");
+  const expectedDeliveryDate = date(payload, "expectedDeliveryDate");
+  if (expectedDeliveryDate < documentDate) {
+    throw new ValidationError("预计交付日不得早于单据日期", [
+      { field: "expectedDeliveryDate", message: "日期范围无效" },
+    ]);
+  }
   const [supplier, snapshots] = await Promise.all([
-    client.suppliers!.findFirst({ where: { id: text(payload, "supplierId"), is_active: true } }),
+    activeSupplier(client, requiredText(payload, "supplierId")),
     skuSnapshots(client, sourceItems),
   ]);
-  if (!supplier) throw new ValidationError("供应商不存在或已停用");
   let subtotal = 0;
   let taxTotal = 0;
   let quantityTotal = 0;
   const detailRows = sourceItems.map((item, index) => {
-    const quantity = decimal(item.quantity, "quantity");
+    const quantity = positiveDecimal(item.quantity, "quantity");
     const unitPrice = decimal(item.unitPrice, "unitPrice");
     const taxRate = decimal(item.taxRate, "taxRate");
     const lineAmount = quantity * unitPrice;
@@ -280,9 +310,7 @@ async function createPurchase(client: DynamicClient, payload: WorkflowPayload, a
     quantityTotal += quantity;
     return {
       ...commonItem(item, snapshots.get(String(item.skuId))!, index + 1, actor),
-      expected_delivery_date: item.expectedDeliveryDate
-        ? new Date(`${String(item.expectedDeliveryDate)}T00:00:00.000Z`)
-        : null,
+      expected_delivery_date: optionalDate(item, "expectedDeliveryDate"),
       inbound_quantity: 0,
       inspected_quantity: 0,
       line_amount: lineAmount,
@@ -299,9 +327,9 @@ async function createPurchase(client: DynamicClient, payload: WorkflowPayload, a
       approval_status: "not_submitted",
       created_by: actor,
       currency_code: "CNY",
-      document_date: date(payload, "documentDate"),
+      document_date: documentDate,
       document_no: documentNo("PO"),
-      expected_delivery_date: date(payload, "expectedDeliveryDate"),
+      expected_delivery_date: expectedDeliveryDate,
       paid_amount: 0,
       payment_terms_snapshot: text(payload, "paymentTermsSnapshot", true),
       purchase_order_items: { create: detailRows },
@@ -321,6 +349,46 @@ async function createPurchase(client: DynamicClient, payload: WorkflowPayload, a
     },
     include: { purchase_order_items: true },
   });
+}
+
+async function purchaseDetailRows(
+  client: DynamicClient,
+  sourceItems: JsonRecord[],
+  actor: string,
+): Promise<{
+  detailRows: JsonRecord[];
+  subtotal: number;
+  taxTotal: number;
+  quantityTotal: number;
+}> {
+  const snapshots = await skuSnapshots(client, sourceItems);
+  let subtotal = 0;
+  let taxTotal = 0;
+  let quantityTotal = 0;
+  const detailRows = sourceItems.map((item, index) => {
+    const quantity = positiveDecimal(item.quantity, "quantity");
+    const unitPrice = decimal(item.unitPrice, "unitPrice");
+    const taxRate = decimal(item.taxRate, "taxRate");
+    const lineAmount = quantity * unitPrice;
+    const taxAmount = lineAmount * taxRate;
+    subtotal += lineAmount;
+    taxTotal += taxAmount;
+    quantityTotal += quantity;
+    return {
+      ...commonItem(item, snapshots.get(String(item.skuId))!, index + 1, actor),
+      expected_delivery_date: optionalDate(item, "expectedDeliveryDate"),
+      inbound_quantity: 0,
+      inspected_quantity: 0,
+      line_amount: lineAmount,
+      qualified_quantity: 0,
+      received_quantity: 0,
+      returned_quantity: 0,
+      tax_amount: taxAmount,
+      tax_rate: taxRate,
+      unit_price: unitPrice,
+    };
+  });
+  return { detailRows, quantityTotal, subtotal, taxTotal };
 }
 
 async function createProduction(client: DynamicClient, payload: WorkflowPayload, actor: string) {
@@ -387,6 +455,9 @@ async function createPayment(client: DynamicClient, command: WorkflowCommand, ac
   const order = await client[orderModel]!.findFirst({ where: { id: command.parentId } });
   if (!order) throw new NotFoundError();
   const amount = decimal(command.payload.paymentAmount, "paymentAmount");
+  if (order.status !== "approved") {
+    throw new ConflictError("仅已审核采购订单允许登记付款");
+  }
   if (amount <= 0 || amount > Number(order.unpaid_amount)) {
     throw new ValidationError("付款金额必须大于 0 且不得超过未付金额");
   }
@@ -836,7 +907,80 @@ async function updateDocument(
   if (!Number.isInteger(versionNo) || versionNo !== Number(current.version_no)) {
     throw new ConflictError("单据版本已变化");
   }
-  if (command.payload.items !== undefined) {
+  if (command.resource === "purchase" && command.payload.items !== undefined) {
+    const sourceItems = items(command.payload);
+    const { detailRows, quantityTotal, subtotal, taxTotal } = await purchaseDetailRows(
+      client,
+      sourceItems,
+      actor,
+    );
+    const supplier =
+      command.payload.supplierId !== undefined
+        ? await activeSupplier(client, requiredText(command.payload, "supplierId"))
+        : current;
+    const documentDate =
+      command.payload.documentDate !== undefined ? date(command.payload, "documentDate") : null;
+    const expectedDeliveryDate =
+      command.payload.expectedDeliveryDate !== undefined
+        ? date(command.payload, "expectedDeliveryDate")
+        : null;
+    const effectiveDocumentDate = documentDate ?? (current.document_date as Date);
+    const effectiveExpectedDeliveryDate =
+      expectedDeliveryDate ?? (current.expected_delivery_date as Date);
+    if (
+      effectiveDocumentDate instanceof Date &&
+      effectiveExpectedDeliveryDate instanceof Date &&
+      effectiveExpectedDeliveryDate < effectiveDocumentDate
+    ) {
+      throw new ValidationError("预计交付日不得早于单据日期", [
+        { field: "expectedDeliveryDate", message: "日期范围无效" },
+      ]);
+    }
+    if (subtotal + taxTotal < Number(current.paid_amount ?? 0)) {
+      throw new ConflictError("订单金额不得低于已付款金额");
+    }
+    return client.$transaction(async (transaction) => {
+      await transaction.purchase_order_items!.deleteMany({
+        where: { purchase_order_id: current.id },
+      });
+      return record(
+        await transaction.purchase_orders!.update({
+          data: {
+            ...(command.payload.documentDate !== undefined ? { document_date: documentDate } : {}),
+            ...(command.payload.expectedDeliveryDate !== undefined
+              ? { expected_delivery_date: expectedDeliveryDate }
+              : {}),
+            ...(command.payload.supplierId !== undefined
+              ? {
+                  supplier_code_snapshot: supplier.supplier_code,
+                  supplier_id: supplier.id,
+                  supplier_name_snapshot: supplier.supplier_name,
+                }
+              : {}),
+            ...(command.payload.settlementMethod !== undefined
+              ? { settlement_method: text(command.payload, "settlementMethod") }
+              : {}),
+            ...(command.payload.paymentTermsSnapshot !== undefined
+              ? { payment_terms_snapshot: text(command.payload, "paymentTermsSnapshot", true) }
+              : {}),
+            ...(command.payload.remark !== undefined
+              ? { remark: text(command.payload, "remark", true) }
+              : {}),
+            purchase_order_items: { create: detailRows },
+            subtotal_amount: subtotal,
+            tax_amount: taxTotal,
+            total_amount: subtotal + taxTotal,
+            total_quantity: quantityTotal,
+            unpaid_amount: subtotal + taxTotal - Number(current.paid_amount ?? 0),
+            updated_by: actor,
+            version_no: versionNo + 1,
+          },
+          include: { purchase_order_items: true },
+          where: { id: current.id },
+        }),
+      );
+    });
+  } else if (command.payload.items !== undefined) {
     throw new ValidationError("明细编辑必须提交已批准的完整明细 DTO，禁止局部覆盖");
   }
   const allowed: Partial<Record<WorkflowCommand["resource"], readonly string[]>> = {

@@ -40,6 +40,17 @@ function command(payload: Record<string, unknown>): WorkflowCommand {
   };
 }
 
+function purchaseCommand(payload: Record<string, unknown>): WorkflowCommand {
+  return {
+    action: "create",
+    apiId: "PUR-003",
+    mutation: true,
+    payload,
+    query: new URLSearchParams(),
+    resource: "purchase",
+  };
+}
+
 describe("Frozen workflow API contracts", () => {
   it("registers all in-scope APIs and excludes only INB-005 other inbound", () => {
     expect(WORKFLOW_API_IDS).toHaveLength(75);
@@ -127,5 +138,46 @@ describe("Frozen workflow API contracts", () => {
     );
     expect(audit.events).toHaveLength(1);
     expect(audit.events[0]).toMatchObject({ action: "PRO-003", actorUserId: USER_ID });
+  });
+
+  it("validates purchase order creation payload and writes purchase audit", async () => {
+    const repository: WorkflowRepository = {
+      execute: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "draft" }),
+    };
+    const audit = new InMemoryAuditWriter();
+    const service = new WorkflowService(repository, audit);
+    await expect(
+      service.execute(
+        purchaseCommand({
+          documentDate: "2026-07-23",
+          expectedDeliveryDate: "2026-08-01",
+          items: [],
+          settlementMethod: "bank_transfer",
+          supplierId: DOCUMENT_ID,
+        }),
+        "purchase.order.create",
+        authentication(["purchase.order.create"]),
+        context,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
+    await service.execute(
+      purchaseCommand({
+        documentDate: "2026-07-23",
+        expectedDeliveryDate: "2026-08-01",
+        items: [{ quantity: 1, skuId: DOCUMENT_ID, taxRate: 0, unitPrice: 100 }],
+        settlementMethod: "bank_transfer",
+        supplierId: DOCUMENT_ID,
+      }),
+      "purchase.order.create",
+      authentication(["purchase.order.create"]),
+      context,
+    );
+    expect(repository.execute).toHaveBeenCalledTimes(1);
+    expect(audit.events).toHaveLength(1);
+    expect(audit.events[0]).toMatchObject({
+      action: "PUR-003",
+      actorUserId: USER_ID,
+      resourceType: "purchase",
+    });
   });
 });
