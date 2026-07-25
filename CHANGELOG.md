@@ -11,6 +11,54 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.25] - 2026-07-25
+
+### Changed
+
+- 批准并执行 Task 7.6 Background Job Database Change Request 的 Database SSOT 更新
+- Database Logical Design 从 v2.3 更新为 v2.4，状态为 `Completed / Approved / Pending Migration`
+- 新增 Task 7.6 Database Design Update 文档，记录 DCR 对应关系、新增数据库对象、设计原因、既有模型关系和 Frozen 影响
+- DATABASE_ENUM_SPEC 更新为 v1.4，明确 Task 7.6 不新增 PostgreSQL Enum，Job/Attempt/Result/Dead Letter 状态均采用字段级 Check 值域
+
+### Added
+
+- `jobs`
+- `job_attempts`
+- `job_results`
+- `job_dead_letters`
+- `scheduler_locks`
+
+### Scope
+
+- 本次只更新 Database SSOT 与关联治理摘要
+- 未修改 API v1.5、Prisma Schema、Migration、Mapping Audit、Permission、DTO 或业务代码
+- 未修改 Product、SKU、Purchase、Production、Inventory、Inbound、Outbound、Cross Border 等业务领域表
+- 当前 Migration 状态为 Not Yet，后续物理同步必须另行执行 Forward-only Migration、Prisma Schema 更新、Mapping Audit 与 PostgreSQL 验证
+
+## [0.11.24] - 2026-07-25
+
+### Added
+
+- 新增 Task 7.6 Background Job & Distributed Lock 正式设计文档
+- 新增 DEC-091，批准 Task 7.6 Background Job & Distributed Lock Architecture Decision
+- 在 Phase 7 Platform Foundation 文档中补充 Task 7.6 PostgreSQL-backed Queue、Worker、Scheduler、Distributed Lock、Retry、Dead Letter 与 Job Audit 架构边界
+
+### Decided
+
+- Task 7.6 第一阶段采用 PostgreSQL-backed Queue 设计方向
+- 当前不默认引入 Redis Queue、Kafka、RabbitMQ、SQS 或其他外部 MQ 系统
+- Job 状态、执行结果、业务状态和审计事实保持职责分离
+- Worker 独立执行后台任务，Scheduler 只创建 Job，不直接执行业务任务
+- Distributed Lock 只用于 Job 执行互斥和 Scheduler 重复触发保护，不替代数据库约束、事务或业务一致性
+
+### Scope
+
+- 本次只冻结 Task 7.6 架构原则
+- 未提交 DCR 或 API Change Request
+- 未创建 Queue、Worker、Scheduler、Distributed Lock、Retry、Dead Letter 或业务接入实现
+- 未修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、DTO、权限、错误码、枚举或业务规则
+- 未修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md` 的当前状态摘要
+
 ## [0.11.23] - 2026-07-25
 
 ### Changed

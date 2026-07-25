@@ -19,6 +19,52 @@ export {
 } from "./inventory-workflow/prisma-inventory-workflow-repository.js";
 export { PrismaIdempotencyRepository } from "./idempotency/prisma-idempotency-repository.js";
 export { createPersistentIdempotencyAdapter } from "./idempotency/persistent-idempotency.js";
+export {
+  PrismaJobRepository,
+  type AcquireSchedulerLockInput,
+  type ClaimedJob,
+  type ClaimJobsInput,
+  type CompleteJobInput,
+  type CreateJobInput,
+  type DeadLetterHandlingStatus,
+  type ExtendJobLeaseInput,
+  type FailJobInput,
+  type FailedAttemptSettlement,
+  type JobAttemptRecord,
+  type JobAttemptStatus,
+  type JobDeadLetterRecord,
+  type JobJson,
+  type JobRecord,
+  type JobStatus,
+  type ReleaseSchedulerLockInput,
+  type SchedulerLockRecord,
+  type SettleFailedAttemptInput,
+  type UpdateJobStatusInput,
+} from "./job/prisma-job-repository.js";
+export {
+  evaluateJobRetry,
+  type JobRetryDecision,
+  type JobRetryDecisionInput,
+  type JobRetryPolicy,
+} from "./job/job-retry-engine.js";
+export {
+  JobSchedulerRuntime,
+  type JobSchedulerRepository,
+  type JobSchedulerRuntimeOptions,
+  type JobSchedulerState,
+  type SchedulerJobFactoryContext,
+  type SchedulerJobFactoryResult,
+  type SchedulerRule,
+} from "./job/job-scheduler-runtime.js";
+export {
+  JobWorkerRuntime,
+  type JobExecutionContext,
+  type JobHandler,
+  type JobHandlerRegistry,
+  type JobWorkerRepository,
+  type JobWorkerRuntimeOptions,
+  type JobWorkerState,
+} from "./job/job-worker-runtime.js";
 export { PrismaSecurityRepository } from "./security/prisma-security-repository.js";
 export { PrismaWorkflowRepository } from "./workflow/prisma-workflow-repository.js";
 export type { PrismaClient } from "./generated/prisma/client.js";

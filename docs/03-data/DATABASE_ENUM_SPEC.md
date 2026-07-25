@@ -1,7 +1,7 @@
 ---
 document_name: 数据库枚举规范
 project: Violin ERP Lite
-version: 1.3
+version: 1.4
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-22
@@ -13,11 +13,13 @@ related_phase: Phase 3
 
 ## 1. 文档目的
 
-本文档统一维护 Frozen Database Logical Design v2.1 的正式枚举代码，作为数据库物理映射、DTO 和 Validation 的唯一正式枚举输入。当前覆盖 `warehouse_type` 与 `access_level`。
+本文档统一维护 Frozen Database Logical Design 的正式枚举代码，作为数据库物理映射、DTO 和 Validation 的唯一正式枚举输入。当前覆盖 `warehouse_type` 与 `access_level`。
 
 Database Change Request 002 及其 Completion Fix 新增的 `user_wechat_identities.status`、`auth_sessions.client_type` 和 `auth_sessions.revocation_actor_type` 都是表内 Check 约束的局部代码，不新增 PostgreSQL Enum，也不扩展本文件的正式枚举集合。
 
 Database Change Request 003 为 `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 增加的四组代码同样只属于 `VARCHAR` 字段级 Check 值域，不是 PostgreSQL Enum，不改变本文件的正式枚举定义或数量。
+
+Task 7.6 Background Job Database Change Request 为 `jobs.status`、`job_attempts.status`、`job_results.result_status` 和 `job_dead_letters.handling_status` 增加的四组代码同样只属于 `VARCHAR` 字段级 Check 值域，不是 PostgreSQL Enum，不改变本文件的正式枚举定义或数量。`scheduler_locks` 使用租约时间表达锁状态，不新增 PostgreSQL Enum。
 
 ## 2. `warehouse_type` 正式枚举
 
@@ -63,15 +65,17 @@ Database Change Request 003 为 `import_tasks.status`、`import_task_items.valid
 5. 本文档不授权新增其他枚举值、字段、关系或业务规则。
 6. `auth_sessions.client_type` 只允许 `pc`、`wechat-mini-program`，`auth_sessions.revocation_actor_type` 只允许 `user`、`system`；二者由表内 Check 管理，不是 PostgreSQL Enum。
 7. DCR-003 的四组 Import 状态由字段级 Check 管理，不得伪造为 Prisma Enum 或 PostgreSQL Enum。
-8. 如后续需要变更枚举集合或语义，必须经项目负责人批准并完成正式变更流程。
+8. Task 7.6 的 Job、Attempt、Result 与 Dead Letter 状态由字段级 Check 管理，不得伪造为 Prisma Enum 或 PostgreSQL Enum。
+9. 如后续需要变更枚举集合或语义，必须经项目负责人批准并完成正式变更流程。
 
 ## 6. 正式结论
 
-- 文档版本：v1.3；
+- 文档版本：v1.4；
 - 文档状态：Completed / Approved / Frozen；
 - `warehouse_type` 正式枚举数量：5；
 - `access_level` 正式枚举数量：3；
 - 数据库表、字段、关系及原有 Check 规则修改数量：0；
 - DCR-002 及其 Completion Fix 新增 PostgreSQL Enum 数量：0；
 - DCR-003 新增 PostgreSQL Enum 数量：0；
+- Task 7.6 新增 PostgreSQL Enum 数量：0；
 - 后续数据库物理映射、DTO 和 Validation 必须以本文档为 `warehouse_type` 与 `access_level` 枚举的唯一正式输入。

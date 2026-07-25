@@ -475,6 +475,119 @@ model idempotency_records {
   @@index([resource_type, resource_id, created_at], map: "idx_idempotency_records_resource_created_at")
 }
 
+/// Task 7.6 keeps Job status as a string and enforces its approved values and lifecycle checks in the v2.4 SQL migration.
+model jobs {
+  id                                     String             @id(map: "pk_jobs") @default(dbgenerated("uuidv7()")) @db.Uuid
+  job_type                               String             @db.VarChar(100)
+  job_key                                String             @db.VarChar(300)
+  status                                 String             @db.VarChar(50)
+  priority                               Int                @default(0)
+  target_object_type                     String?            @db.VarChar(50)
+  target_object_id                       String?            @db.Uuid
+  payload                                Json?
+  scheduled_at                           DateTime           @db.Timestamptz(6)
+  available_at                           DateTime           @db.Timestamptz(6)
+  started_at                             DateTime?          @db.Timestamptz(6)
+  completed_at                           DateTime?          @db.Timestamptz(6)
+  locked_until                           DateTime?          @db.Timestamptz(6)
+  locked_by                              String?            @db.VarChar(200)
+  attempt_count                          Int                @default(0)
+  max_attempts                           Int
+  last_error_code                        String?            @db.VarChar(100)
+  last_error_message                     String?
+  idempotency_record_id                  String?            @db.Uuid
+  request_trace_id                       String             @db.Uuid
+  created_at                             DateTime           @default(now()) @db.Timestamptz(6)
+  created_by                             String?            @db.Uuid
+  updated_at                             DateTime           @default(now()) @db.Timestamptz(6)
+  updated_by                             String?            @db.Uuid
+  cancelled_at                           DateTime?          @db.Timestamptz(6)
+  job_attempts                           job_attempts[]
+  job_dead_letters_job_idTojobs          job_dead_letters?  @relation("job_dead_letters_job_idTojobs")
+  job_dead_letters_replayed_job_idTojobs job_dead_letters[] @relation("job_dead_letters_replayed_job_idTojobs")
+  job_results                            job_results?
+  users_jobs_created_byTousers           users?             @relation("jobs_created_byTousers", fields: [created_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_jobs_created_by")
+  users_jobs_updated_byTousers           users?             @relation("jobs_updated_byTousers", fields: [updated_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_jobs_updated_by")
+
+  @@unique([job_type, job_key], map: "uq_jobs_job_type_job_key")
+  @@index([status, available_at, priority, created_at], map: "idx_jobs_claim")
+  @@index([locked_until], map: "idx_jobs_locked_until")
+  @@index([target_object_type, target_object_id, created_at], map: "idx_jobs_target_created_at")
+  @@index([job_type, created_at], map: "idx_jobs_job_type_created_at")
+}
+
+/// Task 7.6 keeps Attempt status as a string and enforces its approved values and retry checks in the v2.4 SQL migration.
+model job_attempts {
+  id                                               String             @id(map: "pk_job_attempts") @default(dbgenerated("uuidv7()")) @db.Uuid
+  job_id                                           String             @db.Uuid
+  attempt_no                                       Int
+  worker_id                                        String             @db.VarChar(200)
+  status                                           String             @db.VarChar(50)
+  started_at                                       DateTime           @db.Timestamptz(6)
+  ended_at                                         DateTime?          @db.Timestamptz(6)
+  duration_ms                                      Int?
+  lease_expires_at                                 DateTime           @db.Timestamptz(6)
+  error_code                                       String?            @db.VarChar(100)
+  error_message                                    String?
+  error_detail                                     Json?
+  request_trace_id                                 String             @db.Uuid
+  created_at                                       DateTime           @default(now()) @db.Timestamptz(6)
+  jobs                                             jobs               @relation(fields: [job_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_job_attempts_job_id")
+  job_dead_letters_failed_attempt_idTojob_attempts job_dead_letters[] @relation("job_dead_letters_failed_attempt_idTojob_attempts")
+
+  @@unique([job_id, attempt_no], map: "uq_job_attempts_job_id_attempt_no")
+  @@index([status, started_at], map: "idx_job_attempts_status_started_at")
+}
+
+/// Task 7.6 keeps Result status as a string and enforces its approved values in the v2.4 SQL migration.
+model job_results {
+  id            String   @id(map: "pk_job_results") @default(dbgenerated("uuidv7()")) @db.Uuid
+  job_id        String   @unique(map: "uq_job_results_job_id") @db.Uuid
+  result_status String   @db.VarChar(50)
+  result_body   Json?
+  resource_type String?  @db.VarChar(50)
+  resource_id   String?  @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  jobs          jobs     @relation(fields: [job_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_job_results_job_id")
+
+  @@index([resource_type, resource_id, created_at], map: "idx_job_results_resource_created_at")
+}
+
+/// Task 7.6 keeps Dead Letter handling status as a string and enforces its approved values in the v2.4 SQL migration.
+model job_dead_letters {
+  id                                           String       @id(map: "pk_job_dead_letters") @default(dbgenerated("uuidv7()")) @db.Uuid
+  job_id                                       String       @unique(map: "uq_job_dead_letters_job_id") @db.Uuid
+  failed_attempt_id                            String       @db.Uuid
+  dead_letter_reason                           String
+  handling_status                              String       @db.VarChar(50)
+  handled_by                                   String?      @db.Uuid
+  handled_at                                   DateTime?    @db.Timestamptz(6)
+  handling_note                                String?
+  replayed_job_id                              String?      @db.Uuid
+  created_at                                   DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime     @default(now()) @db.Timestamptz(6)
+  jobs_job_dead_letters_job_idTojobs           jobs         @relation("job_dead_letters_job_idTojobs", fields: [job_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_job_dead_letters_job_id")
+  job_attempts_failed_attempt_idTojob_attempts job_attempts @relation("job_dead_letters_failed_attempt_idTojob_attempts", fields: [failed_attempt_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_job_dead_letters_failed_attempt_id")
+  users_job_dead_letters_handled_byTousers     users?       @relation("job_dead_letters_handled_byTousers", fields: [handled_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_job_dead_letters_handled_by")
+  jobs_job_dead_letters_replayed_job_idTojobs  jobs?        @relation("job_dead_letters_replayed_job_idTojobs", fields: [replayed_job_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_job_dead_letters_replayed_job_id")
+
+  @@index([handling_status, created_at], map: "idx_job_dead_letters_handling_status_created_at")
+}
+
+/// Task 7.6 Scheduler lease table. Lock semantics and time-range checks are enforced in the v2.4 SQL migration.
+model scheduler_locks {
+  id               String    @id(map: "pk_scheduler_locks") @default(dbgenerated("uuidv7()")) @db.Uuid
+  lock_key         String    @unique(map: "uq_scheduler_locks_lock_key") @db.VarChar(300)
+  owner_id         String    @db.VarChar(200)
+  locked_until     DateTime  @db.Timestamptz(6)
+  last_acquired_at DateTime  @db.Timestamptz(6)
+  released_at      DateTime? @db.Timestamptz(6)
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([locked_until], map: "idx_scheduler_locks_locked_until")
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model inbound_order_items {
   id                                          String                  @id(map: "pk_inbound_order_items") @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -2020,6 +2133,9 @@ model users {
   import_task_items_import_task_items_updated_byTousers                                   import_task_items[]                  @relation("import_task_items_updated_byTousers")
   import_tasks_import_tasks_created_byTousers                                             import_tasks[]                       @relation("import_tasks_created_byTousers")
   import_tasks_import_tasks_updated_byTousers                                             import_tasks[]                       @relation("import_tasks_updated_byTousers")
+  jobs_jobs_created_byTousers                                                             jobs[]                               @relation("jobs_created_byTousers")
+  jobs_jobs_updated_byTousers                                                             jobs[]                               @relation("jobs_updated_byTousers")
+  job_dead_letters_job_dead_letters_handled_byTousers                                     job_dead_letters[]                   @relation("job_dead_letters_handled_byTousers")
   inbound_order_items_inbound_order_items_created_byTousers                               inbound_order_items[]                @relation("inbound_order_items_created_byTousers")
   inbound_order_items_inbound_order_items_updated_byTousers                               inbound_order_items[]                @relation("inbound_order_items_updated_byTousers")
   inbound_orders_inbound_orders_approved_byTousers                                        inbound_orders[]                     @relation("inbound_orders_approved_byTousers")

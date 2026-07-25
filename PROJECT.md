@@ -126,7 +126,7 @@ Violin ERP Lite 用于管理公司乐器产品，当前以小提琴及配件为�
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，当前 Database Logical Design v2.3 已冻结。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 为 Completed / Approved / Frozen，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen；Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入。Phase Renumbering Change Request 001 已正式批准，项目采用十阶段路线；原 Phase 7 / Task 7.x 成果已迁移为 Phase 8 / Task 8.x。当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.5 均为 Completed / Approved；Current Task 已切换为 Task 7.6，但状态保持 Waiting / Not Started。Phase 8 至 Phase 10 保持 Waiting / Not Started。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.4 为 Completed / Approved / Pending Migration，v2.3 仍为最近已完成物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 为 Completed / Approved / Frozen，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen；Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入。Phase Renumbering Change Request 001 已正式批准，项目采用十阶段路线；原 Phase 7 / Task 7.x 成果已迁移为 Phase 8 / Task 8.x。当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.5 均为 Completed / Approved；Current Task 已切换为 Task 7.6，但状态保持 Waiting / Not Started。Phase 8 至 Phase 10 保持 Waiting / Not Started。
 
 ## 固定十阶段开发路线
 

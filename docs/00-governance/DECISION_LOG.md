@@ -2248,3 +2248,57 @@ Approved
 ### 影响
 
 本决定只同步治理状态，不启动或实现 Task 7.6，不创建 Queue、Worker、Scheduler 或 Distributed Lock，不修改业务代码、Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit 或 Frozen 业务规则。
+
+## DEC-091 批准Task 7.6 Background Job & Distributed Lock Architecture Decision
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 Task 7.6 Background Job & Distributed Lock Architecture Decision；
+- Task 7.6 统一后台任务能力属于 Phase 7 Platform Foundation，不改变业务流程，不新增业务模块；
+- 后台 Job 状态、执行结果、业务状态和审计事实必须保持职责分离，不得用业务状态代替 Job 状态，不得用日志代替任务审计，不得用缓存代替业务一致性控制；
+- Task 7.6 第一阶段采用 PostgreSQL-backed Queue 作为设计方向；
+- 当前不默认引入 Redis Queue、Kafka、RabbitMQ、SQS 或其他外部 MQ 系统，任何新增基础设施必须经过独立 Architecture Decision；
+- Worker 作为独立后台执行进程，负责获取任务、获取执行租约、执行任务、更新结果和记录审计；
+- Scheduler 只负责周期任务触发、创建 Job 和防止重复触发，不直接执行业务任务；
+- Distributed Lock 只用于防止多个 Worker 同时执行同一 Job，以及防止 Scheduler 重复创建任务；
+- Lock 不得替代数据库约束、数据库事务或业务一致性；Task 7.5 Idempotency Lease 与数据库行级锁继续保持原职责；
+- Retry Policy 必须包含最大重试次数、重试间隔、失败原因和是否允许自动恢复，禁止无限自动重试；
+- Dead Letter 用于失败闭环和人工处理，不自动修改业务数据；
+- Job Audit 必须记录 Job ID、Task Type、Start Time、End Time、Worker、Attempt、Error 和 Retry History；
+- 当前不提交 Database Change Request，不提交 API Change Request。
+
+### 影响
+
+本决定只冻结 Task 7.6 架构原则并新增正式设计文档，不启动或实现 Queue、Worker、Scheduler、Distributed Lock、Retry、Dead Letter 或业务接入；不修改 Frozen Database Logical Design v2.3、API Master Specification v1.5、Prisma Schema、Migration、Mapping Audit、DTO、权限、错误码、枚举或业务规则。后续如新增 Job 表、Attempt 表、Lock 表、Dead Letter 表、Job Result 字段、Job Audit 字段或 API 接口，必须先提交并批准对应 DCR 或 API Change Request。
+
+## DEC-092 批准Task 7.6 Database SSOT更新
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人已批准 `TASK_7_6_BACKGROUND_JOB_DATABASE_CHANGE_REQUEST.md`；
+- Task 7.6 Database SSOT 更新正式纳入 Database Logical Design v2.4；
+- Database Logical Design v2.4 新增 5 个平台技术对象：`jobs`、`job_attempts`、`job_results`、`job_dead_letters`、`scheduler_locks`；
+- v2.4 新增 65 个字段、5 个主键、5 个唯一约束/唯一索引、8 个外键、8 个普通索引和 16 项 Check；
+- Task 7.6 不新增 PostgreSQL Enum，Job、Attempt、Result 与 Dead Letter 状态均作为字段级 Check 值域管理；
+- Scheduler Lock / Lease 独立于 Task 7.5 Idempotency Lease，只用于 Scheduler 防重复触发，不替代数据库约束、事务或业务一致性；
+- 当前阶段不创建 Migration，不修改 Prisma Schema，不更新 Mapping Audit，不执行数据库 DDL。
+
+### 影响
+
+本决定只更新 Database SSOT 与关联治理摘要，不修改 API Master Specification v1.5、Permission、DTO、业务代码、Prisma Schema、Migration 或 Mapping Audit；不修改 Product、SKU、Purchase、Production、Inventory、Inbound、Outbound、Cross Border 等业务领域表。Database Logical Design v2.4 当前状态为 Completed / Approved / Pending Migration，后续物理同步必须另行完成 Forward-only Migration、Prisma Schema 更新、Mapping Audit 与 PostgreSQL 验证。

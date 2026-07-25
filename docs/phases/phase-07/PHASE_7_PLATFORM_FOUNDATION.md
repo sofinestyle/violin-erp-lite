@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.9
+version: 2.0
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -149,6 +149,21 @@ Task 7.5 已完成通用持久化幂等平台、Prisma Repository、Hash、Scope
 ### 5.5 Background Job & Distributed Lock
 
 形成后台执行、重试、失败恢复、幂等消费和必要分布式互斥边界，不使用锁代替数据库业务约束。
+
+Task 7.6 Architecture Decision 已冻结以下设计方向：
+
+1. 采用 PostgreSQL-backed Queue 作为第一阶段后台任务方案；
+2. 不默认引入 Redis Queue、Kafka、RabbitMQ、SQS 或其他外部 MQ；
+3. Job 状态、Job Result、业务状态和 Audit 必须保持职责分离；
+4. Worker 作为独立后台执行进程，负责获取任务、执行租约、执行任务、更新结果和记录审计；
+5. Scheduler 只负责周期触发和创建 Job，不直接执行业务任务；
+6. Distributed Lock 只用于 Job 执行互斥和 Scheduler 重复触发保护，不替代数据库约束、事务或业务一致性；
+7. Retry 必须有最大次数、间隔、失败原因和恢复边界，禁止无限自动重试；
+8. Dead Letter 用于失败闭环和人工处理，不自动修改业务数据；
+9. 后续如需新增 Job、Attempt、Lock、Dead Letter、Job Result 或 Job Audit 持久化对象，必须先提交 DCR；
+10. 后续如需新增客户端可见 Job API、DTO、权限、错误码或状态契约，必须先提交 API Change Request。
+
+本架构决策只冻结平台原则，不创建 Queue、Worker、Scheduler、Distributed Lock、数据库结构、API 或业务接入实现。Task 7.6 正式设计文档为 [`TASK_7_6_BACKGROUND_JOB_AND_DISTRIBUTED_LOCK.md`](TASK_7_6_BACKGROUND_JOB_AND_DISTRIBUTED_LOCK.md)。
 
 ### 5.6 Cache & Event Infrastructure
 

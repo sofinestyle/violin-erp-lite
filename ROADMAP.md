@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，当前 Database Logical Design v2.3 已冻结。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.5 均已完成并获得批准，Current Task 已切换为尚未启动的 Task 7.6。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.4 为 Completed / Approved / Pending Migration，v2.3 仍为最近已完成物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.5 均已完成并获得批准，Current Task 已切换为尚未启动的 Task 7.6。
 
 ## 3. 固定十阶段开发路线
 
@@ -234,7 +234,7 @@ Task 5.1 至 Task 5.5 及 Final Consistency Review 均已获得项目负责人�
 3. Task 6.3 公共能力功能详细设计：Completed / Approved；
 4. Phase 6 Final Consistency Review：Completed / Approved。
 
-API Change Request 001、API Coverage Completion 002、API Coverage Completion 003、API Change Request 004 与 API Change Request 005：Completed / Approved。当前 API Master Specification v1.5：Completed / Approved / Frozen，正式接口总数为 335。Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入；Database Logical Design v2.3 保持 Frozen。Phase 6 正式内容后续如需修改，必须通过 DCR 或正式 Change Request，不得通过聊天记忆、代码实现或临时决定覆盖 Frozen 文档。
+API Change Request 001、API Coverage Completion 002、API Coverage Completion 003、API Change Request 004 与 API Change Request 005：Completed / Approved。当前 API Master Specification v1.5：Completed / Approved / Frozen，正式接口总数为 335。Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入；Database Logical Design v2.4 为 Completed / Approved / Pending Migration，v2.3 保持最近已完成物理 Migration 与 Mapping Audit 的 Frozen 基线。Phase 6 正式内容后续如需修改，必须通过 DCR 或正式 Change Request，不得通过聊天记忆、代码实现或临时决定覆盖 Frozen 文档。
 
 Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每个 Task 完成后必须先通过 GitHub 验收，未经项目负责人批准不得启动后续 Task。Phase 6 不设置 Task 6.4。
 

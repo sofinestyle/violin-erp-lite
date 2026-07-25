@@ -199,7 +199,7 @@ pnpm dev:miniapp
 
 ## 当前禁止事项
 
-API Master Specification v1.5 是 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 335。Database Logical Design v2.3、DATABASE_ENUM_SPEC 与 Phase 6 Functional Specification 保持 Frozen。DCR-004、API CR-004、DCR-005 与 API CR-005 均为 Completed / Approved。后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
+API Master Specification v1.5 是 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 335。Database Logical Design v2.4 为 Completed / Approved / Pending Migration，v2.3 仍为最近已完成物理 Migration 与 Mapping Audit 的冻结基线；DATABASE_ENUM_SPEC 与 Phase 6 Functional Specification 保持 Frozen。DCR-004、API CR-004、DCR-005、API CR-005 与 Task 7.6 Background Job Database Change Request 均为 Completed / Approved。后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
 
 ## 安全说明
 
