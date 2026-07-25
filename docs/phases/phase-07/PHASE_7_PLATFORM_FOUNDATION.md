@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -21,7 +21,7 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 
 - Phase：Phase 7 Platform Foundation；
 - Phase Status：In Progress；
-- Current Task：Task 7.2 Authentication & Authorization；
+- Current Task：Task 7.3 Object Storage & File Lifecycle；
 - Current Task Status：In Progress；
 - Phase 8 Application Development：Waiting / Not Started；
 - Phase 9 Test Plan & System Integration：Waiting / Not Started；
@@ -48,8 +48,8 @@ DCR-004 与 API CR-004 未因路线重构获得批准，也不得在本阶段入
 | Task | 名称 | 状态 |
 | --- | --- | --- |
 | Task 7.1 | Platform Baseline & Existing Capability Audit | Completed / Approved |
-| Task 7.2 | Authentication & Authorization | In Progress |
-| Task 7.3 | Object Storage & File Lifecycle | Waiting / Not Started |
+| Task 7.2 | Authentication & Authorization | Completed / Approved |
+| Task 7.3 | Object Storage & File Lifecycle | In Progress |
 | Task 7.4 | Attachment Framework | Waiting / Not Started |
 | Task 7.5 | Idempotency & Concurrency Control | Waiting / Not Started |
 | Task 7.6 | Background Job & Distributed Lock | Waiting / Not Started |
@@ -57,7 +57,7 @@ DCR-004 与 API CR-004 未因路线重构获得批准，也不得在本阶段入
 | Task 7.8 | Audit, Trace & Observability | Waiting / Not Started |
 | Task 7.9 | Platform Final Consistency Review | Waiting / Not Started |
 
-Task 7.1 已完成并获得批准；当前只启动 Task 7.2。Task 7.3 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
+Task 7.1 与 Task 7.2 已完成并获得批准；当前只启动 Task 7.3。Task 7.4 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
 
 ## 5. 平台边界
 
@@ -65,7 +65,7 @@ Task 7.1 已完成并获得批准；当前只启动 Task 7.2。Task 7.3 至 Task
 
 复核现有统一登录、Session、Token Family、RBAC、用户状态和双端认证成果，确认其唯一事实来源、运行边界、测试证据和待补缺口。
 
-Task 7.2 的正式启动边界：
+Task 7.2 已按以下正式边界完成并获得批准：
 
 1. 统一服务端数据范围派生算法；
 2. 消除 `current-user-resolver.ts` 与 Admin API Route 的两套逻辑；
@@ -73,11 +73,23 @@ Task 7.2 的正式启动边界：
 4. 审计内存限流与微信绑定幂等的迁移边界；
 5. 不得在未批准 DCR/API Change Request 的情况下修改数据库或 Frozen API。
 
-本次治理同步不实施上述代码变更。
+Task 7.2 的实现、测试和报告已通过项目负责人技术验收。
 
 ### 5.2 Object Storage & File Lifecycle
 
 定义二进制对象写入、读取、存在性、元数据、补偿、孤儿检测和清理边界；业务元数据继续由正式数据库对象管理。
+
+Task 7.3 的正式启动边界：
+
+1. 扩展 Storage Adapter 正式契约；
+2. 补齐 `read`、`stream`、`exists`、`metadata`；
+3. 明确 Local 与生产 Storage Adapter 边界；
+4. 明确 Storage Key、Checksum、Metadata 与 URL Strategy；
+5. 明确对象生命周期、删除补偿和孤儿对象处理；
+6. 不得提前实现 Attachment Framework；
+7. 如需修改数据库或 Frozen API，必须先提出独立 DCR 或 API Change Request。
+
+本次治理同步不实施 Storage 代码或 Attachment Framework。
 
 ### 5.3 Attachment Framework
 
@@ -121,4 +133,4 @@ Task 7.2 的正式启动边界：
 
 ## 8. 当前结论
 
-Phase 7 Platform Foundation 保持 In Progress。Task 7.1 已为 Completed / Approved；当前 Task 7.2 为 In Progress；Task 7.3 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。
+Phase 7 Platform Foundation 保持 In Progress。Task 7.1 与 Task 7.2 已为 Completed / Approved；当前 Task 7.3 为 In Progress；Task 7.4 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。

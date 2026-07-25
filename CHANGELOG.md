@@ -11,6 +11,21 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.9] - 2026-07-25
+
+### Changed
+
+- Task 7.2 Authentication & Authorization 已通过技术验收并更新为 `Completed / Approved`
+- Current Task 已切换为 Task 7.3 Object Storage & File Lifecycle，状态为 `In Progress`
+- Phase 7 保持 `In Progress`，Task 7.4 至 Task 7.9 保持 `Waiting / Not Started`
+- Task 7.3 首要边界固定为扩展 Storage Adapter 契约，补齐 `read`、`stream`、`exists`、`metadata`，并明确 Local 与生产 Adapter、Storage Key、Checksum、Metadata、URL Strategy、对象生命周期、删除补偿和孤儿对象处理
+
+### Scope
+
+- 本轮只同步治理状态和 Task 7.3 启动边界
+- 未修改 Storage、Attachment 或其他业务代码，未修改数据库、Prisma、Migration、Mapping Audit、Frozen API 或测试逻辑
+- Task 7.3 不得提前实现 Attachment Framework；如需修改数据库或 Frozen API，必须先提出独立 DCR 或 API Change Request
+
 ## [0.11.8] - 2026-07-25
 
 ### Added

@@ -1,8 +1,8 @@
 ---
 document_name: Task 7.2 Authentication & Authorization Report
 project: Violin ERP Lite
-version: 1.0
-status: Completed / Pending Approval
+version: 1.1
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-25
 updated_date: 2026-07-25
@@ -145,8 +145,18 @@ Frozen SSOT 不存在 `none` 代码，因此无有效权限时返回空集合，
 
 未新增表、字段、关系、Check、Index、状态、API、DTO、错误码或响应字段。DCR-004 与 API CR-004 未被采用、批准或实现。
 
-## 10. 冻结条件
+## 10. 批准结论
 
-Task 7.2 的实现、测试和报告已完成，达到进入 GitHub 技术验收的条件，报告状态为 Completed / Pending Approval。
+项目负责人已完成 Task 7.2 的 GitHub 技术验收。Task 7.2 的实现、测试和报告正式更新为 Completed / Approved。
 
-正式 Task 状态继续以 `CURRENT_STATUS.md` 为准，保持 In Progress。未经项目负责人批准，不将 Task 7.2 更新为 Completed / Approved，不启动 Task 7.3。
+Phase 7 保持 In Progress，Current Task 切换为 Task 7.3 Object Storage & File Lifecycle，状态为 In Progress。本次只同步治理状态，不实施 Storage 代码。
+
+Task 7.3 首要处理事项为：
+
+1. 扩展 Storage Adapter 正式契约；
+2. 补齐 `read`、`stream`、`exists`、`metadata`；
+3. 明确 Local 与生产 Storage Adapter 边界；
+4. 明确 Storage Key、Checksum、Metadata 与 URL Strategy；
+5. 明确对象生命周期、删除补偿和孤儿对象处理；
+6. 不得提前实现 Attachment Framework；
+7. 如需修改数据库或 Frozen API，必须先提出独立 DCR 或 API Change Request。

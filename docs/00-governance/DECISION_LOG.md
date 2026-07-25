@@ -1,7 +1,7 @@
 ---
 document_name: 正式决策记录
 project: Violin ERP Lite
-version: 1.2
+version: 1.3
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
@@ -2002,3 +2002,30 @@ Approved
 ### 影响
 
 本决定只同步治理状态与 Task 7.2 启动边界，不实施 Task 7.2 功能；不修改认证代码、业务代码、数据库、Prisma、Migration、Mapping Audit、Frozen API、权限定义或测试逻辑。
+
+## DEC-081 批准Task 7.2并启动Task 7.3
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人已完成 Task 7.2 Authentication & Authorization 的 GitHub 技术验收；
+- Task 7.2 与正式完成报告均更新为 Completed / Approved；
+- Phase 7 Platform Foundation 继续保持 In Progress；
+- Current Task 切换为 Task 7.3 Object Storage & File Lifecycle，状态为 In Progress；
+- Task 7.4 至 Task 7.9 继续保持 Waiting / Not Started；
+- Task 7.3 首要扩展 Storage Adapter 正式契约并补齐 `read`、`stream`、`exists`、`metadata`；
+- Task 7.3 必须明确 Local 与生产 Storage Adapter 边界，以及 Storage Key、Checksum、Metadata 和 URL Strategy；
+- Task 7.3 必须明确对象生命周期、删除补偿和孤儿对象处理；
+- Task 7.3 不得提前实现 Attachment Framework；
+- 如需修改数据库或 Frozen API，必须先提出独立 DCR 或 API Change Request。
+
+### 影响
+
+本决定只同步治理状态与 Task 7.3 启动边界，不实施 Task 7.3 功能；不修改 Storage、Attachment 或其他业务代码，不修改数据库、Prisma、Migration、Mapping Audit、Frozen API、权限定义或测试逻辑。
