@@ -1,5 +1,8 @@
 export { checkDatabaseConnection, createPrismaClient, getPrismaClient } from "./client.js";
 export { PrismaAuditWriter } from "./audit/prisma-audit-writer.js";
+export { PrismaAttachmentLinkRepository } from "./attachment/prisma-attachment-link-repository.js";
+export { PrismaAttachmentObjectReader } from "./attachment/prisma-attachment-object-reader.js";
+export { PrismaAttachmentRepository } from "./attachment/prisma-attachment-repository.js";
 export { createCurrentUserResolver } from "./auth/current-user-resolver.js";
 export { PrismaAuthRepository } from "./auth/prisma-auth-repository.js";
 export { PrismaMasterDataRepository } from "./master-data/prisma-master-data-repository.js";

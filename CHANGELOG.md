@@ -11,6 +11,31 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.20] - 2026-07-25
+
+### Added
+
+- 新增统一 `AttachmentObjectRegistry`，覆盖 Frozen API v1.5 的 17 个 Object Type
+- 新增统一 `AttachmentCategoryRegistry`，覆盖 10 个 Category 的敏感、证据、兼容、删除与保留规则
+- 新增 Attachment 与 Attachment Link Repository 接口及 Prisma 实现
+- 新增 `AttachmentLifecycle`、统一 `AttachmentValidator` 与不含 HTTP 语义的 Domain Error
+- 新增 Attachment Domain、Repository、Object Reader、唯一约束和 PostgreSQL 集成测试
+
+### Verified
+
+- Registry 完整覆盖 17 个 Object Type 与 10 个 Category
+- Lifecycle 覆盖 Database v2.3 的全部正式迁移并拒绝非法迁移
+- Attachment Link 重复竞争只依赖既有 PostgreSQL 唯一约束，两个并发创建只允许一个成功
+- PostgreSQL 18.4 独立测试数据库成功部署全部 6 个正式 Migration，Seed 连续执行两次保持幂等
+- PostgreSQL Attachment Repository 集成测试 2/2 通过
+
+### Scope
+
+- Batch 7.4-A 实现状态为 `Completed / Pending Approval`，Task 7.4 正式状态继续为 `In Progress`
+- 未创建 `ATT-001` 至 `ATT-008` Route，未实现 Upload、Download、删除流程或 Worker
+- 未修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、DTO、权限代码或 API 数量
+- 未启动下一内部批次或 Task 7.6
+
 ## [0.11.19] - 2026-07-25
 
 ### Changed

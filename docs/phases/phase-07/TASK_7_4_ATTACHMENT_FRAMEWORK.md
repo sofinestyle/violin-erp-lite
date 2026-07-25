@@ -1,7 +1,7 @@
 ---
 document_name: Task 7.4 Attachment Framework
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-25
@@ -14,41 +14,50 @@ related_phase: Phase 7
 ## 1. 正式状态
 
 - Task Status：In Progress；
-- Implementation Status：Governance Prerequisites Pending；
-- Current Task：Task 7.4 Attachment Framework。
+- Current Task：Task 7.4 Attachment Framework；
+- Batch 7.4-A Implementation：Completed / Pending Approval。
 
-Task 7.4 未完成、未关闭，也未退回 Waiting / Not Started。
+Batch 是 Task 7.4 内部实施批次，不进入 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。Task 7.4 未完成、未关闭，也未启动 Task 7.6。
 
-## 2. 历史依赖与恢复结论
+## 2. 正式实现基线
 
-`ATT-001` 上传要求生产级持久化幂等。Attachment Framework 不得：
+- Database Logical Design v2.3：Completed / Approved / Frozen；
+- API Master Specification v1.5：Completed / Approved / Frozen；
+- Attachment Framework SSOT Completion 001：Completed / Approved；
+- Database Change Request 005：Completed / Approved；
+- API Change Request 005：Completed / Approved；
+- Task 7.3 Object Storage & File Lifecycle：Completed / Approved；
+- Task 7.5 Idempotency & Concurrency Control：Completed / Approved。
 
-- 使用进程内 Map 作为生产级幂等能力；
-- 建立 Attachment 专用持久化幂等；
-- 绕过统一 Platform Idempotency Framework。
+历史治理前置已经全部关闭。Attachment Framework 不得使用进程内 Map 作为生产级幂等能力，不得建立 Attachment 专用持久化幂等，不得绕过 Task 7.3 Storage 或 Task 7.5 Persistent Idempotency。
 
-Database Logical Design v2.2 与 API Master Specification v1.4 已完成前置冻结。Task 7.5 已完成统一幂等与并发控制基础并通过 GitHub 技术验收，正式状态为 Completed / Approved。Task 7.4 因 Task 7.5 产生的历史依赖暂停现已解除，并恢复为 Current Task。
+## 3. Batch 7.4-A 完成范围
 
-## 3. 后续治理前置顺序
+本批次建立 Attachment Framework 基础领域层：
 
-Task 7.4 后续必须按以下顺序执行：
+1. 冻结 17 个 Object Type 的统一 `AttachmentObjectRegistry`；
+2. 冻结 10 个 Category 的统一 `AttachmentCategoryRegistry`；
+3. 建立 `AttachmentRepository` 与 Prisma 实现；
+4. 建立 `AttachmentLinkRepository` 与 Prisma 实现；
+5. 建立统一 `AttachmentValidator`；
+6. 建立五状态 `AttachmentLifecycle`；
+7. 建立不包含 HTTP 语义的 Attachment Domain Error；
+8. 完成领域、Repository、唯一约束及 PostgreSQL 18.4 集成测试。
 
-1. DCR-005 Approval；
-2. Database v2.3 Documentation & Migration Sync；
-3. API CR-005 Approval；
-4. API v1.5 Documentation Sync；
-5. Attachment Framework Implementation。
+Object Type 与 Category 的分派只通过 Registry 完成。业务 Service 不得使用 `switch` 或 `if-else` 建立平行 Object Type 规则。Attachment 与 Link 的数据库访问只通过 Repository 完成，业务层不得直接调用 Prisma。
 
-DCR-005 与 API CR-005 继续保持 Proposed / Pending Approval。未经正式批准与 SSOT 同步，不得进入 Attachment Framework Implementation。
+## 4. 本批次明确未实现
 
-## 4. 未变边界
+- `ATT-001` 至 `ATT-008` API；
+- Route、Controller 或 HTTP Error Mapping；
+- Upload、Download 或 Streaming；
+- Attachment 删除执行流程或 Storage 删除补偿；
+- Background Worker 或 Task 7.6 Distributed Lock；
+- Import 业务接入；
+- 页面或 Mini Program 功能。
 
-- 不提前实现 Attachment Route、Service、Repository 或测试；
-- 不修改 Frozen Database v2.2 或 API v1.4；
-- DCR-005 与 API CR-005 保持原状态，本次状态同步不批准、不修改；
-- 不提前实现 Import 或后台清理 Worker；
-- Task 7.4 实施时仍须遵守届时有效的 Approved / Frozen SSOT。
+本批次未修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、Object Type、Category、Status、DTO、权限代码或正式 API 数量。
 
-## 5. 本轮结论
+## 5. 后续边界
 
-本轮只批准 Task 7.5、解除 Task 7.4 的历史平台依赖暂停并切换 Current Task，不实施 Attachment 代码，不批准或修改 DCR-005 与 API CR-005。
+Batch 7.4-A 必须先完成独立 GitHub 技术验收。未经项目负责人后续正式指令，不得开始 Attachment API、Upload、Download、删除流程或下一内部批次。
