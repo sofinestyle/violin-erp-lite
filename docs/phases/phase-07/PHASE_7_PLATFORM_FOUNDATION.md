@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.7
+version: 1.8
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -32,16 +32,16 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 ## 3. 权威输入
 
 - Frozen `BUSINESS_RULES.md`；
-- Frozen Database Logical Design v2.2；
-- Frozen API Master Specification v1.4，正式接口总数 335；
+- Frozen Database Logical Design v2.3；
+- Frozen API Master Specification v1.5，正式接口总数 335；
 - Frozen `ROLE_PERMISSION_SPEC.md`；
 - Approved Phase 4 页面设计；
 - Frozen Phase 6 Functional Specification；
 - Completed / Approved 的原 Phase 7 工程成果，现已迁移为 Phase 8 历史 Task；
 - Completed / Approved 的 Phase Renumbering Change Request 001；
-- Completed / Approved 的 DCR-004 与 API CR-004。
+- Completed / Approved 的 DCR-004、API CR-004、DCR-005 与 API CR-005。
 
-DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步，现作为 Task 7.5 的正式实现输入。
+DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步，并作为 Task 7.5 的正式实现输入。DCR-005 与 API CR-005 已完成批准和同步，并作为 Task 7.4 的正式实现输入。
 
 ## 4. Task 结构
 
@@ -108,26 +108,24 @@ Task 7.4 的正式启动边界：
 9. 如数据库现有字段不足，必须停止并提出 DCR；
 10. 不得提前实现 Task 7.5 通用幂等或 Task 7.6 后台清理 Worker。
 
-Task 7.4 实现前审计发现以下 Frozen SSOT 缺口：
+Task 7.4 实现前审计发现以下 Frozen SSOT 缺口，现均已通过正式变更流程关闭：
 
 1. `attachments.status` 没有正式状态值域、默认值或 Check；
 2. `ATT-001` 至 `ATT-008` 没有完整 Request/Response DTO；
 3. `object_type` 与 `attachment_category` 没有封闭代码集合；
 4. 删除保护、Storage 删除补偿及失败状态没有可执行矩阵；
 5. 现有错误码不足以稳定映射全部 Attachment/Storage 失败；
-6. `ATT-001` 的生产级首次结果重放依赖已由 DCR-004/API CR-004 补齐，但 Attachment 状态、DTO、类别与删除规则仍等待 DCR-005/API CR-005 批准。
+6. `ATT-001` 的生产级首次结果重放依赖由 DCR-004/API CR-004 补齐，Attachment 状态、DTO、类别与删除规则由 DCR-005/API CR-005 补齐。
 
-Database v2.2 与 API v1.4 已补齐生产级持久化幂等的正式数据和契约基础。`ATT-001` 所依赖的统一 Platform Idempotency Framework 已由 Task 7.5 完成并获得批准，Task 7.4 的历史依赖暂停现已解除，正式状态继续为 `In Progress` 并恢复为 Current Task。Task 7.4 不得使用进程内 Map、建立 Attachment 专用幂等或绕过统一平台幂等框架。
+Database v2.3 与 API v1.5 已提供 Attachment Framework 的正式数据和接口契约。Task 7.5 已完成 `ATT-001`、`ATT-005`、`ATT-006` 与 `ATT-007` 所依赖的统一生产级持久化幂等平台。Task 7.4 不使用进程内 Map、Attachment 专用幂等或平行 Storage 实现。
 
-已提出但尚未批准：
+Task 7.4 的三个内部实施批次结果：
 
-- `ATTACHMENT_FRAMEWORK_SSOT_COMPLETION_001.md`；
-- `DATABASE_CHANGE_REQUEST_005.md`；
-- `API_CHANGE_REQUEST_005.md`。
+1. Batch 7.4-A：Completed / Approved，完成 Domain、Repository、Registry、Validator 与 Lifecycle；
+2. Batch 7.4-B：Completed / Approved，完成 `ATT-001` 至 `ATT-004`；
+3. Batch 7.4-C：Completed / Pending Approval，完成 `ATT-005` 至 `ATT-008`、完整删除状态机、生命周期查询、审计和并发验证。
 
-上述 Attachment 提案、DCR-005 与 API CR-005 继续保持原状态，本轮不批准、不修改、不实施。
-
-Task 7.4 后续必须依次完成 DCR-005 Approval、Database v2.3 Documentation & Migration Sync、API CR-005 Approval、API v1.5 Documentation Sync，方可进入 Attachment Framework Implementation。
+Task 7.4 Implementation 当前为 `Completed / Pending Approval`，正式 Task 状态仍为 `In Progress`，Current Task 仍为 Task 7.4。内部 Batch 状态不进入 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。
 
 ### 5.4 Idempotency & Concurrency Control
 

@@ -23,10 +23,13 @@ import {
   parseAttachmentId,
   parseAttachmentListQuery,
   parseAttachmentUploadRequest,
+  parseCreateAttachmentLink,
+  parseDeleteAttachment,
   parseMasterDataListQuery,
   parseLoginRequest,
   parseRefreshRequest,
   parseSecurityListQuery,
+  parseUnlinkAttachment,
   recordAuditEvent,
   requireClientType,
   requireIdempotencyKey as requirePersistentIdempotencyKey,
@@ -93,6 +96,13 @@ async function body(request: Request): Promise<unknown> {
   } catch {
     throw new AppError("VALIDATION_INVALID_JSON", 422, "请求体必须是有效 JSON");
   }
+}
+
+async function attachmentJsonBody(request: Request): Promise<unknown> {
+  if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get("Content-Type") ?? "")) {
+    throw new AppError("VALIDATION_INVALID_HEADER", 422, "Content-Type 必须是 application/json");
+  }
+  return body(request);
 }
 
 function services() {
@@ -333,6 +343,53 @@ async function dispatchAttachment(
         headers: createAttachmentDownloadHeaders(download.attachment, context.requestId),
         status: 200,
       });
+    }
+    if (segments.length === 3 && segments[2] === "links" && request.method === "POST") {
+      return idempotencyResponse(
+        await endpoint.createLink(
+          attachmentId,
+          parseCreateAttachmentLink(await attachmentJsonBody(request)),
+          requirePersistentIdempotencyKey(request),
+          authentication,
+          context,
+        ),
+        context,
+      );
+    }
+    if (
+      segments.length === 4 &&
+      segments[2] === "links" &&
+      segments[3] === "unlink" &&
+      request.method === "POST"
+    ) {
+      return idempotencyResponse(
+        await endpoint.unlink(
+          attachmentId,
+          parseUnlinkAttachment(await attachmentJsonBody(request)),
+          requirePersistentIdempotencyKey(request),
+          authentication,
+          context,
+        ),
+        context,
+      );
+    }
+    if (segments.length === 3 && segments[2] === "delete" && request.method === "POST") {
+      return idempotencyResponse(
+        await endpoint.deleteAttachment(
+          attachmentId,
+          parseDeleteAttachment(await attachmentJsonBody(request)),
+          requirePersistentIdempotencyKey(request),
+          authentication,
+          context,
+        ),
+        context,
+      );
+    }
+    if (segments.length === 3 && segments[2] === "lifecycle" && request.method === "GET") {
+      return createSuccessResponse(
+        await endpoint.lifecycle(attachmentId, authentication, context),
+        context,
+      );
     }
     throw new AppError("RESOURCE_NOT_FOUND", 404, "接口不存在");
   } catch (error) {

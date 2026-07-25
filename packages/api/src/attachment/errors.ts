@@ -17,6 +17,12 @@ export class AttachmentStateConflictError extends AttachmentDomainError {
   }
 }
 
+export class AttachmentStillReferencedError extends AttachmentDomainError {
+  constructor(message = "附件仍存在有效业务关联") {
+    super(message);
+  }
+}
+
 export class AttachmentCategoryMismatchError extends AttachmentDomainError {
   constructor(message = "附件类别与目标对象不匹配") {
     super(message);

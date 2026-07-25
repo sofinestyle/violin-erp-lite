@@ -6,6 +6,7 @@ import type {
 import { PrismaAuditWriter } from "../audit/prisma-audit-writer.js";
 import { getPrismaClient } from "../client.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
+import { Prisma } from "../generated/prisma/client.js";
 import { PrismaAttachmentLinkRepository } from "./prisma-attachment-link-repository.js";
 import { PrismaAttachmentRepository } from "./prisma-attachment-repository.js";
 
@@ -22,6 +23,21 @@ export class PrismaAttachmentTransactionRunner implements AttachmentTransactionR
         attachments: new PrismaAttachmentRepository(transaction),
         audit: new PrismaAuditWriter(transaction),
         links: new PrismaAttachmentLinkRepository(transaction),
+        lockAttachment: async (id) => {
+          await transaction.$queryRaw(
+            Prisma.sql`SELECT id FROM attachments WHERE id = ${id}::uuid FOR UPDATE`,
+          );
+        },
+        lockAttachmentLink: async (attachmentId, linkId) => {
+          await transaction.$queryRaw(
+            Prisma.sql`SELECT id FROM attachment_links WHERE id = ${linkId}::uuid AND attachment_id = ${attachmentId}::uuid FOR UPDATE`,
+          );
+        },
+        lockAttachmentLinks: async (attachmentId) => {
+          await transaction.$queryRaw(
+            Prisma.sql`SELECT id FROM attachment_links WHERE attachment_id = ${attachmentId}::uuid FOR UPDATE`,
+          );
+        },
       }),
     );
   }

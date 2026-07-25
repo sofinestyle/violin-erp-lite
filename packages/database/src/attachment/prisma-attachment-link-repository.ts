@@ -76,6 +76,11 @@ export class PrismaAttachmentLinkRepository implements AttachmentLinkRepository 
     return (await this.#client.attachment_links.count({ where: { id } })) > 0;
   }
 
+  async findById(id: string): Promise<AttachmentLinkRecord | null> {
+    const found = await this.#client.attachment_links.findUnique({ where: { id } });
+    return found ? record(found) : null;
+  }
+
   async listByAttachment(attachmentId: string): Promise<readonly AttachmentLinkRecord[]> {
     const rows = await this.#client.attachment_links.findMany({
       orderBy: [{ sort_order: "asc" }, { linked_at: "asc" }, { id: "asc" }],

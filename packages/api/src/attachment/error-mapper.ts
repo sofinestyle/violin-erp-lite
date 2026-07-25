@@ -15,6 +15,7 @@ import {
   AttachmentPermissionDeniedError,
   AttachmentProtectedError,
   AttachmentStateConflictError,
+  AttachmentStillReferencedError,
 } from "./errors.js";
 
 export function mapAttachmentError(error: unknown): AppError {
@@ -41,6 +42,9 @@ export function mapAttachmentError(error: unknown): AppError {
   }
   if (error instanceof AttachmentProtectedError) {
     return new AppError("STATE_ATTACHMENT_HISTORY_PROTECTED", 409, "附件受正式历史保护");
+  }
+  if (error instanceof AttachmentStillReferencedError) {
+    return new AppError("STATE_ATTACHMENT_STILL_REFERENCED", 409, "附件仍存在有效业务关联");
   }
   if (
     error instanceof AttachmentStateConflictError ||

@@ -11,6 +11,9 @@ import {
   createLocalObjectStorage,
   mapAttachmentError,
   parseAttachmentListQuery,
+  parseCreateAttachmentLink,
+  parseDeleteAttachment,
+  parseUnlinkAttachment,
   parseAttachmentUploadRequest,
   type AttachmentRecord,
 } from "../src/index";
@@ -88,6 +91,42 @@ describe("Attachment multipart and query DTO", () => {
 });
 
 describe("Attachment HTTP security helpers", () => {
+  it("parses the Frozen ATT-005 through ATT-007 JSON DTOs strictly", () => {
+    expect(
+      parseCreateAttachmentLink({
+        attachmentCategory: "general_business_document",
+        objectId: OBJECT_ID,
+        objectType: "purchase_order",
+      }),
+    ).toMatchObject({ sortOrder: 0 });
+    expect(
+      parseUnlinkAttachment({
+        attachmentLinkId: OBJECT_ID,
+        reason: " 解除错误关联 ",
+      }),
+    ).toMatchObject({ reason: "解除错误关联" });
+    expect(
+      parseDeleteAttachment({
+        reason: "删除无引用附件",
+        version: "2026-07-25T00:00:00.000Z",
+      }),
+    ).toMatchObject({ version: "2026-07-25T00:00:00.000Z" });
+    expect(() =>
+      parseCreateAttachmentLink({
+        attachmentCategory: "general_business_document",
+        objectId: OBJECT_ID,
+        objectType: "purchase_order",
+        unknown: true,
+      }),
+    ).toThrow();
+    expect(() =>
+      parseDeleteAttachment({
+        reason: " ",
+        version: "not-a-date",
+      }),
+    ).toThrow();
+  });
+
   it("maps Domain and Storage errors only to Frozen API v1.5 codes", () => {
     expect(mapAttachmentError(new AttachmentCategoryMismatchError())).toMatchObject({
       code: "VALIDATION_ATTACHMENT_CATEGORY_OBJECT_MISMATCH",

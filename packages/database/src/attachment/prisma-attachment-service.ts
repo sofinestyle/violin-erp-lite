@@ -11,6 +11,7 @@ import { getPrismaClient } from "../client.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { createPersistentIdempotencyAdapter } from "../idempotency/persistent-idempotency.js";
 import { PrismaAttachmentAccessScopeResolver } from "./prisma-attachment-access-scope-resolver.js";
+import { PrismaAttachmentAuditReader } from "./prisma-attachment-audit-reader.js";
 import { PrismaAttachmentLinkRepository } from "./prisma-attachment-link-repository.js";
 import { PrismaAttachmentObjectReader } from "./prisma-attachment-object-reader.js";
 import { PrismaAttachmentRepository } from "./prisma-attachment-repository.js";
@@ -29,6 +30,7 @@ export function createAttachmentService(
     accessScopes: new PrismaAttachmentAccessScopeResolver(client),
     attachments: new PrismaAttachmentRepository(client),
     audit: new PrismaAuditWriter(client),
+    auditReader: new PrismaAttachmentAuditReader(client),
     categories,
     contentScanner: new BaselineAttachmentContentScanner(),
     idempotency: createPersistentIdempotencyAdapter(environment, client),

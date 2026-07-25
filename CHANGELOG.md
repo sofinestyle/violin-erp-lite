@@ -11,6 +11,35 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.22] - 2026-07-25
+
+### Added
+
+- 实现 `ATT-005` Attachment Link 创建与 PostgreSQL 并发唯一裁决
+- 实现 `ATT-006` Attachment Link 解除、对象保护、敏感权限与事务审计
+- 实现 `ATT-007` 完整删除状态机、Storage 删除补偿、失败状态与显式重试
+- 实现 `ATT-008` 基于正式 Audit Log 的五状态生命周期只读查询
+- 新增 Attachment Audit Reader、事务行锁、Link 定位、删除 DTO 与生命周期响应 DTO
+- 新增 `ATT-005` 至 `ATT-008` HTTP 边界、Route 契约及 PostgreSQL 18.4 + Local Storage 集成测试
+
+### Verified
+
+- Batch 7.4-A 与 Batch 7.4-B 已通过 GitHub 技术验收并更新为 `Completed / Approved`
+- 同一 Link 的 20 并发请求只创建一个 `attachment_links` 记录
+- 并发删除只允许一次 Storage 删除副作用，相同 Key 重放首次结果，不同 Hash 稳定冲突
+- Audit 写入失败时 Link、Unlink 和删除状态事务均回滚
+- 物理删除失败进入 `physical_delete_failed`，显式重试后进入 `physically_deleted`
+- `physically_deleted` 保留数据库墓碑，生命周期查询不暴露 Storage Reference
+- `ATT-008` 查询不修改 Attachment 状态、不读取二进制、不生成 URL
+
+### Scope
+
+- Batch 7.4-C 与 Task 7.4 Implementation 为 `Completed / Pending Approval`
+- Task 7.4 正式状态继续为 `In Progress`，Current Task 不变
+- 未实现 Background Worker、自动重试、定时清理、Task 7.6、Import 接入或前端功能
+- 未修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、权限、错误码或 API 总数
+- 未修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`
+
 ## [0.11.21] - 2026-07-25
 
 ### Added

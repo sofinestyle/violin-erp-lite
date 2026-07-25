@@ -1,6 +1,12 @@
 import { AppError, ValidationError } from "../errors/app-error.js";
 import { AttachmentCategoryRegistry } from "./category-registry.js";
-import type { AttachmentListQueryDto, AttachmentUploadDto } from "./types.js";
+import type {
+  AttachmentListQueryDto,
+  AttachmentUploadDto,
+  CreateAttachmentLinkDto,
+  DeleteAttachmentDto,
+  UnlinkAttachmentDto,
+} from "./types.js";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const UPLOAD_FIELDS = new Set([
@@ -148,4 +154,110 @@ export function parseAttachmentListQuery(
 
 export function parseAttachmentId(value: string | undefined): string {
   return uuid(value ?? null, "attachmentId");
+}
+
+function jsonObject(value: unknown): Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw new ValidationError("请求体必须是对象");
+  }
+  return value as Record<string, unknown>;
+}
+
+function exactFields(
+  value: Record<string, unknown>,
+  allowed: readonly string[],
+  required: readonly string[],
+): void {
+  const allowedSet = new Set(allowed);
+  const unknown = Object.keys(value).find((field) => !allowedSet.has(field));
+  if (unknown) {
+    throw new ValidationError("请求体包含未定义字段", [{ field: unknown, message: "未定义字段" }]);
+  }
+  const missing = required.find((field) => !(field in value));
+  if (missing) {
+    throw new ValidationError("请求体缺少必填字段", [{ field: missing, message: "必填" }]);
+  }
+}
+
+function jsonString(value: unknown, field: string, maximum?: number): string {
+  if (typeof value !== "string" || !value.trim() || value.trim() !== value) {
+    throw new ValidationError(`${field} 字段无效`, [{ field, message: "字段无效" }]);
+  }
+  if (maximum !== undefined && value.length > maximum) {
+    throw new ValidationError(`${field} 字段过长`, [{ field, message: `最长 ${maximum} 字符` }]);
+  }
+  return value;
+}
+
+function reason(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new ValidationError("reason 字段无效", [{ field: "reason", message: "字段无效" }]);
+  }
+  const normalized = value.trim();
+  if (!normalized) {
+    throw new ValidationError("reason 字段无效", [{ field: "reason", message: "字段无效" }]);
+  }
+  if (normalized.length > 500) {
+    throw new ValidationError("reason 字段过长", [{ field: "reason", message: "最长 500 字符" }]);
+  }
+  return normalized;
+}
+
+export function parseCreateAttachmentLink(
+  value: unknown,
+  registry: AttachmentCategoryRegistry = new AttachmentCategoryRegistry(),
+): CreateAttachmentLinkDto {
+  const input = jsonObject(value);
+  exactFields(
+    input,
+    ["attachmentCategory", "objectId", "objectItemId", "objectType", "sortOrder"],
+    ["attachmentCategory", "objectId", "objectType"],
+  );
+  const sortOrder = input.sortOrder ?? 0;
+  if (!Number.isSafeInteger(sortOrder) || Number(sortOrder) < 0) {
+    throw new ValidationError("sortOrder 必须是非负整数", [
+      { field: "sortOrder", message: "必须是非负整数" },
+    ]);
+  }
+  return Object.freeze({
+    attachmentCategory: registry.requireCategory(
+      jsonString(input.attachmentCategory, "attachmentCategory"),
+    ),
+    objectId: uuid(jsonString(input.objectId, "objectId"), "objectId"),
+    ...(input.objectItemId === undefined
+      ? {}
+      : {
+          objectItemId: uuid(jsonString(input.objectItemId, "objectItemId"), "objectItemId"),
+        }),
+    objectType: registry.requireObjectType(jsonString(input.objectType, "objectType")),
+    sortOrder: Number(sortOrder),
+  });
+}
+
+export function parseUnlinkAttachment(value: unknown): UnlinkAttachmentDto {
+  const input = jsonObject(value);
+  exactFields(input, ["attachmentLinkId", "reason"], ["attachmentLinkId", "reason"]);
+  return Object.freeze({
+    attachmentLinkId: uuid(
+      jsonString(input.attachmentLinkId, "attachmentLinkId"),
+      "attachmentLinkId",
+    ),
+    reason: reason(input.reason),
+  });
+}
+
+export function parseDeleteAttachment(value: unknown): DeleteAttachmentDto {
+  const input = jsonObject(value);
+  exactFields(input, ["reason", "version"], ["reason", "version"]);
+  const version = jsonString(input.version, "version");
+  const parsed = new Date(version);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString() !== version) {
+    throw new ValidationError("version 必须是 ISO-8601 时间", [
+      { field: "version", message: "必须是 ISO-8601 时间" },
+    ]);
+  }
+  return Object.freeze({
+    reason: reason(input.reason),
+    version,
+  });
 }

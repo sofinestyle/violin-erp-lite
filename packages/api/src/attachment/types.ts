@@ -143,6 +143,7 @@ export type AttachmentLinkRepository = Readonly<{
   create(input: CreateAttachmentLinkInput): Promise<AttachmentLinkRecord>;
   delete(id: string): Promise<boolean>;
   exists(id: string): Promise<boolean>;
+  findById(id: string): Promise<AttachmentLinkRecord | null>;
   listByAttachment(attachmentId: string): Promise<readonly AttachmentLinkRecord[]>;
   listByObject(
     objectType: AttachmentObjectType,
@@ -278,10 +279,76 @@ export type AttachmentUploadDto = Readonly<{
   sortOrder: number;
 }>;
 
+export type CreateAttachmentLinkDto = Readonly<{
+  attachmentCategory: AttachmentCategory;
+  objectId: string;
+  objectItemId?: string;
+  objectType: AttachmentObjectType;
+  sortOrder: number;
+}>;
+
+export type UnlinkAttachmentDto = Readonly<{
+  attachmentLinkId: string;
+  reason: string;
+}>;
+
+export type DeleteAttachmentDto = Readonly<{
+  reason: string;
+  version: string;
+}>;
+
+export type DeleteAttachmentResponseDto = Readonly<{
+  attachmentId: string;
+  deleted: true;
+  status: "physically_deleted";
+}>;
+
+export type AttachmentAuditRecord = Readonly<{
+  event: string;
+  metadata: Readonly<Record<string, unknown>>;
+  occurredAt: Date;
+  operatorId: string | null;
+  reason: string | null;
+  requestId: string;
+  result: "failure" | "success";
+}>;
+
+export type AttachmentAuditReader = Readonly<{
+  findByRequestId(
+    requestId: string,
+    events: readonly string[],
+  ): Promise<AttachmentAuditRecord | null>;
+  listByAttachment(attachmentId: string): Promise<readonly AttachmentAuditRecord[]>;
+}>;
+
+export type AttachmentLifecycleEventDto = Readonly<{
+  event: string;
+  objectId: string | null;
+  objectType: AttachmentObjectType | null;
+  occurredAt: string;
+  operator: AttachmentUserSummaryDto | "system";
+  reason: string | null;
+  requestId: string;
+  result: "denied" | "failed" | "succeeded";
+}>;
+
+export type AttachmentLifecycleResponseDto = Readonly<{
+  activeLinkCount: number;
+  attachmentId: string;
+  events: readonly AttachmentLifecycleEventDto[];
+  protected: boolean;
+  status: AttachmentStatus;
+  storageAvailability: "available" | "unavailable";
+  version: string;
+}>;
+
 export type AttachmentTransactionContext = Readonly<{
   attachments: AttachmentRepository;
   audit: AuditWriter;
   links: AttachmentLinkRepository;
+  lockAttachment(id: string): Promise<void>;
+  lockAttachmentLink(attachmentId: string, linkId: string): Promise<void>;
+  lockAttachmentLinks(attachmentId: string): Promise<void>;
 }>;
 
 export type AttachmentTransactionRunner = Readonly<{

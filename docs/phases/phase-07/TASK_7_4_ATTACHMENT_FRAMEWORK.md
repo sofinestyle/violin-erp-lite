@@ -1,7 +1,7 @@
 ---
 document_name: Task 7.4 Attachment Framework
 project: Violin ERP Lite
-version: 1.3
+version: 1.4
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-25
@@ -15,8 +15,10 @@ related_phase: Phase 7
 
 - Task Status：In Progress；
 - Current Task：Task 7.4 Attachment Framework；
-- Batch 7.4-A Implementation：Completed / Pending Approval；
-- Batch 7.4-B Implementation：Completed / Pending Approval。
+- Batch 7.4-A Implementation：Completed / Approved；
+- Batch 7.4-B Implementation：Completed / Approved；
+- Batch 7.4-C Implementation：Completed / Pending Approval；
+- Task 7.4 Implementation：Completed / Pending Approval。
 
 Batch 是 Task 7.4 内部实施批次，不进入 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。Task 7.4 未完成、未关闭，也未启动 Task 7.6。
 
@@ -64,18 +66,31 @@ Object Type 与 Category 的分派只通过 Registry 完成。业务 Service 不
 
 20 个独立 Service/Repository 实例使用相同 Idempotency Key 并发时，PostgreSQL 只允许一次认领、一次 Storage 写入和一个 Attachment/Link 结果。相同 Key/相同 Hash 重放首次安全结果；相同 Key/不同 Hash 返回既有 `SECURITY_REPLAY_DETECTED`。
 
-## 5. 本批次明确未实现
+## 5. Batch 7.4-C 完成范围
 
-- `ATT-005` 至 `ATT-008` API；
-- 独立创建 Link 或解除 Link；
-- `ATT-007` Attachment 删除执行流程及其生命周期删除补偿；
+本批次严格按 API Master Specification v1.5 完成剩余 Attachment API：
+
+1. `ATT-005 POST /api/v1/attachments/{attachmentId}/links`：统一对象 Registry、Category、权限、数据范围、状态、敏感性、保护规则与 Storage Metadata 校验后创建关联；
+2. `ATT-006 POST /api/v1/attachments/{attachmentId}/links/unlink`：事务内解除指定关联并写正式审计，不触碰 Storage 对象；
+3. `ATT-007 POST /api/v1/attachments/{attachmentId}/delete`：实现 `active → soft_deleted → pending_physical_delete → physically_deleted` 完整删除状态机，以及 `pending_physical_delete → physical_delete_failed → pending_physical_delete` 失败重试；
+4. `ATT-008 GET /api/v1/attachments/{attachmentId}/lifecycle`：从正式 Attachment、Link、Storage Metadata 与 Audit Log 只读生成生命周期摘要和事件；
+5. `ATT-005`、`ATT-006`、`ATT-007` 全部复用 Task 7.5 Persistent Idempotency，支持首次安全结果重放、同 Key 不同 Hash 冲突和已提交结果对账；
+6. `ATT-005` 使用 PostgreSQL 行锁和既有唯一约束裁决并发重复关联；
+7. `ATT-007` 在每个状态事务内锁定 Attachment、执行版本比较、重新校验有效关联，并保留 `physically_deleted` 墓碑；
+8. Storage Soft Delete 失败时回滚数据库状态；Physical Delete 失败时保留 `physical_delete_failed`，供显式新请求重试；
+9. 审计写入失败时对应数据库状态事务整体回滚，不以普通日志替代正式审计；
+10. 完成 DTO、HTTP Route、错误映射、Audit Reader、Repository、事务锁以及 PostgreSQL 18.4 + Local Storage 集成测试。
+
+## 6. 明确未实现
+
 - Background Worker 或 Task 7.6 Distributed Lock；
+- 自动重试、定时清理或独立恢复 API；
 - Import 业务接入；
 - 页面或 Mini Program 功能。
 
-本批次实现的 Storage 补偿仅处理 `ATT-001` 新对象在数据库事务失败后的回滚，不属于 `ATT-007` 删除流程。本批次未修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、Object Type、Category、Status、DTO 字段、权限代码、错误码或正式 API 数量。
+本批次未修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、Object Type、Category、Status、DTO 字段、权限代码、错误码或正式 API 数量。
 
-## 6. 验证结论
+## 7. 验证结论
 
 - Attachment HTTP/Domain 单元测试通过；
 - 全仓既有测试继续通过；
@@ -85,7 +100,12 @@ Object Type 与 Category 的分派只通过 Registry 完成。业务 Service 不
 - Storage 补偿失败返回 Frozen Storage 错误且写失败审计；
 - `ATT-004` 只对 `active` 状态返回安全流式响应；
 - 敏感附件无字段权限时不进入列表总数，详情不泄露存在性，下载拒绝。
+- `ATT-005` 并发创建同一关联只提交一个 Link，重复请求由数据库唯一约束裁决；
+- `ATT-006` 只解除目标 Link，保护对象与敏感附件继续执行实时授权；
+- `ATT-007` 成功路径保留墓碑且删除 Storage 对象，失败路径进入 `physical_delete_failed` 并支持显式重试；
+- 并发删除只允许一个请求产生 Storage 删除副作用，过期 processing 可依据已提交 Audit Receipt 对账；
+- `ATT-008` 覆盖五个正式状态，只读查询不改变 Attachment 状态或 Storage 生命周期。
 
-## 7. 后续边界
+## 8. 后续边界
 
-Batch 7.4-B 必须先完成独立 GitHub 技术验收。未经项目负责人后续正式指令，不得开始 `ATT-005` 至 `ATT-008`、Attachment 删除流程或下一内部批次。
+Batch 7.4-A 与 Batch 7.4-B 已通过 GitHub 技术验收并获得批准。Batch 7.4-C 与 Task 7.4 Implementation 当前为 `Completed / Pending Approval`，Task 7.4 正式治理状态继续保持 `In Progress`。未经项目负责人技术验收与正式状态同步，不得将 Task 7.4 标记为 Completed / Approved，不得启动 Task 7.6。

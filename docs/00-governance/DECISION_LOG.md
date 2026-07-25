@@ -2199,3 +2199,27 @@ Approved
 ### 影响
 
 本决定只同步 API SSOT 与关联治理文档，不修改 Database v2.3、Prisma Schema、Migration 或 Mapping Audit，不创建 Attachment Route、Service、Repository、Object Registry、Upload、删除逻辑或 Worker，不启动 Task 7.6，不修改 Current Task 或 Task 状态。
+
+## DEC-089 完成Attachment Framework Batch 7.4-C并提交技术验收
+
+### 状态
+
+Pending Approval
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- Batch 7.4-A 与 Batch 7.4-B 已通过 GitHub 技术验收，实施状态更新为 Completed / Approved；
+- Batch 7.4-C 严格按 API Master Specification v1.5 完成 `ATT-005` 至 `ATT-008`，实施状态为 Completed / Pending Approval；
+- `ATT-005`、`ATT-006` 与 `ATT-007` 统一复用 Task 7.5 Persistent Idempotency、服务端实时权限和数据范围校验；
+- `ATT-007` 完成五状态删除生命周期、Storage 补偿、失败重试、墓碑保留、版本并发控制和 Audit Receipt 对账；
+- `ATT-008` 只读生成生命周期摘要与事件，不改变 Attachment 或 Storage 状态；
+- Task 7.4 Implementation 为 Completed / Pending Approval，正式 Task 状态继续为 In Progress，Current Task 继续为 Task 7.4；
+- Task 7.6、Background Worker、自动重试、定时清理、Import 接入及前端功能均未启动。
+
+### 影响
+
+本决定记录 Batch 7.4-C 的实现完成和待验收状态，不修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、权限、错误码、API 总数或正式当前状态入口，不将 Task 7.4 提前标记为 Completed / Approved。

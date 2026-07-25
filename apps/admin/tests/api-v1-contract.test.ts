@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { GET } from "../app/api/v1/[...segments]/route";
+import { GET, POST } from "../app/api/v1/[...segments]/route";
 
 describe("Frozen v1 API route boundary", () => {
   beforeAll(() => {
@@ -57,6 +57,34 @@ describe("Frozen v1 API route boundary", () => {
         error: { code: "AUTH_UNAUTHORIZED" },
       });
     }
+  });
+
+  it("protects ATT-005 through ATT-008 before Attachment runtime initialization", async () => {
+    const id = "11111111-1111-4111-8111-111111111111";
+    for (const path of [
+      `/api/v1/attachments/${id}/links`,
+      `/api/v1/attachments/${id}/links/unlink`,
+      `/api/v1/attachments/${id}/delete`,
+    ]) {
+      const response = await POST(
+        new Request(`http://localhost${path}`, {
+          body: "{}",
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        }),
+      );
+      expect(response.status).toBe(401);
+      await expect(response.json()).resolves.toMatchObject({
+        error: { code: "AUTH_UNAUTHORIZED" },
+        success: false,
+      });
+    }
+    const lifecycle = await GET(new Request(`http://localhost/api/v1/attachments/${id}/lifecycle`));
+    expect(lifecycle.status).toBe(401);
+    await expect(lifecycle.json()).resolves.toMatchObject({
+      error: { code: "AUTH_UNAUTHORIZED" },
+      success: false,
+    });
   });
 
   it("rejects missing credentials before loading runtime configuration", async () => {
