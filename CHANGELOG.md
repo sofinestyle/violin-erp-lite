@@ -11,6 +11,34 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.30] - 2026-07-25
+
+### Changed
+
+- Phase 8 Application Development 正式从 `Waiting / Not Started` 更新为 `In Progress`
+- Current Task 切换为 `8-B2-2 Master Data Development - Core`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 与 `README.md` 同步 Phase 8 启动状态
+- 新增 DEC-097，记录 Phase 8 Application Development 启动批准
+
+### Added
+
+- Phase 8 Application Development Started
+- 记录 Phase 7 Platform Foundation 已完成、批准并冻结
+- 记录 Phase 8-A Business Application Planning 已完成
+- 记录 Phase 8 正式进入业务应用开发阶段
+
+### Verified
+
+- Phase 7 Platform Foundation 状态为 `Completed / Approved / Frozen`
+- Phase 8-A Business Application Planning 已完成规划文档
+- `pnpm status:check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改业务代码、Database Schema、Migration、API Contract、Permission 或业务规则
+
 ## [0.11.29] - 2026-07-25
 
 ### Changed

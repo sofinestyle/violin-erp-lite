@@ -17,10 +17,10 @@ related_phase: All Phases
 
 ## 2. 当前项目进度
 
-- Current Phase：Phase 7
-- Phase Status：Completed / Approved / Frozen
-- Current Task：Phase 7 Frozen
-- Current Task Status：Completed / Approved / Frozen
+- Current Phase：Phase 8
+- Phase Status：In Progress
+- Current Task：8-B2-2 Master Data Development - Core
+- Current Task Status：Waiting / Not Started
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件负责定义固定阶段路线、Task 边界、进入条件和完成条件。
 
@@ -77,7 +77,7 @@ related_phase: All Phases
 - Task 7.7 Cache & Event Infrastructure：Completed / Approved
 - Task 7.8 Audit, Trace & Observability：Completed / Approved
 - Task 7.9 Platform Final Consistency Review：Completed / Approved
-- Phase 8：Waiting / Not Started
+- Phase 8：In Progress
 - Phase 9：Waiting / Not Started
 - Phase 10：Waiting / Not Started
 - API Change Request 001：Completed / Approved
@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 保持 Waiting / Not Started。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已由项目负责人正式启动，当前状态为 In Progress。
 
 ## 3. 固定十阶段开发路线
 
@@ -268,11 +268,11 @@ Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每�
 9. Task 7.9 Platform Final Consistency Review：Completed / Approved；
 10. Phase 7 Frozen Final State：Completed / Approved / Frozen；
 
-每个 Task 完成后必须先通过 GitHub 技术验收并获得项目负责人批准，方可启动下一 Task。Task 7.1 至 Task 7.9 均已通过 GitHub 技术验收并获得批准。Phase 7 已冻结为 Completed / Approved / Frozen；Phase 8 Application Development 继续保持 Waiting / Not Started，未经项目负责人明确启动不得执行。
+每个 Task 完成后必须先通过 GitHub 技术验收并获得项目负责人批准，方可启动下一 Task。Task 7.1 至 Task 7.9 均已通过 GitHub 技术验收并获得批准。Phase 7 已冻结为 Completed / Approved / Frozen；Phase 8 Application Development 已由项目负责人正式启动。
 
 ### Phase 8：应用开发（Application Development）
 
-- 状态：Waiting / Not Started
+- 状态：In Progress
 - 目标：依据 Approved/Frozen 规格与 Phase 7 平台基线完成双端应用、API、数据访问和业务模块开发。
 - 主要输出：
   - 原 Phase 7 已完成开发成果及历史 Task 的完整保留；
@@ -292,7 +292,15 @@ Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每�
 6. Task 8.6 系统集成与开发收口：Waiting / Not Started；
 7. Phase 8 Final Consistency Review：Waiting / Not Started。
 
-Task 8.1 至 Task 8.5 是原 Phase 7 已完成成果的编号迁移，不删除、不重做。Task 8.6 的既有执行记录完整保留，但在 Phase 7 Platform Foundation 完成前不得恢复；其内部 Batch 状态不进入正式状态治理文件。
+Task 8.1 至 Task 8.5 是原 Phase 7 已完成成果的编号迁移，不删除、不重做。Task 8.6 的既有执行记录完整保留；其内部 Batch 状态不进入正式状态治理文件。
+
+#### Phase 8 当前业务应用开发任务
+
+1. Phase 8-A Business Application Planning 业务开发规划：Completed；
+2. 8-B2-1 Master Data Implementation Design 基础资料中心实施设计：Completed / Pending Approval；
+3. 8-B2-2 Master Data Development - Core 核心基础资料开发：Waiting / Not Started；
+
+Phase 8 当前新增业务应用开发任务从 Phase 8-A 规划与 Module 1 基础资料中心开始推进。
 
 ### Phase 9：测试方案与系统集成（Test Plan & System Integration）
 

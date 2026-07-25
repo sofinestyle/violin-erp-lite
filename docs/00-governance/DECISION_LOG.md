@@ -2411,3 +2411,26 @@ Approved
 ### 影响
 
 本决定只同步 Phase 7 最终批准与冻结状态，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或业务模块。Phase 8 Application Development 未自动启动，必须等待项目负责人后续正式启动指令。后续新增 Dead Letter 管理 UI、Dead Letter 重放 API、Job 管理 API、Event 管理 API、Metrics Endpoint、Trace / Audit 查询 API、Redis、MQ、Prometheus、Grafana、OpenTelemetry、ELK、商业监控平台或业务模块接入 Job / Event，均必须通过对应 DCR、API Change Request、Architecture Decision Update、Permission 评估或独立获批任务。
+
+## DEC-097 批准Phase 8 Application Development启动
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 Phase 8 Application Development 启动；
+- Phase 7 Platform Foundation 已完成、批准并冻结，状态为 Completed / Approved / Frozen；
+- Phase 8-A Business Application Planning 已完成；
+- Phase 8 状态从 Waiting / Not Started 更新为 In Progress；
+- Current Task 切换为 8-B2-2 Master Data Development - Core；
+- Current Task Status 为 Waiting / Not Started。
+
+### 影响
+
+本决定只同步 Phase 8 启动状态与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或业务模块。Phase 8 后续业务开发必须继续遵守 Frozen `BUSINESS_RULES.md`、Database Logical Design v2.5、API Master Specification v1.5、Frozen `ROLE_PERMISSION_SPEC.md` 与 Phase 7 Frozen Platform Foundation；如发现 Database、API 或 Permission 不足，必须先提交对应 CR。
