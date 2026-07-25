@@ -1,11 +1,11 @@
 ---
 document_name: Task 7.1 Platform Baseline & Existing Capability Audit Report
 project: Violin ERP Lite
-version: 1.0
-status: Completed / Pending Approval
+version: 1.1
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-24
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 7
 ---
 
@@ -211,4 +211,8 @@ Task 7.1 的审计交付物已形成，进入技术验收前确认：
 6. 未修改 `CURRENT_STATUS.md` 或 `ROADMAP.md`；
 7. 未修改任何代码、数据库或 Frozen SSOT。
 
-本报告状态为 Completed / Pending Approval。Task 7.1 的正式状态仍以 `CURRENT_STATUS.md` 为准，继续保持 In Progress，等待 GitHub 技术验收及项目负责人后续批准。
+## 9. 批准与后续边界
+
+项目负责人已完成技术验收并正式批准本报告。Task 7.1 状态为 Completed / Approved；Current Task 已切换为 Task 7.2 Authentication & Authorization，状态为 In Progress。
+
+Task 7.2 首要处理服务端数据范围派生算法唯一化、移除 `current-user-resolver.ts` 与 Admin API Route 的双重逻辑、禁止角色名称自动产生 `all`、审计内存限流与微信绑定幂等的迁移边界。未经批准不得修改数据库或 Frozen API。本次只同步治理状态，未修改认证实现。

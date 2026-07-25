@@ -1,11 +1,11 @@
 ---
 document_name: 项目说明
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 1
 ---
 
@@ -19,14 +19,14 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 - Current Phase：Phase 7
 - Phase Status：In Progress
-- Current Task：Task 7.1
+- Current Task：Task 7.2
 - Current Task Status：In Progress
 
 完整当前状态以 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md) 为唯一入口。
 
 ## 十阶段开发路线
 
-十个阶段的数量、名称和顺序已经冻结。当前为 Phase 7 Platform Foundation / Task 7.1；Phase 8 Application Development、Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
+十个阶段的数量、名称和顺序已经冻结。当前为 Phase 7 Platform Foundation / Task 7.2 Authentication & Authorization；Task 7.1 已为 Completed / Approved，Phase 8 Application Development、Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
 
 ## 仓库用途
 
@@ -182,7 +182,7 @@ pnpm dev:miniapp
 - [API Change Request 001：补齐库存盘点、销售退货、报损 API（Completed / Approved）](docs/00-governance/API_CHANGE_REQUEST_001.md)
 - [Phase 6 Final Consistency Review（Completed / Approved）](docs/phases/phase-06/PHASE_6_FINAL_CONSISTENCY_REVIEW.md)
 - [Phase 7 Platform Foundation（In Progress）](docs/phases/phase-07/PHASE_7_PLATFORM_FOUNDATION.md)
-- [Task 7.1 Platform Baseline & Existing Capability Audit（In Progress）](docs/phases/phase-07/TASK_7_1_PLATFORM_BASELINE_AND_EXISTING_CAPABILITY_AUDIT.md)
+- [Task 7.1 Platform Baseline & Existing Capability Audit（Completed / Approved）](docs/phases/phase-07/TASK_7_1_PLATFORM_BASELINE_AND_EXISTING_CAPABILITY_AUDIT.md)
 - [Phase 8 Application Development（Waiting / Not Started）](docs/phases/phase-08/PHASE_8_APPLICATION_DEVELOPMENT.md)
 - [Task 8.1 开发基线与工程初始化（Completed / Approved）](docs/phases/phase-08/TASK_8_1_DEVELOPMENT_BASELINE.md)
 - [Task 8.6 系统集成与开发收口（Waiting / Not Started）](docs/phases/phase-08/TASK_8_6_SYSTEM_INTEGRATION_AND_DEVELOPMENT_CLOSURE.md)

@@ -5,11 +5,26 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 1
 ---
 
 # CHANGELOG
+
+## [0.11.7] - 2026-07-25
+
+### Changed
+
+- Task 7.1 Platform Baseline & Existing Capability Audit 已通过技术验收并更新为 `Completed / Approved`
+- Current Task 已切换为 Task 7.2 Authentication & Authorization，状态为 `In Progress`
+- Phase 7 保持 `In Progress`，Task 7.3 至 Task 7.9 保持 `Waiting / Not Started`
+- Task 7.2 首要边界固定为统一服务端数据范围派生、移除双重逻辑、禁止角色名称自动授予 `all`，并审计内存限流与微信绑定幂等的迁移边界
+
+### Scope
+
+- 本轮只同步治理状态和 Task 7.2 启动边界
+- 未修改认证代码、业务代码、数据库、Prisma、Migration、Mapping Audit、Frozen API 或测试逻辑
+- DCR-004 与 API CR-004 继续为 `Proposed / Pending Approval`
 
 ## [0.11.6] - 2026-07-24
 

@@ -1,11 +1,11 @@
 ---
 document_name: 正式决策记录
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 1
 ---
 
@@ -1976,3 +1976,29 @@ Approved
 ### 影响
 
 本决定只修改治理文档、Phase/Task 文件路径、标题、编号引用和状态检查配置。Database Logical Design v2.1、API Master Specification v1.3 和 335 个正式 API 保持不变；DCR-004 与 API CR-004 继续为 Proposed / Pending Approval；不修改业务代码、数据库、Prisma、Migration、Mapping Audit、API 或测试逻辑。Phase 7 完成并批准前不得启动 Phase 8。
+
+## DEC-080 批准Task 7.1并启动Task 7.2
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人已完成 Task 7.1 Platform Baseline & Existing Capability Audit 的技术验收；
+- Task 7.1 与正式审计报告均更新为 Completed / Approved；
+- Phase 7 Platform Foundation 继续保持 In Progress；
+- Current Task 切换为 Task 7.2 Authentication & Authorization，状态为 In Progress；
+- Task 7.3 至 Task 7.9 继续保持 Waiting / Not Started；
+- Task 7.2 首要处理服务端数据范围派生算法唯一化，消除 `current-user-resolver.ts` 与 Admin API Route 的两套逻辑；
+- 角色名称不得自动授予 `all` 数据范围；
+- Task 7.2 必须审计内存限流与微信绑定幂等的迁移边界；
+- DCR-004 与 API CR-004 未获批准前，不得修改数据库或 Frozen API。
+
+### 影响
+
+本决定只同步治理状态与 Task 7.2 启动边界，不实施 Task 7.2 功能；不修改认证代码、业务代码、数据库、Prisma、Migration、Mapping Audit、Frozen API、权限定义或测试逻辑。

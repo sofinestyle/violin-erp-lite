@@ -1,11 +1,11 @@
 ---
 document_name: Task 7.1 Platform Baseline & Existing Capability Audit
 project: Violin ERP Lite
-version: 1.0
-status: In Progress
+version: 1.1
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-24
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 7
 ---
 
@@ -15,7 +15,7 @@ related_phase: Phase 7
 
 建立 Platform Foundation 的正式审计基线，识别已有平台能力、唯一事实来源、实现位置、自动化证据、缺口、重复实现和治理依赖，为 Task 7.2 至 Task 7.8 提供不重做既有成果的执行输入。
 
-本 Task 已正式启动，状态为 In Progress。本轮路线重构只创建任务入口，不执行平台代码整改，不提前开始 Task 7.2。
+本 Task 已完成平台能力审计、GitHub 技术验收并获得项目负责人批准，正式状态为 Completed / Approved。审计执行期间未实施平台代码整改，也未提前开始 Task 7.2。
 
 ## 2. 审计范围
 
@@ -101,6 +101,16 @@ related_phase: Phase 7
 - 全部文档和质量检查通过；
 - GitHub 技术验收通过并获得项目负责人批准。
 
-## 9. 当前结论
+## 9. 完成结论
 
-Task 7.1 已正式启动并处于 In Progress。本轮只建立任务入口和路线迁移基线；完整平台能力审计尚待后续独立执行指令。
+Task 7.1 已形成正式平台能力矩阵、现有成果映射、SSOT 一致性结论、风险清单及 Task 7.2 至 Task 7.9 建议边界，状态为 Completed / Approved。
+
+Task 7.2 Authentication & Authorization 已由项目负责人正式启动并进入 In Progress。首要处理事项为：
+
+1. 统一服务端数据范围派生算法；
+2. 消除 `current-user-resolver.ts` 与 Admin API Route 的两套逻辑；
+3. 角色名称不得自动授予 `all` 数据范围；
+4. 审计内存限流与微信绑定幂等的迁移边界；
+5. 不得在未批准 DCR/API Change Request 的情况下修改数据库或 Frozen API。
+
+本次状态同步不修改认证代码，不实施任何 Task 7.2 功能。

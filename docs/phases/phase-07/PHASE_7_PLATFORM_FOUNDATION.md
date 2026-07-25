@@ -1,11 +1,11 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 7
 ---
 
@@ -21,7 +21,7 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 
 - Phase：Phase 7 Platform Foundation；
 - Phase Status：In Progress；
-- Current Task：Task 7.1 Platform Baseline & Existing Capability Audit；
+- Current Task：Task 7.2 Authentication & Authorization；
 - Current Task Status：In Progress；
 - Phase 8 Application Development：Waiting / Not Started；
 - Phase 9 Test Plan & System Integration：Waiting / Not Started；
@@ -47,8 +47,8 @@ DCR-004 与 API CR-004 未因路线重构获得批准，也不得在本阶段入
 
 | Task | 名称 | 状态 |
 | --- | --- | --- |
-| Task 7.1 | Platform Baseline & Existing Capability Audit | In Progress |
-| Task 7.2 | Authentication & Authorization | Waiting / Not Started |
+| Task 7.1 | Platform Baseline & Existing Capability Audit | Completed / Approved |
+| Task 7.2 | Authentication & Authorization | In Progress |
 | Task 7.3 | Object Storage & File Lifecycle | Waiting / Not Started |
 | Task 7.4 | Attachment Framework | Waiting / Not Started |
 | Task 7.5 | Idempotency & Concurrency Control | Waiting / Not Started |
@@ -57,13 +57,23 @@ DCR-004 与 API CR-004 未因路线重构获得批准，也不得在本阶段入
 | Task 7.8 | Audit, Trace & Observability | Waiting / Not Started |
 | Task 7.9 | Platform Final Consistency Review | Waiting / Not Started |
 
-本轮只启动 Task 7.1。其余 Task 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
+Task 7.1 已完成并获得批准；当前只启动 Task 7.2。Task 7.3 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
 
 ## 5. 平台边界
 
 ### 5.1 Authentication & Authorization
 
 复核现有统一登录、Session、Token Family、RBAC、用户状态和双端认证成果，确认其唯一事实来源、运行边界、测试证据和待补缺口。
+
+Task 7.2 的正式启动边界：
+
+1. 统一服务端数据范围派生算法；
+2. 消除 `current-user-resolver.ts` 与 Admin API Route 的两套逻辑；
+3. 角色名称不得自动授予 `all` 数据范围；
+4. 审计内存限流与微信绑定幂等的迁移边界；
+5. 不得在未批准 DCR/API Change Request 的情况下修改数据库或 Frozen API。
+
+本次治理同步不实施上述代码变更。
 
 ### 5.2 Object Storage & File Lifecycle
 
@@ -111,4 +121,4 @@ DCR-004 与 API CR-004 未因路线重构获得批准，也不得在本阶段入
 
 ## 8. 当前结论
 
-Phase 7 Platform Foundation 已正式启动并处于 In Progress。当前只执行 Task 7.1；Task 7.2 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。
+Phase 7 Platform Foundation 保持 In Progress。Task 7.1 已为 Completed / Approved；当前 Task 7.2 为 In Progress；Task 7.3 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。
