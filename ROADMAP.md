@@ -1,7 +1,7 @@
 ---
 document_name: 项目开发路线
 project: Violin ERP Lite
-version: 2.7
+version: 2.8
 status: Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -19,7 +19,7 @@ related_phase: All Phases
 
 - Current Phase：Phase 7
 - Phase Status：In Progress
-- Current Task：Task 7.6
+- Current Task：Task 7.7
 - Current Task Status：Completed / Approved
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件负责定义固定阶段路线、Task 边界、进入条件和完成条件。
@@ -74,7 +74,7 @@ related_phase: All Phases
 - Task 7.4 Attachment Framework：Completed / Approved
 - Task 7.5 Idempotency & Concurrency Control：Completed / Approved
 - Task 7.6 Background Job & Distributed Lock：Completed / Approved
-- Task 7.7 Cache & Event Infrastructure：Waiting / Not Started
+- Task 7.7 Cache & Event Infrastructure：Completed / Approved
 - Task 7.8 Audit, Trace & Observability：Waiting / Not Started
 - Task 7.9 Platform Final Consistency Review：Waiting / Not Started
 - Phase 8：Waiting / Not Started
@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.4 为 Completed / Approved / Pending Migration，v2.3 仍为最近已完成物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.6 均已完成并获得批准。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.7 均已完成并获得批准。
 
 ## 3. 固定十阶段开发路线
 
@@ -234,7 +234,7 @@ Task 5.1 至 Task 5.5 及 Final Consistency Review 均已获得项目负责人�
 3. Task 6.3 公共能力功能详细设计：Completed / Approved；
 4. Phase 6 Final Consistency Review：Completed / Approved。
 
-API Change Request 001、API Coverage Completion 002、API Coverage Completion 003、API Change Request 004 与 API Change Request 005：Completed / Approved。当前 API Master Specification v1.5：Completed / Approved / Frozen，正式接口总数为 335。Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入；Database Logical Design v2.4 为 Completed / Approved / Pending Migration，v2.3 保持最近已完成物理 Migration 与 Mapping Audit 的 Frozen 基线。Phase 6 正式内容后续如需修改，必须通过 DCR 或正式 Change Request，不得通过聊天记忆、代码实现或临时决定覆盖 Frozen 文档。
+API Change Request 001、API Coverage Completion 002、API Coverage Completion 003、API Change Request 004 与 API Change Request 005：Completed / Approved。当前 API Master Specification v1.5：Completed / Approved / Frozen，正式接口总数为 335。Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入；Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 保持最近已完成业务领域物理 Migration 与 Mapping Audit 的 Frozen 基线。Phase 6 正式内容后续如需修改，必须通过 DCR 或正式 Change Request，不得通过聊天记忆、代码实现或临时决定覆盖 Frozen 文档。
 
 Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每个 Task 完成后必须先通过 GitHub 验收，未经项目负责人批准不得启动后续 Task。Phase 6 不设置 Task 6.4。
 
@@ -263,11 +263,11 @@ Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每�
 4. Task 7.4 Attachment Framework：Completed / Approved；
 5. Task 7.5 Idempotency & Concurrency Control：Completed / Approved；
 6. Task 7.6 Background Job & Distributed Lock：Completed / Approved；
-7. Task 7.7 Cache & Event Infrastructure：Waiting / Not Started；
+7. Task 7.7 Cache & Event Infrastructure：Completed / Approved；
 8. Task 7.8 Audit, Trace & Observability：Waiting / Not Started；
 9. Task 7.9 Platform Final Consistency Review：Waiting / Not Started。
 
-每个 Task 完成后必须先通过 GitHub 技术验收并获得项目负责人批准，方可启动下一 Task。Task 7.1 至 Task 7.6 均已通过 GitHub 技术验收并获得批准；Task 7.7 至 Task 7.9 继续保持 Waiting / Not Started。Task 7.9 是本 Phase 的正式收口任务，未经项目负责人明确启动不得执行。
+每个 Task 完成后必须先通过 GitHub 技术验收并获得项目负责人批准，方可启动下一 Task。Task 7.1 至 Task 7.7 均已通过 GitHub 技术验收并获得批准；Task 7.8 至 Task 7.9 继续保持 Waiting / Not Started。Task 7.9 是本 Phase 的正式收口任务，未经项目负责人明确启动不得执行。
 
 ### Phase 8：应用开发（Application Development）
 

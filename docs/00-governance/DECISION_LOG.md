@@ -1,7 +1,7 @@
 ---
 document_name: 正式决策记录
 project: Violin ERP Lite
-version: 1.4
+version: 1.5
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
@@ -2330,3 +2330,30 @@ Approved
 ### 影响
 
 本决定只同步 Task 7.6 完成批准状态，不修改代码、Schema、Migration、API、Permission、DTO、业务规则或业务模块。Task 7.7 Cache & Event Infrastructure、Task 7.8 Audit, Trace & Observability 与 Task 7.9 Platform Final Consistency Review 继续保持 Waiting / Not Started；Phase 8 Application Development 未启动。后续 Attachment、Import、Backup 等业务接入必须在对应获批 Task 中复用 Task 7.6 平台能力，不得建立平行 Queue、Worker、Scheduler、Lock、Retry、Dead Letter 或 Job Audit 事实来源。
+
+## DEC-094 批准Task 7.7 Cache & Event Infrastructure完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 Task 7.7 Cache & Event Infrastructure 完成，状态更新为 Completed / Approved；
+- Cache / Event Architecture Decision 已完成，明确缓存只能作为派生加速层，不得成为库存、权限、状态或审计事实来源；
+- 第一阶段不引入 Redis、Kafka、RabbitMQ 或其他 MQ，Event Infrastructure 采用 PostgreSQL-first 设计；
+- Event System 与 Task 7.6 Job System 边界已确认：Event System 负责事件发布与订阅，Job System 负责后台任务执行，Job Queue 不替代 Event Bus；
+- Event Database SSOT 已纳入 Database Logical Design v2.5；
+- Prisma Schema、Forward-only Migration 与 Mapping Audit 已完成；
+- Event Infrastructure 已完成 Outbox、Event History、Consumer Inbox、Delivery Tracking、Retry、Lease Recovery、Dead Letter 与 Event → Job Bridge；
+- Audit / Trace Integration 已完成基础链路记录；
+- Task 7.7 Final Consistency Review 已确认 Architecture Decision、Database SSOT v2.5、Prisma Schema、Migration、Mapping Audit 与 Runtime Implementation 保持一致；
+- `pnpm check` 与 `git diff --check` 已通过。
+
+### 影响
+
+本决定只同步 Task 7.7 完成批准状态，不修改业务代码、Database Schema、Migration、API、Permission、DTO、业务规则或业务模块。Task 7.8 Audit, Trace & Observability 与 Task 7.9 Platform Final Consistency Review 继续保持 Waiting / Not Started；Phase 8 Application Development 未启动。后续 Attachment、Import、Backup、Inventory、Purchase、Production 等业务接入必须在对应获批 Task 中复用本平台能力，不得建立平行 Cache、Event Bus、Outbox、Inbox、Delivery、Dead Letter 或事件审计事实来源。

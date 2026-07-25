@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 2.1
+version: 2.2
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -21,7 +21,7 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 
 - Phase：Phase 7 Platform Foundation；
 - Phase Status：In Progress；
-- Current Task：Task 7.6 Background Job & Distributed Lock；
+- Current Task：Task 7.7 Cache & Event Infrastructure；
 - Current Task Status：Completed / Approved；
 - Phase 8 Application Development：Waiting / Not Started；
 - Phase 9 Test Plan & System Integration：Waiting / Not Started；
@@ -53,11 +53,11 @@ DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步，并作
 | Task 7.4 | Attachment Framework | Completed / Approved |
 | Task 7.5 | Idempotency & Concurrency Control | Completed / Approved |
 | Task 7.6 | Background Job & Distributed Lock | Completed / Approved |
-| Task 7.7 | Cache & Event Infrastructure | Waiting / Not Started |
+| Task 7.7 | Cache & Event Infrastructure | Completed / Approved |
 | Task 7.8 | Audit, Trace & Observability | Waiting / Not Started |
 | Task 7.9 | Platform Final Consistency Review | Waiting / Not Started |
 
-Task 7.1 至 Task 7.6 已完成并获得批准。Task 7.7 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
+Task 7.1 至 Task 7.7 已完成并获得批准。Task 7.8 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
 
 ## 5. 平台边界
 
@@ -169,6 +169,10 @@ Task 7.6 已完成 Background Job Foundation 的设计、Database SSOT、Prisma 
 
 明确缓存只作为派生加速层，事件只作为已提交业务事实的传播机制；两者不得成为库存、权限、状态或审计唯一来源。
 
+Task 7.7 已完成 Cache & Event Infrastructure 的 Capability Audit、Architecture Decision、Database Change Request、Database SSOT v2.5、Prisma Schema、Forward-only Migration、Mapping Audit、Event Repository、Event Registry、Publisher Runtime、Consumer Runtime、Delivery Runtime、Retry、Lease Recovery、Dead Letter、Event → Job Bridge 与 Audit / Trace Integration，并已通过最终一致性复核。
+
+Task 7.7 第一阶段未引入 Redis、Kafka、RabbitMQ 或其他 MQ，未新增客户端 API、DTO 或 Permission，未接入 Attachment、Import、Backup、Inventory、Purchase、Production 等业务模块。后续业务模块接入必须在对应获批 Task 中复用本平台能力，不得建立平行 Cache、Event Bus、Outbox、Inbox、Delivery、Dead Letter 或事件审计事实来源。Task 7.7 正式架构文档为 [`TASK_7_7_CACHE_EVENT_ARCHITECTURE_DECISION.md`](TASK_7_7_CACHE_EVENT_ARCHITECTURE_DECISION.md)。
+
 ### 5.7 Audit, Trace & Observability
 
 统一 Request ID、Trace、结构化日志、Audit Log、安全脱敏、健康检查和运行指标，不把普通日志代替正式审计事实。
@@ -195,4 +199,4 @@ Task 7.6 已完成 Background Job Foundation 的设计、Database SSOT、Prisma 
 
 ## 8. 当前结论
 
-Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.6 已为 Completed / Approved；Task 7.7 至 Task 7.9 均为 Waiting / Not Started，业务应用开发保持暂停。
+Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.7 已为 Completed / Approved；Task 7.8 至 Task 7.9 均为 Waiting / Not Started，业务应用开发保持暂停。

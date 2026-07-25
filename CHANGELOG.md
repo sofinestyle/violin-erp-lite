@@ -11,6 +11,33 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.27] - 2026-07-25
+
+### Changed
+
+- Task 7.7 Cache & Event Infrastructure 正式更新为 `Completed / Approved`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md`、`README.md` 与 Phase 7 Platform Foundation 文档同步 Task 7.7 完成状态
+- 新增 DEC-094，记录 Task 7.7 完成批准与平台能力边界
+
+### Added
+
+- Cache / Event Architecture Decision 完成并纳入 Phase 7 平台基础边界
+- Event Infrastructure 完成 PostgreSQL-first 基础能力
+- Outbox、Event History、Consumer Inbox、Delivery Tracking 与 Event Dead Letter 完成落地
+- Event Registry、Publisher Runtime、Consumer Runtime、Delivery Runtime、Retry、Lease Recovery、Event → Job Bridge 与 Audit / Trace Integration 完成收口
+
+### Verified
+
+- Task 7.7 Final Consistency Review 通过
+- `pnpm check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改业务代码、Database Schema、Migration、API、Permission 或业务规则
+- Task 7.8 至 Task 7.9 继续保持 `Waiting / Not Started`
+
 ## [0.11.26] - 2026-07-25
 
 ### Changed

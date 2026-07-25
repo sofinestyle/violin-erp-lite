@@ -1,7 +1,7 @@
 ---
 document_name: 项目说明
 project: Violin ERP Lite
-version: 1.9
+version: 2.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
@@ -19,14 +19,14 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 - Current Phase：Phase 7
 - Phase Status：In Progress
-- Current Task：Task 7.6
+- Current Task：Task 7.7
 - Current Task Status：Completed / Approved
 
 完整当前状态以 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md) 为唯一入口。
 
 ## 十阶段开发路线
 
-十个阶段的数量、名称和顺序已经冻结。当前为 Phase 7 Platform Foundation；Task 7.1 至 Task 7.6 均为 Completed / Approved。Task 7.7 Cache & Event Infrastructure、Task 7.8 Audit, Trace & Observability、Task 7.9 Platform Final Consistency Review、Phase 8 Application Development、Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
+十个阶段的数量、名称和顺序已经冻结。当前为 Phase 7 Platform Foundation；Task 7.1 至 Task 7.7 均为 Completed / Approved。Task 7.8 Audit, Trace & Observability、Task 7.9 Platform Final Consistency Review、Phase 8 Application Development、Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
 
 ## 仓库用途
 
@@ -199,7 +199,7 @@ pnpm dev:miniapp
 
 ## 当前禁止事项
 
-API Master Specification v1.5 是 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 335。Database Logical Design v2.4 为 Completed / Approved / Pending Migration，v2.3 仍为最近已完成物理 Migration 与 Mapping Audit 的冻结基线；DATABASE_ENUM_SPEC 与 Phase 6 Functional Specification 保持 Frozen。DCR-004、API CR-004、DCR-005、API CR-005 与 Task 7.6 Background Job Database Change Request 均为 Completed / Approved。后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
+API Master Specification v1.5 是 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 335。Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线；DATABASE_ENUM_SPEC 与 Phase 6 Functional Specification 保持 Frozen。DCR-004、API CR-004、DCR-005、API CR-005、Task 7.6 Background Job Database Change Request 与 Task 7.7 Event Infrastructure Database Change Request 均为 Completed / Approved。后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
 
 ## 安全说明
 
