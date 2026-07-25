@@ -11,6 +11,28 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.12] - 2026-07-25
+
+### Added
+
+- 新增 Attachment Framework SSOT Completion 001，提出 Attachment 状态、Object Type、Category、删除保留、错误码和幂等依赖的完整补齐方案
+- 新增 Database Change Request 005，建议为 `attachments.status` 增加 5 个正式值、`active` 默认值、1 个 Check 和 1 个普通索引
+- 新增 API Change Request 005，补齐既有 `ATT-001` 至 `ATT-008` 的 Header、Path、Query、Body、multipart、Response、权限、数据范围、审计、幂等、事务及 Storage 失败契约
+
+### Changed
+
+- Task 7.4 正式状态保持 `In Progress`，实现状态记录为 `Paused / Frozen SSOT Conflict`
+- Attachment Object Type 建议收口为 17 个正式对象代码，Attachment Category 建议收口为 10 个正式类别代码
+- `ATT-001` 推荐采用方案 A：先完成 DCR-004/API CR-004 的通用持久化幂等，不建立 Attachment 专用或进程内生产实现
+- DCR-005 建议在 DCR-004 之后形成 Database v2.3；API CR-005 建议在 API CR-004 之后形成 API v1.5，API 总数保持 335
+
+### Scope
+
+- 三个新增文件均为 `Proposed / Pending Approval`，不视为已生效 SSOT
+- 本轮未修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md`、`README.md` 或 `DECISION_LOG.md`
+- 未修改 Frozen Database/API、Prisma、Migration、Mapping Audit、Seed、业务代码、Storage、Attachment 或测试逻辑
+- 未启动 Task 7.5、后台 Worker 或 Task 7.4 实现
+
 ## [0.11.11] - 2026-07-25
 
 ### Changed

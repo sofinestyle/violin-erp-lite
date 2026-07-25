@@ -108,7 +108,24 @@ Task 7.4 的正式启动边界：
 9. 如数据库现有字段不足，必须停止并提出 DCR；
 10. 不得提前实现 Task 7.5 通用幂等或 Task 7.6 后台清理 Worker。
 
-本次治理同步不实施 Attachment 或 Storage 代码。
+Task 7.4 实现前审计发现以下 Frozen SSOT 缺口：
+
+1. `attachments.status` 没有正式状态值域、默认值或 Check；
+2. `ATT-001` 至 `ATT-008` 没有完整 Request/Response DTO；
+3. `object_type` 与 `attachment_category` 没有封闭代码集合；
+4. 删除保护、Storage 删除补偿及失败状态没有可执行矩阵；
+5. 现有错误码不足以稳定映射全部 Attachment/Storage 失败；
+6. `ATT-001` 的生产级首次结果重放依赖仍未批准的 DCR-004/API CR-004。
+
+因此 Task 7.4 正式状态继续为 `In Progress`，实现状态为 `Paused / Frozen SSOT Conflict`。暂停只记录在本 Task 边界和 `CHANGELOG.md`，不写入 `CURRENT_STATUS.md`。
+
+已提出但尚未批准：
+
+- `ATTACHMENT_FRAMEWORK_SSOT_COMPLETION_001.md`；
+- `DATABASE_CHANGE_REQUEST_005.md`；
+- `API_CHANGE_REQUEST_005.md`。
+
+上述提案及 DCR-004/API CR-004 未完成批准和正式同步前，不实施 Attachment、Storage、数据库、API 或测试代码。
 
 ### 5.4 Idempotency & Concurrency Control
 
