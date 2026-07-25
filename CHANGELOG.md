@@ -11,6 +11,27 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.13] - 2026-07-25
+
+### Added
+
+- 按已批准 DCR-004 新增 `import_tasks.file_checksum` 及其摘要格式 Check、目标 XOR Check、两个目标范围部分唯一索引
+- 新增包含 15 个字段的 `idempotency_records`，以及 1 个主键、1 个唯一约束、3 个普通索引和 5 个表级 Check
+- 新增 Forward-only Migration `20260725140000_add_persistent_idempotency_foundation`
+
+### Changed
+
+- Database Logical Design 从 v2.1 升级并冻结为 v2.2
+- Mapping Audit 更新为 63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、97 普通索引、233 Check、2 Enum
+- DCR-004 更新为 `Completed / Approved`
+- Migration 前置审计确认开发库 `import_tasks` 0 行，仓库/店铺双空 0 行、双非空 0 行，历史 Import 文件 0 个，无需历史 SHA-256 回填
+
+### Scope
+
+- 本轮只实施 DCR-004 数据库结构与正式数据库文档同步
+- 未修改 Frozen API、API 总数、业务代码、Attachment、Task 7.4、Task 7.5 或正式当前状态
+- API CR-004、DCR-005 与 API CR-005 继续保持 `Proposed / Pending Approval`
+
 ## [0.11.12] - 2026-07-25
 
 ### Added

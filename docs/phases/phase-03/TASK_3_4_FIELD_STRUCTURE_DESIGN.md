@@ -1,11 +1,11 @@
 ---
 document_name: Task 3.4 字段结构设计
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-21
+updated_date: 2026-07-25
 related_phase: Phase 3
 ---
 
@@ -518,3 +518,12 @@ production_completion_records
 - 技术开发：Not Started。
 
 Task 3.4 验收通过前不得启动 Task 3.5。本文件不定义字段类型、长度、精度、物理约束、索引或任何技术实现。
+
+## 13. Database v2.2 正式字段增量
+
+Database Change Request 004 新增 16 个正式字段：
+
+- `import_tasks.file_checksum`；
+- `idempotency_records` 的 15 个字段：`id`、`scope_code`、`idempotency_key_hash`、`request_hash`、`status`、`response_http_status`、`response_body`、`resource_type`、`resource_id`、`request_trace_id`、`locked_until`、`completed_at`、`expires_at`、`created_at`、`updated_at`。
+
+Database v2.2 正式字段总数为 1176。未新增第 16 个 `idempotency_records` 字段。

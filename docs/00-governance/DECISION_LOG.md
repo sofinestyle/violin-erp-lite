@@ -2056,3 +2056,26 @@ Approved
 ### 影响
 
 本决定只同步治理状态与 Task 7.4 启动边界，不实施 Task 7.4 功能；不修改 Attachment、Storage 或其他业务代码，不修改数据库、Prisma、Migration、Mapping Audit、Frozen API、权限定义或测试逻辑。
+
+## DEC-083 批准DCR-004并冻结Database v2.2
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 Database Change Request 004，状态更新为 Completed / Approved；
+- Database Logical Design 从 v2.1 升级为 v2.2，并在独立 Forward-only Migration、Prisma Schema、Mapping Audit 与 PostgreSQL 验证一致后冻结为 Completed / Approved / Frozen；
+- `import_tasks` 新增且仅新增 `file_checksum` 1 个字段、2 个 Check 和 2 个部分唯一索引；
+- 新增 `idempotency_records`，包含且仅包含 DCR-004 批准的 15 个字段、1 个主键、1 个唯一约束、3 个普通索引和 5 个表级 Check；
+- Migration 前置审计确认开发库 `import_tasks` 0 行，仓库/店铺双空与双非空均为 0 行，历史 Import 文件 0 个，无需历史 SHA-256 回填；
+- Database v2.2 最终 Mapping 为 63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、97 普通索引、233 Check、2 Enum。
+
+### 影响
+
+本决定只批准和实施 DCR-004。API CR-004、DCR-005 与 API CR-005 继续保持 Proposed / Pending Approval；不修改 Frozen API、API 总数、业务代码、Attachment Framework、Task 7.4、Task 7.5、CURRENT_STATUS、ROADMAP、PROJECT 或 README。

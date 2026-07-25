@@ -415,6 +415,7 @@ model import_task_items {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// DCR-003 keeps status as a string; its approved values are enforced by ck_import_tasks_status in the v2.1 SQL migration.
+/// DCR-004 enforces file checksum format, the warehouse/store XOR target, and two partial unique indexes in the v2.2 SQL migration.
 model import_tasks {
   id                                   String                    @id(map: "pk_import_tasks") @default(dbgenerated("uuidv7()")) @db.Uuid
   created_at                           DateTime                  @default(now()) @db.Timestamptz(6)
@@ -425,6 +426,7 @@ model import_tasks {
   import_type                          String                    @db.VarChar(50)
   file_name                            String                    @db.VarChar(255)
   file_reference                       String                    @db.VarChar(1000)
+  file_checksum                        String                    @db.VarChar(128)
   warehouse_id                         String?                   @db.Uuid
   store_id                             String?                   @db.Uuid
   status                               String                    @db.VarChar(50)
@@ -445,6 +447,30 @@ model import_tasks {
   @@index([status, created_at], map: "idx_import_tasks_status_created_at")
   @@index([store_id, created_at], map: "idx_import_tasks_store_id_created_at")
   @@index([warehouse_id, created_at], map: "idx_import_tasks_warehouse_id_created_at")
+}
+
+/// DCR-004 keeps status as a string and enforces hash, HTTP status, lifecycle, and time-range rules in the v2.2 SQL migration.
+model idempotency_records {
+  id                   String    @id(map: "pk_idempotency_records") @default(dbgenerated("uuidv7()")) @db.Uuid
+  scope_code           String    @db.VarChar(300)
+  idempotency_key_hash String    @db.VarChar(128)
+  request_hash         String    @db.VarChar(128)
+  status               String    @db.VarChar(50)
+  response_http_status Int?
+  response_body        Json?
+  resource_type        String?   @db.VarChar(50)
+  resource_id          String?   @db.Uuid
+  request_trace_id     String    @db.Uuid
+  locked_until         DateTime? @db.Timestamptz(6)
+  completed_at         DateTime? @db.Timestamptz(6)
+  expires_at           DateTime  @db.Timestamptz(6)
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@unique([scope_code, idempotency_key_hash], map: "uq_idempotency_records_scope_code_key_hash")
+  @@index([status, locked_until], map: "idx_idempotency_records_status_locked_until")
+  @@index([expires_at], map: "idx_idempotency_records_expires_at")
+  @@index([resource_type, resource_id, created_at], map: "idx_idempotency_records_resource_created_at")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

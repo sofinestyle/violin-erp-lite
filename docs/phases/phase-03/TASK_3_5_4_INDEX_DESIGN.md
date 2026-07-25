@@ -1,11 +1,11 @@
 ---
 document_name: Task 3.5.4 索引设计
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Approved
 owner: Project Manager
 created_date: 2026-07-20
-updated_date: 2026-07-20
+updated_date: 2026-07-25
 related_phase: Phase 3
 ---
 
@@ -225,3 +225,13 @@ related_phase: Phase 3
 - SQL、ORM、Schema、Migration、数据库选型及技术开发：Not Started。
 
 Task 3.5.4 已完成。Task 3.5.5 按冲刺指令进入 In Progress，但本文件不包含其设计内容。
+
+## 14. Database v2.2 正式增量
+
+DCR-004 为 `idempotency_records` 新增三个普通索引：
+
+- `idx_idempotency_records_status_locked_until (status, locked_until)`；
+- `idx_idempotency_records_expires_at (expires_at)`；
+- `idx_idempotency_records_resource_created_at (resource_type, resource_id, created_at)`。
+
+Database v2.2 普通索引总数为 97。Import 的两个新增部分唯一索引归入唯一约束/唯一索引计数，不重复计入普通索引。

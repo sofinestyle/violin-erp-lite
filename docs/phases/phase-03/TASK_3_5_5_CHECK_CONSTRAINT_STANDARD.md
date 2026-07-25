@@ -1,11 +1,11 @@
 ---
 document_name: Task 3.5.5 Check约束设计
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Approved
 owner: Project Manager
 created_date: 2026-07-20
-updated_date: 2026-07-23
+updated_date: 2026-07-25
 related_phase: Phase 3
 ---
 
@@ -331,3 +331,17 @@ Check 只验证同一行字段组合，以下事项必须由服务层或事务�
 - SQL、ORM、Schema、Migration、数据库选型及技术开发：Not Started。
 
 Task 3.5.5 已完成。Task 3.5.6 按数据库设计冲刺进入 In Progress，但本文件不包含其设计内容。
+
+## 13. Database v2.2 正式增量
+
+DCR-004 新增且仅新增七项 Check：
+
+- `ck_import_tasks_file_checksum_format`；
+- `ck_import_tasks_target_exactly_one`；
+- `ck_idempotency_records_status`；
+- `ck_idempotency_records_hash_format`；
+- `ck_idempotency_records_http_status`；
+- `ck_idempotency_records_lifecycle`；
+- `ck_idempotency_records_time_range`。
+
+它们分别约束 Import 摘要格式、仓库/店铺目标 XOR，以及幂等记录的三态值域、双 Hash 格式、HTTP 状态范围、状态生命周期和时间顺序。Database v2.2 Check 总数为 233，不新增 PostgreSQL Enum。

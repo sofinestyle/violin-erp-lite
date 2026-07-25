@@ -1,11 +1,11 @@
 ---
 document_name: Task 3.3 数据表结构设计
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-19
+updated_date: 2026-07-25
 related_phase: Phase 3
 ---
 
@@ -384,3 +384,7 @@ Task 3.4 字段结构检查已将 `role_warehouses` 和 `role_stores` 转为正�
 - 技术开发：Not Started。
 
 Task 3.3 保持 Completed / Approved，正式逻辑表数量经 Task 3.4 结构检查由 57 张修正为 60 张。Task 3.4 验收通过前不得启动 Task 3.5；字段类型、长度、主外键物理约束、索引、SQL、ORM、数据库技术选型、数据库 Schema、物理 ER 模型、页面、API 和业务代码均未开始。
+
+## 14. Database v2.2 正式增量
+
+Database Change Request 004 已于 2026-07-25 获批。Database v2.2 在既有 62 张表基础上新增 `idempotency_records`，用于保存通用持久化幂等的认领、终态安全响应、资源引用、租约和过期信息。正式逻辑表总数更新为 63；不新增 Attachment 表、业务表或平行数据源。

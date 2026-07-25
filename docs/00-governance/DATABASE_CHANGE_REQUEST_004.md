@@ -2,16 +2,16 @@
 document_name: Database Change Request 004：Import 文件去重与通用幂等持久化
 project: Violin ERP Lite
 version: 1.0
-status: Proposed / Pending Approval
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-24
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 3 / Phase 8
 ---
 
 # Database Change Request 004：Import 文件去重与通用幂等持久化
 
-> 本 Change Request 尚未批准。Database Logical Design 当前仍为 v2.1 Completed / Approved / Frozen；本文只提出 v2.2 候选变更，不修改现有 Database SSOT、Schema、Migration 或 Mapping Audit。
+> 项目负责人已于 2026-07-25 批准本 Change Request。Database Logical Design v2.2 已完成正式同步、验证并冻结。
 
 ## 1. 变更原因
 
@@ -171,4 +171,15 @@ uq_import_tasks_file_checksum_import_type_store
 5. 幂等 Hash、Scope、租约、失败重放与清理原则；
 6. API CR-004 对外行为。
 
-批准后必须先独立同步并冻结 Database v2.2，再实施业务代码。当前状态：**Proposed / Pending Approval**。
+批准后必须先独立同步并冻结 Database v2.2，再实施业务代码。
+
+## 13. 批准与实施结果
+
+- Change Request 状态：Completed / Approved；
+- Database Logical Design：v2.2 Completed / Approved / Frozen；
+- Migration 前置审计：`import_tasks` 0 行，目标双空 0 行、双非空 0 行，历史 Import 文件 0 个，无需历史摘要回填；
+- 正式增量：`import_tasks.file_checksum` 1 个字段，`idempotency_records` 15 个字段，总计新增 16 个字段；
+- Mapping Audit：63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、97 普通索引、233 Check、2 Enum；
+- Forward-only Migration：`20260725140000_add_persistent_idempotency_foundation`；
+- API CR-004、DCR-005 与 API CR-005 不在本次批准与同步范围，继续保持原提案状态；
+- 本次未实施 API、业务代码、Attachment Framework 或 Task 7.5。

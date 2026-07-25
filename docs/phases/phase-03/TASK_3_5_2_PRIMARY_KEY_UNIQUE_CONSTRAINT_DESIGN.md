@@ -1,11 +1,11 @@
 ---
 document_name: Task 3.5.2 主键与唯一约束设计
 project: Violin ERP Lite
-version: 1.0
+version: 1.1
 status: Approved
 owner: Project Manager
 created_date: 2026-07-20
-updated_date: 2026-07-20
+updated_date: 2026-07-25
 related_phase: Phase 3
 ---
 
@@ -260,3 +260,14 @@ related_phase: Phase 3
 - SQL、ORM、Schema、Migration、数据库选型及技术开发：Not Started。
 
 下一小任务为 Task 3.5.3 外键关系规范。Task 3.5.2 验收通过前不得启动 Task 3.5.3。
+
+## 16. Database v2.2 正式增量
+
+DCR-004 新增：
+
+- 主键 `pk_idempotency_records`；
+- 唯一约束 `uq_idempotency_records_scope_code_key_hash (scope_code, idempotency_key_hash)`；
+- 部分唯一索引 `uq_import_tasks_file_checksum_import_type_warehouse`；
+- 部分唯一索引 `uq_import_tasks_file_checksum_import_type_store`。
+
+Database v2.2 最终为 63 个主键、79 项唯一约束/唯一索引。两个 Import 部分唯一索引必须结合目标 XOR Check 使用，不得退化为应用层“先查后写”。
