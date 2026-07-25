@@ -31,7 +31,7 @@ export type JobHandlerRegistry =
 
 export type JobWorkerRepository = Pick<
   PrismaJobRepository,
-  "claimJobs" | "markSucceeded" | "settleFailedAttempt"
+  "claimJobs" | "markSucceeded" | "recoverExpiredLeases" | "settleFailedAttempt"
 >;
 
 export type JobWorkerRuntimeOptions = Readonly<{
@@ -178,6 +178,11 @@ export class JobWorkerRuntime {
   async runOnce(): Promise<number> {
     const now = this.#clock();
     const lockedUntil = new Date(now.getTime() + this.#leaseMilliseconds);
+    await this.#repository.recoverExpiredLeases({
+      limit: this.#claimLimit,
+      now,
+      requestTraceId: randomUUID(),
+    });
     const claimedJobs = await this.#repository.claimJobs({
       limit: this.#claimLimit,
       lockedUntil,

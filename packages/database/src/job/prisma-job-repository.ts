@@ -158,6 +158,14 @@ export type FailedAttemptSettlement = Readonly<{
   job: JobRecord;
 }>;
 
+export type RecoverExpiredLeasesInput = Readonly<{
+  limit: number;
+  now: Date;
+  requestTraceId: string;
+}>;
+
+export type ExpiredLeaseRecovery = FailedAttemptSettlement;
+
 export type SchedulerLockRecord = Readonly<{
   createdAt: Date;
   id: string;
@@ -188,6 +196,12 @@ type AuditClient = Pick<PrismaClient, "audit_logs">;
 type ClaimCandidate = Readonly<{
   attempt_count: number;
   id: string;
+}>;
+
+type ExpiredLeaseCandidate = Readonly<{
+  attempt_count: number;
+  id: string;
+  max_attempts: number;
 }>;
 
 function assertSafePositiveInteger(value: number, name: string, max: number): void {
@@ -726,6 +740,169 @@ export class PrismaJobRepository {
         deadLetter: deadLetter ? rowToDeadLetter(deadLetter) : null,
         job: rowToJob(updatedJob),
       };
+    });
+  }
+
+  async recoverExpiredLeases(input: RecoverExpiredLeasesInput): Promise<ExpiredLeaseRecovery[]> {
+    assertSafePositiveInteger(input.limit, "Expired Job lease recovery limit", 100);
+
+    return this.#client.$transaction(async (transaction) => {
+      const candidates = await transaction.$queryRaw<ExpiredLeaseCandidate[]>(
+        Prisma.sql`
+          SELECT id, attempt_count, max_attempts
+          FROM jobs
+          WHERE status = 'running'
+            AND locked_until < ${input.now}
+          ORDER BY locked_until ASC, created_at ASC
+          FOR UPDATE SKIP LOCKED
+          LIMIT ${input.limit}
+        `,
+      );
+
+      const recovered: ExpiredLeaseRecovery[] = [];
+      for (const candidate of candidates) {
+        const attempt = await transaction.job_attempts.findFirst({
+          orderBy: { attempt_no: "desc" },
+          where: {
+            job_id: candidate.id,
+            status: "running",
+          },
+        });
+        const job = await transaction.jobs.findUnique({ where: { id: candidate.id } });
+        if (!attempt || !job || job.status !== "running" || !job.locked_by) continue;
+
+        const retryable = candidate.attempt_count < candidate.max_attempts;
+        const errorCode = "JOB_LEASE_TIMEOUT";
+        const errorMessage = "Job lease expired before completion";
+        const updatedJob = await transaction.jobs.update({
+          data: retryable
+            ? {
+                available_at: input.now,
+                completed_at: null,
+                last_error_code: errorCode,
+                last_error_message: errorMessage,
+                locked_by: null,
+                locked_until: null,
+                status: "retrying",
+                updated_at: input.now,
+              }
+            : {
+                completed_at: input.now,
+                last_error_code: errorCode,
+                last_error_message: errorMessage,
+                locked_by: null,
+                locked_until: null,
+                status: "dead_letter",
+                updated_at: input.now,
+              },
+          where: { id: candidate.id },
+        });
+
+        const updatedAttempt = await transaction.job_attempts.update({
+          data: {
+            duration_ms: durationMs(attempt.started_at, input.now),
+            ended_at: input.now,
+            error_code: errorCode,
+            error_message: errorMessage,
+            status: "timed_out",
+          },
+          where: { id: attempt.id },
+        });
+
+        await writeJobAudit(transaction, {
+          action: "job_attempt.timed_out",
+          afterSnapshot: {
+            attemptNo: updatedAttempt.attempt_no,
+            durationMs: updatedAttempt.duration_ms,
+            errorCode: updatedAttempt.error_code,
+            errorMessage: updatedAttempt.error_message,
+            status: updatedAttempt.status,
+          },
+          failureReason: errorMessage,
+          metadata: {
+            jobId: updatedJob.id,
+            jobKey: updatedJob.job_key,
+            jobType: updatedJob.job_type,
+            previousWorkerId: attempt.worker_id,
+          },
+          moduleCode: "background_job",
+          requestId: attempt.request_trace_id || input.requestTraceId,
+          resourceId: updatedAttempt.id,
+          resourceNoSnapshot: `${updatedJob.job_key}#${updatedAttempt.attempt_no}`,
+          resourceType: "job_attempt",
+          result: "failure",
+          timestamp: input.now,
+        });
+
+        const deadLetter = retryable
+          ? null
+          : await transaction.job_dead_letters.create({
+              data: {
+                created_at: input.now,
+                dead_letter_reason: "Job lease timed out and retry attempts exhausted",
+                failed_attempt_id: updatedAttempt.id,
+                handling_status: "open",
+                job_id: updatedJob.id,
+                updated_at: input.now,
+              },
+            });
+
+        if (retryable) {
+          await writeJobAudit(transaction, {
+            action: "job.retry.scheduled",
+            afterSnapshot: {
+              availableAt: updatedJob.available_at,
+              lastErrorCode: updatedJob.last_error_code,
+              lastErrorMessage: updatedJob.last_error_message,
+              status: updatedJob.status,
+            },
+            metadata: {
+              attemptId: updatedAttempt.id,
+              attemptNo: updatedAttempt.attempt_no,
+              maxAttempts: updatedJob.max_attempts,
+              previousWorkerId: attempt.worker_id,
+            },
+            moduleCode: "background_job",
+            requestId: attempt.request_trace_id || input.requestTraceId,
+            resourceId: updatedJob.id,
+            resourceNoSnapshot: updatedJob.job_key,
+            resourceType: "job",
+            result: "success",
+            timestamp: input.now,
+          });
+        } else if (deadLetter) {
+          await writeJobAudit(transaction, {
+            action: "job.dead_letter.open",
+            afterSnapshot: {
+              deadLetterReason: deadLetter.dead_letter_reason,
+              handlingStatus: deadLetter.handling_status,
+              status: updatedJob.status,
+            },
+            failureReason: errorMessage,
+            metadata: {
+              attemptId: updatedAttempt.id,
+              attemptNo: updatedAttempt.attempt_no,
+              failedAttemptId: deadLetter.failed_attempt_id,
+              jobId: updatedJob.id,
+            },
+            moduleCode: "background_job",
+            requestId: attempt.request_trace_id || input.requestTraceId,
+            resourceId: deadLetter.id,
+            resourceNoSnapshot: updatedJob.job_key,
+            resourceType: "job_dead_letter",
+            result: "failure",
+            timestamp: input.now,
+          });
+        }
+
+        recovered.push({
+          attempt: rowToAttempt(updatedAttempt),
+          deadLetter: deadLetter ? rowToDeadLetter(deadLetter) : null,
+          job: rowToJob(updatedJob),
+        });
+      }
+
+      return recovered;
     });
   }
 

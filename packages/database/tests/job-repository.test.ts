@@ -850,6 +850,249 @@ describe("Prisma Job repository", () => {
     });
   });
 
+  it("recovers a running Job with an expired Lease into retrying and marks Attempt timed_out", async () => {
+    const expiredAt = new Date(NOW.getTime() - 1_000);
+    const attempt = attemptRow({ lease_expires_at: expiredAt });
+    const runningJob = jobRow({
+      attempt_count: 1,
+      id: attempt.job_id,
+      locked_by: "worker-timeout",
+      locked_until: expiredAt,
+      max_attempts: 2,
+      started_at: attempt.started_at,
+      status: "running",
+    });
+    const retryingJob = {
+      ...runningJob,
+      available_at: NOW,
+      last_error_code: "JOB_LEASE_TIMEOUT",
+      last_error_message: "Job lease expired before completion",
+      locked_by: null,
+      locked_until: null,
+      status: "retrying",
+      updated_at: NOW,
+    };
+    const timedOutAttempt = {
+      ...attempt,
+      duration_ms: 0,
+      ended_at: NOW,
+      error_code: "JOB_LEASE_TIMEOUT",
+      error_message: "Job lease expired before completion",
+      status: "timed_out",
+    };
+    const transaction = {
+      $queryRaw: vi
+        .fn()
+        .mockResolvedValue([
+          { attempt_count: runningJob.attempt_count, id: runningJob.id, max_attempts: 2 },
+        ]),
+      job_attempts: {
+        findFirst: vi.fn().mockResolvedValue(attempt),
+        update: vi.fn().mockResolvedValue(timedOutAttempt),
+      },
+      job_dead_letters: { create: vi.fn() },
+      jobs: {
+        findUnique: vi.fn().mockResolvedValue(runningJob),
+        update: vi.fn().mockResolvedValue(retryingJob),
+      },
+    };
+    const repository = new PrismaJobRepository({
+      $transaction: (callback: (client: typeof transaction) => unknown) => callback(transaction),
+    } as unknown as PrismaClient);
+
+    await expect(
+      repository.recoverExpiredLeases({
+        limit: 1,
+        now: NOW,
+        requestTraceId: runningJob.request_trace_id,
+      }),
+    ).resolves.toMatchObject([
+      {
+        attempt: { errorCode: "JOB_LEASE_TIMEOUT", status: "timed_out" },
+        deadLetter: null,
+        job: { lockedBy: null, lockedUntil: null, status: "retrying" },
+      },
+    ]);
+    expect(transaction.$queryRaw).toHaveBeenCalledOnce();
+    expect(transaction.job_attempts.findFirst).toHaveBeenCalledWith({
+      orderBy: { attempt_no: "desc" },
+      where: {
+        job_id: runningJob.id,
+        status: "running",
+      },
+    });
+    expect(transaction.jobs.update).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        available_at: NOW,
+        locked_by: null,
+        locked_until: null,
+        status: "retrying",
+      }),
+      where: { id: runningJob.id },
+    });
+    expect(transaction.job_attempts.update).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        error_code: "JOB_LEASE_TIMEOUT",
+        status: "timed_out",
+      }),
+      where: { id: attempt.id },
+    });
+    expect(transaction.job_dead_letters.create).not.toHaveBeenCalled();
+  });
+
+  it("lets a recovered retrying Job be claimed again with a new Attempt", async () => {
+    const candidate = { attempt_count: 1, id: randomUUID() };
+    const runningJob = jobRow({
+      attempt_count: 2,
+      id: candidate.id,
+      locked_by: "worker-2",
+      locked_until: LEASE_UNTIL,
+      started_at: NOW,
+      status: "running",
+    });
+    const runningAttempt = attemptRow({
+      attempt_no: 2,
+      job_id: candidate.id,
+      request_trace_id: runningJob.request_trace_id,
+      worker_id: "worker-2",
+    });
+    const transaction = {
+      $queryRaw: vi.fn().mockResolvedValue([candidate]),
+      job_attempts: { create: vi.fn().mockResolvedValue(runningAttempt) },
+      jobs: { update: vi.fn().mockResolvedValue(runningJob) },
+    };
+    const repository = new PrismaJobRepository({
+      $transaction: (callback: (client: typeof transaction) => unknown) => callback(transaction),
+    } as unknown as PrismaClient);
+
+    await expect(
+      repository.claimJobs({
+        limit: 1,
+        lockedUntil: LEASE_UNTIL,
+        now: NOW,
+        requestTraceId: runningJob.request_trace_id,
+        workerId: "worker-2",
+      }),
+    ).resolves.toMatchObject([
+      {
+        attempt: { attemptNo: 2, status: "running", workerId: "worker-2" },
+        job: { attemptCount: 2, id: candidate.id, status: "running" },
+      },
+    ]);
+  });
+
+  it("moves an exhausted expired Lease directly to Dead Letter", async () => {
+    const expiredAt = new Date(NOW.getTime() - 1_000);
+    const attempt = attemptRow({ lease_expires_at: expiredAt });
+    const runningJob = jobRow({
+      attempt_count: 1,
+      id: attempt.job_id,
+      locked_by: "worker-timeout",
+      locked_until: expiredAt,
+      max_attempts: 1,
+      started_at: attempt.started_at,
+      status: "running",
+    });
+    const deadLetterJob = {
+      ...runningJob,
+      completed_at: NOW,
+      last_error_code: "JOB_LEASE_TIMEOUT",
+      last_error_message: "Job lease expired before completion",
+      locked_by: null,
+      locked_until: null,
+      status: "dead_letter",
+      updated_at: NOW,
+    };
+    const timedOutAttempt = {
+      ...attempt,
+      duration_ms: 0,
+      ended_at: NOW,
+      error_code: "JOB_LEASE_TIMEOUT",
+      error_message: "Job lease expired before completion",
+      status: "timed_out",
+    };
+    const deadLetter = {
+      created_at: NOW,
+      dead_letter_reason: "Job lease timed out and retry attempts exhausted",
+      failed_attempt_id: attempt.id,
+      handled_at: null,
+      handled_by: null,
+      handling_note: null,
+      handling_status: "open",
+      id: randomUUID(),
+      job_id: attempt.job_id,
+      replayed_job_id: null,
+      updated_at: NOW,
+    };
+    const transaction = {
+      $queryRaw: vi
+        .fn()
+        .mockResolvedValue([
+          { attempt_count: runningJob.attempt_count, id: runningJob.id, max_attempts: 1 },
+        ]),
+      job_attempts: {
+        findFirst: vi.fn().mockResolvedValue(attempt),
+        update: vi.fn().mockResolvedValue(timedOutAttempt),
+      },
+      job_dead_letters: { create: vi.fn().mockResolvedValue(deadLetter) },
+      jobs: {
+        findUnique: vi.fn().mockResolvedValue(runningJob),
+        update: vi.fn().mockResolvedValue(deadLetterJob),
+      },
+    };
+    const repository = new PrismaJobRepository({
+      $transaction: (callback: (client: typeof transaction) => unknown) => callback(transaction),
+    } as unknown as PrismaClient);
+
+    await expect(
+      repository.recoverExpiredLeases({
+        limit: 1,
+        now: NOW,
+        requestTraceId: runningJob.request_trace_id,
+      }),
+    ).resolves.toMatchObject([
+      {
+        attempt: { status: "timed_out" },
+        deadLetter: { failedAttemptId: attempt.id, handlingStatus: "open" },
+        job: { lockedBy: null, status: "dead_letter" },
+      },
+    ]);
+    expect(transaction.job_dead_letters.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        dead_letter_reason: "Job lease timed out and retry attempts exhausted",
+        failed_attempt_id: attempt.id,
+        handling_status: "open",
+        job_id: attempt.job_id,
+      }),
+    });
+  });
+
+  it("relies on SKIP LOCKED so only one Worker recovers an expired Lease", async () => {
+    const firstRepository = new PrismaJobRepository({
+      $transaction: (callback: (client: { $queryRaw: ReturnType<typeof vi.fn> }) => unknown) =>
+        callback({ $queryRaw: vi.fn().mockResolvedValue([]) }),
+    } as unknown as PrismaClient);
+    const secondRepository = new PrismaJobRepository({
+      $transaction: (callback: (client: { $queryRaw: ReturnType<typeof vi.fn> }) => unknown) =>
+        callback({ $queryRaw: vi.fn().mockResolvedValue([]) }),
+    } as unknown as PrismaClient);
+
+    await expect(
+      Promise.all([
+        firstRepository.recoverExpiredLeases({
+          limit: 1,
+          now: NOW,
+          requestTraceId: randomUUID(),
+        }),
+        secondRepository.recoverExpiredLeases({
+          limit: 1,
+          now: NOW,
+          requestTraceId: randomUUID(),
+        }),
+      ]),
+    ).resolves.toEqual([[], []]);
+  });
+
   it("acquires a Scheduler Lock through one atomic database statement", async () => {
     const lock = schedulerLockRow();
     const queryRaw = vi.fn().mockResolvedValue([lock]);

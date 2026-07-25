@@ -139,4 +139,66 @@ integration("PostgreSQL Job repository integration", () => {
     expect(acquired).toHaveLength(1);
     expect(await clients[0]!.scheduler_locks.count({ where: { lock_key: lockKey } })).toBe(1);
   });
+
+  it("recovers an expired running Job once across concurrent Workers", async () => {
+    const now = new Date();
+    const expiredAt = new Date(now.getTime() - 30_000);
+    const job = await repositories[0]!.createJob({
+      availableAt: now,
+      jobKey: `lease-timeout-${randomUUID()}`,
+      jobType: "test.lease-timeout",
+      maxAttempts: 2,
+      now,
+      requestTraceId: randomUUID(),
+      scheduledAt: now,
+    });
+    const [claimed] = await repositories[0]!.claimJobs({
+      limit: 1,
+      lockedUntil: new Date(now.getTime() + 30_000),
+      now,
+      requestTraceId: randomUUID(),
+      workerId: "worker-crashed",
+    });
+
+    await clients[0]!.jobs.update({
+      data: {
+        locked_until: expiredAt,
+        updated_at: now,
+      },
+      where: { id: job.id },
+    });
+    await clients[0]!.job_attempts.update({
+      data: { lease_expires_at: expiredAt },
+      where: { id: claimed!.attempt.id },
+    });
+
+    const attempts = Array.from({ length: 20 }, (_, index) =>
+      repositories[index % repositories.length]!.recoverExpiredLeases({
+        limit: 1,
+        now,
+        requestTraceId: randomUUID(),
+      }),
+    );
+
+    const results = await Promise.all(attempts);
+    const recovered = results.flat();
+
+    expect(recovered).toHaveLength(1);
+    expect(recovered[0]!.job.id).toBe(job.id);
+    expect(recovered[0]!.job.status).toBe("retrying");
+    expect(recovered[0]!.attempt.status).toBe("timed_out");
+    expect(await clients[0]!.job_dead_letters.count({ where: { job_id: job.id } })).toBe(0);
+    expect(await clients[0]!.job_attempts.count({ where: { job_id: job.id } })).toBe(1);
+
+    const [reclaimed] = await repositories[0]!.claimJobs({
+      limit: 1,
+      lockedUntil: new Date(now.getTime() + 30_000),
+      now,
+      requestTraceId: randomUUID(),
+      workerId: "worker-retry",
+    });
+    expect(reclaimed!.attempt.attemptNo).toBe(2);
+    expect(reclaimed!.job.status).toBe("running");
+    expect(await clients[0]!.job_attempts.count({ where: { job_id: job.id } })).toBe(2);
+  });
 });

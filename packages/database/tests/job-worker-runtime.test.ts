@@ -65,6 +65,7 @@ function createRepository(claimedJobs: ClaimedJob[] = []): JobWorkerRepository {
   return {
     claimJobs: vi.fn().mockResolvedValue(claimedJobs),
     markSucceeded: vi.fn().mockResolvedValue(null),
+    recoverExpiredLeases: vi.fn().mockResolvedValue([]),
     settleFailedAttempt: vi.fn().mockResolvedValue(null),
   };
 }
@@ -87,6 +88,12 @@ describe("Job Worker Runtime", () => {
     await worker.stop();
 
     expect(worker.state).toBe("stopped");
+    expect(repository.recoverExpiredLeases).toHaveBeenCalledWith(
+      expect.objectContaining({
+        limit: 1,
+        now: NOW,
+      }),
+    );
     expect(repository.claimJobs).toHaveBeenCalledWith(
       expect.objectContaining({
         limit: 1,
@@ -127,6 +134,9 @@ describe("Job Worker Runtime", () => {
       targetObjectType: "attachment",
       workerId: "worker-1",
     });
+    expect(vi.mocked(repository.recoverExpiredLeases).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(repository.claimJobs).mock.invocationCallOrder[0]!,
+    );
   });
 
   it("marks a Job as succeeded when the Handler completes", async () => {
