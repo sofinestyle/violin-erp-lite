@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.2
+version: 1.3
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -21,7 +21,7 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 
 - Phase：Phase 7 Platform Foundation；
 - Phase Status：In Progress；
-- Current Task：Task 7.3 Object Storage & File Lifecycle；
+- Current Task：Task 7.4 Attachment Framework；
 - Current Task Status：In Progress；
 - Phase 8 Application Development：Waiting / Not Started；
 - Phase 9 Test Plan & System Integration：Waiting / Not Started；
@@ -49,15 +49,15 @@ DCR-004 与 API CR-004 未因路线重构获得批准，也不得在本阶段入
 | --- | --- | --- |
 | Task 7.1 | Platform Baseline & Existing Capability Audit | Completed / Approved |
 | Task 7.2 | Authentication & Authorization | Completed / Approved |
-| Task 7.3 | Object Storage & File Lifecycle | In Progress |
-| Task 7.4 | Attachment Framework | Waiting / Not Started |
+| Task 7.3 | Object Storage & File Lifecycle | Completed / Approved |
+| Task 7.4 | Attachment Framework | In Progress |
 | Task 7.5 | Idempotency & Concurrency Control | Waiting / Not Started |
 | Task 7.6 | Background Job & Distributed Lock | Waiting / Not Started |
 | Task 7.7 | Cache & Event Infrastructure | Waiting / Not Started |
 | Task 7.8 | Audit, Trace & Observability | Waiting / Not Started |
 | Task 7.9 | Platform Final Consistency Review | Waiting / Not Started |
 
-Task 7.1 与 Task 7.2 已完成并获得批准；当前只启动 Task 7.3。Task 7.4 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
+Task 7.1 至 Task 7.3 已完成并获得批准；当前只启动 Task 7.4。Task 7.5 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
 
 ## 5. 平台边界
 
@@ -79,7 +79,7 @@ Task 7.2 的实现、测试和报告已通过项目负责人技术验收。
 
 定义二进制对象写入、读取、存在性、元数据、补偿、孤儿检测和清理边界；业务元数据继续由正式数据库对象管理。
 
-Task 7.3 的正式启动边界：
+Task 7.3 已按以下正式边界完成并获得批准：
 
 1. 扩展 Storage Adapter 正式契约；
 2. 补齐 `read`、`stream`、`exists`、`metadata`；
@@ -89,11 +89,26 @@ Task 7.3 的正式启动边界：
 6. 不得提前实现 Attachment Framework；
 7. 如需修改数据库或 Frozen API，必须先提出独立 DCR 或 API Change Request。
 
-本次治理同步不实施 Storage 代码或 Attachment Framework。
+Task 7.3 的实现、测试和报告已通过项目负责人技术验收。
 
 ### 5.3 Attachment Framework
 
 复用既有 Attachment SSOT，统一上传、下载、关联、权限、安全扫描、保留和审计，不擅自增加对象关系。
+
+Task 7.4 的正式启动边界：
+
+1. 接入 Frozen `attachments` 与 `attachment_links`；
+2. 实现 `ATT-001` 至 `ATT-008` 已冻结接口；
+3. 建立 Attachment Route、Service、Repository；
+4. 上传后正式记录必须复用 Task 7.3 Storage Metadata；
+5. 每次下载必须重新进行权限和数据范围校验；
+6. 实现业务对象关联、敏感附件权限和删除保护；
+7. 完成附件操作审计与 Storage 删除补偿；
+8. 不得修改 Frozen API 契约；
+9. 如数据库现有字段不足，必须停止并提出 DCR；
+10. 不得提前实现 Task 7.5 通用幂等或 Task 7.6 后台清理 Worker。
+
+本次治理同步不实施 Attachment 或 Storage 代码。
 
 ### 5.4 Idempotency & Concurrency Control
 
@@ -133,4 +148,4 @@ Task 7.3 的正式启动边界：
 
 ## 8. 当前结论
 
-Phase 7 Platform Foundation 保持 In Progress。Task 7.1 与 Task 7.2 已为 Completed / Approved；当前 Task 7.3 为 In Progress；Task 7.4 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。
+Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.3 已为 Completed / Approved；当前 Task 7.4 为 In Progress；Task 7.5 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。

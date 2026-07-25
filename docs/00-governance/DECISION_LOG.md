@@ -1,7 +1,7 @@
 ---
 document_name: 正式决策记录
 project: Violin ERP Lite
-version: 1.3
+version: 1.4
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
@@ -2029,3 +2029,30 @@ Approved
 ### 影响
 
 本决定只同步治理状态与 Task 7.3 启动边界，不实施 Task 7.3 功能；不修改 Storage、Attachment 或其他业务代码，不修改数据库、Prisma、Migration、Mapping Audit、Frozen API、权限定义或测试逻辑。
+
+## DEC-082 批准Task 7.3并启动Task 7.4
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人已完成 Task 7.3 Object Storage & File Lifecycle 的 GitHub 技术验收；
+- Task 7.3 与正式完成报告均更新为 Completed / Approved；
+- Phase 7 Platform Foundation 继续保持 In Progress；
+- Current Task 切换为 Task 7.4 Attachment Framework，状态为 In Progress；
+- Task 7.5 至 Task 7.9 继续保持 Waiting / Not Started；
+- Task 7.4 首要接入 Frozen `attachments`、`attachment_links` 与 `ATT-001` 至 `ATT-008`；
+- Task 7.4 必须建立 Attachment Route、Service、Repository，并复用 Task 7.3 Storage Metadata；
+- 每次下载必须重新校验权限和数据范围，并覆盖业务对象关联、敏感附件权限、删除保护、操作审计和 Storage 删除补偿；
+- 不得修改 Frozen API 契约；数据库现有字段不足时必须停止并提出 DCR；
+- 不得提前实现 Task 7.5 通用幂等或 Task 7.6 后台清理 Worker。
+
+### 影响
+
+本决定只同步治理状态与 Task 7.4 启动边界，不实施 Task 7.4 功能；不修改 Attachment、Storage 或其他业务代码，不修改数据库、Prisma、Migration、Mapping Audit、Frozen API、权限定义或测试逻辑。

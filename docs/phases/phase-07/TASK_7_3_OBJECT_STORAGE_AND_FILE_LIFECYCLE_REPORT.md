@@ -1,8 +1,8 @@
 ---
 document_name: Task 7.3 Object Storage & File Lifecycle Report
 project: Violin ERP Lite
-version: 1.0
-status: Completed / Pending Approval
+version: 1.1
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-25
 updated_date: 2026-07-25
@@ -149,8 +149,21 @@ Node v22.23.1 下完成：
 4. Physical Delete 不保留 Storage 层历史，正式删除裁决和审计必须在调用前由 Task 7.4 完成；
 5. URL Strategy 的 `authorized` 上下文必须由服务端权限层生成，客户端输入不得直接映射。
 
-## 11. 冻结条件
+## 11. 批准结论
 
-Task 7.3 的 Adapter、Metadata、URL Strategy、Lifecycle、Streaming、Local Storage 和自动化测试已完成，达到进入 GitHub 技术验收的条件，报告状态为 Completed / Pending Approval。
+项目负责人已完成 Task 7.3 的 GitHub 技术验收。Task 7.3 的 Adapter、Metadata、URL Strategy、Lifecycle、Streaming、Local Storage、测试和报告正式更新为 Completed / Approved。
 
-正式 Task 状态继续以 `CURRENT_STATUS.md` 为准，保持 In Progress。未经项目负责人批准，不将 Task 7.3 更新为 Completed / Approved，不启动 Task 7.4。
+Phase 7 保持 In Progress，Current Task 切换为 Task 7.4 Attachment Framework，状态为 In Progress。本次只同步治理状态，不实施 Attachment 或 Storage 代码。
+
+Task 7.4 首要处理事项为：
+
+1. 接入 Frozen `attachments` 与 `attachment_links`；
+2. 实现 `ATT-001` 至 `ATT-008` 已冻结接口；
+3. 建立 Attachment Route、Service、Repository；
+4. 上传后正式记录必须复用 Task 7.3 Storage Metadata；
+5. 每次下载必须重新进行权限和数据范围校验；
+6. 实现业务对象关联、敏感附件权限和删除保护；
+7. 完成附件操作审计与 Storage 删除补偿；
+8. 不得修改 Frozen API 契约；
+9. 如数据库现有字段不足，必须停止并提出 DCR；
+10. 不得提前实现 Task 7.5 通用幂等或 Task 7.6 后台清理 Worker。

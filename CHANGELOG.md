@@ -11,6 +11,22 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.11] - 2026-07-25
+
+### Changed
+
+- Task 7.3 Object Storage & File Lifecycle 已通过技术验收并更新为 `Completed / Approved`
+- Current Task 已切换为 Task 7.4 Attachment Framework，状态为 `In Progress`
+- Phase 7 保持 `In Progress`，Task 7.5 至 Task 7.9 保持 `Waiting / Not Started`
+- Task 7.4 首要边界固定为接入 Frozen Attachment 数据对象与 `ATT-001` 至 `ATT-008`，建立 Route、Service、Repository，并复用 Task 7.3 Storage Metadata
+- Task 7.4 必须逐次校验下载权限与数据范围，覆盖关联、敏感附件、删除保护、审计和 Storage 删除补偿
+
+### Scope
+
+- 本轮只同步治理状态和 Task 7.4 启动边界
+- 未修改 Attachment、Storage 或其他业务代码，未修改数据库、Prisma、Migration、Mapping Audit、Frozen API 或测试逻辑
+- 如数据库字段不足必须先提出 DCR；不得提前实现 Task 7.5 通用幂等或 Task 7.6 后台清理 Worker
+
 ## [0.11.10] - 2026-07-25
 
 ### Added

@@ -1,7 +1,7 @@
 ---
 document_name: 项目开发路线
 project: Violin ERP Lite
-version: 2.1
+version: 2.2
 status: Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -19,7 +19,7 @@ related_phase: All Phases
 
 - Current Phase：Phase 7
 - Phase Status：In Progress
-- Current Task：Task 7.3
+- Current Task：Task 7.4
 - Current Task Status：In Progress
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件负责定义固定阶段路线、Task 边界、进入条件和完成条件。
@@ -70,8 +70,8 @@ related_phase: All Phases
 - Phase 7：In Progress
 - Task 7.1 Platform Baseline & Existing Capability Audit：Completed / Approved
 - Task 7.2 Authentication & Authorization：Completed / Approved
-- Task 7.3 Object Storage & File Lifecycle：In Progress
-- Task 7.4 Attachment Framework：Waiting / Not Started
+- Task 7.3 Object Storage & File Lifecycle：Completed / Approved
+- Task 7.4 Attachment Framework：In Progress
 - Task 7.5 Idempotency & Concurrency Control：Waiting / Not Started
 - Task 7.6 Background Job & Distributed Lock：Waiting / Not Started
 - Task 7.7 Cache & Event Infrastructure：Waiting / Not Started
@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，当前 Database Logical Design v2.1 已冻结。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.3 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 与 Task 7.2 已批准，Task 7.3 已正式启动。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，当前 Database Logical Design v2.1 已冻结。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.3 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.3 已批准，Task 7.4 已正式启动。
 
 ## 3. 固定十阶段开发路线
 
@@ -259,8 +259,8 @@ Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每�
 
 1. Task 7.1 Platform Baseline & Existing Capability Audit：Completed / Approved；
 2. Task 7.2 Authentication & Authorization：Completed / Approved；
-3. Task 7.3 Object Storage & File Lifecycle：In Progress；
-4. Task 7.4 Attachment Framework：Waiting / Not Started；
+3. Task 7.3 Object Storage & File Lifecycle：Completed / Approved；
+4. Task 7.4 Attachment Framework：In Progress；
 5. Task 7.5 Idempotency & Concurrency Control：Waiting / Not Started；
 6. Task 7.6 Background Job & Distributed Lock：Waiting / Not Started；
 7. Task 7.7 Cache & Event Infrastructure：Waiting / Not Started；
