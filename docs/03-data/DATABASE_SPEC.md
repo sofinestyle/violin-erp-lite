@@ -1,7 +1,7 @@
 ---
 document_name: 数据库规格
 project: Violin ERP Lite
-version: 2.2
+version: 2.3
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -13,22 +13,22 @@ related_phase: Phase 3 / Phase 7
 
 ## 1. 正式状态
 
-Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计；项目负责人于 2026-07-24 批准 Database Change Request 003，为四个既有导入状态字段增加正式值域 Check；项目负责人于 2026-07-25 批准 Database Change Request 004，补齐 Import 文件摘要去重与通用持久化幂等数据库基础。
+Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计；项目负责人于 2026-07-24 批准 Database Change Request 003，为四个既有导入状态字段增加正式值域 Check；项目负责人于 2026-07-25 批准 Database Change Request 004，补齐 Import 文件摘要去重与通用持久化幂等数据库基础；同日批准 Database Change Request 005，补齐 Attachment 生命周期状态值域、默认值和状态定位索引。
 
 当前唯一有效版本为：
 
-- Database Logical Design：v2.2；
+- Database Logical Design：v2.3；
 - 状态：Completed / Approved / Frozen；
 - 正式表：63；
 - 正式字段：1176；
 - 主键：63；
 - 唯一约束/唯一索引：79；
 - 外键：292；
-- 普通索引：97；
-- Check：233；
+- 普通索引：98；
+- Check：234；
 - 正式数据库枚举：2。
 
-Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check；不新增外键或 PostgreSQL Enum。
+Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check。v2.3 按 DCR-005 为既有 `attachments.status` 增加 `active` 默认值和五值域 Check，并新增一个状态定位普通索引；不新增表、字段、外键、唯一约束或 PostgreSQL Enum。
 
 ## 2. 既有正式设计来源
 
@@ -49,8 +49,9 @@ Task 3.1 至 Task 3.5.7 的正式成果继续有效：
 - [Database Change Request 002](../00-governance/DATABASE_CHANGE_REQUEST_002.md)；
 - [Database Change Request 003](../00-governance/DATABASE_CHANGE_REQUEST_003.md)。
 - [Database Change Request 004](../00-governance/DATABASE_CHANGE_REQUEST_004.md)。
+- [Database Change Request 005](../00-governance/DATABASE_CHANGE_REQUEST_005.md)。
 
-DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；DCR-003 是 v2.0 到 v2.1 的唯一约束增量；DCR-004 是 v2.1 到 v2.2 的唯一结构增量。发生冲突时，本文件和已批准 Change Request 的对应定义优先于历史版本数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
+DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；DCR-003 是 v2.0 到 v2.1 的唯一约束增量；DCR-004 是 v2.1 到 v2.2 的唯一结构增量；DCR-005 是 v2.2 到 v2.3 的唯一约束与索引增量。发生冲突时，本文件和已批准 Change Request 的对应定义优先于历史版本数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
 
 ## 3. `user_wechat_identities` 正式定位
 
@@ -231,11 +232,13 @@ Database Logical Design v2.1 为以下四个既有字段冻结局部 Check 代�
 - `prisma/migrations/20260724090000_add_import_status_value_checks/migration.sql`；
 - `prisma/schema.prisma` 中 `import_tasks.file_checksum` 与 `idempotency_records` 模型；
 - `prisma/migrations/20260725140000_add_persistent_idempotency_foundation/migration.sql`；
-- `prisma/mapping-audit.json` 的 v2.2 计数。
+- `prisma/schema.prisma` 中 `attachments.status` 的 `active` 默认值与状态查询索引；
+- `prisma/migrations/20260725160000_add_attachment_status_constraints/migration.sql`；
+- `prisma/mapping-audit.json` 的 v2.3 计数。
 
 DCR-002 的两个 Migration 分别创建空表及其约束、索引、外键和必要循环防护，不回填或猜测任何现有身份，不包含真实 AppID、Secret、OpenID、Token、用户或业务数据。DCR-003 Migration 在添加四项 Check 前审计现有值；发现未知值时以脱敏行数与 distinct 数量抛出异常并停止，不自动映射、删除或转换数据。不得修改或重写任何历史 Migration。
 
-最终 Mapping Audit 为 63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、97 普通索引、233 Check、2 枚举。
+最终 Mapping Audit 为 63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、98 普通索引、234 Check、2 枚举。
 
 ## 17. 枚举结论
 
@@ -250,7 +253,7 @@ Database Change Request 003 的四组 Import 状态同样是字段级 Check 代�
 
 ## 18. 冻结结论
 
-Database Logical Design v2.2 在 DCR-004 的独立前向 Migration、Mapping Audit 与真实 PostgreSQL 验证通过后完成、批准并冻结。v2.2 只增加 DCR-004 明确批准的 1 张表、16 个字段、1 个主键、3 项唯一、3 个普通索引和 7 项 Check；外键、PostgreSQL Enum、库存粒度和历史保留规则保持不变。
+Database Logical Design v2.3 在 DCR-005 的独立前向 Migration、Mapping Audit 与真实 PostgreSQL 验证通过后完成、批准并冻结。v2.3 相对 v2.2 只增加 DCR-005 明确批准的 1 个普通索引和 1 项 Check，并为既有 `attachments.status` 设置 `active` 默认值；表、字段、主键、唯一、外键、PostgreSQL Enum、库存粒度和历史保留规则保持不变。
 
 后续任何表、字段、类型、状态、约束、索引、关系或枚举变化都必须重新提交 Database Change Request。不得通过代码、API、客户端缓存、JSON、备注或临时 Migration 绕过本规范。
 
@@ -281,3 +284,27 @@ Database Logical Design v2.2 在 DCR-004 的独立前向 Migration、Mapping Aud
 2026-07-25 使用 PostgreSQL 18.4 对开发数据库完成迁移前审计：`import_tasks` 共 0 行，仓库与店铺双空 0 行、双非空 0 行，历史 Import 文件 0 个。开发库不需要历史 SHA-256 回填，可以执行空表 Migration。
 
 Migration 内仍保留阻断守卫：如其他环境存在历史 Import 行，则必须先从受信 Storage 读取原文件并计算 SHA-256；不得用文件名、Storage Key、随机值或占位摘要伪造回填。
+
+## 22. Attachment 生命周期状态与墓碑
+
+`attachments.status` 保持 `VARCHAR(50) NOT NULL`，数据库默认值为 `active`。`ck_attachments_status` 只允许：
+
+- `active`；
+- `soft_deleted`；
+- `pending_physical_delete`；
+- `physical_delete_failed`；
+- `physically_deleted`。
+
+初始状态为 `active`，终止状态为 `physically_deleted`。正式迁移为：
+
+1. `active → soft_deleted`；
+2. `soft_deleted → pending_physical_delete`；
+3. `pending_physical_delete → physically_deleted`；
+4. `pending_physical_delete → physical_delete_failed`；
+5. `physical_delete_failed → pending_physical_delete`。
+
+数据库 Check 只约束值域；迁移合法性、零关联条件、证据保护和事务边界由后续获批 Attachment Repository 与 Service 控制。仍存在 `attachment_links` 时不得进入删除流程。物理删除成功后保留 `physically_deleted` 墓碑、业务 Metadata 和审计外键，不删除数据库记录；后续 API 不得暴露 Storage Reference。物理删除失败必须保留记录。
+
+`idx_attachments_status_updated_at (status, updated_at)` 只支持状态定位，不授权 Background Worker、自动清理、自动重试或定时任务。DCR-005 不新增字段、表、外键、唯一约束、Enum 或 Seed。
+
+2026-07-25 使用 PostgreSQL 18.4 隔离开发库完成 Migration 前置审计：`attachments` 总行数 0；五个正式状态各 0 行；NULL 0 行；未知状态 0 行；`updated_at < created_at` 0 行；`attachment_links` 重复约束异常组 0。满足空表 Migration 条件，无需映射、修正或删除历史数据。

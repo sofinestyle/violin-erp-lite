@@ -6,7 +6,7 @@
   "specialtyForeignKeys": 123,
   "commonUserForeignKeys": 169,
   "foreignKeys": 292,
-  "ordinaryIndexes": 97,
-  "checks": 233,
+  "ordinaryIndexes": 98,
+  "checks": 234,
   "enums": 2
 }

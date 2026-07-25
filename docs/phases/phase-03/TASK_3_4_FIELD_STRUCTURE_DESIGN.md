@@ -1,7 +1,7 @@
 ---
 document_name: Task 3.4 字段结构设计
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
@@ -527,3 +527,9 @@ Database Change Request 004 新增 16 个正式字段：
 - `idempotency_records` 的 15 个字段：`id`、`scope_code`、`idempotency_key_hash`、`request_hash`、`status`、`response_http_status`、`response_body`、`resource_type`、`resource_id`、`request_trace_id`、`locked_until`、`completed_at`、`expires_at`、`created_at`、`updated_at`。
 
 Database v2.2 正式字段总数为 1176。未新增第 16 个 `idempotency_records` 字段。
+
+## 14. Database v2.3 Attachment 字段结论
+
+Database Change Request 005 不新增字段。`attachments.status` 保持 `VARCHAR(50) NOT NULL`，正式数据库默认值为 `active`，值域为 `active`、`soft_deleted`、`pending_physical_delete`、`physical_delete_failed`、`physically_deleted`。Database v2.3 正式字段总数保持 1176。
+
+不得新增 `deleted_at`、`deleted_by`、`physical_deleted_at`、`delete_failure_reason`、`retention_until`、`storage_status` 或 `retry_count`。

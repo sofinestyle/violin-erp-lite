@@ -1,8 +1,8 @@
 ---
 document_name: Database Change Request 005：Attachment 状态与生命周期约束
 project: Violin ERP Lite
-version: 1.0
-status: Proposed / Pending Approval
+version: 1.1
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-25
 updated_date: 2026-07-25
@@ -11,26 +11,25 @@ related_phase: Phase 3 / Phase 7
 
 # Database Change Request 005：Attachment 状态与生命周期约束
 
-> 本 Change Request 尚未批准。Database Logical Design 当前仍为 v2.1 Completed / Approved / Frozen；本文只提出 Attachment 状态与查询约束候选变更，不修改 DATABASE_SPEC、DATABASE_ENUM_SPEC、Prisma Schema、Migration 或 Mapping Audit。
+> 本 Change Request 已由项目负责人批准并完成正式同步。Database Logical Design v2.2 原状态为 Completed / Approved / Frozen；本次仅增加 Attachment 状态默认值、局部值域 Check 与状态定位索引，形成 Database Logical Design v2.3。
 
 ## 1. 变更原因
 
-Frozen `attachments.status` 是 `VARCHAR(50) NOT NULL`，但现有 Database v2.1 没有正式值域、默认值或 Check。Task 7.4 无法在不自创状态的情况下持久化上传、逻辑删除、物理删除尝试、失败和终止结果。
+Frozen `attachments.status` 是 `VARCHAR(50) NOT NULL`，但 Database v2.2 没有正式值域、默认值或 Check。Task 7.4 无法在不自创状态的情况下持久化上传、逻辑删除、物理删除尝试、失败和终止结果。
 
 现有 `attachments`、`attachment_links` 已具备业务 Metadata、Storage Reference、敏感标记、受控多态关系和审计用户字段，不需要新增表或字段。
 
-## 2. 依赖与版本建议
+## 2. 依赖与正式版本顺序
 
-DCR-004 当前拟占用 Database v2.2，并为高风险写 API 提供通用 `idempotency_records`。本提案推荐顺序：
+DCR-004 已为 Completed / Approved，并已形成 Database Logical Design v2.2。正式版本顺序为：
 
-1. 先批准并正式同步 DCR-004，形成 Database v2.2；
-2. 再批准本 DCR-005，形成 Database v2.3。
-
-若 DCR-004 被拒绝或撤回，本提案必须重新基于 v2.1 审核，并可改为 Database v2.2；不得同时让两个独立提案占用同一正式版本。
+1. Database Logical Design v2.2；
+2. DCR-005；
+3. Database Logical Design v2.3。
 
 ## 3. 正式状态值域
 
-建议 `attachments.status` 只允许：
+`attachments.status` 只允许：
 
 ```text
 active
@@ -91,7 +90,7 @@ ON attachments (status, updated_at);
 
 ## 5. 不新增字段的结论
 
-不建议新增：
+不得新增：
 
 - `deleted_at`、`deleted_by`；
 - `physical_deleted_at`；
@@ -162,9 +161,9 @@ attachment_id, object_type, object_id, object_item_id, attachment_category
 
 - Prisma：`attachments.status` 保持 `String @db.VarChar(50)`，新增 `@default("active")`；
 - Check 继续由 Migration 与数据库承载，Prisma 注释明确存在额外 Check；
-- Mapping Audit 基于 DCR-004 已完成的 v2.2 预计值：
+- Mapping Audit 以 DCR-004 已完成的 v2.2 正式值为基线：
 
-| 项目 | v2.2 预计 | v2.3 预计 | 变化 |
+| 项目 | v2.2 正式 | v2.3 正式 | 变化 |
 | --- | ---: | ---: | ---: |
 | 表 | 63 | 63 | 0 |
 | 字段 | 1176 | 1176 | 0 |
@@ -174,8 +173,6 @@ attachment_id, object_type, object_id, object_item_id, attachment_category
 | 普通索引 | 97 | 98 | +1 |
 | Check | 233 | 234 | +1 |
 | PostgreSQL Enum | 2 | 2 | 0 |
-
-若 DCR-004 未实施而本提案重新获准，则相对 v2.1 的变化为普通索引 `94 → 95`、Check `226 → 227`，其他数量保持不变。
 
 ## 11. Seed 影响
 
@@ -187,11 +184,11 @@ attachment_id, object_type, object_id, object_item_id, attachment_category
 
 ## 12. 不影响范围
 
-本提案不新增表、字段、API、DTO、权限、角色、业务模块或 Worker；不修改 Storage Metadata、Attachment Link 唯一范围、业务对象状态、库存或审计表。批准前不修改任何 Frozen SSOT、Schema、Migration、Mapping Audit、Seed 或代码。
+本变更不新增表、字段、API、DTO、权限、角色、业务模块或 Worker；不修改 Storage Metadata、Attachment Link 唯一范围、业务对象状态、库存或审计表。正式同步只修改 Database SSOT、Prisma 默认值与索引映射、前向 Migration 和 Mapping Audit。
 
-## 13. 批准 Gate
+## 13. 批准结论
 
-项目负责人需确认：
+项目负责人已确认：
 
 1. 5 个 Attachment 状态及迁移；
 2. `physically_deleted` 墓碑保留原则；
@@ -200,4 +197,6 @@ attachment_id, object_type, object_id, object_item_id, attachment_category
 5. DCR-004 → DCR-005 的版本顺序；
 6. API CR-005 的状态动作与删除规则。
 
-当前状态：**Proposed / Pending Approval**。
+当前状态：**Completed / Approved**。
+
+Database Logical Design v2.3 已完成正式文档、Prisma Schema、Forward-only Migration、Mapping Audit 与 PostgreSQL 18.4 验证同步，状态为 Completed / Approved / Frozen。API CR-005 继续保持 Proposed / Pending Approval，本 Change Request 不授权 Attachment Route、Service、Repository 或 Worker 实现。

@@ -1,7 +1,7 @@
 ---
 document_name: Task 3.5.4 索引设计
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: Approved
 owner: Project Manager
 created_date: 2026-07-20
@@ -235,3 +235,11 @@ DCR-004 为 `idempotency_records` 新增三个普通索引：
 - `idx_idempotency_records_resource_created_at (resource_type, resource_id, created_at)`。
 
 Database v2.2 普通索引总数为 97。Import 的两个新增部分唯一索引归入唯一约束/唯一索引计数，不重复计入普通索引。
+
+## 15. Database v2.3 正式增量
+
+DCR-005 为既有 `attachments` 新增且仅新增一个普通索引：
+
+- `idx_attachments_status_updated_at (status, updated_at)`。
+
+该索引只支持 Attachment 状态定位，不形成 Background Worker、自动清理、自动重试或定时任务授权。Database v2.3 普通索引总数为 98。

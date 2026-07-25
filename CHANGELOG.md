@@ -11,6 +11,35 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.18] - 2026-07-25
+
+### Added
+
+- 新增 Forward-only Migration `20260725160000_add_attachment_status_constraints`
+- 为 `attachments.status` 新增 `ck_attachments_status` 五值域 Check
+- 新增普通索引 `idx_attachments_status_updated_at (status, updated_at)`
+
+### Changed
+
+- Database Change Request 005 更新为 `Completed / Approved`
+- Database Logical Design 从 v2.2 升级并冻结为 v2.3
+- `attachments.status` 保持 `VARCHAR(50) NOT NULL` 并增加 `active` 默认值
+- Prisma Schema 与 Mapping Audit 同步 Database v2.3
+
+### Verified
+
+- PostgreSQL 18.4 Migration 前置审计确认 `attachments` 0 行，NULL、未知状态、时间异常及 Attachment Link 重复组均为 0
+- 五个正式状态均通过 Check，任意其他值被拒绝
+- 默认插入获得 `active`，约束与索引名称一致
+- 既有更新时间、文件大小与 Attachment Link 唯一约束继续有效
+
+### Scope
+
+- Database v2.3 最终 Mapping 为 63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、98 普通索引、234 Check、2 Enum
+- 未新增表、字段、外键、唯一约束、Enum、Seed 或 Worker
+- 未修改 Frozen API v1.4；API CR-005 继续为 `Proposed / Pending Approval`
+- 未实现 Attachment Route、Service、Repository、Upload、状态迁移或删除 Worker
+
 ## [0.11.17] - 2026-07-25
 
 ### Changed

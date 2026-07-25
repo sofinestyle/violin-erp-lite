@@ -1,7 +1,7 @@
 ---
 document_name: Task 3.5.5 Check约束设计
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: Approved
 owner: Project Manager
 created_date: 2026-07-20
@@ -345,3 +345,15 @@ DCR-004 新增且仅新增七项 Check：
 - `ck_idempotency_records_time_range`。
 
 它们分别约束 Import 摘要格式、仓库/店铺目标 XOR，以及幂等记录的三态值域、双 Hash 格式、HTTP 状态范围、状态生命周期和时间顺序。Database v2.2 Check 总数为 233，不新增 PostgreSQL Enum。
+
+## 14. Database v2.3 正式增量
+
+DCR-005 新增且仅新增 `ck_attachments_status`，限制 `attachments.status` 只能为：
+
+- `active`；
+- `soft_deleted`；
+- `pending_physical_delete`；
+- `physical_delete_failed`；
+- `physically_deleted`。
+
+数据库 Check 只约束状态值域，不约束状态迁移。合法迁移、零关联条件、证据保护和事务边界由后续获批 Attachment Repository 与 Service 控制。Database v2.3 Check 总数为 234，不新增 PostgreSQL Enum。

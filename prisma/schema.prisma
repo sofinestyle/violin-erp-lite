@@ -56,6 +56,7 @@ model attachment_links {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// DCR-005 keeps lifecycle status as a string and enforces its five-value domain in the v2.3 SQL migration.
 model attachments {
   id                                   String             @id(map: "pk_attachments") @default(dbgenerated("uuidv7()")) @db.Uuid
   created_at                           DateTime           @default(now()) @db.Timestamptz(6)
@@ -72,13 +73,14 @@ model attachments {
   uploaded_at                          DateTime           @db.Timestamptz(6)
   uploaded_by                          String             @db.Uuid
   is_sensitive                         Boolean            @default(false)
-  status                               String             @db.VarChar(50)
+  status                               String             @default("active") @db.VarChar(50)
   attachment_links                     attachment_links[]
   users_attachments_created_byTousers  users              @relation("attachments_created_byTousers", fields: [created_by], references: [id], onUpdate: Restrict, map: "fk_attachments_created_by")
   users_attachments_updated_byTousers  users              @relation("attachments_updated_byTousers", fields: [updated_by], references: [id], onUpdate: Restrict, map: "fk_attachments_updated_by")
   users_attachments_uploaded_byTousers users              @relation("attachments_uploaded_byTousers", fields: [uploaded_by], references: [id], onUpdate: Restrict, map: "fk_attachments_uploaded_by")
 
   @@index([uploaded_by, created_at], map: "idx_attachments_uploaded_by_created_at")
+  @@index([status, updated_at], map: "idx_attachments_status_updated_at")
 }
 
 model audit_logs {

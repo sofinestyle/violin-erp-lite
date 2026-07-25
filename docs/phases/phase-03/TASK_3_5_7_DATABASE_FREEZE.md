@@ -1,7 +1,7 @@
 ---
 document_name: Task 3.5.7 Database Freeze
 project: Violin ERP Lite
-version: 1.1
+version: 1.2
 status: Frozen
 owner: Project Manager
 created_date: 2026-07-20
@@ -21,8 +21,8 @@ related_phase: Phase 3
 | 前置小任务 | Task 3.5.6：数据库命名规范（Completed / Approved） |
 | 文档状态 | Frozen |
 | 小任务状态 | Completed / Approved / Frozen |
-| 冻结版本 | Database Logical Design v1.1 |
-| 冻结日期 | 2026-07-20 |
+| 冻结版本 | Database Logical Design v2.3 |
+| 冻结日期 | 2026-07-25 |
 
 ## 2. 冻结目的
 
@@ -32,7 +32,7 @@ related_phase: Phase 3
 
 ## 3. 冻结范围
 
-Database Logical Design v1.1 正式冻结以下内容：
+Database Logical Design v2.3 正式冻结以下内容：
 
 1. 60 张正式逻辑表及其表名称；
 2. Task 3.4 已批准的字段名称；
@@ -142,8 +142,8 @@ DCR-001 于 2026-07-21 获得项目负责人正式批准。Database Logical Desi
 
 ## 9. 正式结论
 
-1. Database Logical Design v1.0 于 2026-07-20 正式冻结；DCR-001 于 2026-07-21 批准唯一状态语义修订，当前冻结版本为 Database Logical Design v1.1。
-2. 正式逻辑表数量为 60 张。
+1. Database Logical Design v1.0 于 2026-07-20 正式冻结；DCR-001 至 DCR-005 经正式批准与同步后，当前冻结版本为 Database Logical Design v2.3。
+2. 正式物理表数量为 63 张。
 3. 业务规则、逻辑表、字段、类型、约束、关系、逻辑索引、命名及历史保留原则纳入冻结范围。
 4. Frozen 数据库逻辑设计作为后续页面设计、技术设计和开发工作的正式输入。
 5. 后续阶段不得改变 Frozen 数据库业务语义。
@@ -155,6 +155,19 @@ DCR-001 于 2026-07-21 获得项目负责人正式批准。Database Logical Desi
 11. 本次未选择数据库或 ORM，未编写 SQL，未创建 DDL、Schema、Migration、Seed、物理 ER 图或数据库初始化内容。
 12. 本次未产生页面、API 或业务代码，未安装依赖。
 
-## 10. 下一步
+## 10. DCR-005 冻结增量
 
-等待 ChatGPT 读取 GitHub 并统一验收 Task 3.5.4 至 Task 3.5.7 及 Phase 3 Database Freeze。验收通过前不得启动 Phase 4，不得预先启动任何技术映射工作。
+Database Change Request 005 已于 2026-07-25 获得项目负责人正式批准。Database Logical Design v2.3 相对 v2.2：
+
+- 表、字段、主键、唯一约束/唯一索引、外键及 PostgreSQL Enum 数量不变；
+- `attachments.status` 保持 `VARCHAR(50) NOT NULL` 并增加 `active` 默认值；
+- 新增 `ck_attachments_status`，冻结五个正式状态；
+- 新增 `idx_attachments_status_updated_at (status, updated_at)`；
+- `physically_deleted` 为保留数据库行、业务 Metadata 和审计外键的终止墓碑；
+- 不授权 Attachment API、Repository、Service、Worker、自动清理或自动重试。
+
+Database v2.3 最终 Mapping Audit 为 63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、98 普通索引、234 Check、2 PostgreSQL Enum。
+
+## 11. 下一步
+
+等待 GitHub 技术验收。API CR-005 继续保持 Proposed / Pending Approval；未经正式批准与同步，不得实施 Attachment Framework。

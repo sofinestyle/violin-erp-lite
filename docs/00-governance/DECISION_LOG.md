@@ -2149,3 +2149,27 @@ Approved
 ### 影响
 
 本决定只同步 Task 7.5 批准结果与 Task 7.4 恢复状态，不修改业务代码、Frozen Database/API、Prisma Schema、Migration、Mapping Audit、API 数量、DTO、权限或错误码；不实现 Attachment、Import 业务流程或 Background Worker，不批准或修改 DCR-005 与 API CR-005。
+
+## DEC-087 批准DCR-005并冻结Database v2.3
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 Database Change Request 005，状态更新为 Completed / Approved；
+- Database Logical Design 从 v2.2 升级为 v2.3，并在 Forward-only Migration、Prisma Schema、Mapping Audit 与 PostgreSQL 18.4 验证一致后冻结为 Completed / Approved / Frozen；
+- `attachments.status` 保持 `VARCHAR(50) NOT NULL`，默认值设为 `active`；
+- 新增且仅新增 `ck_attachments_status`，允许 `active`、`soft_deleted`、`pending_physical_delete`、`physical_delete_failed`、`physically_deleted`；
+- 新增且仅新增普通索引 `idx_attachments_status_updated_at (status, updated_at)`；
+- `physically_deleted` 保留数据库墓碑、业务 Metadata 和审计外键，不物理删除 `attachments` 行；
+- Database v2.3 最终 Mapping 为 63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、98 普通索引、234 Check、2 Enum。
+
+### 影响
+
+本决定只批准和实施 DCR-005。API Master Specification v1.4、API 总数、DTO、权限和错误码保持不变；API CR-005 继续为 Proposed / Pending Approval。不新增表、字段、外键、唯一约束、Enum、Seed 或 Worker，不实现 Attachment Route、Service、Repository、Upload、状态迁移或删除 Worker，不修改 CURRENT_STATUS 或 Current Task。
