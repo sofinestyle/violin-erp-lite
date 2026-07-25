@@ -11,6 +11,27 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.23] - 2026-07-25
+
+### Changed
+
+- Task 7.4 Attachment Framework 通过 GitHub 技术验收并更新为 `Completed / Approved`
+- Batch 7.4-A、Batch 7.4-B 与 Batch 7.4-C 均完成批准
+- Current Task 切换为 Task 7.6 Background Job & Distributed Lock
+- Task 7.6 继续保持 `Waiting / Not Started`，Phase 7 继续保持 `In Progress`
+
+### Verified
+
+- Attachment Domain、Registry、Repository、Lifecycle、Validator 与 Domain Error 已完成
+- `ATT-001` 至 `ATT-008` 全部完成并通过技术验收
+- Task 7.3 Object Storage 与 Task 7.5 Persistent Idempotency 已由 Attachment Framework 正式复用
+- 权限、数据范围、敏感附件保护、Audit、Storage 补偿、并发控制与墓碑保留均已收口
+
+### Scope
+
+- 本次仅同步治理状态，未修改业务代码、Database v2.3、API v1.5、Prisma、Migration 或 Mapping Audit
+- 未启动 Task 7.6，未创建 Queue、Worker、Scheduler 或 Distributed Lock
+
 ## [0.11.22] - 2026-07-25
 
 ### Added

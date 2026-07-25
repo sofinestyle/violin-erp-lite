@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.8
+version: 1.9
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -21,8 +21,8 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 
 - Phase：Phase 7 Platform Foundation；
 - Phase Status：In Progress；
-- Current Task：Task 7.4 Attachment Framework；
-- Current Task Status：In Progress；
+- Current Task：Task 7.6 Background Job & Distributed Lock；
+- Current Task Status：Waiting / Not Started；
 - Phase 8 Application Development：Waiting / Not Started；
 - Phase 9 Test Plan & System Integration：Waiting / Not Started；
 - Phase 10 Release & Acceptance：Waiting / Not Started。
@@ -50,14 +50,14 @@ DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步，并作
 | Task 7.1 | Platform Baseline & Existing Capability Audit | Completed / Approved |
 | Task 7.2 | Authentication & Authorization | Completed / Approved |
 | Task 7.3 | Object Storage & File Lifecycle | Completed / Approved |
-| Task 7.4 | Attachment Framework | In Progress |
+| Task 7.4 | Attachment Framework | Completed / Approved |
 | Task 7.5 | Idempotency & Concurrency Control | Completed / Approved |
 | Task 7.6 | Background Job & Distributed Lock | Waiting / Not Started |
 | Task 7.7 | Cache & Event Infrastructure | Waiting / Not Started |
 | Task 7.8 | Audit, Trace & Observability | Waiting / Not Started |
 | Task 7.9 | Platform Final Consistency Review | Waiting / Not Started |
 
-Task 7.1 至 Task 7.3 及 Task 7.5 已完成并获得批准；Task 7.4 保持 In Progress 并恢复为 Current Task。Task 7.6 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
+Task 7.1 至 Task 7.5 已完成并获得批准。Current Task 已切换为 Task 7.6，但 Task 7.6 仍为 Waiting / Not Started；Task 7.6 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
 
 ## 5. 平台边界
 
@@ -123,9 +123,9 @@ Task 7.4 的三个内部实施批次结果：
 
 1. Batch 7.4-A：Completed / Approved，完成 Domain、Repository、Registry、Validator 与 Lifecycle；
 2. Batch 7.4-B：Completed / Approved，完成 `ATT-001` 至 `ATT-004`；
-3. Batch 7.4-C：Completed / Pending Approval，完成 `ATT-005` 至 `ATT-008`、完整删除状态机、生命周期查询、审计和并发验证。
+3. Batch 7.4-C：Completed / Approved，完成 `ATT-005` 至 `ATT-008`、完整删除状态机、生命周期查询、审计和并发验证。
 
-Task 7.4 Implementation 当前为 `Completed / Pending Approval`，正式 Task 状态仍为 `In Progress`，Current Task 仍为 Task 7.4。内部 Batch 状态不进入 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。
+Task 7.4 Implementation 已通过 GitHub 技术验收，正式状态为 `Completed / Approved`。Attachment Framework 已完整复用 Task 7.3 Object Storage 与 Task 7.5 Persistent Idempotency，并完成权限、数据范围、敏感附件保护、Audit、Storage 补偿、并发控制与墓碑保留。内部 Batch 状态不进入 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。
 
 ### 5.4 Idempotency & Concurrency Control
 
@@ -180,4 +180,4 @@ Task 7.5 已完成通用持久化幂等平台、Prisma Repository、Hash、Scope
 
 ## 8. 当前结论
 
-Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.3 及 Task 7.5 已为 Completed / Approved；Task 7.4 保持 In Progress 并恢复为 Current Task，其 Task 7.5 平台依赖暂停已解除；Task 7.6 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。
+Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.5 已为 Completed / Approved；Current Task 已切换为 Task 7.6，但 Task 7.6 仍为 Waiting / Not Started，未授权实施 Queue、Worker、Scheduler 或 Distributed Lock。Task 7.7 至 Task 7.9 均为 Waiting / Not Started，业务应用开发保持暂停。

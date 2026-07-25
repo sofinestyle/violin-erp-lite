@@ -2204,7 +2204,7 @@ Approved
 
 ### 状态
 
-Pending Approval
+Approved
 
 ### 日期
 
@@ -2213,13 +2213,38 @@ Pending Approval
 ### 决定
 
 - Batch 7.4-A 与 Batch 7.4-B 已通过 GitHub 技术验收，实施状态更新为 Completed / Approved；
-- Batch 7.4-C 严格按 API Master Specification v1.5 完成 `ATT-005` 至 `ATT-008`，实施状态为 Completed / Pending Approval；
+- Batch 7.4-C 严格按 API Master Specification v1.5 完成 `ATT-005` 至 `ATT-008`，并已通过 GitHub 技术验收，状态更新为 Completed / Approved；
 - `ATT-005`、`ATT-006` 与 `ATT-007` 统一复用 Task 7.5 Persistent Idempotency、服务端实时权限和数据范围校验；
 - `ATT-007` 完成五状态删除生命周期、Storage 补偿、失败重试、墓碑保留、版本并发控制和 Audit Receipt 对账；
 - `ATT-008` 只读生成生命周期摘要与事件，不改变 Attachment 或 Storage 状态；
-- Task 7.4 Implementation 为 Completed / Pending Approval，正式 Task 状态继续为 In Progress，Current Task 继续为 Task 7.4；
+- Task 7.4 Implementation 已通过 GitHub 技术验收并获得批准；
 - Task 7.6、Background Worker、自动重试、定时清理、Import 接入及前端功能均未启动。
 
 ### 影响
 
-本决定记录 Batch 7.4-C 的实现完成和待验收状态，不修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、权限、错误码、API 总数或正式当前状态入口，不将 Task 7.4 提前标记为 Completed / Approved。
+本决定确认 Batch 7.4-C 的 GitHub 技术验收结果，不修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、权限、错误码或 API 总数。
+
+## DEC-090 批准Task 7.4并切换Current Task至Task 7.6
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- Task 7.4 Attachment Framework 正式更新为 Completed / Approved；
+- Attachment Domain、Object Registry、Category Registry、Attachment Repository、Attachment Link Repository、Lifecycle、Validator 与 Domain Error 已完成；
+- `ATT-001` 至 `ATT-008` 已全部完成并通过 GitHub 技术验收；
+- Attachment Framework 正式复用 Task 7.3 Object Storage 与 Task 7.5 Persistent Idempotency；
+- 权限校验、数据范围、敏感附件保护、Audit、Storage 补偿、并发控制与墓碑保留已完成收口；
+- Phase 7 继续保持 In Progress，Task 7.1 至 Task 7.5 均为 Completed / Approved；
+- Current Task 切换为 Task 7.6 Background Job & Distributed Lock，但状态保持 Waiting / Not Started；
+- Task 7.7 至 Task 7.9 继续保持 Waiting / Not Started。
+
+### 影响
+
+本决定只同步治理状态，不启动或实现 Task 7.6，不创建 Queue、Worker、Scheduler 或 Distributed Lock，不修改业务代码、Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit 或 Frozen 业务规则。

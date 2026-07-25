@@ -1,8 +1,8 @@
 ---
 document_name: Task 7.4 Attachment Framework
 project: Violin ERP Lite
-version: 1.4
-status: In Progress
+version: 1.5
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-25
 updated_date: 2026-07-25
@@ -13,14 +13,15 @@ related_phase: Phase 7
 
 ## 1. 正式状态
 
-- Task Status：In Progress；
-- Current Task：Task 7.4 Attachment Framework；
+- Task Status：Completed / Approved；
+- Current Task：Task 7.6 Background Job & Distributed Lock；
+- Current Task Status：Waiting / Not Started；
 - Batch 7.4-A Implementation：Completed / Approved；
 - Batch 7.4-B Implementation：Completed / Approved；
-- Batch 7.4-C Implementation：Completed / Pending Approval；
-- Task 7.4 Implementation：Completed / Pending Approval。
+- Batch 7.4-C Implementation：Completed / Approved；
+- Task 7.4 Implementation：Completed / Approved。
 
-Batch 是 Task 7.4 内部实施批次，不进入 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。Task 7.4 未完成、未关闭，也未启动 Task 7.6。
+Batch 是 Task 7.4 内部实施批次，不进入 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`。Task 7.4 已通过 GitHub 技术验收并正式关闭；Task 7.6 仅成为 Current Task，仍未启动。
 
 ## 2. 正式实现基线
 
@@ -108,4 +109,4 @@ Object Type 与 Category 的分派只通过 Registry 完成。业务 Service 不
 
 ## 8. 后续边界
 
-Batch 7.4-A 与 Batch 7.4-B 已通过 GitHub 技术验收并获得批准。Batch 7.4-C 与 Task 7.4 Implementation 当前为 `Completed / Pending Approval`，Task 7.4 正式治理状态继续保持 `In Progress`。未经项目负责人技术验收与正式状态同步，不得将 Task 7.4 标记为 Completed / Approved，不得启动 Task 7.6。
+Batch 7.4-A、Batch 7.4-B 与 Batch 7.4-C 均已通过 GitHub 技术验收并获得批准，Task 7.4 正式状态为 `Completed / Approved`。Current Task 已切换为 Task 7.6，但 Task 7.6 继续保持 `Waiting / Not Started`；未经项目负责人正式执行指令，不得启动 Task 7.6。

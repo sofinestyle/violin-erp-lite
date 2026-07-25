@@ -1,7 +1,7 @@
 ---
 document_name: 项目说明
 project: Violin ERP Lite
-version: 1.7
+version: 1.8
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
@@ -19,14 +19,14 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 - Current Phase：Phase 7
 - Phase Status：In Progress
-- Current Task：Task 7.4
-- Current Task Status：In Progress
+- Current Task：Task 7.6
+- Current Task Status：Waiting / Not Started
 
 完整当前状态以 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md) 为唯一入口。
 
 ## 十阶段开发路线
 
-十个阶段的数量、名称和顺序已经冻结。当前为 Phase 7 Platform Foundation / Task 7.4 Attachment Framework；Task 7.1 至 Task 7.3 及 Task 7.5 已为 Completed / Approved，Task 7.4 保持 In Progress，Phase 8 Application Development、Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
+十个阶段的数量、名称和顺序已经冻结。当前为 Phase 7 Platform Foundation；Task 7.1 至 Task 7.5 均为 Completed / Approved。Current Task 已切换为 Task 7.6 Background Job & Distributed Lock，但仍为 Waiting / Not Started；Phase 8 Application Development、Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
 
 ## 仓库用途
 
@@ -183,7 +183,7 @@ pnpm dev:miniapp
 - [Phase 6 Final Consistency Review（Completed / Approved）](docs/phases/phase-06/PHASE_6_FINAL_CONSISTENCY_REVIEW.md)
 - [Phase 7 Platform Foundation（In Progress）](docs/phases/phase-07/PHASE_7_PLATFORM_FOUNDATION.md)
 - [Task 7.1 Platform Baseline & Existing Capability Audit（Completed / Approved）](docs/phases/phase-07/TASK_7_1_PLATFORM_BASELINE_AND_EXISTING_CAPABILITY_AUDIT.md)
-- [Task 7.4 Attachment Framework（In Progress）](docs/phases/phase-07/TASK_7_4_ATTACHMENT_FRAMEWORK.md)
+- [Task 7.4 Attachment Framework（Completed / Approved）](docs/phases/phase-07/TASK_7_4_ATTACHMENT_FRAMEWORK.md)
 - [Task 7.5 Idempotency & Concurrency Control（Completed / Approved）](docs/phases/phase-07/TASK_7_5_IDEMPOTENCY_AND_CONCURRENCY_CONTROL.md)
 - [Phase 8 Application Development（Waiting / Not Started）](docs/phases/phase-08/PHASE_8_APPLICATION_DEVELOPMENT.md)
 - [Task 8.1 开发基线与工程初始化（Completed / Approved）](docs/phases/phase-08/TASK_8_1_DEVELOPMENT_BASELINE.md)
