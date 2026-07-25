@@ -11,6 +11,34 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.29] - 2026-07-25
+
+### Changed
+
+- Phase 7 Platform Foundation 正式更新为 `Completed / Approved / Frozen`
+- Task 7.9 Platform Final Consistency Review 正式更新为 `Completed / Approved`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md`、`README.md` 与 Phase 7 Platform Foundation 文档同步 Phase 7 冻结状态
+- 新增 DEC-096，记录 Phase 7 Platform Foundation 冻结批准
+
+### Added
+
+- Platform Foundation 完成冻结，覆盖 Authentication、Authorization、Object Storage、Attachment Framework、Idempotency、Background Job、Event Infrastructure、Audit、Trace、Logging、Metrics Foundation 与 Health Foundation
+- Task 7.9 Final Audit & Gap Review 通过，Blocking Gap = 0
+- Task 7.9 Final Alignment Confirmation 通过，结论为 Recommend Phase 7 Freeze
+
+### Verified
+
+- Phase 7 Final Audit 通过
+- Phase 7 Alignment Confirmation 通过
+- `pnpm status:check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改业务代码、Database Schema、Migration、API Contract、Permission 或业务规则
+- Phase 8 Application Development 继续保持 `Waiting / Not Started`
+
 ## [0.11.28] - 2026-07-25
 
 ### Changed

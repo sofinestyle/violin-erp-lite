@@ -2384,3 +2384,30 @@ Approved
 ### 影响
 
 本决定只同步 Task 7.8 完成批准状态，不修改业务代码、Database Schema、Migration、API、Permission、DTO、业务规则或业务模块。Task 7.9 Platform Final Consistency Review 继续保持 Waiting / Not Started；Phase 8 Application Development 未启动。后续新增 `/metrics`、`/health/liveness`、`/health/readiness`、Trace 查询、Audit 查询、Alert 查询或引入 Prometheus、Grafana、OpenTelemetry、ELK、商业监控平台，必须先经过对应 API Change Request、Architecture Decision Update 或正式依赖审批。
+
+## DEC-096 批准Phase 7 Platform Foundation冻结
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 Phase 7 Platform Foundation 完成并冻结，状态更新为 Completed / Approved / Frozen；
+- Task 7.1 至 Task 7.9 均已完成并获得批准；
+- Task 7.9-A Final Audit & Gap Review 已完成，Blocking Gap = 0；
+- Task 7.9-B Final Alignment Confirmation 已完成，结论为 Recommend Phase 7 Freeze；
+- Phase 7 冻结内容包括 Authentication、Authorization、Object Storage、Attachment Framework、Idempotency、Background Job、Event Infrastructure、Audit、Trace、Logging、Metrics Foundation 与 Health Foundation；
+- Database SSOT v2.5、Prisma Schema、Migration 与 Runtime 保持一致；
+- API Master Specification v1.5 保持 Completed / Approved / Frozen，正式接口总数 335，未新增 API Contract、DTO 或错误码；
+- ROLE_PERMISSION_SPEC v1.0 保持 Completed / Approved / Frozen，未新增 Permission；
+- Blocking Gap 数量为 0；
+- Phase 8 Application Development 是下一阶段，状态继续保持 Waiting / Not Started。
+
+### 影响
+
+本决定只同步 Phase 7 最终批准与冻结状态，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或业务模块。Phase 8 Application Development 未自动启动，必须等待项目负责人后续正式启动指令。后续新增 Dead Letter 管理 UI、Dead Letter 重放 API、Job 管理 API、Event 管理 API、Metrics Endpoint、Trace / Audit 查询 API、Redis、MQ、Prometheus、Grafana、OpenTelemetry、ELK、商业监控平台或业务模块接入 Job / Event，均必须通过对应 DCR、API Change Request、Architecture Decision Update、Permission 评估或独立获批任务。

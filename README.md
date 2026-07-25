@@ -1,7 +1,7 @@
 ---
 document_name: 项目说明
 project: Violin ERP Lite
-version: 2.0
+version: 2.1
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
@@ -18,15 +18,15 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 ## 当前项目状态
 
 - Current Phase：Phase 7
-- Phase Status：In Progress
-- Current Task：Task 7.8
-- Current Task Status：Completed / Approved
+- Phase Status：Completed / Approved / Frozen
+- Current Task：Phase 7 Frozen
+- Current Task Status：Completed / Approved / Frozen
 
 完整当前状态以 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md) 为唯一入口。
 
 ## 十阶段开发路线
 
-十个阶段的数量、名称和顺序已经冻结。当前为 Phase 7 Platform Foundation；Task 7.1 至 Task 7.8 均为 Completed / Approved。Task 7.9 Platform Final Consistency Review、Phase 8 Application Development、Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
+十个阶段的数量、名称和顺序已经冻结。Phase 7 Platform Foundation 已完成 Task 7.1 至 Task 7.9、Final Audit、Alignment Confirmation 与 Freeze，状态为 Completed / Approved / Frozen。Phase 8 Application Development、Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
 
 ## 仓库用途
 

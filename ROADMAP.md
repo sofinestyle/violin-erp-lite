@@ -1,7 +1,7 @@
 ---
 document_name: 项目开发路线
 project: Violin ERP Lite
-version: 2.9
+version: 3.0
 status: Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -18,9 +18,9 @@ related_phase: All Phases
 ## 2. 当前项目进度
 
 - Current Phase：Phase 7
-- Phase Status：In Progress
-- Current Task：Task 7.8
-- Current Task Status：Completed / Approved
+- Phase Status：Completed / Approved / Frozen
+- Current Task：Phase 7 Frozen
+- Current Task Status：Completed / Approved / Frozen
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件负责定义固定阶段路线、Task 边界、进入条件和完成条件。
 
@@ -67,7 +67,7 @@ related_phase: All Phases
 - Task 6.1 功能详细设计统一规范：Completed / Approved
 - Task 6.2 核心业务功能详细设计：Completed / Approved
 - Task 6.3 公共能力功能详细设计：Completed / Approved
-- Phase 7：In Progress
+- Phase 7：Completed / Approved / Frozen
 - Task 7.1 Platform Baseline & Existing Capability Audit：Completed / Approved
 - Task 7.2 Authentication & Authorization：Completed / Approved
 - Task 7.3 Object Storage & File Lifecycle：Completed / Approved
@@ -76,7 +76,7 @@ related_phase: All Phases
 - Task 7.6 Background Job & Distributed Lock：Completed / Approved
 - Task 7.7 Cache & Event Infrastructure：Completed / Approved
 - Task 7.8 Audit, Trace & Observability：Completed / Approved
-- Task 7.9 Platform Final Consistency Review：Waiting / Not Started
+- Task 7.9 Platform Final Consistency Review：Completed / Approved
 - Phase 8：Waiting / Not Started
 - Phase 9：Waiting / Not Started
 - Phase 10：Waiting / Not Started
@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.8 均已完成并获得批准。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 保持 Waiting / Not Started。
 
 ## 3. 固定十阶段开发路线
 
@@ -240,7 +240,7 @@ Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每�
 
 ### Phase 7：平台基础（Platform Foundation）
 
-- 状态：In Progress
+- 状态：Completed / Approved / Frozen
 - 目标：盘点、复用并收口跨应用公共技术能力，为应用开发提供唯一、稳定、可审计的平台基线。
 - 主要输出：
   - Platform Baseline 与已有能力审计；
@@ -265,9 +265,10 @@ Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每�
 6. Task 7.6 Background Job & Distributed Lock：Completed / Approved；
 7. Task 7.7 Cache & Event Infrastructure：Completed / Approved；
 8. Task 7.8 Audit, Trace & Observability：Completed / Approved；
-9. Task 7.9 Platform Final Consistency Review：Waiting / Not Started。
+9. Task 7.9 Platform Final Consistency Review：Completed / Approved；
+10. Phase 7 Frozen Final State：Completed / Approved / Frozen；
 
-每个 Task 完成后必须先通过 GitHub 技术验收并获得项目负责人批准，方可启动下一 Task。Task 7.1 至 Task 7.8 均已通过 GitHub 技术验收并获得批准；Task 7.9 继续保持 Waiting / Not Started。Task 7.9 是本 Phase 的正式收口任务，未经项目负责人明确启动不得执行。
+每个 Task 完成后必须先通过 GitHub 技术验收并获得项目负责人批准，方可启动下一 Task。Task 7.1 至 Task 7.9 均已通过 GitHub 技术验收并获得批准。Phase 7 已冻结为 Completed / Approved / Frozen；Phase 8 Application Development 继续保持 Waiting / Not Started，未经项目负责人明确启动不得执行。
 
 ### Phase 8：应用开发（Application Development）
 
