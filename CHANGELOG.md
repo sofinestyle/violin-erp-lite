@@ -11,6 +11,22 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.14] - 2026-07-25
+
+### Changed
+
+- API Change Request 004 更新为 `Completed / Approved`
+- API Master Specification 从 v1.3 升级并冻结为 v1.4，正式 API 总数保持 335
+- 正式补齐 `processing`、`completed`、`failed`、同 Key 不同 Request Hash 与过期租约恢复的统一幂等行为
+- 正式冻结 Import 并发重复只创建一个任务、其他请求返回 `IMPORT_DUPLICATE_FILE` 且不创建第二条 `duplicate_file` 任务
+- 同步 Phase 5 通用 API、Import/Security 契约及当前治理文档中的 API v1.4 引用
+
+### Scope
+
+- 新增 API 0、删除 API 0、DTO 字段变化 0、权限变化 0、错误码变化 0
+- 未修改 Database v2.2、Prisma、Migration、Mapping Audit、业务代码、Attachment 或幂等实现
+- Task 7.5 未启动；DCR-005 与 API CR-005 继续保持 `Proposed / Pending Approval`
+
 ## [0.11.13] - 2026-07-25
 
 ### Added

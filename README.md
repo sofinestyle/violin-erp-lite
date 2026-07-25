@@ -1,7 +1,7 @@
 ---
 document_name: 项目说明
 project: Violin ERP Lite
-version: 1.4
+version: 1.5
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
@@ -197,7 +197,7 @@ pnpm dev:miniapp
 
 ## 当前禁止事项
 
-API Master Specification v1.3 是 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 335。Database Logical Design v2.1、DATABASE_ENUM_SPEC 与 Phase 6 Functional Specification 保持 Frozen。DCR-004 与 API CR-004 继续为 Proposed / Pending Approval；后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
+API Master Specification v1.4 是 Completed / Approved / Frozen 的唯一 API 事实来源，正式接口总数为 335。Database Logical Design v2.2、DATABASE_ENUM_SPEC 与 Phase 6 Functional Specification 保持 Frozen。DCR-004 与 API CR-004 已为 Completed / Approved；DCR-005 与 API CR-005 继续为 Proposed / Pending Approval。后续修改必须经过正式 DCR 或 Change Request，不得由聊天记忆、代码实现或临时决定覆盖。当前执行边界以 `CURRENT_STATUS.md`、`ROADMAP.md` 和已批准的当前 Task 指令为准。
 
 ## 安全说明
 

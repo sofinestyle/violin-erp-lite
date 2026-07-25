@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.3
+version: 1.4
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -32,16 +32,16 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 ## 3. 权威输入
 
 - Frozen `BUSINESS_RULES.md`；
-- Frozen Database Logical Design v2.1；
-- Frozen API Master Specification v1.3，正式接口总数 335；
+- Frozen Database Logical Design v2.2；
+- Frozen API Master Specification v1.4，正式接口总数 335；
 - Frozen `ROLE_PERMISSION_SPEC.md`；
 - Approved Phase 4 页面设计；
 - Frozen Phase 6 Functional Specification；
 - Completed / Approved 的原 Phase 7 工程成果，现已迁移为 Phase 8 历史 Task；
 - Completed / Approved 的 Phase Renumbering Change Request 001；
-- Proposed / Pending Approval 的 DCR-004 与 API CR-004。
+- Completed / Approved 的 DCR-004 与 API CR-004。
 
-DCR-004 与 API CR-004 未因路线重构获得批准，也不得在本阶段入口中被描述为已生效。
+DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步；其获批不等于 Task 7.5 已启动，也不授权提前实现通用幂等代码。
 
 ## 4. Task 结构
 
@@ -115,7 +115,7 @@ Task 7.4 实现前审计发现以下 Frozen SSOT 缺口：
 3. `object_type` 与 `attachment_category` 没有封闭代码集合；
 4. 删除保护、Storage 删除补偿及失败状态没有可执行矩阵；
 5. 现有错误码不足以稳定映射全部 Attachment/Storage 失败；
-6. `ATT-001` 的生产级首次结果重放依赖仍未批准的 DCR-004/API CR-004。
+6. `ATT-001` 的生产级首次结果重放依赖已由 DCR-004/API CR-004 补齐，但 Attachment 状态、DTO、类别与删除规则仍等待 DCR-005/API CR-005 批准。
 
 因此 Task 7.4 正式状态继续为 `In Progress`，实现状态为 `Paused / Frozen SSOT Conflict`。暂停只记录在本 Task 边界和 `CHANGELOG.md`，不写入 `CURRENT_STATUS.md`。
 
@@ -125,11 +125,11 @@ Task 7.4 实现前审计发现以下 Frozen SSOT 缺口：
 - `DATABASE_CHANGE_REQUEST_005.md`；
 - `API_CHANGE_REQUEST_005.md`。
 
-上述提案及 DCR-004/API CR-004 未完成批准和正式同步前，不实施 Attachment、Storage、数据库、API 或测试代码。
+上述 Attachment 提案、DCR-005 与 API CR-005 未完成批准和正式同步前，不实施 Attachment、Storage、数据库、API 或测试代码。
 
 ### 5.4 Idempotency & Concurrency Control
 
-建立写 API 的通用幂等、请求摘要、原子认领、重放、租约、并发冲突和过期清理框架。DCR-004 与 API CR-004 在正式批准前只作为待决依赖。
+建立写 API 的通用幂等、请求摘要、原子认领、重放、租约、并发冲突和过期清理框架。DCR-004 与 API CR-004 已成为正式输入，但 Task 7.5 仍为 Waiting / Not Started，未经正式启动不得实现。
 
 ### 5.5 Background Job & Distributed Lock
 

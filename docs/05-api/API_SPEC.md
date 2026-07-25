@@ -1,11 +1,11 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.3
+version: 1.4
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 5
 ---
 
@@ -15,7 +15,7 @@ related_phase: Phase 5
 
 本文件是 Violin ERP Lite Phase 5 正式 API 规范总入口，统一 Task 5.1 至 Task 5.5 的接口编号、Header、请求、响应、分页、排序、筛选、命名、版本、错误码、权限、日志、导入、附件和安全规则。
 
-API Master Specification v1.3 为 Completed / Approved / Frozen，正式接口总数保持 335。API Change Request 003 已正式批准，在不新增路径、编号、DTO 字段、权限或错误码的前提下补齐 Import 状态代码、筛选、动作和汇总契约。API Master Specification v1.2 及其 335 个接口保留为历史冻结基线。
+API Master Specification v1.4 为 Completed / Approved / Frozen，正式接口总数保持 335。API Change Request 004 已正式批准，在不新增路径、编号、DTO 字段、权限或错误码的前提下补齐持久化幂等、重放和 Import 并发重复行为。API Master Specification v1.3 及其 335 个接口保留为历史冻结基线。
 
 ## 2. 正式文档入口
 
@@ -33,8 +33,10 @@ API Master Specification v1.3 为 Completed / Approved / Frozen，正式接口�
 12. 本文件第 20 节：API Master Specification v1.2 统一认证正式契约
 13. [API Change Request 003：导入状态代码与动作边界](../00-governance/API_CHANGE_REQUEST_003.md)
 14. 本文件第 21 节：API Master Specification v1.3 Import 状态正式契约
+15. [API Change Request 004：幂等处理中与 Import 重复竞争行为](../00-governance/API_CHANGE_REQUEST_004.md)
+16. 本文件第 22 节：API Master Specification v1.4 持久化幂等正式契约
 
-发生冲突时，Frozen 业务规则、Frozen Database Logical Design v2.1 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
+发生冲突时，Frozen 业务规则、Frozen Database Logical Design v2.2 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
 
 ## 3. 接口编号与数量
 
@@ -58,7 +60,7 @@ API Master Specification v1.3 为 Completed / Approved / Frozen，正式接口�
 | API CR-001 | 库存盘点 `STC-*` | 17 | Completed / Approved |
 | API CR-001 | 销售退货 `SRT-*` | 13 | Completed / Approved |
 | API CR-001 | 报损 `DMG-*` | 13 | Completed / Approved |
-| 合计 | API Master Specification v1.3 正式接口 | 335 | Completed / Approved / Frozen |
+| 合计 | API Master Specification v1.4 正式接口 | 335 | Completed / Approved / Frozen |
 
 逐模块复核结果为 `74 + 29 + 29 + 10 + 26 + 18 + 17 + 15 + 22 + 15 + 8 + 4 + 5 + 16 + 4 + 17 + 13 + 13 = 335`。接口编号唯一且稳定，不得复用、改义或因排序调整重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。`STC-*`、`SRT-*` 和 `DMG-*` 的完整正式契约以 API Change Request 001 及 Task 5.4 补充章节为准；`SEC-006` 至 `SEC-021` 的完整正式契约以本文件第 16 节为准；`SEC-022` 至 `SEC-025` 的完整正式契约以本文件第 17 节为准；`CBR-003` 的 `transportMethod` 字段补充契约以本文件第 18 节为准。
 
@@ -148,11 +150,17 @@ API Master Specification v1.3 为 Completed / Approved / Frozen，正式接口�
 
 ## 11. Idempotency 与并发
 
-- 同一认证主体、方法、规范路径和幂等键的相同请求返回首次结果；同键不同请求返回 409；
+- 原始 `Idempotency-Key` 只来自既有 Header，不新增 DTO 字段；服务端只持久化其 HMAC-SHA-256 Hash；
+- Request Hash 由服务端生成，覆盖 API 动作、Path、业务 Query、Body、服务端文件 Checksum、目标仓库/店铺及认证 Scope；
+- 不存在记录时原子认领并执行；任何同 Key 不同 Request Hash 的请求均返回 `409 SECURITY_REPLAY_DETECTED`，且不得产生业务副作用；
+- 相同 Hash 的有效 `processing` 返回 `409 SECURITY_REPLAY_DETECTED`；可返回安全 `Retry-After`，不得暴露租约、锁、Hash 或内部状态；
+- 相同 Hash 的过期 `processing` 必须先对账并原子回收，再决定补写终态或重新执行；恢复完成前继续返回稳定 409；
+- 相同 Hash 的 `completed` 重放首次安全 HTTP 状态与响应；`failed` 重放首次安全失败且不得重新执行；
+- 首次执行及每次重放都必须重新校验用户状态、身份、权限和数据范围；
 - 正式单据更新使用现有 `versionNo`，无版本字段对象使用 `updatedAt`、当前状态、唯一约束和事务；
 - 库存事务、导入执行和跨仓动作必须在原子事务内完成余额、流水、来源状态和审计；
 - 禁止重复库存流水、重复导入成功行、重复附件关联和重复审批；
-- 幂等、锁、隔离级别和持久化介质的技术选择后置，不新增数据库字段或表。
+- 持久化只使用 Frozen Database Logical Design v2.2 的 `idempotency_records`；不得回退为进程内 Map 作为生产级事实来源。
 
 ## 12. Import
 
@@ -174,9 +182,9 @@ Audit Log、Operation Log、Import Log、Export Log、Login Log 和 Security Log
 
 ## 15. Security
 
-`SEC-001` 至 `SEC-005` 定义登录、刷新、登出、当前会话和当前权限能力；`SEC-006` 至 `SEC-021` 定义用户、角色、角色权限、用户角色和权限目录管理能力；`SEC-022` 至 `SEC-025` 定义角色仓库与店铺数据范围查询及整体替换能力。Authentication、Authorization、Token、Refresh Token、Session、Permission Validation、Replay Protection、Idempotency、Rate Limit、IP White List 和 Header 安全规则适用于 v1.3 的全部 335 个 Frozen 接口。
+`SEC-001` 至 `SEC-005` 定义登录、刷新、登出、当前会话和当前权限能力；`SEC-006` 至 `SEC-021` 定义用户、角色、角色权限、用户角色和权限目录管理能力；`SEC-022` 至 `SEC-025` 定义角色仓库与店铺数据范围查询及整体替换能力。Authentication、Authorization、Token、Refresh Token、Session、Permission Validation、Replay Protection、Idempotency、Rate Limit、IP White List 和 Header 安全规则适用于 v1.4 的全部 335 个 Frozen 接口。
 
-认证持久化只使用 Frozen Database Logical Design v2.1 的 `users`、`user_wechat_identities` 和 `auth_sessions`；不得新增平行用户、微信映射或会话来源。网关、限流器、IP 配置及安全遥测的技术实现留待后续阶段。生产环境必须使用 HTTPS，并执行最小权限、数据脱敏、文件安全、输入白名单和安全错误处理。
+认证持久化只使用 Frozen Database Logical Design v2.2 的 `users`、`user_wechat_identities` 和 `auth_sessions`；不得新增平行用户、微信映射或会话来源。网关、限流器、IP 配置及安全遥测的技术实现留待后续阶段。生产环境必须使用 HTTPS，并执行最小权限、数据脱敏、文件安全、输入白名单和安全错误处理。
 
 ## 16. API Coverage Completion 002：用户、角色与权限管理
 
@@ -956,10 +964,61 @@ Validation、Execution 和 Match 中文映射以已批准 `IMPORT_STATUS_CODE_CO
 - 执行结束后 `successRows` 是 Execution `succeeded` 行数，`failedRows` 是 Execution `failed` 行数；`skipped` 通过既有明细状态表达，不新增 DTO 字段；
 - 任务状态与统计必须由服务端依据正式行级事实计算，客户端不得提交目标状态。
 
-`IMP-001` 的重复范围为文件内容摘要、`importType` 与目标 `warehouseId` 或 `storeId`。命中后复用 `IMPORT_DUPLICATE_FILE`，任务可保存为 `duplicate_file`，不得进入 `IMP-009`、`IMP-011` 或 `IMP-012`。
+`IMP-001` 的重复范围为文件内容摘要、`importType` 与目标 `warehouseId` 或 `storeId`。API v1.4 进一步冻结：并发或重复命中后复用 `IMPORT_DUPLICATE_FILE`，但不得创建第二条 `duplicate_file` 任务；原任务状态不得被重复请求改变。`duplicate_file` 代码继续保留在既有正式状态集合中，不因本次契约同步删除或改义。
 
 ### 21.6 错误码与冻结结论
 
 继续复用 `STATE_IMPORT_JOB_ACTION_NOT_ALLOWED`、`IMPORT_FILE_FORMAT_INVALID`、`IMPORT_TEMPLATE_VERSION_UNSUPPORTED`、`IMPORT_VALIDATION_FAILED`、`IMPORT_DUPLICATE_FILE`、`IMPORT_EXECUTION_PARTIAL_FAILED` 和 `CONFLICT_IMPORT_JOB_MODIFIED`，新增错误码数量为 0。
 
 API Master Specification v1.3 已完成、批准并冻结。本次只补齐既有 DTO 状态值、筛选和动作语义，不创建 Route、Service、Repository、Controller、前端或测试实现，不修改数据库。
+
+## 22. API Change Request 004：持久化幂等正式契约
+
+### 22.1 版本、数量与不变项
+
+1. API Change Request 004：Completed / Approved；
+2. API Master Specification：v1.4，Completed / Approved / Frozen；
+3. Database Logical Design v2.2：Completed / Approved / Frozen，是持久化幂等和 Import 原子去重的数据基础；
+4. 新增 API 0、删除 API 0、DTO 字段变化 0、权限变化 0、错误码变化 0；
+5. 正式 API 总数保持 335；
+6. 不新增 `IDEMPOTENCY_IN_PROGRESS` 或任何同义错误码。
+
+### 22.2 `Idempotency-Key` 与 Request Hash
+
+- 原始 `Idempotency-Key` 只来自第 5 节既有 Header，不进入 Path、Query 或 DTO；
+- 服务端只持久化服务端密钥参与的 HMAC-SHA-256 Key Hash，不保存、返回或记录原始 Key；
+- Request Hash 由服务端在 Validation 后生成，覆盖 API 动作、规范 Path、业务 Query、Body、文件 Checksum、目标仓库/店铺及认证 Scope；
+- 文件 Checksum 必须由服务端依据原始上传内容计算，客户端不得提交、覆盖或指定正式 Checksum；
+- 同 Key 不同 Request Hash 在任何记录状态下均返回 `409 SECURITY_REPLAY_DETECTED`，不得产生业务副作用。
+
+### 22.3 状态与重放行为
+
+| 既有记录 | Request Hash | 正式结果 |
+| --- | --- | --- |
+| 不存在 | — | 原子认领并执行 |
+| `processing` 且租约有效 | 相同 | `409 SECURITY_REPLAY_DETECTED`；可返回安全 `Retry-After` |
+| `processing` 且租约过期 | 相同 | 先对账并原子回收；恢复完成前继续返回稳定 409 |
+| `completed` | 相同 | 返回首次安全 HTTP 状态及响应 |
+| `failed` | 相同 | 返回首次安全失败结果，不重新执行 |
+| 任意状态 | 不同 | `409 SECURITY_REPLAY_DETECTED`，无业务副作用 |
+
+`processing` 响应不得泄露租约时间、锁、Key Hash、Request Hash、数据库状态或内部恢复进度。租约过期不等于业务失败，也不授权直接重做；服务端必须先核对已提交资源、业务唯一事实和审计，再决定补写终态或重新执行。
+
+每次首次执行及 `completed`、`failed` 重放前，服务端都必须重新检查用户当前状态、认证身份、功能和操作权限、仓库/店铺及记录级数据范围。幂等结果不得绕过最新授权，也不得跨用户或跨 API 动作复用。
+
+### 22.4 Import 并发重复
+
+`IMP-001` 的两个正式重复范围为：
+
+- `fileChecksum + importType + warehouseId`；
+- `fileChecksum + importType + storeId`。
+
+并发请求只允许一个 Import Task 创建成功。其他请求返回既有 `IMPORT_DUPLICATE_FILE`，不得创建第二条 `duplicate_file` 任务；重复尝试只由幂等记录和审计保留，原任务状态及后续处理不得被重复请求改变。友好预查不能替代 Database v2.2 的目标范围部分唯一索引。
+
+### 22.5 安全与冻结结论
+
+- 所有响应继续使用统一 Envelope 与 Request ID；
+- 重放不得返回当前主体已经失去权限的数据；
+- 响应不得暴露 Key Hash、Request Hash、租约、内部锁、Session、Storage Key、SQL 或堆栈；
+- API v1.4 只补充既有高风险写 API 的可观察幂等行为，不扩大 `Idempotency-Key` 必填范围；
+- 本次不创建 Route、Service、Repository、幂等 Adapter、前端或测试实现，不启动 Task 7.5。

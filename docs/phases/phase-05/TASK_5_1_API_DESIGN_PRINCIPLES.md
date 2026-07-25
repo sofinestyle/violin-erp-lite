@@ -1,10 +1,11 @@
 ---
 document_name: Task 5.1 API 总体规范与安全规则设计
-version: 1.0
+version: 1.1
 status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
 related_phase: Phase 5
+updated_date: 2026-07-25
 ---
 
 # Task 5.1：API 总体规范与安全规则设计
@@ -393,14 +394,14 @@ API 必须执行并返回明确结果的校验至少包括：
 ### 15.2 幂等键规则
 
 - 幂等键通过 `Idempotency-Key` Header 传递；
-- 幂等范围至少包含认证主体、请求方法、规范化路径和幂等键；
-- 同一幂等键和相同请求内容重复提交时，应返回首次已确认结果，不得重复执行；
-- 同一幂等键对应不同请求内容时返回 `409` 和 `CONFLICT_*` 错误码；
-- 请求体摘要计算、结果保存介质、保留时限和清理策略留待后续技术设计；
+- 幂等范围包含认证主体与 API 动作，Request Hash 覆盖规范化 Path、业务 Query、Body、服务端文件 Checksum、目标仓库/店铺及认证 Scope；
+- 同一幂等键和相同 Request Hash 的 `completed`、`failed` 记录返回首次安全结果，不得重复执行；
+- 同一幂等键对应不同 Request Hash 时返回 `409 SECURITY_REPLAY_DETECTED`；
+- `processing`、租约恢复、Hash、结果保存和重放细则以 API Master Specification v1.4 第 22 节为准；
 - 客户端重试必须复用原幂等键，不得每次生成新键规避保护；
 - 幂等成功不得掩盖首次请求的业务失败结果。
 
-本任务不为幂等新增数据库表或字段。后续实现若无法使用获批准的技术机制，且需要修改 Frozen 数据库结构，必须提出 Database Change Request。
+持久化只使用 Frozen Database Logical Design v2.2 的 `idempotency_records`。本文件不授权新增其他幂等表、字段或平行事实来源。
 
 ## 16. 并发控制规则
 
@@ -615,3 +616,15 @@ Task 5.1 达到以下条件后可提交项目负责人验收：
 7. 本次未编写业务代码，未创建真实 API Route，未修改 Frozen 数据库设计或 Approved 页面设计。
 8. 技术开发保持 Not Started。
 9. 本文件已完成 GitHub 验收；当前下一步为 Phase 5 Final Consistency Review GitHub 验收，不得开始 Phase 6。
+
+## 27. API Change Request 004 正式同步
+
+API Master Specification v1.4 已按获批 API CR-004 补齐统一持久化幂等行为：
+
+1. 不存在记录时原子认领并执行；
+2. 有效 `processing` 的相同 Hash 返回 `409 SECURITY_REPLAY_DETECTED`，只允许安全 `Retry-After`；
+3. 过期 `processing` 先对账并原子回收，恢复完成前继续返回稳定 409；
+4. `completed` 重放首次安全成功结果，`failed` 重放首次安全失败且不得重新执行；
+5. 任意状态下同 Key 不同 Hash 均返回 `409 SECURITY_REPLAY_DETECTED`，无业务副作用；
+6. 每次首次执行和重放均重新校验用户状态、身份、权限和数据范围；
+7. 本次新增 API、DTO 字段、权限和错误码均为 0，正式接口总数保持 335。

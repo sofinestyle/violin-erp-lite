@@ -2,16 +2,16 @@
 document_name: API Change Request 004：幂等处理中与 Import 重复竞争行为
 project: Violin ERP Lite
 version: 1.0
-status: Proposed / Pending Approval
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-24
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 5 / Phase 8
 ---
 
 # API Change Request 004：幂等处理中与 Import 重复竞争行为
 
-> 本 Change Request 尚未批准。API Master Specification 当前仍为 v1.3 Completed / Approved / Frozen；本文不修改现有 API、DTO、权限、错误码或 335 个接口总数。
+> 项目负责人已于 2026-07-25 批准本 Change Request。API Master Specification v1.4 已完成正式同步并冻结；API、DTO、权限、错误码和 335 个接口总数保持不变。
 
 ## 1. 变更原因
 
@@ -95,4 +95,13 @@ API v1.3 已要求高风险写操作使用 `Idempotency-Key`，同键同请求�
 4. 完成独立 GitHub 技术验收；
 5. 项目负责人另行下令恢复 Batch 8.6-C1。
 
-当前状态：**Proposed / Pending Approval**。批准前不得修改 Frozen API_SPEC、实现、测试或数据库。
+## 10. 批准与同步结果
+
+- Change Request 状态：Completed / Approved；
+- API Master Specification：v1.4 Completed / Approved / Frozen；
+- Database Logical Design v2.2 前置依赖已满足；
+- 新增 API 0、删除 API 0、DTO 字段变化 0、权限变化 0、错误码变化 0；
+- 正式接口总数保持 335；
+- `processing`、`completed`、`failed`、同 Key 不同 Hash 及 Import 并发重复行为已按本文正式同步；
+- DCR-005 与 API CR-005 不在本次批准和同步范围，继续保持 Proposed / Pending Approval；
+- 本次未创建 API、幂等实现、Attachment 实现或 Task 7.5 代码。

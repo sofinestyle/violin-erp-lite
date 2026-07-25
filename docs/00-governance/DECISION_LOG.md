@@ -2079,3 +2079,26 @@ Approved
 ### 影响
 
 本决定只批准和实施 DCR-004。API CR-004、DCR-005 与 API CR-005 继续保持 Proposed / Pending Approval；不修改 Frozen API、API 总数、业务代码、Attachment Framework、Task 7.4、Task 7.5、CURRENT_STATUS、ROADMAP、PROJECT 或 README。
+
+## DEC-084 批准API CR-004并冻结API v1.4
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 API Change Request 004，状态更新为 Completed / Approved；
+- API Master Specification 从 v1.3 升级为 v1.4，并冻结为 Completed / Approved / Frozen；
+- 正式补齐不存在记录、有效及过期 `processing`、`completed`、`failed` 和同 Key 不同 Request Hash 的统一外部行为；
+- 继续复用 `SECURITY_REPLAY_DETECTED`，不新增 `IDEMPOTENCY_IN_PROGRESS` 或同义错误码；
+- Import 并发重复只允许一个任务创建成功，其他请求返回 `IMPORT_DUPLICATE_FILE`，不创建第二条 `duplicate_file` 任务；
+- 正式接口总数保持 335，API、DTO 字段、权限和错误码数量均不变化。
+
+### 影响
+
+本决定只同步 API CR-004 与 API v1.4 正式文档，不创建 Route、Service、Repository、幂等实现、Attachment 实现或 Task 7.5 代码，不修改 Database v2.2、Prisma、Migration 或 Mapping Audit。DCR-005 与 API CR-005 继续保持 Proposed / Pending Approval；CURRENT_STATUS 与当前 Task 状态不变。

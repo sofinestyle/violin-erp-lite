@@ -1,10 +1,11 @@
 ---
 document_name: Task 5.5 导入、附件、日志、安全与 API 最终收口
-version: 1.2
+version: 1.3
 status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
 related_phase: Phase 5
+updated_date: 2026-07-25
 ---
 
 # Task 5.5：导入、附件、日志、安全与 API 最终收口
@@ -354,7 +355,7 @@ Task 5.1 至 Task 5.5 统一采用：
 
 行校验由 `pending` 进入 `valid`、`warning` 或 `invalid`；只有 `valid`、`warning` 行可进入执行。行执行由 `pending` 进入 `processing`，最终为 `succeeded`、`failed` 或 `skipped`。匹配记录只使用 `pending`、`partially_matched`、`matched`；无法建立合法目标外键的未匹配或冲突行保留在导入明细错误中，不创建伪匹配记录。
 
-`totalRows`、`successRows`、`failedRows`、`warningRows` 必须由正式行记录聚合并满足 API v1.3 的一致性规则。重复文件按文件内容摘要、导入类型及目标范围识别，进入 `duplicate_file` 后不得校验或执行。
+`totalRows`、`successRows`、`failedRows`、`warningRows` 必须由正式行记录聚合并满足 API v1.3 的一致性规则。重复文件按文件内容摘要、导入类型及目标范围识别；API v1.4 进一步规定重复请求不得创建第二条 `duplicate_file` 任务，原任务状态不得被改变。
 
 ### 13.3 跨境投影与冻结结论
 
@@ -363,3 +364,15 @@ Task 5.1 至 Task 5.5 统一采用：
 - `IMP-001` 至 `IMP-015` 保持 15 个，未新增 DTO、权限、错误码或路径；
 - API Master Specification v1.3 为 Completed / Approved / Frozen，正式接口总数保持 335；
 - 本次仅同步正式文档，未创建 API、业务代码或数据库变更。
+
+## 14. API Change Request 004 正式同步
+
+API Master Specification v1.4 对本 Task 既有 Import 与安全契约增加以下正式约束：
+
+- `Idempotency-Key` 仍只使用既有 Header，不新增 DTO 字段；
+- 文件 Checksum 由服务端计算，并与 `importType`、`warehouseId` 或 `storeId` 组成正式重复范围；
+- 并发只允许一个 Import Task 创建成功，其他请求返回 `IMPORT_DUPLICATE_FILE`；
+- 不创建第二条 `duplicate_file` 任务，重复尝试由幂等记录和审计保留；
+- 有效 `processing` 与恢复中的过期 `processing` 返回稳定 `409 SECURITY_REPLAY_DETECTED`；
+- `completed` 和 `failed` 按首次安全结果重放，且每次重放重新校验当前权限与数据范围；
+- API、DTO、权限、错误码和正式接口总数均不变化。
