@@ -15,7 +15,7 @@ related_phase: Phase 8
 
 - Current Phase：Phase 8
 - Phase Status：In Progress
-- Current Task：8-B2-2 Master Data Development - Core
+- Current Task：8-B3-B Procurement & Production Impact Review
 - Current Task Status：Waiting / Not Started
 - Next Phase：Phase 9 Test Plan & System Integration
 - Task 7.1：Completed / Approved
@@ -30,7 +30,10 @@ related_phase: Phase 8
 - Phase 7 Frozen：Completed / Approved / Frozen
 - Phase 8-A Business Application Planning：Completed
 - 8-B2-1 Master Data Implementation Design：Completed / Pending Approval
-- 8-B2-2 Master Data Development - Core：Waiting / Not Started
+- 8-B2-2 Master Data Development - Core：Completed / Approved
+- 8-B2-3 Master Data Extended Development：Completed / Approved
+- 8-B3-A Master Data Final Review & Documentation Sync：Completed / Approved
+- 8-B3-B Procurement & Production Impact Review：Waiting / Not Started
 - Phase 8：In Progress
 
 ## 状态事实来源优先级

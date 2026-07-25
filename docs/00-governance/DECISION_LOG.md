@@ -2434,3 +2434,26 @@ Approved
 ### 影响
 
 本决定只同步 Phase 8 启动状态与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或业务模块。Phase 8 后续业务开发必须继续遵守 Frozen `BUSINESS_RULES.md`、Database Logical Design v2.5、API Master Specification v1.5、Frozen `ROLE_PERMISSION_SPEC.md` 与 Phase 7 Frozen Platform Foundation；如发现 Database、API 或 Permission 不足，必须先提交对应 CR。
+
+## DEC-098 批准Module 1 Master Data Center完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-26
+
+### 决定
+
+- 项目负责人批准 Module 1 Master Data Center 最终验收完成；
+- Category、Brand、Product、SKU 已完成并获得批准；
+- Supplier、Manufacturer、Warehouse、Platform、Store 已完成并获得批准；
+- Module 1 Master Data Center 状态更新为 Completed / Approved；
+- Current Task 切换为 8-B3-B Procurement & Production Impact Review；
+- Current Task Status 为 Waiting / Not Started。
+
+### 影响
+
+本决定只同步 Module 1 基础资料中心最终验收与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Module 1 后续如需新增字段、接口、权限、附件类型、外部平台同步、库存联动或业务流程扩展，必须先经过对应 DCR、API Change Request、Permission 评估或独立获批任务。Phase 8 下一步进入采购与生产基础闭环影响评估。

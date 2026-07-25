@@ -19,7 +19,7 @@ related_phase: All Phases
 
 - Current Phase：Phase 8
 - Phase Status：In Progress
-- Current Task：8-B2-2 Master Data Development - Core
+- Current Task：8-B3-B Procurement & Production Impact Review
 - Current Task Status：Waiting / Not Started
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件负责定义固定阶段路线、Task 边界、进入条件和完成条件。
@@ -298,9 +298,12 @@ Task 8.1 至 Task 8.5 是原 Phase 7 已完成成果的编号迁移，不删除�
 
 1. Phase 8-A Business Application Planning 业务开发规划：Completed；
 2. 8-B2-1 Master Data Implementation Design 基础资料中心实施设计：Completed / Pending Approval；
-3. 8-B2-2 Master Data Development - Core 核心基础资料开发：Waiting / Not Started；
+3. 8-B2-2 Master Data Development - Core 核心基础资料开发：Completed / Approved；
+4. 8-B2-3 Master Data Extended Development 扩展基础资料开发：Completed / Approved；
+5. 8-B3-A Master Data Final Review & Documentation Sync 基础资料中心最终验收与状态同步：Completed / Approved；
+6. 8-B3-B Procurement & Production Impact Review 采购与生产影响评估：Waiting / Not Started；
 
-Phase 8 当前新增业务应用开发任务从 Phase 8-A 规划与 Module 1 基础资料中心开始推进。
+Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中心，下一步进入采购与生产基础闭环影响评估。
 
 ### Phase 9：测试方案与系统集成（Test Plan & System Integration）
 

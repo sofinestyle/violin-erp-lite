@@ -11,6 +11,32 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.31] - 2026-07-26
+
+### Changed
+
+- Module 1 Master Data Center 更新为 `Completed / Approved`
+- Current Task 切换为 `8-B3-B Procurement & Production Impact Review`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 与 `README.md` 同步 Module 1 验收状态
+- 新增 DEC-098，记录 Module 1 Master Data Center 最终验收批准
+
+### Added
+
+- 新增 `TASK_8_B3_MASTER_DATA_FINAL_REVIEW.md`
+- 记录 Category、Brand、Product、SKU、Supplier、Manufacturer、Warehouse、Platform、Store 已完成
+- 记录 Database SSOT、API Master Specification v1.6 与 Permission Spec 均无变化
+
+### Verified
+
+- Module 1 Master Data Center 最终验收通过
+- `pnpm status:check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改业务代码、Database Schema、Migration、API Contract、Permission 或业务规则
+
 ## [0.11.30] - 2026-07-25
 
 ### Changed
