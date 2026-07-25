@@ -4,6 +4,7 @@ export * from "./auth/auth-flow.js";
 export * from "./auth/password.js";
 export * from "./auth/token.js";
 export * from "./authorization/authorization.js";
+export * from "./authorization/data-scope.js";
 export * from "./authorization/permissions.js";
 export * from "./errors/app-error.js";
 export * from "./logging/logger.js";

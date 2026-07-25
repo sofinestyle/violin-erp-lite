@@ -130,11 +130,10 @@ function boundedEnvironment(name: string, maximumLength: number): string {
 
 function loadSeedConfiguration(): SeedConfiguration {
   const adminPassword = requiredEnvironment("SEED_ADMIN_PASSWORD");
-  if (
-    adminPassword.length < 12 ||
-    /^(change|replace|password|your)[-_ ]/i.test(adminPassword)
-  ) {
-    throw new Error("SEED_ADMIN_PASSWORD must be a non-placeholder value of at least 12 characters");
+  if (adminPassword.length < 12 || /^(change|replace|password|your)[-_ ]/i.test(adminPassword)) {
+    throw new Error(
+      "SEED_ADMIN_PASSWORD must be a non-placeholder value of at least 12 characters",
+    );
   }
 
   const adminEmail = process.env.SEED_ADMIN_EMAIL?.trim() || null;

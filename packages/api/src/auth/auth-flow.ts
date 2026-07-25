@@ -143,31 +143,38 @@ type RateLimitWindow = Readonly<{
   expiresAt: number;
 }>;
 
-export class AuthenticationRateLimiter {
-  readonly #clock: () => number;
-  readonly #limit: number;
+export type AuthenticationRateLimitConsumeInput = Readonly<{
+  key: string;
+  limit: number;
+  now: number;
+  windowMilliseconds: number;
+}>;
+
+export interface AuthenticationRateLimitAdapter {
+  consume(input: AuthenticationRateLimitConsumeInput): boolean;
+}
+
+/**
+ * Single-process development adapter. It is intentionally not a distributed
+ * production rate limiter; a shared adapter can replace it without changing
+ * authentication routes or service contracts.
+ */
+export class InMemoryAuthenticationRateLimitAdapter implements AuthenticationRateLimitAdapter {
   readonly #windows = new Map<string, RateLimitWindow>();
-  readonly #windowMilliseconds: number;
 
-  constructor(limit = 10, windowMilliseconds = 60_000, clock: () => number = Date.now) {
-    if (!Number.isInteger(limit) || limit < 1 || windowMilliseconds < 1) {
-      throw new TypeError("认证限流配置无效");
+  consume(input: AuthenticationRateLimitConsumeInput): boolean {
+    const current = this.#windows.get(input.key);
+    if (!current || current.expiresAt <= input.now) {
+      this.#windows.set(input.key, {
+        count: 1,
+        expiresAt: input.now + input.windowMilliseconds,
+      });
+      this.#prune(input.now);
+      return true;
     }
-    this.#limit = limit;
-    this.#windowMilliseconds = windowMilliseconds;
-    this.#clock = clock;
-  }
-
-  consume(key: string): void {
-    const now = this.#clock();
-    const current = this.#windows.get(key);
-    if (!current || current.expiresAt <= now) {
-      this.#windows.set(key, { count: 1, expiresAt: now + this.#windowMilliseconds });
-      this.#prune(now);
-      return;
-    }
-    if (current.count >= this.#limit) throw securityError.rateLimitExceeded();
-    this.#windows.set(key, { ...current, count: current.count + 1 });
+    if (current.count >= input.limit) return false;
+    this.#windows.set(input.key, { ...current, count: current.count + 1 });
+    return true;
   }
 
   #prune(now: number): void {
@@ -183,43 +190,65 @@ export class AuthenticationRateLimiter {
   }
 }
 
-type IdempotencyEntry<T> = Readonly<{
+export class AuthenticationRateLimiter {
+  readonly #adapter: AuthenticationRateLimitAdapter;
+  readonly #clock: () => number;
+  readonly #limit: number;
+  readonly #windowMilliseconds: number;
+
+  constructor(
+    limit = 10,
+    windowMilliseconds = 60_000,
+    clock: () => number = Date.now,
+    adapter: AuthenticationRateLimitAdapter = new InMemoryAuthenticationRateLimitAdapter(),
+  ) {
+    if (!Number.isInteger(limit) || limit < 1 || windowMilliseconds < 1) {
+      throw new TypeError("认证限流配置无效");
+    }
+    this.#limit = limit;
+    this.#windowMilliseconds = windowMilliseconds;
+    this.#clock = clock;
+    this.#adapter = adapter;
+  }
+
+  consume(key: string): void {
+    if (
+      !this.#adapter.consume({
+        key,
+        limit: this.#limit,
+        now: this.#clock(),
+        windowMilliseconds: this.#windowMilliseconds,
+      })
+    ) {
+      throw securityError.rateLimitExceeded();
+    }
+  }
+}
+
+export type AuthenticationIdempotencyEntry = Readonly<{
   expiresAt: number;
   fingerprint: string;
-  result: Promise<T>;
+  result: Promise<unknown>;
 }>;
 
-export class AuthenticationIdempotencyStore {
-  readonly #clock: () => number;
-  readonly #entries = new Map<string, IdempotencyEntry<unknown>>();
-  readonly #retentionMilliseconds: number;
+export interface AuthenticationIdempotencyAdapter {
+  get(key: string): AuthenticationIdempotencyEntry | undefined;
+  prune(now: number): void;
+  set(key: string, entry: AuthenticationIdempotencyEntry): void;
+}
 
-  constructor(retentionMilliseconds = 10 * 60_000, clock: () => number = Date.now) {
-    if (retentionMilliseconds < 1) throw new TypeError("认证幂等配置无效");
-    this.#retentionMilliseconds = retentionMilliseconds;
-    this.#clock = clock;
+/**
+ * Single-process development adapter for the approved WeChat binding retry.
+ * It is not the general persistent idempotency framework owned by Task 7.5.
+ */
+export class InMemoryAuthenticationIdempotencyAdapter implements AuthenticationIdempotencyAdapter {
+  readonly #entries = new Map<string, AuthenticationIdempotencyEntry>();
+
+  get(key: string): AuthenticationIdempotencyEntry | undefined {
+    return this.#entries.get(key);
   }
 
-  execute<T>(key: string, fingerprint: string, operation: () => Promise<T>): Promise<T> {
-    const now = this.#clock();
-    const existing = this.#entries.get(key);
-    if (existing && existing.expiresAt > now) {
-      if (existing.fingerprint !== fingerprint) {
-        throw new AppError("CONFLICT_IDEMPOTENCY_KEY_REUSED", 409, "幂等键已用于其他请求");
-      }
-      return existing.result as Promise<T>;
-    }
-    const result = operation();
-    this.#entries.set(key, {
-      expiresAt: now + this.#retentionMilliseconds,
-      fingerprint,
-      result,
-    });
-    this.#prune(now);
-    return result;
-  }
-
-  #prune(now: number): void {
+  prune(now: number): void {
     for (const [key, value] of this.#entries) {
       if (value.expiresAt <= now) this.#entries.delete(key);
     }
@@ -228,6 +257,46 @@ export class AuthenticationIdempotencyStore {
       if (!oldest) break;
       this.#entries.delete(oldest);
     }
+  }
+
+  set(key: string, entry: AuthenticationIdempotencyEntry): void {
+    this.#entries.set(key, entry);
+  }
+}
+
+export class AuthenticationIdempotencyStore {
+  readonly #adapter: AuthenticationIdempotencyAdapter;
+  readonly #clock: () => number;
+  readonly #retentionMilliseconds: number;
+
+  constructor(
+    retentionMilliseconds = 10 * 60_000,
+    clock: () => number = Date.now,
+    adapter: AuthenticationIdempotencyAdapter = new InMemoryAuthenticationIdempotencyAdapter(),
+  ) {
+    if (retentionMilliseconds < 1) throw new TypeError("认证幂等配置无效");
+    this.#retentionMilliseconds = retentionMilliseconds;
+    this.#clock = clock;
+    this.#adapter = adapter;
+  }
+
+  execute<T>(key: string, fingerprint: string, operation: () => Promise<T>): Promise<T> {
+    const now = this.#clock();
+    const existing = this.#adapter.get(key);
+    if (existing && existing.expiresAt > now) {
+      if (existing.fingerprint !== fingerprint) {
+        throw new AppError("CONFLICT_IDEMPOTENCY_KEY_REUSED", 409, "幂等键已用于其他请求");
+      }
+      return existing.result as Promise<T>;
+    }
+    const result = operation();
+    this.#adapter.set(key, {
+      expiresAt: now + this.#retentionMilliseconds,
+      fingerprint,
+      result,
+    });
+    this.#adapter.prune(now);
+    return result;
   }
 }
 

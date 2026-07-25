@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import {
   AuthenticationService,
+  createSessionAuthenticationContext,
   JwtService,
   loadJwtConfiguration,
   type WechatIdentity,
@@ -9,6 +10,7 @@ import {
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createPrismaClient } from "../src/client";
 import { PrismaAuthRepository } from "../src/auth/prisma-auth-repository";
+import { createCurrentUserResolver } from "../src/auth/current-user-resolver";
 
 const databaseUrl = process.env.AUTH_INTEGRATION_DATABASE_URL;
 const username = process.env.AUTH_INTEGRATION_USERNAME;
@@ -18,7 +20,10 @@ const client = databaseUrl ? createPrismaClient(databaseUrl) : null;
 const repository = client ? new PrismaAuthRepository(client) : null;
 
 class MutableWechatAdapter implements WechatIdentityAdapter {
-  identity: WechatIdentity = { openid: "integration-openid-1", unionid: "integration-unionid-1" };
+  identity: WechatIdentity = {
+    openid: `integration-openid-${username ?? "skipped"}`,
+    unionid: `integration-unionid-${username ?? "skipped"}`,
+  };
   async exchange(): Promise<WechatIdentity> {
     return this.identity;
   }
@@ -44,6 +49,11 @@ function service() {
 
 integration("Prisma unified authentication integration", () => {
   beforeAll(async () => {
+    const target = await client!.users.findFirstOrThrow({
+      select: { id: true },
+      where: { username },
+    });
+    await client!.user_wechat_identities.deleteMany({ where: { user_id: target.id } });
     await client!.users.updateMany({
       data: { must_change_password: false },
       where: { username },
@@ -61,10 +71,14 @@ integration("Prisma unified authentication integration", () => {
     );
     const claims = await jwt.verifyAccessToken(tokens.accessToken);
     const current = await repository!.resolveSession(claims, "pc");
+    const resolverUser = await createCurrentUserResolver(client!)(claims.userId);
+    const sessionUser = current ? createSessionAuthenticationContext(current).user : null;
 
     expect(current?.user.username).toBe(username);
     expect(current?.user.permissions).toHaveLength(244);
     expect(current?.session.sessionId).toBe(claims.sessionId);
+    expect(resolverUser).toEqual(sessionUser);
+    expect(resolverUser?.dataScopes).not.toContain("all");
   });
 
   it("allows only one concurrent rotation and replay revokes the whole family", async () => {

@@ -1,4 +1,5 @@
 import { createServer, type Server } from "node:http";
+import { createPrismaClient, type PrismaClient } from "@violin-erp/database";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { GET, POST } from "../app/api/v1/[...segments]/route";
 
@@ -27,12 +28,23 @@ function request(
 }
 
 integration("SEC-001 through SEC-005 HTTP integration", () => {
+  let database: PrismaClient;
   let wechatServer: Server;
 
   beforeAll(async () => {
+    database = createPrismaClient(process.env.DATABASE_URL!);
+    const target = await database.users.findFirstOrThrow({
+      select: { id: true },
+      where: { username: username! },
+    });
+    await database.user_wechat_identities.deleteMany({ where: { user_id: target.id } });
+    await database.users.updateMany({
+      data: { must_change_password: false },
+      where: { username: username! },
+    });
     wechatServer = createServer((_request, response) => {
       response.writeHead(200, { "Content-Type": "application/json" });
-      response.end(JSON.stringify({ openid: "api-integration-openid" }));
+      response.end(JSON.stringify({ openid: `api-integration-openid-${username}` }));
     });
     await new Promise<void>((resolve) => wechatServer.listen(0, "127.0.0.1", resolve));
     const address = wechatServer.address();
@@ -46,6 +58,7 @@ integration("SEC-001 through SEC-005 HTTP integration", () => {
     await new Promise<void>((resolve, reject) =>
       wechatServer.close((error) => (error ? reject(error) : resolve())),
     );
+    await database.$disconnect();
   });
 
   it("executes password login, session, permission, refresh and logout contracts", async () => {

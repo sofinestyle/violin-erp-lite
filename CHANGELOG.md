@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.8] - 2026-07-25
+
+### Added
+
+- 新增 Task 7.2 Authentication & Authorization 完成报告
+- 新增唯一服务端数据范围解析器及认证用户上下文转换
+- 新增认证限流与微信绑定幂等的可替换 Adapter 边界
+- 新增数据范围默认拒绝、仓库/店铺范围及旧入口一致性测试
+
+### Changed
+
+- Current User Resolver 与 Admin API Session Resolver 统一使用同一数据范围算法
+- 删除基于角色名称自动授予 `all` 或其他数据范围的逻辑
+- Workflow、Inventory Workflow 在缺少可执行记录范围时改为默认拒绝
+- 仓库与店铺过滤改用当前有效授权关系解析出的目标 ID
+- 机械修复 `prisma/seed.ts` 的历史 Prettier 格式，不改变 Seed 行为
+
+### Verification
+
+- Node v22.23.1 下 API 单元测试通过
+- PostgreSQL v18.4 下认证 Repository 与 SEC-001—SEC-005 HTTP 集成测试通过
+- 本轮未修改数据库结构、Migration、Seed 行为、Frozen API 或业务规则
+- Task 7.2 正式状态继续保持 `In Progress`，等待 GitHub 技术验收
+
 ## [0.11.7] - 2026-07-25
 
 ### Changed

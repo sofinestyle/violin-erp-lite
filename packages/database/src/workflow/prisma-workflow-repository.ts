@@ -137,25 +137,20 @@ function itemRelation(resource: WorkflowCommand["resource"]): string | undefined
 
 function dataScopeWhere(command: WorkflowCommand, actor: AuthenticatedUser): JsonRecord {
   if (actor.dataScopes.includes("all")) return {};
+  const warehouseIds = (actor.warehouseScopes ?? []).map((scope) => scope.targetId);
   if (
     (command.resource === "inbound" || command.resource === "inspection") &&
-    actor.dataScopes.includes("warehouse")
+    actor.dataScopes.includes("warehouse") &&
+    warehouseIds.length > 0
   ) {
     return {
       warehouses: {
-        role_warehouses: {
-          some: {
-            roles: {
-              user_roles: {
-                some: { user_id: actor.userId },
-              },
-            },
-          },
-        },
+        id: { in: warehouseIds },
       },
     };
   }
-  return actor.dataScopes.includes("self_created") ? { created_by: actor.userId } : {};
+  if (actor.dataScopes.includes("self_created")) return { created_by: actor.userId };
+  return { id: { in: [] } };
 }
 
 function listWhere(command: WorkflowCommand, actor: AuthenticatedUser): JsonRecord {

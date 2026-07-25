@@ -137,18 +137,17 @@ function warehouseScope(
   resource: InventoryWorkflowCommand["resource"] = "inventory",
 ): JsonRecord {
   if (actor.dataScopes.includes("all")) return {};
-  if (actor.dataScopes.includes("warehouse")) {
-    const scope = {
-      role_warehouses: {
-        some: {
-          roles: {
-            user_roles: {
-              some: { user_id: actor.userId },
-            },
-          },
-        },
-      },
-    };
+  const storeIds = (actor.storeScopes ?? []).map((scope) => scope.targetId);
+  if (
+    (resource === "outbound" || resource === "sales-return") &&
+    actor.dataScopes.includes("store") &&
+    storeIds.length > 0
+  ) {
+    return { stores: { id: { in: storeIds } } };
+  }
+  const warehouseIds = (actor.warehouseScopes ?? []).map((scope) => scope.targetId);
+  if (actor.dataScopes.includes("warehouse") && warehouseIds.length > 0) {
+    const scope = { id: { in: warehouseIds } };
     if (resource === "transfer") {
       return {
         warehouses_transfer_orders_source_warehouse_idTowarehouses: scope,
@@ -161,7 +160,8 @@ function warehouseScope(
     }
     return { warehouses: scope };
   }
-  return actor.dataScopes.includes("self_created") ? { created_by: actor.userId } : {};
+  if (actor.dataScopes.includes("self_created")) return { created_by: actor.userId };
+  return { id: { in: [] } };
 }
 
 function listWhere(command: InventoryWorkflowCommand, actor: AuthenticatedUser): JsonRecord {

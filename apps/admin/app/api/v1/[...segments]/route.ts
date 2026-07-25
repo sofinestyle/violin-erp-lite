@@ -5,6 +5,7 @@ import {
   AuthenticationRateLimiter,
   AuthenticationService,
   assertMasterDataResource,
+  createSessionAuthenticationContext,
   createRouteHandler,
   createSuccessResponse,
   extractBearerToken,
@@ -147,43 +148,6 @@ function authService(
   );
 }
 
-function authenticationContext(
-  record: Awaited<ReturnType<PrismaAuthRepository["resolveSession"]>>,
-) {
-  if (!record) return null;
-  const dataScopes = new Set<
-    "all" | "business_related" | "manufacturer_derived" | "self_created" | "store" | "warehouse"
-  >(["business_related"]);
-  if (record.user.roles.some((role) => role.roleCode === "purchaser")) {
-    dataScopes.add("self_created");
-  }
-  if (record.user.warehouseScopes.length > 0) {
-    dataScopes.add("warehouse");
-    dataScopes.add("manufacturer_derived");
-  }
-  if (record.user.storeScopes.length > 0) dataScopes.add("store");
-  return {
-    session: {
-      accessTokenExpiresAt: record.session.accessTokenExpiresAt,
-      clientType: record.session.clientType,
-      refreshTokenExpiresAt: record.session.refreshTokenExpiresAt,
-    },
-    user: {
-      dataScopes: [...dataScopes],
-      displayName: record.user.displayName,
-      mustChangePassword: record.user.mustChangePassword,
-      permissionCodes: record.user.permissions.map((item) => item.permissionCode),
-      roleCodes: record.user.roles.map((item) => item.roleCode),
-      roles: record.user.roles,
-      storeScopes: record.user.storeScopes,
-      userId: record.user.id,
-      username: record.user.username,
-      warehouseScopes: record.user.warehouseScopes,
-      wechatBound: record.user.wechatBound,
-    },
-  } satisfies AuthenticationContext;
-}
-
 async function dispatchAuthentication(
   request: Request,
   context: RequestContext,
@@ -292,7 +256,7 @@ async function dispatchAuthentication(
       },
       async (claims, headerClientType) => {
         const record = await repository.resolveSession(claims, headerClientType);
-        const authentication = authenticationContext(record);
+        const authentication = record ? createSessionAuthenticationContext(record) : null;
         return authentication ? { ...authentication, claims } : null;
       },
     );
@@ -740,7 +704,7 @@ const handler = createRouteHandler(async (request, context) => {
     },
     async (claims, clientType) => {
       const record = await repository.resolveSession(claims, clientType);
-      const authentication = authenticationContext(record);
+      const authentication = record ? createSessionAuthenticationContext(record) : null;
       return authentication ? { ...authentication, claims } : null;
     },
   );

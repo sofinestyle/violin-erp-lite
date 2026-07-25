@@ -1,7 +1,13 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { DataScopeType, PermissionCode, RoleCode } from "../authorization/permissions.js";
+import { resolveDataScopes } from "../authorization/data-scope.js";
 import { UnauthorizedError } from "../errors/app-error.js";
-import type { AuthRoleSummary, AuthScopeSummary } from "./auth-flow.js";
+import type {
+  AuthenticatedSessionRecord,
+  AuthRoleSummary,
+  AuthScopeSummary,
+  AuthUserRecord,
+} from "./auth-flow.js";
 import type { ClientType, JwtService, TokenClaims } from "./token.js";
 
 export type AuthenticatedUser = Readonly<{
@@ -33,6 +39,43 @@ export type SessionAuthenticationResolver = (
   claims: TokenClaims,
   clientType: ClientType,
 ) => Promise<AuthenticationContext | null>;
+
+export function createAuthenticatedUser(
+  user: AuthUserRecord,
+  explicitDataScopes: readonly DataScopeType[] = [],
+): AuthenticatedUser {
+  return Object.freeze({
+    dataScopes: resolveDataScopes({
+      explicitDataScopes,
+      permissionCodes: user.permissions.map((item) => item.permissionCode),
+      storeScopes: user.storeScopes,
+      warehouseScopes: user.warehouseScopes,
+    }),
+    displayName: user.displayName,
+    mustChangePassword: user.mustChangePassword,
+    permissionCodes: user.permissions.map((item) => item.permissionCode),
+    roleCodes: user.roles.map((item) => item.roleCode),
+    roles: user.roles,
+    storeScopes: user.storeScopes,
+    userId: user.id,
+    username: user.username,
+    warehouseScopes: user.warehouseScopes,
+    wechatBound: user.wechatBound,
+  });
+}
+
+export function createSessionAuthenticationContext(
+  record: AuthenticatedSessionRecord,
+): AuthenticationContext {
+  return Object.freeze({
+    session: {
+      accessTokenExpiresAt: record.session.accessTokenExpiresAt,
+      clientType: record.session.clientType,
+      refreshTokenExpiresAt: record.session.refreshTokenExpiresAt,
+    },
+    user: createAuthenticatedUser(record.user),
+  });
+}
 
 const authenticationStorage = new AsyncLocalStorage<AuthenticationContext>();
 

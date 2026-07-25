@@ -4,12 +4,15 @@ import {
   PERMISSION_CODES,
   ROLE_CODES,
   ROLE_PERMISSION_MAP,
+  createAuthenticatedUser,
   isPermissionCode,
+  resolveDataScopes,
   requireAllPermissions,
   requireAnyPermission,
   requireAuthentication,
   requirePermission,
   type AuthenticationContext,
+  type AuthUserRecord,
   type PermissionCode,
 } from "../src/index";
 
@@ -80,5 +83,80 @@ describe("authorization guards", () => {
     expect(() =>
       requireAllPermissions(authenticated, ["purchase.order.read", "purchase.order.approve"]),
     ).toThrowError(expect.objectContaining({ code: "PERMISSION_FORBIDDEN" }));
+  });
+});
+
+describe("canonical data-scope resolution", () => {
+  const warehouseScope = {
+    accessLevel: "operate" as const,
+    targetId: "22222222-2222-4222-8222-222222222222",
+  };
+  const storeScope = {
+    accessLevel: "read" as const,
+    targetId: "33333333-3333-4333-8333-333333333333",
+  };
+
+  it("never grants all from an administrator role name", () => {
+    const user: AuthUserRecord = {
+      displayName: "管理员",
+      failedLoginCount: 0,
+      id: "11111111-1111-4111-8111-111111111111",
+      isActive: true,
+      lockedUntil: null,
+      mustChangePassword: false,
+      passwordHash: "redacted",
+      permissions: [
+        {
+          actionCode: "read",
+          moduleCode: "master.product",
+          permissionCode: "master.product.read",
+        },
+      ],
+      roles: [
+        {
+          id: "44444444-4444-4444-8444-444444444444",
+          roleCode: "administrator",
+          roleName: "管理员",
+        },
+      ],
+      status: "active",
+      storeScopes: [],
+      username: "admin",
+      warehouseScopes: [],
+      wechatBound: false,
+    };
+
+    expect(createAuthenticatedUser(user).dataScopes).toEqual(["business_related"]);
+  });
+
+  it("defaults to no scope when no current permission is granted", () => {
+    expect(
+      resolveDataScopes({
+        permissionCodes: [],
+        storeScopes: [storeScope],
+        warehouseScopes: [warehouseScope],
+      }),
+    ).toEqual([]);
+  });
+
+  it("unions permission-derived, warehouse and store scopes deterministically", () => {
+    expect(
+      resolveDataScopes({
+        permissionCodes: ["purchase.order.read", "purchase.order.create", "purchase.order.read"],
+        storeScopes: [storeScope, storeScope],
+        warehouseScopes: [warehouseScope, warehouseScope],
+      }),
+    ).toEqual(["self_created", "business_related", "warehouse", "store", "manufacturer_derived"]);
+  });
+
+  it("honors only a trusted explicit all grant as the dominant scope", () => {
+    expect(
+      resolveDataScopes({
+        explicitDataScopes: ["all", "business_related"],
+        permissionCodes: ["purchase.order.read"],
+        storeScopes: [storeScope],
+        warehouseScopes: [warehouseScope],
+      }),
+    ).toEqual(["all"]);
   });
 });

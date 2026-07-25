@@ -22,6 +22,39 @@ const context: RequestContext = {
 };
 
 describe("inventory transaction repository", () => {
+  it("filters store workflows by the current resolved store assignments", async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    const count = vi.fn().mockResolvedValue(0);
+    const repository = new PrismaInventoryWorkflowRepository({
+      outbound_orders: { count, findMany },
+    } as unknown as PrismaClient);
+    const storeId = "88888888-8888-4888-8888-888888888888";
+
+    await repository.execute(
+      {
+        action: "list",
+        apiId: "OUT-001",
+        mutation: false,
+        payload: {},
+        query: new URLSearchParams(),
+        resource: "outbound",
+      },
+      {
+        ...actor,
+        dataScopes: ["business_related", "store"],
+        permissionCodes: ["outbound.order.read"],
+        storeScopes: [{ accessLevel: "read", targetId: storeId }],
+      },
+      context,
+    );
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { AND: [{ stores: { id: { in: [storeId] } } }] },
+      }),
+    );
+  });
+
   it("updates balance and writes immutable ledger rows together", async () => {
     const upsert = vi.fn().mockResolvedValue({});
     const create = vi.fn().mockResolvedValue({});

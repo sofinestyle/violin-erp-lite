@@ -211,6 +211,20 @@ export class PrismaAuthRepository implements AuthRepository {
     this.#client = client;
   }
 
+  async resolveCurrentUser(userId: string): Promise<AuthUserRecord | null> {
+    const user = await readUser(this.#client, userId);
+    if (
+      !user ||
+      !user.isActive ||
+      user.status !== "active" ||
+      user.roles.length === 0 ||
+      (user.lockedUntil && user.lockedUntil.getTime() > Date.now())
+    ) {
+      return null;
+    }
+    return user;
+  }
+
   async findUserByUsername(username: string): Promise<AuthUserRecord | null> {
     const user = await this.#client.users.findFirst({
       select: userSelect,
@@ -552,13 +566,9 @@ export class PrismaAuthRepository implements AuthRepository {
       where: { revoked_at: { not: null }, token_family_id: claims.tokenFamilyId },
     });
     if (familyRevoked > 0) return null;
-    const user = await readUser(this.#client, claims.userId);
+    const user = await this.resolveCurrentUser(claims.userId);
     if (
       !user ||
-      !user.isActive ||
-      user.status !== "active" ||
-      user.roles.length === 0 ||
-      (user.lockedUntil && user.lockedUntil.getTime() > Date.now()) ||
       (clientType === "wechat-mini-program" && user.mustChangePassword) ||
       (clientType === "wechat-mini-program" && !user.wechatBound)
     ) {

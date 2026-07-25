@@ -14,6 +14,33 @@ const actor: AuthenticatedUser = {
 };
 
 describe("Prisma workflow repository", () => {
+  it("uses an impossible filter when no record scope is granted", async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    const count = vi.fn().mockResolvedValue(0);
+    const repository = new PrismaWorkflowRepository({
+      purchase_orders: { count, findMany },
+    } as unknown as PrismaClient);
+
+    await repository.execute(
+      {
+        action: "list",
+        apiId: "PUR-001",
+        mutation: false,
+        payload: {},
+        query: new URLSearchParams(),
+        resource: "purchase",
+      },
+      { ...actor, dataScopes: [], permissionCodes: ["purchase.order.read"] },
+    );
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { AND: [{ id: { in: [] } }] },
+      }),
+    );
+    expect(count).toHaveBeenCalledWith({ where: { AND: [{ id: { in: [] } }] } });
+  });
+
   it("records purchase payment without changing purchase lifecycle status", async () => {
     const order = {
       currency_code: "CNY",
