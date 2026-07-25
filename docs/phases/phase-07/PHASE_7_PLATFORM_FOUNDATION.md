@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.6
+version: 1.7
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -21,7 +21,7 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 
 - Phase：Phase 7 Platform Foundation；
 - Phase Status：In Progress；
-- Current Task：Task 7.5 Idempotency & Concurrency Control；
+- Current Task：Task 7.4 Attachment Framework；
 - Current Task Status：In Progress；
 - Phase 8 Application Development：Waiting / Not Started；
 - Phase 9 Test Plan & System Integration：Waiting / Not Started；
@@ -51,13 +51,13 @@ DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步，现作
 | Task 7.2 | Authentication & Authorization | Completed / Approved |
 | Task 7.3 | Object Storage & File Lifecycle | Completed / Approved |
 | Task 7.4 | Attachment Framework | In Progress |
-| Task 7.5 | Idempotency & Concurrency Control | In Progress |
+| Task 7.5 | Idempotency & Concurrency Control | Completed / Approved |
 | Task 7.6 | Background Job & Distributed Lock | Waiting / Not Started |
 | Task 7.7 | Cache & Event Infrastructure | Waiting / Not Started |
 | Task 7.8 | Audit, Trace & Observability | Waiting / Not Started |
 | Task 7.9 | Platform Final Consistency Review | Waiting / Not Started |
 
-Task 7.1 至 Task 7.3 已完成并获得批准；Task 7.4 保持 In Progress，但其实现依赖 Task 7.5 的统一平台幂等能力，当前执行重点已切换至 Task 7.5。Task 7.6 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
+Task 7.1 至 Task 7.3 及 Task 7.5 已完成并获得批准；Task 7.4 保持 In Progress 并恢复为 Current Task。Task 7.6 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
 
 ## 5. 平台边界
 
@@ -117,7 +117,7 @@ Task 7.4 实现前审计发现以下 Frozen SSOT 缺口：
 5. 现有错误码不足以稳定映射全部 Attachment/Storage 失败；
 6. `ATT-001` 的生产级首次结果重放依赖已由 DCR-004/API CR-004 补齐，但 Attachment 状态、DTO、类别与删除规则仍等待 DCR-005/API CR-005 批准。
 
-Database v2.2 与 API v1.4 已补齐生产级持久化幂等的正式数据和契约基础。由于 `ATT-001` 必须依赖统一 Platform Idempotency Framework，Task 7.4 正式状态继续为 `In Progress`，实现状态调整为 `Paused / Dependency on Task 7.5`。Task 7.4 不得使用进程内 Map、建立 Attachment 专用幂等或绕过统一平台幂等框架；Task 7.5 完成后再恢复 Task 7.4。暂停只记录在 Task 7.4 文档、本 Phase 文档和 `CHANGELOG.md`，不写入 `CURRENT_STATUS.md`。
+Database v2.2 与 API v1.4 已补齐生产级持久化幂等的正式数据和契约基础。`ATT-001` 所依赖的统一 Platform Idempotency Framework 已由 Task 7.5 完成并获得批准，Task 7.4 的历史依赖暂停现已解除，正式状态继续为 `In Progress` 并恢复为 Current Task。Task 7.4 不得使用进程内 Map、建立 Attachment 专用幂等或绕过统一平台幂等框架。
 
 已提出但尚未批准：
 
@@ -127,9 +127,11 @@ Database v2.2 与 API v1.4 已补齐生产级持久化幂等的正式数据和�
 
 上述 Attachment 提案、DCR-005 与 API CR-005 继续保持原状态，本轮不批准、不修改、不实施。
 
+Task 7.4 后续必须依次完成 DCR-005 Approval、Database v2.3 Documentation & Migration Sync、API CR-005 Approval、API v1.5 Documentation Sync，方可进入 Attachment Framework Implementation。
+
 ### 5.4 Idempotency & Concurrency Control
 
-Task 7.5 已正式启动并成为 Current Task，后续实施范围限定为：
+Task 7.5 的实施范围限定为：
 
 1. 建立 `idempotency_records` Repository；
 2. 实现原子认领；
@@ -144,7 +146,7 @@ Task 7.5 已正式启动并成为 Current Task，后续实施范围限定为：
 11. 收口并发控制；
 12. 不提前实现 Attachment、Import 或后台 Worker。
 
-Task 7.5 已完成通用持久化幂等平台、Prisma Repository、Hash、Scope、安全响应、租约、重放、对账与统一 Adapter/Middleware 实现，并通过真实 PostgreSQL 18.4 的 20 并发和多实例验证。实现状态为 `Completed / Pending Approval`；正式 Current Task 继续为 Task 7.5 / In Progress，等待 GitHub 技术验收和项目负责人批准。任何超出 Database v2.2 或 API v1.4 的数据库或接口变更，仍须先通过独立 DCR 或 API Change Request。
+Task 7.5 已完成通用持久化幂等平台、Prisma Repository、Hash、Scope、安全响应、租约、重放、对账与统一 Adapter/Middleware 实现，并通过真实 PostgreSQL 18.4 的 20 并发和 4 个独立 Prisma Client / Repository 实例竞争验证。PostgreSQL 是唯一正式并发裁决来源，20 并发仅 1 次认领和 1 次业务执行；HMAC、Canonical Hash、Scope、Lease、Replay、Reconciliation 和安全响应均已完成。Task 7.5 已通过 GitHub 技术验收，正式状态为 `Completed / Approved`；未修改 Database v2.2 或 API v1.4，未提前实现 Attachment、Import 或 Background Worker。任何超出 Database v2.2 或 API v1.4 的数据库或接口变更，仍须先通过独立 DCR 或 API Change Request。
 
 ### 5.5 Background Job & Distributed Lock
 
@@ -180,4 +182,4 @@ Task 7.5 已完成通用持久化幂等平台、Prisma Repository、Hash、Scope
 
 ## 8. 当前结论
 
-Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.3 已为 Completed / Approved；Task 7.4 保持 In Progress，其实现因依赖 Task 7.5 暂停；Current Task 为 Task 7.5，状态为 In Progress；Task 7.6 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。
+Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.3 及 Task 7.5 已为 Completed / Approved；Task 7.4 保持 In Progress 并恢复为 Current Task，其 Task 7.5 平台依赖暂停已解除；Task 7.6 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。

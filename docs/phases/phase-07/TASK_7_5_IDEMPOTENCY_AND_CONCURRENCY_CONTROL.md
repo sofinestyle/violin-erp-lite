@@ -1,8 +1,8 @@
 ---
 document_name: Task 7.5 Idempotency & Concurrency Control
 project: Violin ERP Lite
-version: 1.1
-status: Completed / Pending Approval
+version: 1.2
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-25
 updated_date: 2026-07-25
@@ -13,12 +13,12 @@ related_phase: Phase 7
 
 ## 1. 执行状态
 
-- Implementation Status：Completed / Pending Approval；
-- Current Task：Task 7.5 Idempotency & Concurrency Control；
+- Implementation Status：Completed / Approved；
+- Current Task：Task 7.4 Attachment Framework；
 - Formal Current Task Status：In Progress；
 - Phase Status：Phase 7 In Progress。
 
-本 Task 已完成实现并等待 GitHub 技术验收。未经项目负责人批准，不更新为 Approved，不切换 Current Task，也不恢复 Task 7.4。
+本 Task 已通过 GitHub 技术验收并获得项目负责人批准。通用持久化幂等平台作为 Task 7.4 后续实现的正式平台依赖继续有效。
 
 ## 2. 正式输入与修改范围
 
@@ -153,4 +153,4 @@ PostgreSQL 18.4 隔离测试库部署全部正式 Migration 后验证：
 
 ## 10. 结论
 
-Task 7.5 实现状态为 Completed / Pending Approval，已具备 GitHub 技术验收条件。正式 Current Task 仍为 Task 7.5 / In Progress，等待项目负责人批准后另行同步状态。
+Task 7.5 已通过 GitHub 技术验收，正式状态为 Completed / Approved。Current Task 已切换为 Task 7.4 Attachment Framework / In Progress；本次状态同步不实施 Attachment、Import 或 Background Worker。

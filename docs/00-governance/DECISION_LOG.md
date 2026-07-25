@@ -2126,11 +2126,11 @@ Approved
 
 本决定只同步 Phase 与 Task 治理状态及 Task 7.5 后续实施边界，不实现 Attachment、Idempotency、Import 或后台 Worker，不修改业务代码、Database v2.2、API v1.4、Prisma、Migration、Mapping Audit、DCR-005 或 API CR-005。
 
-## DEC-086 完成Task 7.5实现并提交技术验收
+## DEC-086 批准Task 7.5并恢复Task 7.4
 
 ### 状态
 
-Pending Approval
+Approved
 
 ### 日期
 
@@ -2138,12 +2138,14 @@ Pending Approval
 
 ### 决定
 
-- Task 7.5 已按 Database v2.2 与 API v1.4 完成统一持久化幂等与并发控制实现；
-- 实现状态更新为 Completed / Pending Approval，等待 GitHub 技术验收；
-- PostgreSQL 18.4 的 20 并发与多实例竞争验证通过；
-- Current Task 继续为 Task 7.5，正式状态继续为 In Progress；
-- Task 7.4 不恢复，Task 7.6 至 Task 7.9 不启动。
+- Task 7.5 已按 Database v2.2 与 API v1.4 完成统一持久化幂等与并发控制实现，并通过 GitHub 技术验收；
+- Task 7.5 正式状态更新为 Completed / Approved；
+- PostgreSQL 是唯一正式并发裁决来源，PostgreSQL 18.4 的 20 并发仅 1 次认领和 1 次业务执行，4 个独立 Prisma Client / Repository 实例竞争验证通过；
+- HMAC、Canonical Hash、Scope、Lease、Replay、Reconciliation 和安全响应已完成；
+- Current Task 切换为 Task 7.4 Attachment Framework，正式状态保持 In Progress，其 Task 7.5 依赖暂停正式解除；
+- Task 7.4 后续仍须先完成 DCR-005、Database v2.3、API CR-005 与 API v1.5 的正式批准和同步；
+- DCR-005 与 API CR-005 继续为 Proposed / Pending Approval，Task 7.6 至 Task 7.9 不启动。
 
 ### 影响
 
-本次新增平台幂等组件、Prisma Repository、环境变量模板和测试，不修改 Frozen Database/API、Prisma Schema、Migration、Mapping Audit、API 数量、DTO、权限或错误码；不实现 Attachment、Import 业务流程或 Background Worker。
+本决定只同步 Task 7.5 批准结果与 Task 7.4 恢复状态，不修改业务代码、Frozen Database/API、Prisma Schema、Migration、Mapping Audit、API 数量、DTO、权限或错误码；不实现 Attachment、Import 业务流程或 Background Worker，不批准或修改 DCR-005 与 API CR-005。

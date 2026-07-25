@@ -11,6 +11,28 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.17] - 2026-07-25
+
+### Changed
+
+- Task 7.5 Idempotency & Concurrency Control 已通过 GitHub 技术验收，正式状态更新为 `Completed / Approved`
+- DEC-086 更新为 `Approved`
+- Current Task 切换为 Task 7.4 Attachment Framework，正式状态保持 `In Progress`
+- Task 7.4 因 Task 7.5 产生的历史依赖暂停已解除
+
+### Verified
+
+- PostgreSQL 是唯一正式并发裁决来源，20 并发仅 1 次认领和 1 次业务执行
+- 4 个独立 Prisma Client / Repository 实例竞争验证通过
+- HMAC、Canonical Hash、Scope、Lease、Replay、Reconciliation 和安全响应均已完成
+
+### Scope
+
+- Task 7.4 后续仍须依次完成 DCR-005 Approval、Database v2.3 Documentation & Migration Sync、API CR-005 Approval、API v1.5 Documentation Sync，方可实施 Attachment Framework
+- DCR-005 与 API CR-005 继续为 `Proposed / Pending Approval`
+- 本轮只同步治理状态，未修改业务代码、Database v2.2、API v1.4、Prisma Schema、Migration 或 Mapping Audit
+- 未实施 Attachment、Import 或 Background Worker
+
 ## [0.11.16] - 2026-07-25
 
 ### Added

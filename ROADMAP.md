@@ -1,7 +1,7 @@
 ---
 document_name: 项目开发路线
 project: Violin ERP Lite
-version: 2.4
+version: 2.5
 status: Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -19,7 +19,7 @@ related_phase: All Phases
 
 - Current Phase：Phase 7
 - Phase Status：In Progress
-- Current Task：Task 7.5
+- Current Task：Task 7.4
 - Current Task Status：In Progress
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件负责定义固定阶段路线、Task 边界、进入条件和完成条件。
@@ -72,7 +72,7 @@ related_phase: All Phases
 - Task 7.2 Authentication & Authorization：Completed / Approved
 - Task 7.3 Object Storage & File Lifecycle：Completed / Approved
 - Task 7.4 Attachment Framework：In Progress
-- Task 7.5 Idempotency & Concurrency Control：In Progress
+- Task 7.5 Idempotency & Concurrency Control：Completed / Approved
 - Task 7.6 Background Job & Distributed Lock：Waiting / Not Started
 - Task 7.7 Cache & Event Infrastructure：Waiting / Not Started
 - Task 7.8 Audit, Trace & Observability：Waiting / Not Started
@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，当前 Database Logical Design v2.2 已冻结。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.4 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.3 已批准，Task 7.4 保持 In Progress，Current Task 已切换为 Task 7.5。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准，当前 Database Logical Design v2.2 已冻结。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.4 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；当前 Phase 7 Platform Foundation 保持 In Progress，Task 7.1 至 Task 7.3 及 Task 7.5 已批准，Task 7.4 保持 In Progress 并成为 Current Task。
 
 ## 3. 固定十阶段开发路线
 
@@ -261,13 +261,13 @@ Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每�
 2. Task 7.2 Authentication & Authorization：Completed / Approved；
 3. Task 7.3 Object Storage & File Lifecycle：Completed / Approved；
 4. Task 7.4 Attachment Framework：In Progress；
-5. Task 7.5 Idempotency & Concurrency Control：In Progress；
+5. Task 7.5 Idempotency & Concurrency Control：Completed / Approved；
 6. Task 7.6 Background Job & Distributed Lock：Waiting / Not Started；
 7. Task 7.7 Cache & Event Infrastructure：Waiting / Not Started；
 8. Task 7.8 Audit, Trace & Observability：Waiting / Not Started；
 9. Task 7.9 Platform Final Consistency Review：Waiting / Not Started。
 
-每个 Task 完成后必须先通过 GitHub 技术验收并获得项目负责人批准，方可启动下一 Task。项目负责人已明确将 Current Task 切换为 Task 7.5，Task 7.4 正式状态保持 In Progress；本次执行重点调整不授权并行实施其他 Task。Task 7.9 是本 Phase 的正式收口任务，未经项目负责人明确启动不得执行。
+每个 Task 完成后必须先通过 GitHub 技术验收并获得项目负责人批准，方可启动下一 Task。Task 7.5 已通过 GitHub 技术验收并获得批准，Current Task 已切换回 Task 7.4；本次状态同步不授权实施其他 Task。Task 7.9 是本 Phase 的正式收口任务，未经项目负责人明确启动不得执行。
 
 ### Phase 8：应用开发（Application Development）
 
