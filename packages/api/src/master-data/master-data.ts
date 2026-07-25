@@ -11,6 +11,7 @@ export const MASTER_DATA_RESOURCE_KEYS = [
   "skus",
   "product-categories",
   "brands",
+  "ecommerce-platforms",
   "manufacturers",
   "suppliers",
   "warehouses",
@@ -99,6 +100,7 @@ export type MasterDataResourceDefinition = Readonly<{
     | "master.brand"
     | "master.category"
     | "master.manufacturer"
+    | "master.platform"
     | "master.product"
     | "master.sku"
     | "master.store"
@@ -208,6 +210,27 @@ export const MASTER_DATA_DEFINITIONS: Readonly<
     nameField: "brandName",
     permissionResource: "master.brand",
     sortFields: ["brandCode", "brandName", "createdAt", "updatedAt"],
+  },
+  "ecommerce-platforms": {
+    codeField: "platformCode",
+    fields: [
+      requiredString("platformCode", "平台编码", 50),
+      requiredString("platformName", "平台名称", 200),
+      requiredString("platformType", "平台类型", 50),
+      optionalString("countryCode", "国家代码", 2),
+      {
+        key: "isCrossBorder",
+        kind: "boolean",
+        label: "是否跨境平台",
+        requiredOnCreate: true,
+      },
+      optionalString("description", "说明"),
+    ],
+    filterFields: ["platformType", "countryCode"],
+    label: "电商平台",
+    nameField: "platformName",
+    permissionResource: "master.platform",
+    sortFields: ["platformCode", "platformName", "createdAt", "updatedAt"],
   },
   manufacturers: {
     codeField: "manufacturerCode",

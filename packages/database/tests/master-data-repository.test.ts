@@ -77,4 +77,97 @@ describe("Prisma Master Data repository", () => {
       }),
     );
   });
+
+  it("maps ecommerce-platforms to the Frozen ecommerce_platforms table", async () => {
+    const create = vi.fn().mockResolvedValue({
+      id: "22222222-2222-4222-8222-222222222222",
+      is_cross_border: false,
+      platform_code: "PLT-001",
+      platform_name: "测试平台",
+      platform_type: "domestic",
+    });
+    const repository = new PrismaMasterDataRepository({
+      ecommerce_platforms: { create },
+    } as never);
+
+    await expect(
+      repository.create(
+        "ecommerce-platforms",
+        {
+          isCrossBorder: false,
+          platformCode: "PLT-001",
+          platformName: "测试平台",
+          platformType: "domestic",
+        },
+        USER_ID,
+      ),
+    ).resolves.toMatchObject({
+      isCrossBorder: false,
+      platformCode: "PLT-001",
+      platformName: "测试平台",
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          created_by: USER_ID,
+          is_cross_border: false,
+          platform_code: "PLT-001",
+          updated_by: USER_ID,
+        }),
+      }),
+    );
+  });
+
+  it("applies store role scope before pagination and maps platform summary", async () => {
+    const findMany = vi.fn().mockResolvedValue([
+      {
+        ecommerce_platforms: {
+          id: "33333333-3333-4333-8333-333333333333",
+          platform_code: "PLT-001",
+          platform_name: "测试平台",
+        },
+        id: "22222222-2222-4222-8222-222222222222",
+        is_active: true,
+        store_code: "STR-001",
+        store_name: "测试店铺",
+        updated_at: new Date("2026-07-23T00:00:00.000Z"),
+      },
+    ]);
+    const count = vi.fn().mockResolvedValue(1);
+    const repository = new PrismaMasterDataRepository({
+      stores: { count, findMany },
+    } as never);
+
+    const result = await repository.list(
+      "stores",
+      {
+        filters: { countryCode: "CN" },
+        isActive: true,
+        page: 1,
+        pageSize: 20,
+        sortBy: "updatedAt",
+        sortOrder: "desc",
+      },
+      USER_ID,
+    );
+
+    expect(result.items[0]).toMatchObject({
+      platform: { platformCode: "PLT-001", platformName: "测试平台" },
+      storeCode: "STR-001",
+      storeName: "测试店铺",
+    });
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          AND: expect.arrayContaining([
+            expect.objectContaining({
+              role_stores: expect.objectContaining({ some: expect.any(Object) }),
+            }),
+            { country_code: "CN" },
+            { is_active: true },
+          ]),
+        },
+      }),
+    );
+  });
 });

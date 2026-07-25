@@ -22,6 +22,7 @@ type GenericDelegate = Readonly<{
 
 const RESOURCE_MODELS: Readonly<Record<MasterDataResourceKey, string>> = {
   brands: "brands",
+  "ecommerce-platforms": "ecommerce_platforms",
   manufacturers: "manufacturers",
   "product-categories": "product_categories",
   products: "products",

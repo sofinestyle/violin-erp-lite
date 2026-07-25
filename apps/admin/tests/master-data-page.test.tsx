@@ -6,14 +6,24 @@ import { PermissionProvider } from "../contexts/permission-context";
 import { MASTER_WORKBENCHES, SECURITY_WORKBENCHES } from "../lib/master-data";
 
 describe("Master Data PC pages", () => {
-  it("renders all eight master-data entries and two security entries", () => {
+  it("renders all nine master-data entries and two security entries", () => {
     const master = renderToStaticMarkup(
       <WorkbenchHub basePath="/workspace/master-data" definitions={MASTER_WORKBENCHES} />,
     );
     const security = renderToStaticMarkup(
       <WorkbenchHub basePath="/workspace/access-control" definitions={SECURITY_WORKBENCHES} />,
     );
-    for (const label of ["产品", "SKU", "产品分类", "品牌", "生产厂家", "供应商", "仓库", "店铺"]) {
+    for (const label of [
+      "产品",
+      "SKU",
+      "产品分类",
+      "品牌",
+      "电商平台",
+      "生产厂家",
+      "供应商",
+      "仓库",
+      "店铺",
+    ]) {
       expect(master).toContain(`${label}管理`);
     }
     expect(security).toContain("用户管理");
