@@ -475,6 +475,163 @@ model idempotency_records {
   @@index([resource_type, resource_id, created_at], map: "idx_idempotency_records_resource_created_at")
 }
 
+/// Task 7.7 keeps Outbox status as a string and enforces its approved values and lease checks in the v2.5 SQL migration.
+model event_outbox {
+  id                                      String               @id(map: "pk_event_outbox") @default(dbgenerated("uuidv7()")) @db.Uuid
+  event_id                                String               @unique(map: "uq_event_outbox_event_id") @db.Uuid
+  event_type                              String               @db.VarChar(150)
+  event_version                           Int
+  aggregate_type                          String?              @db.VarChar(100)
+  aggregate_id                            String?              @db.Uuid
+  producer                                String               @db.VarChar(100)
+  payload                                 Json?
+  metadata                                Json?
+  request_trace_id                        String               @db.Uuid
+  actor_user_id                           String?              @db.Uuid
+  status                                  String               @db.VarChar(50)
+  occurred_at                             DateTime             @db.Timestamptz(6)
+  available_at                            DateTime             @db.Timestamptz(6)
+  published_at                            DateTime?            @db.Timestamptz(6)
+  locked_by                               String?              @db.VarChar(200)
+  locked_until                            DateTime?            @db.Timestamptz(6)
+  attempt_count                           Int                  @default(0)
+  max_attempts                            Int
+  last_error_code                         String?              @db.VarChar(100)
+  last_error_message                      String?
+  created_at                              DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime             @default(now()) @db.Timestamptz(6)
+  users_event_outbox_actor_user_idTousers users?               @relation("event_outbox_actor_user_idTousers", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_outbox_actor_user_id")
+  event_dead_letters                      event_dead_letters[]
+
+  @@index([status, available_at, created_at], map: "idx_event_outbox_claim")
+  @@index([event_type, created_at], map: "idx_event_outbox_event_type_created_at")
+  @@index([aggregate_type, aggregate_id, created_at], map: "idx_event_outbox_aggregate_created_at")
+  @@index([locked_until], map: "idx_event_outbox_locked_until")
+  @@index([request_trace_id], map: "idx_event_outbox_request_trace_id")
+}
+
+/// Task 7.7 event fact table. Event facts are immutable by service convention; state changes live in Outbox, Delivery, Consumption, and Dead Letter tables.
+model event_history {
+  id                                                  String               @id(map: "pk_event_history") @default(dbgenerated("uuidv7()")) @db.Uuid
+  event_id                                            String               @unique(map: "uq_event_history_event_id") @db.Uuid
+  event_type                                          String               @db.VarChar(150)
+  event_version                                       Int
+  aggregate_type                                      String?              @db.VarChar(100)
+  aggregate_id                                        String?              @db.Uuid
+  producer                                            String               @db.VarChar(100)
+  payload                                             Json?
+  metadata                                            Json?
+  request_trace_id                                    String               @db.Uuid
+  actor_user_id                                       String?              @db.Uuid
+  occurred_at                                         DateTime             @db.Timestamptz(6)
+  created_at                                          DateTime             @default(now()) @db.Timestamptz(6)
+  users_event_history_actor_user_idTousers            users?               @relation("event_history_actor_user_idTousers", fields: [actor_user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_history_actor_user_id")
+  event_consumptions                                  event_consumptions[]
+  event_dead_letters_event_idToevent_history          event_dead_letters[] @relation("event_dead_letters_event_idToevent_history")
+  event_dead_letters_replayed_event_idToevent_history event_dead_letters[] @relation("event_dead_letters_replayed_event_idToevent_history")
+  event_deliveries                                    event_deliveries[]
+
+  @@index([event_type, occurred_at], map: "idx_event_history_event_type_occurred_at")
+  @@index([aggregate_type, aggregate_id, occurred_at], map: "idx_event_history_aggregate_occurred_at")
+  @@index([request_trace_id], map: "idx_event_history_request_trace_id")
+  @@index([producer, occurred_at], map: "idx_event_history_producer_occurred_at")
+}
+
+/// Task 7.7 keeps Event Inbox status as a string and enforces consumer idempotency in the v2.5 SQL migration.
+model event_consumptions {
+  id                 String               @id(map: "pk_event_consumptions") @default(dbgenerated("uuidv7()")) @db.Uuid
+  event_id           String               @db.Uuid
+  consumer_name      String               @db.VarChar(150)
+  handler_name       String               @db.VarChar(150)
+  status             String               @db.VarChar(50)
+  attempt_count      Int                  @default(0)
+  max_attempts       Int
+  available_at       DateTime             @db.Timestamptz(6)
+  started_at         DateTime?            @db.Timestamptz(6)
+  completed_at       DateTime?            @db.Timestamptz(6)
+  locked_by          String?              @db.VarChar(200)
+  locked_until       DateTime?            @db.Timestamptz(6)
+  last_error_code    String?              @db.VarChar(100)
+  last_error_message String?
+  last_error_detail  Json?
+  request_trace_id   String               @db.Uuid
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  event_history      event_history        @relation(fields: [event_id], references: [event_id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_consumptions_event_id")
+  event_dead_letters event_dead_letters[]
+
+  @@unique([event_id, consumer_name], map: "uq_event_consumptions_event_consumer")
+  @@index([consumer_name, status, available_at], map: "idx_event_consumptions_consumer_status_available_at")
+  @@index([status, available_at, created_at], map: "idx_event_consumptions_status_available_at_created_at")
+  @@index([locked_until], map: "idx_event_consumptions_locked_until")
+  @@index([event_id], map: "idx_event_consumptions_event_id")
+  @@index([request_trace_id], map: "idx_event_consumptions_request_trace_id")
+}
+
+/// Task 7.7 keeps Event Dead Letter status and failure stage as strings and enforces their approved values in the v2.5 SQL migration.
+model event_dead_letters {
+  id                                                                String              @id(map: "pk_event_dead_letters") @default(dbgenerated("uuidv7()")) @db.Uuid
+  event_id                                                          String              @db.Uuid
+  failure_stage                                                     String              @db.VarChar(50)
+  consumer_name                                                     String?             @db.VarChar(150)
+  delivery_target                                                   String?             @db.VarChar(200)
+  outbox_id                                                         String?             @db.Uuid
+  consumption_id                                                    String?             @db.Uuid
+  delivery_id                                                       String?             @db.Uuid
+  reason_code                                                       String              @db.VarChar(100)
+  reason_message                                                    String
+  context                                                           Json?
+  status                                                            String              @db.VarChar(50)
+  handled_by                                                        String?             @db.Uuid
+  handled_at                                                        DateTime?           @db.Timestamptz(6)
+  handling_note                                                     String?
+  replayed_event_id                                                 String?             @db.Uuid
+  created_at                                                        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                                        DateTime            @default(now()) @db.Timestamptz(6)
+  event_history_event_dead_letters_event_idToevent_history          event_history       @relation("event_dead_letters_event_idToevent_history", fields: [event_id], references: [event_id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_dead_letters_event_id")
+  event_outbox                                                      event_outbox?       @relation(fields: [outbox_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_dead_letters_outbox_id")
+  event_consumptions                                                event_consumptions? @relation(fields: [consumption_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_dead_letters_consumption_id")
+  event_deliveries                                                  event_deliveries?   @relation(fields: [delivery_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_dead_letters_delivery_id")
+  users_event_dead_letters_handled_byTousers                        users?              @relation("event_dead_letters_handled_byTousers", fields: [handled_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_dead_letters_handled_by")
+  event_history_event_dead_letters_replayed_event_idToevent_history event_history?      @relation("event_dead_letters_replayed_event_idToevent_history", fields: [replayed_event_id], references: [event_id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_dead_letters_replayed_event_id")
+
+  @@index([status, created_at], map: "idx_event_dead_letters_status_created_at")
+  @@index([event_id], map: "idx_event_dead_letters_event_id")
+  @@index([failure_stage, created_at], map: "idx_event_dead_letters_failure_stage_created_at")
+  @@index([consumer_name, status], map: "idx_event_dead_letters_consumer_status")
+  @@index([delivery_target, status], map: "idx_event_dead_letters_delivery_target_status")
+}
+
+/// Task 7.7 keeps Event Delivery status as a string and enforces its approved values and target idempotency in the v2.5 SQL migration.
+model event_deliveries {
+  id                   String               @id(map: "pk_event_deliveries") @default(dbgenerated("uuidv7()")) @db.Uuid
+  event_id             String               @db.Uuid
+  delivery_target_type String               @db.VarChar(100)
+  delivery_target      String               @db.VarChar(200)
+  status               String               @db.VarChar(50)
+  attempt_count        Int                  @default(0)
+  max_attempts         Int
+  available_at         DateTime             @db.Timestamptz(6)
+  delivered_at         DateTime?            @db.Timestamptz(6)
+  locked_by            String?              @db.VarChar(200)
+  locked_until         DateTime?            @db.Timestamptz(6)
+  last_error_code      String?              @db.VarChar(100)
+  last_error_message   String?
+  response_summary     Json?
+  request_trace_id     String               @db.Uuid
+  created_at           DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime             @default(now()) @db.Timestamptz(6)
+  event_history        event_history        @relation(fields: [event_id], references: [event_id], onDelete: Restrict, onUpdate: Restrict, map: "fk_event_deliveries_event_id")
+  event_dead_letters   event_dead_letters[]
+
+  @@unique([event_id, delivery_target_type, delivery_target], map: "uq_event_deliveries_event_target")
+  @@index([status, available_at, created_at], map: "idx_event_deliveries_status_available_at_created_at")
+  @@index([delivery_target, status, available_at], map: "idx_event_deliveries_target_status_available_at")
+  @@index([event_id], map: "idx_event_deliveries_event_id")
+  @@index([locked_until], map: "idx_event_deliveries_locked_until")
+  @@index([request_trace_id], map: "idx_event_deliveries_request_trace_id")
+}
+
 /// Task 7.6 keeps Job status as a string and enforces its approved values and lifecycle checks in the v2.4 SQL migration.
 model jobs {
   id                                     String             @id(map: "pk_jobs") @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -2133,6 +2290,9 @@ model users {
   import_task_items_import_task_items_updated_byTousers                                   import_task_items[]                  @relation("import_task_items_updated_byTousers")
   import_tasks_import_tasks_created_byTousers                                             import_tasks[]                       @relation("import_tasks_created_byTousers")
   import_tasks_import_tasks_updated_byTousers                                             import_tasks[]                       @relation("import_tasks_updated_byTousers")
+  event_outbox_event_outbox_actor_user_idTousers                                          event_outbox[]                       @relation("event_outbox_actor_user_idTousers")
+  event_history_event_history_actor_user_idTousers                                        event_history[]                      @relation("event_history_actor_user_idTousers")
+  event_dead_letters_event_dead_letters_handled_byTousers                                 event_dead_letters[]                 @relation("event_dead_letters_handled_byTousers")
   jobs_jobs_created_byTousers                                                             jobs[]                               @relation("jobs_created_byTousers")
   jobs_jobs_updated_byTousers                                                             jobs[]                               @relation("jobs_updated_byTousers")
   job_dead_letters_job_dead_letters_handled_byTousers                                     job_dead_letters[]                   @relation("job_dead_letters_handled_byTousers")

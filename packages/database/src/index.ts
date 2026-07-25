@@ -67,6 +67,59 @@ export {
   type JobWorkerRuntimeOptions,
   type JobWorkerState,
 } from "./job/job-worker-runtime.js";
+export {
+  EventRegistry,
+  type EventConsumerRegistration,
+  type EventDeliveryContext,
+  type EventDeliveryHandler,
+  type EventDeliveryTargetRegistration,
+  type EventHandler,
+  type EventHandlerContext,
+} from "./event/event-registry.js";
+export {
+  evaluateEventRetry,
+  type EventRetryDecision,
+  type EventRetryDecisionInput,
+  type EventRetryPolicy,
+} from "./event/event-retry-engine.js";
+export {
+  PrismaEventRepository,
+  type ClaimConsumptionsInput,
+  type ClaimDeliveriesInput,
+  type ClaimOutboxInput,
+  type CreateConsumerInboxInput,
+  type CreateDeliveryInput,
+  type EventConsumptionRecord,
+  type EventConsumptionStatus,
+  type EventDeadLetterRecord,
+  type EventDeadLetterStatus,
+  type EventDeliveryRecord,
+  type EventDeliveryStatus,
+  type EventEnvelope,
+  type EventFailureStage,
+  type EventHistoryRecord,
+  type EventJson,
+  type EventOutboxRecord,
+  type EventOutboxStatus,
+  type RecoverEventLeasesInput,
+  type RegisterEventInput,
+} from "./event/prisma-event-repository.js";
+export {
+  createEventJobBridgeHandler,
+  eventPayload,
+  EventConsumerRuntime,
+  EventDeliveryRuntime,
+  EventPublisherRuntime,
+  type EventConsumerRepository,
+  type EventConsumerRuntimeOptions,
+  type EventDeliveryRepository,
+  type EventDeliveryRuntimeOptions,
+  type EventJobBridgeFactory,
+  type EventJobBridgeRepository,
+  type EventPublisherRepository,
+  type EventPublisherRuntimeOptions,
+  type EventRuntimeState,
+} from "./event/event-runtime.js";
 export { PrismaSecurityRepository } from "./security/prisma-security-repository.js";
 export { PrismaWorkflowRepository } from "./workflow/prisma-workflow-repository.js";
 export type { PrismaClient } from "./generated/prisma/client.js";
