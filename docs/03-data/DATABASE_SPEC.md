@@ -1,7 +1,7 @@
 ---
 document_name: 数据库规格
 project: Violin ERP Lite
-version: 2.4
+version: 2.5
 status: Completed / Approved / Pending Migration
 owner: Project Manager
 created_date: 2026-07-19
@@ -13,22 +13,22 @@ related_phase: Phase 3 / Phase 7
 
 ## 1. 正式状态
 
-Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计；项目负责人于 2026-07-24 批准 Database Change Request 003，为四个既有导入状态字段增加正式值域 Check；项目负责人于 2026-07-25 批准 Database Change Request 004，补齐 Import 文件摘要去重与通用持久化幂等数据库基础；同日批准 Database Change Request 005，补齐 Attachment 生命周期状态值域、默认值和状态定位索引；项目负责人批准 Task 7.6 Background Job Database Change Request，新增后台任务、执行尝试、执行结果、死信闭环和调度租约的逻辑数据库设计。
+Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计；项目负责人于 2026-07-24 批准 Database Change Request 003，为四个既有导入状态字段增加正式值域 Check；项目负责人于 2026-07-25 批准 Database Change Request 004，补齐 Import 文件摘要去重与通用持久化幂等数据库基础；同日批准 Database Change Request 005，补齐 Attachment 生命周期状态值域、默认值和状态定位索引；项目负责人批准 Task 7.6 Background Job Database Change Request，新增后台任务、执行尝试、执行结果、死信闭环和调度租约的逻辑数据库设计；项目负责人批准 Task 7.7 Event Infrastructure Database Change Request，新增事件 Outbox、事件历史、消费 Inbox、事件死信和投递状态的逻辑数据库设计。
 
 当前唯一有效版本为：
 
-- Database Logical Design：v2.4；
+- Database Logical Design：v2.5；
 - 状态：Completed / Approved / Pending Migration；
-- 正式表：68；
-- 正式字段：1241；
-- 主键：68；
-- 唯一约束/唯一索引：84；
-- 外键：300；
-- 普通索引：106；
-- Check：250；
+- 正式表：73；
+- 正式字段：1330；
+- 主键：73；
+- 唯一约束/唯一索引：88；
+- 外键：310；
+- 普通索引：130；
+- Check：277；
 - 正式数据库枚举：2。
 
-Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check。v2.3 按 DCR-005 为既有 `attachments.status` 增加 `active` 默认值和五值域 Check，并新增一个状态定位普通索引；不新增表、字段、外键、唯一约束或 PostgreSQL Enum。v2.4 按 Task 7.6 Background Job Database Change Request 新增 `jobs`、`job_attempts`、`job_results`、`job_dead_letters` 与 `scheduler_locks` 五个逻辑表，新增 65 个字段、5 个主键、5 个唯一约束/唯一索引、8 个外键、8 个普通索引和 16 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。
+Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check。v2.3 按 DCR-005 为既有 `attachments.status` 增加 `active` 默认值和五值域 Check，并新增一个状态定位普通索引；不新增表、字段、外键、唯一约束或 PostgreSQL Enum。v2.4 按 Task 7.6 Background Job Database Change Request 新增 `jobs`、`job_attempts`、`job_results`、`job_dead_letters` 与 `scheduler_locks` 五个逻辑表，新增 65 个字段、5 个主键、5 个唯一约束/唯一索引、8 个外键、8 个普通索引和 16 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.5 按 Task 7.7 Event Infrastructure Database Change Request 新增 `event_outbox`、`event_history`、`event_consumptions`、`event_dead_letters` 与 `event_deliveries` 五个逻辑表，新增 89 个字段、5 个主键、4 个唯一约束/唯一索引、10 个外键、24 个普通索引和 27 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。
 
 ## 2. 既有正式设计来源
 
@@ -52,8 +52,10 @@ Task 3.1 至 Task 3.5.7 的正式成果继续有效：
 - [Database Change Request 005](../00-governance/DATABASE_CHANGE_REQUEST_005.md)。
 - [Task 7.6 Background Job Database Change Request](../phases/phase-07/TASK_7_6_BACKGROUND_JOB_DATABASE_CHANGE_REQUEST.md)。
 - [Task 7.6 Database Design Update](../phases/phase-07/TASK_7_6_DATABASE_DESIGN_UPDATE.md)。
+- [Task 7.7 Event Infrastructure Database Change Request](../phases/phase-07/TASK_7_7_EVENT_DATABASE_CHANGE_REQUEST.md)。
+- [Task 7.7 Database Design Update](../phases/phase-07/TASK_7_7_DATABASE_DESIGN_UPDATE.md)。
 
-DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；DCR-003 是 v2.0 到 v2.1 的唯一约束增量；DCR-004 是 v2.1 到 v2.2 的唯一结构增量；DCR-005 是 v2.2 到 v2.3 的唯一约束与索引增量；Task 7.6 Background Job Database Change Request 是 v2.3 到 v2.4 的唯一逻辑结构增量。发生冲突时，本文件和已批准 Change Request 的对应定义优先于历史版本数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
+DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；DCR-003 是 v2.0 到 v2.1 的唯一约束增量；DCR-004 是 v2.1 到 v2.2 的唯一结构增量；DCR-005 是 v2.2 到 v2.3 的唯一约束与索引增量；Task 7.6 Background Job Database Change Request 是 v2.3 到 v2.4 的唯一逻辑结构增量；Task 7.7 Event Infrastructure Database Change Request 是 v2.4 到 v2.5 的唯一逻辑结构增量。发生冲突时，本文件和已批准 Change Request 的对应定义优先于历史版本数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
 
 ## 3. `user_wechat_identities` 正式定位
 
@@ -238,9 +240,9 @@ Database Logical Design v2.1 为以下四个既有字段冻结局部 Check 代�
 - `prisma/migrations/20260725160000_add_attachment_status_constraints/migration.sql`；
 - `prisma/mapping-audit.json` 的 v2.3 计数。
 
-DCR-002 的两个 Migration 分别创建空表及其约束、索引、外键和必要循环防护，不回填或猜测任何现有身份，不包含真实 AppID、Secret、OpenID、Token、用户或业务数据。DCR-003 Migration 在添加四项 Check 前审计现有值；发现未知值时以脱敏行数与 distinct 数量抛出异常并停止，不自动映射、删除或转换数据。Task 7.6 v2.4 当前只完成 Database SSOT 逻辑设计，尚未创建 Prisma Schema、Forward-only Migration 或 Mapping Audit。不得修改或重写任何历史 Migration。
+DCR-002 的两个 Migration 分别创建空表及其约束、索引、外键和必要循环防护，不回填或猜测任何现有身份，不包含真实 AppID、Secret、OpenID、Token、用户或业务数据。DCR-003 Migration 在添加四项 Check 前审计现有值；发现未知值时以脱敏行数与 distinct 数量抛出异常并停止，不自动映射、删除或转换数据。Task 7.6 v2.4 已完成后续 Prisma Schema、Forward-only Migration 与运行时实现；Task 7.7 v2.5 当前只完成 Database SSOT 逻辑设计，尚未创建 Prisma Schema、Forward-only Migration 或 Mapping Audit。不得修改或重写任何历史 Migration。
 
-v2.3 最终物理 Mapping Audit 为 63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、98 普通索引、234 Check、2 枚举。v2.4 逻辑目标 Mapping 为 68 表、1241 字段、68 主键、84 唯一约束/唯一索引、300 外键、106 普通索引、250 Check、2 枚举；物理验证留待后续 Migration 阶段。
+v2.3 最终物理 Mapping Audit 为 63 表、1176 字段、63 主键、79 唯一约束/唯一索引、292 外键、98 普通索引、234 Check、2 枚举。v2.4 逻辑目标 Mapping 为 68 表、1241 字段、68 主键、84 唯一约束/唯一索引、300 外键、106 普通索引、250 Check、2 枚举。v2.5 逻辑目标 Mapping 为 73 表、1330 字段、73 主键、88 唯一约束/唯一索引、310 外键、130 普通索引、277 Check、2 枚举；物理验证留待后续 Migration 阶段。
 
 ## 17. 枚举结论
 
@@ -251,11 +253,11 @@ DCR-002 及其 Completion Fix 不新增 PostgreSQL Enum。`user_wechat_identitie
 
 `access_level` 的正式代码继续由 `DATABASE_ENUM_SPEC.md` 管理并通过 Check 物理限制，不改变本次 Mapping Audit 的 PostgreSQL Enum 数量。
 
-Database Change Request 003 的四组 Import 状态同样是字段级 Check 代码集合，不新增 PostgreSQL Enum，也不改变 `DATABASE_ENUM_SPEC.md` 的既有定义或数量。Task 7.6 新增的 Job、Attempt、Result 和 Dead Letter 状态也是字段级 Check 代码集合，不新增 PostgreSQL Enum。正式数据库枚举数量继续为 2。
+Database Change Request 003 的四组 Import 状态同样是字段级 Check 代码集合，不新增 PostgreSQL Enum，也不改变 `DATABASE_ENUM_SPEC.md` 的既有定义或数量。Task 7.6 新增的 Job、Attempt、Result 和 Dead Letter 状态也是字段级 Check 代码集合，不新增 PostgreSQL Enum。Task 7.7 新增的 Outbox、Consumption、Delivery、Event Dead Letter 与 Failure Stage 状态同样是字段级 Check 代码集合，不新增 PostgreSQL Enum。正式数据库枚举数量继续为 2。
 
 ## 18. 冻结结论
 
-Database Logical Design v2.3 在 DCR-005 的独立前向 Migration、Mapping Audit 与真实 PostgreSQL 验证通过后完成、批准并冻结。v2.4 在 Task 7.6 Background Job Database Change Request 批准后完成逻辑 SSOT 更新，新增五个后台任务平台技术对象及对应字段、约束、索引和字段级状态值域；当前尚未执行 Prisma Schema、Migration 或 Mapping Audit 物理同步。
+Database Logical Design v2.3 在 DCR-005 的独立前向 Migration、Mapping Audit 与真实 PostgreSQL 验证通过后完成、批准并冻结。v2.4 在 Task 7.6 Background Job Database Change Request 批准后完成逻辑 SSOT 更新，新增五个后台任务平台技术对象及对应字段、约束、索引和字段级状态值域。v2.5 在 Task 7.7 Event Infrastructure Database Change Request 批准后完成逻辑 SSOT 更新，新增五个 Event 平台技术对象及对应字段、约束、索引和字段级状态值域；当前尚未执行 Prisma Schema、Migration 或 Mapping Audit 物理同步。
 
 后续任何表、字段、类型、状态、约束、索引、关系或枚举变化都必须重新提交 Database Change Request。不得通过代码、API、客户端缓存、JSON、备注或临时 Migration 绕过本规范。
 
@@ -595,3 +597,364 @@ Task 7.6 后台任务平台只新增平台技术对象，不修改任何业务�
 5. 更新 Mapping Audit；
 6. 使用 PostgreSQL 18.x 验证主键、唯一约束、外键、索引、Check 和空库迁移；
 7. 不写入真实业务数据、密钥、Token、Storage 私有路径或敏感数据。
+
+## 31. Task 7.7 Event Infrastructure 数据库边界
+
+Task 7.7 Event Infrastructure 只新增平台技术对象，不修改任何业务领域表。禁止修改：
+
+- Product；
+- SKU；
+- Purchase；
+- Production；
+- Inventory；
+- Inbound；
+- Outbound；
+- Cross Border。
+
+Event Infrastructure 的正式职责是保存领域事件事实、发布状态、消费状态、投递状态和失败闭环。Event 不得替代业务状态、库存流水、权限校验、请求幂等、后台 Job 状态或正式审计。
+
+事件载荷、元数据、错误详情和响应摘要必须为脱敏后的受控内容。不得保存文件本体、Token、Secret、密码、Storage 私有路径、未脱敏个人敏感信息或可绕过权限判断的完整业务快照。
+
+## 32. `event_outbox` 正式结构
+
+`event_outbox` 是可靠事件登记表，用于在业务事务提交时登记待发布事件，并为事件发布提供状态、租约、重试和错误记录。`event_outbox` 不保存业务状态，不替代 `event_history` 的不可变事件事实。
+
+| 字段 | PostgreSQL 类型 | 必填 | 默认值 | 正式语义 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | `uuidv7()` | 主键 |
+| `event_id` | `uuid` | 是 | 无 | 事件唯一标识 |
+| `event_type` | `varchar(150)` | 是 | 无 | 事件类型代码 |
+| `event_version` | `integer` | 是 | 无 | 事件结构版本 |
+| `aggregate_type` | `varchar(100)` | 否 | `NULL` | 聚合或对象类型 |
+| `aggregate_id` | `uuid` | 否 | `NULL` | 聚合或对象 ID |
+| `producer` | `varchar(100)` | 是 | 无 | 事件生产模块 |
+| `payload` | `jsonb` | 否 | `NULL` | 脱敏事件载荷 |
+| `metadata` | `jsonb` | 否 | `NULL` | 脱敏事件元数据 |
+| `request_trace_id` | `uuid` | 是 | 无 | 请求链路 ID |
+| `actor_user_id` | `uuid` | 否 | `NULL` | 触发用户；系统事件可空 |
+| `status` | `varchar(50)` | 是 | 无 | Outbox 发布状态 |
+| `occurred_at` | `timestamptz(6)` | 是 | 无 | 事件事实发生时间 |
+| `available_at` | `timestamptz(6)` | 是 | 无 | 下一次可发布领取时间 |
+| `published_at` | `timestamptz(6)` | 否 | `NULL` | 成功发布时间 |
+| `locked_by` | `varchar(200)` | 否 | `NULL` | 当前发布租约持有者 |
+| `locked_until` | `timestamptz(6)` | 否 | `NULL` | 发布租约截止时间 |
+| `attempt_count` | `integer` | 是 | `0` | 已发布尝试次数 |
+| `max_attempts` | `integer` | 是 | 无 | 最大发布尝试次数 |
+| `last_error_code` | `varchar(100)` | 否 | `NULL` | 最近发布错误代码 |
+| `last_error_message` | `text` | 否 | `NULL` | 最近脱敏发布错误摘要 |
+| `created_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 创建时间 |
+| `updated_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 更新时间 |
+
+### 32.1 `event_outbox` 状态
+
+`event_outbox.status` 只允许：
+
+- `pending`；
+- `publishing`；
+- `published`；
+- `failed`；
+- `dead_letter`；
+- `cancelled`。
+
+`published`、`dead_letter` 和 `cancelled` 是终态。`failed` 表示当前发布尝试失败但仍待 Retry Policy 裁决，不代表业务事实失败。
+
+### 32.2 `event_outbox` 主键、唯一约束与索引
+
+- 主键：`pk_event_outbox (id)`；
+- 唯一约束：`uq_event_outbox_event_id (event_id)`；
+- 普通索引：`idx_event_outbox_claim (status, available_at, created_at)`；
+- 普通索引：`idx_event_outbox_event_type_created_at (event_type, created_at)`；
+- 普通索引：`idx_event_outbox_aggregate_created_at (aggregate_type, aggregate_id, created_at)`；
+- 普通索引：`idx_event_outbox_locked_until (locked_until)`；
+- 普通索引：`idx_event_outbox_request_trace_id (request_trace_id)`。
+
+### 32.3 `event_outbox` 外键
+
+| 外键 | 引用 | 更新 | 删除 |
+| --- | --- | --- | --- |
+| `fk_event_outbox_actor_user_id` | `actor_user_id → users.id` | RESTRICT | RESTRICT |
+
+### 32.4 `event_outbox` Check
+
+正式新增 6 项 Check：
+
+1. `status` 只允许六个正式 Outbox 状态；
+2. `event_version >= 1`；
+3. `attempt_count >= 0`、`max_attempts >= 1` 且 `attempt_count <= max_attempts`；
+4. `available_at >= occurred_at`，`published_at IS NULL OR published_at >= occurred_at`，`updated_at >= created_at`；
+5. `aggregate_type` 与 `aggregate_id` 必须同时为空或同时非空；
+6. 活动租约字段必须成组：`locked_until` 与 `locked_by` 同时为空或同时非空。
+
+## 33. `event_history` 正式结构
+
+`event_history` 是事件事实保存表。事件事实一旦写入，应视为不可变事实；发布、投递、消费和失败处理状态不得写入 `event_history`。
+
+| 字段 | PostgreSQL 类型 | 必填 | 默认值 | 正式语义 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | `uuidv7()` | 主键 |
+| `event_id` | `uuid` | 是 | 无 | 事件唯一标识 |
+| `event_type` | `varchar(150)` | 是 | 无 | 事件类型代码 |
+| `event_version` | `integer` | 是 | 无 | 事件结构版本 |
+| `aggregate_type` | `varchar(100)` | 否 | `NULL` | 聚合或对象类型 |
+| `aggregate_id` | `uuid` | 否 | `NULL` | 聚合或对象 ID |
+| `producer` | `varchar(100)` | 是 | 无 | 事件生产模块 |
+| `payload` | `jsonb` | 否 | `NULL` | 脱敏事件载荷 |
+| `metadata` | `jsonb` | 否 | `NULL` | 脱敏事件元数据 |
+| `request_trace_id` | `uuid` | 是 | 无 | 请求链路 ID |
+| `actor_user_id` | `uuid` | 否 | `NULL` | 触发用户；系统事件可空 |
+| `occurred_at` | `timestamptz(6)` | 是 | 无 | 事件事实发生时间 |
+| `created_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 创建时间 |
+
+### 33.1 `event_history` 主键、唯一约束与索引
+
+- 主键：`pk_event_history (id)`；
+- 唯一约束：`uq_event_history_event_id (event_id)`；
+- 普通索引：`idx_event_history_event_type_occurred_at (event_type, occurred_at)`；
+- 普通索引：`idx_event_history_aggregate_occurred_at (aggregate_type, aggregate_id, occurred_at)`；
+- 普通索引：`idx_event_history_request_trace_id (request_trace_id)`；
+- 普通索引：`idx_event_history_producer_occurred_at (producer, occurred_at)`。
+
+### 33.2 `event_history` 外键
+
+| 外键 | 引用 | 更新 | 删除 |
+| --- | --- | --- | --- |
+| `fk_event_history_actor_user_id` | `actor_user_id → users.id` | RESTRICT | RESTRICT |
+
+### 33.3 `event_history` Check
+
+正式新增 4 项 Check：
+
+1. `event_version >= 1`；
+2. `occurred_at` 必填且不得晚于 `created_at` 之后的数据库写入语义范围；
+3. `aggregate_type` 与 `aggregate_id` 必须同时为空或同时非空；
+4. `event_type`、`producer` 去除首尾空白后必须非空，数据库值不得包含首尾空白。
+
+## 34. `event_consumptions` 正式结构
+
+`event_consumptions` 是 Event Inbox，用于记录每个消费者对每个事件的消费状态和消费幂等。它不替代 `idempotency_records` 的请求级幂等。
+
+| 字段 | PostgreSQL 类型 | 必填 | 默认值 | 正式语义 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | `uuidv7()` | 主键 |
+| `event_id` | `uuid` | 是 | 无 | 被消费事件 |
+| `consumer_name` | `varchar(150)` | 是 | 无 | 消费者名称 |
+| `handler_name` | `varchar(150)` | 是 | 无 | 事件处理器名称 |
+| `status` | `varchar(50)` | 是 | 无 | 消费状态 |
+| `attempt_count` | `integer` | 是 | `0` | 已消费尝试次数 |
+| `max_attempts` | `integer` | 是 | 无 | 最大消费尝试次数 |
+| `available_at` | `timestamptz(6)` | 是 | 无 | 下一次可消费领取时间 |
+| `started_at` | `timestamptz(6)` | 否 | `NULL` | 最近一次开始消费时间 |
+| `completed_at` | `timestamptz(6)` | 否 | `NULL` | 成功或终态完成时间 |
+| `locked_by` | `varchar(200)` | 否 | `NULL` | 当前消费租约持有者 |
+| `locked_until` | `timestamptz(6)` | 否 | `NULL` | 消费租约截止时间 |
+| `last_error_code` | `varchar(100)` | 否 | `NULL` | 最近消费错误代码 |
+| `last_error_message` | `text` | 否 | `NULL` | 最近脱敏消费错误摘要 |
+| `last_error_detail` | `jsonb` | 否 | `NULL` | 最近脱敏结构化错误详情 |
+| `request_trace_id` | `uuid` | 是 | 无 | 请求链路 ID |
+| `created_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 创建时间 |
+| `updated_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 更新时间 |
+
+### 34.1 `event_consumptions` 状态
+
+`event_consumptions.status` 只允许：
+
+- `pending`；
+- `running`；
+- `succeeded`；
+- `retrying`；
+- `failed`；
+- `dead_letter`；
+- `ignored`。
+
+`succeeded`、`dead_letter` 和 `ignored` 是终态。
+
+### 34.2 `event_consumptions` 主键、唯一约束与索引
+
+- 主键：`pk_event_consumptions (id)`；
+- 唯一约束：`uq_event_consumptions_event_consumer (event_id, consumer_name)`；
+- 普通索引：`idx_event_consumptions_consumer_status_available_at (consumer_name, status, available_at)`；
+- 普通索引：`idx_event_consumptions_status_available_at_created_at (status, available_at, created_at)`；
+- 普通索引：`idx_event_consumptions_locked_until (locked_until)`；
+- 普通索引：`idx_event_consumptions_event_id (event_id)`；
+- 普通索引：`idx_event_consumptions_request_trace_id (request_trace_id)`。
+
+### 34.3 `event_consumptions` 外键
+
+| 外键 | 引用 | 更新 | 删除 |
+| --- | --- | --- | --- |
+| `fk_event_consumptions_event_id` | `event_id → event_history.event_id` | RESTRICT | RESTRICT |
+
+### 34.4 `event_consumptions` Check
+
+正式新增 6 项 Check：
+
+1. `status` 只允许七个正式消费状态；
+2. `attempt_count >= 0`、`max_attempts >= 1` 且 `attempt_count <= max_attempts`；
+3. `started_at`、`completed_at` 不得早于 `created_at`，`updated_at >= created_at`；
+4. 活动租约字段必须成组：`locked_until` 与 `locked_by` 同时为空或同时非空；
+5. 成功或人工忽略类终态必须有 `completed_at`；
+6. 失败类状态应记录脱敏错误摘要，错误详情不得保存敏感原文。
+
+## 35. `event_dead_letters` 正式结构
+
+`event_dead_letters` 保存事件发布、投递或消费失败后的死信闭环。Dead Letter 不自动修改业务数据，不替代人工审批或业务补偿。
+
+| 字段 | PostgreSQL 类型 | 必填 | 默认值 | 正式语义 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | `uuidv7()` | 主键 |
+| `event_id` | `uuid` | 是 | 无 | 死信对应事件 |
+| `failure_stage` | `varchar(50)` | 是 | 无 | 失败阶段 |
+| `consumer_name` | `varchar(150)` | 否 | `NULL` | 消费者名称 |
+| `delivery_target` | `varchar(200)` | 否 | `NULL` | 投递目标名称 |
+| `outbox_id` | `uuid` | 否 | `NULL` | 关联 Outbox 记录 |
+| `consumption_id` | `uuid` | 否 | `NULL` | 关联消费记录 |
+| `delivery_id` | `uuid` | 否 | `NULL` | 关联投递记录 |
+| `reason_code` | `varchar(100)` | 是 | 无 | 死信原因代码 |
+| `reason_message` | `text` | 是 | 无 | 脱敏死信原因摘要 |
+| `context` | `jsonb` | 否 | `NULL` | 脱敏失败上下文 |
+| `status` | `varchar(50)` | 是 | 无 | 死信处理状态 |
+| `handled_by` | `uuid` | 否 | `NULL` | 人工处理操作者 |
+| `handled_at` | `timestamptz(6)` | 否 | `NULL` | 人工处理时间 |
+| `handling_note` | `text` | 否 | `NULL` | 脱敏处理说明 |
+| `replayed_event_id` | `uuid` | 否 | `NULL` | 重放后形成的新事件 ID |
+| `created_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 创建时间 |
+| `updated_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 更新时间 |
+
+### 35.1 `event_dead_letters` 状态与失败阶段
+
+`event_dead_letters.status` 只允许：
+
+- `open`；
+- `in_review`；
+- `replayed`；
+- `resolved`；
+- `ignored`。
+
+`event_dead_letters.failure_stage` 只允许：
+
+- `publish`；
+- `consume`；
+- `deliver`。
+
+### 35.2 `event_dead_letters` 主键、唯一约束与索引
+
+- 主键：`pk_event_dead_letters (id)`；
+- 普通索引：`idx_event_dead_letters_status_created_at (status, created_at)`；
+- 普通索引：`idx_event_dead_letters_event_id (event_id)`；
+- 普通索引：`idx_event_dead_letters_failure_stage_created_at (failure_stage, created_at)`；
+- 普通索引：`idx_event_dead_letters_consumer_status (consumer_name, status)`；
+- 普通索引：`idx_event_dead_letters_delivery_target_status (delivery_target, status)`。
+
+### 35.3 `event_dead_letters` 外键
+
+| 外键 | 引用 | 更新 | 删除 |
+| --- | --- | --- | --- |
+| `fk_event_dead_letters_event_id` | `event_id → event_history.event_id` | RESTRICT | RESTRICT |
+| `fk_event_dead_letters_outbox_id` | `outbox_id → event_outbox.id` | RESTRICT | RESTRICT |
+| `fk_event_dead_letters_consumption_id` | `consumption_id → event_consumptions.id` | RESTRICT | RESTRICT |
+| `fk_event_dead_letters_delivery_id` | `delivery_id → event_deliveries.id` | RESTRICT | RESTRICT |
+| `fk_event_dead_letters_handled_by` | `handled_by → users.id` | RESTRICT | RESTRICT |
+| `fk_event_dead_letters_replayed_event_id` | `replayed_event_id → event_history.event_id` | RESTRICT | RESTRICT |
+
+### 35.4 `event_dead_letters` Check
+
+正式新增 5 项 Check：
+
+1. `status` 只允许五个正式死信处理状态；
+2. `failure_stage` 只允许三个正式失败阶段；
+3. 至少关联 `outbox_id`、`consumption_id`、`delivery_id` 或 `event_id` 中的一项；
+4. `replayed` 状态必须有 `replayed_event_id`；
+5. `resolved`、`ignored`、`replayed` 状态必须有 `handled_at` 与 `handled_by`，`updated_at >= created_at`。
+
+## 36. `event_deliveries` 正式结构
+
+`event_deliveries` 保存事件对投递目标的投递状态。投递状态与事件事实、Outbox 发布状态和消费者消费状态分离。
+
+| 字段 | PostgreSQL 类型 | 必填 | 默认值 | 正式语义 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | `uuidv7()` | 主键 |
+| `event_id` | `uuid` | 是 | 无 | 被投递事件 |
+| `delivery_target_type` | `varchar(100)` | 是 | 无 | 投递目标类型 |
+| `delivery_target` | `varchar(200)` | 是 | 无 | 投递目标名称 |
+| `status` | `varchar(50)` | 是 | 无 | 投递状态 |
+| `attempt_count` | `integer` | 是 | `0` | 已投递尝试次数 |
+| `max_attempts` | `integer` | 是 | 无 | 最大投递尝试次数 |
+| `available_at` | `timestamptz(6)` | 是 | 无 | 下一次可投递领取时间 |
+| `delivered_at` | `timestamptz(6)` | 否 | `NULL` | 成功投递时间 |
+| `locked_by` | `varchar(200)` | 否 | `NULL` | 当前投递租约持有者 |
+| `locked_until` | `timestamptz(6)` | 否 | `NULL` | 投递租约截止时间 |
+| `last_error_code` | `varchar(100)` | 否 | `NULL` | 最近投递错误代码 |
+| `last_error_message` | `text` | 否 | `NULL` | 最近脱敏投递错误摘要 |
+| `response_summary` | `jsonb` | 否 | `NULL` | 脱敏响应摘要 |
+| `request_trace_id` | `uuid` | 是 | 无 | 请求链路 ID |
+| `created_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 创建时间 |
+| `updated_at` | `timestamptz(6)` | 是 | `CURRENT_TIMESTAMP` | 更新时间 |
+
+### 36.1 `event_deliveries` 状态
+
+`event_deliveries.status` 只允许：
+
+- `pending`；
+- `delivering`；
+- `succeeded`；
+- `retrying`；
+- `failed`；
+- `dead_letter`；
+- `cancelled`。
+
+`succeeded`、`dead_letter` 和 `cancelled` 是终态。
+
+### 36.2 `event_deliveries` 主键、唯一约束与索引
+
+- 主键：`pk_event_deliveries (id)`；
+- 唯一约束：`uq_event_deliveries_event_target (event_id, delivery_target_type, delivery_target)`；
+- 普通索引：`idx_event_deliveries_status_available_at_created_at (status, available_at, created_at)`；
+- 普通索引：`idx_event_deliveries_target_status_available_at (delivery_target, status, available_at)`；
+- 普通索引：`idx_event_deliveries_event_id (event_id)`；
+- 普通索引：`idx_event_deliveries_locked_until (locked_until)`；
+- 普通索引：`idx_event_deliveries_request_trace_id (request_trace_id)`。
+
+### 36.3 `event_deliveries` 外键
+
+| 外键 | 引用 | 更新 | 删除 |
+| --- | --- | --- | --- |
+| `fk_event_deliveries_event_id` | `event_id → event_history.event_id` | RESTRICT | RESTRICT |
+
+### 36.4 `event_deliveries` Check
+
+正式新增 6 项 Check：
+
+1. `status` 只允许七个正式投递状态；
+2. `attempt_count >= 0`、`max_attempts >= 1` 且 `attempt_count <= max_attempts`；
+3. `available_at >= created_at`，`delivered_at IS NULL OR delivered_at >= created_at`，`updated_at >= created_at`；
+4. 活动租约字段必须成组：`locked_until` 与 `locked_by` 同时为空或同时非空；
+5. 成功状态必须有 `delivered_at`；
+6. 失败类状态应记录脱敏错误摘要，响应摘要不得保存敏感原文。
+
+## 37. Task 7.7 数据库设计与既有对象关系
+
+| 既有对象 | 正式职责 | 与 Task 7.7 的关系 |
+| --- | --- | --- |
+| `jobs` | 后台任务状态、执行结果与调度租约 | Event 可触发 Job 创建；Job 不替代 Event History、Outbox、Inbox、Delivery 或 Event Dead Letter |
+| `job_attempts` | Job 执行尝试记录 | 可记录事件触发后台任务后的执行尝试；不记录事件消费幂等 |
+| `audit_logs` | 正式审计事实 | 继续记录事件发布、投递、消费、失败、死信和人工处理审计；不作为事件事实或事件状态 |
+| `idempotency_records` | 请求级持久化幂等 | 继续负责请求防重复与响应重放；不替代 `event_consumptions` 的消费级幂等 |
+| `attachments` | Attachment 元数据与生命周期 | 后续可通过事件通知缓存失效或创建后台 Job；事件不修改 Attachment 状态机 |
+| `import_tasks` | Import 业务任务 | 后续可发布导入相关事件；事件不替代 Import 业务状态 |
+| `inventory_transactions` | 库存流水事实 | 事件不得替代库存流水或库存余额裁决，只可作为派生通知 |
+
+## 38. Task 7.7 Migration 边界
+
+当前阶段不创建 Migration，不修改 Prisma Schema，不更新 Mapping Audit，不执行数据库 DDL。
+
+后续物理同步必须满足：
+
+1. 新增独立 Forward-only Migration；
+2. 不修改或重写历史 Migration；
+3. Migration 前审计现有数据；
+4. 更新 Prisma Schema；
+5. 更新 Mapping Audit；
+6. 使用 PostgreSQL 18.x 验证主键、唯一约束、外键、索引、Check 和空库迁移；
+7. 不写入真实业务数据、密钥、Token、Storage 私有路径或敏感数据；
+8. 不新增 PostgreSQL Enum；
+9. 不修改业务领域表、API Contract、Permission 或 DTO。

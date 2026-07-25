@@ -1,11 +1,11 @@
 ---
 document_name: 数据库枚举规范
 project: Violin ERP Lite
-version: 1.4
+version: 1.5
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-22
-updated_date: 2026-07-24
+updated_date: 2026-07-25
 related_phase: Phase 3
 ---
 
@@ -20,6 +20,8 @@ Database Change Request 002 及其 Completion Fix 新增的 `user_wechat_identit
 Database Change Request 003 为 `import_tasks.status`、`import_task_items.validation_status`、`import_task_items.execution_status` 和 `shipment_import_matches.match_status` 增加的四组代码同样只属于 `VARCHAR` 字段级 Check 值域，不是 PostgreSQL Enum，不改变本文件的正式枚举定义或数量。
 
 Task 7.6 Background Job Database Change Request 为 `jobs.status`、`job_attempts.status`、`job_results.result_status` 和 `job_dead_letters.handling_status` 增加的四组代码同样只属于 `VARCHAR` 字段级 Check 值域，不是 PostgreSQL Enum，不改变本文件的正式枚举定义或数量。`scheduler_locks` 使用租约时间表达锁状态，不新增 PostgreSQL Enum。
+
+Task 7.7 Event Infrastructure Database Change Request 为 `event_outbox.status`、`event_consumptions.status`、`event_deliveries.status`、`event_dead_letters.status` 和 `event_dead_letters.failure_stage` 增加的五组代码同样只属于 `VARCHAR` 字段级 Check 值域，不是 PostgreSQL Enum，不改变本文件的正式枚举定义或数量。
 
 ## 2. `warehouse_type` 正式枚举
 
@@ -66,11 +68,69 @@ Task 7.6 Background Job Database Change Request 为 `jobs.status`、`job_attempt
 6. `auth_sessions.client_type` 只允许 `pc`、`wechat-mini-program`，`auth_sessions.revocation_actor_type` 只允许 `user`、`system`；二者由表内 Check 管理，不是 PostgreSQL Enum。
 7. DCR-003 的四组 Import 状态由字段级 Check 管理，不得伪造为 Prisma Enum 或 PostgreSQL Enum。
 8. Task 7.6 的 Job、Attempt、Result 与 Dead Letter 状态由字段级 Check 管理，不得伪造为 Prisma Enum 或 PostgreSQL Enum。
-9. 如后续需要变更枚举集合或语义，必须经项目负责人批准并完成正式变更流程。
+9. Task 7.7 的 Event Outbox、Consumption、Delivery、Dead Letter 与 Failure Stage 状态由字段级 Check 管理，不得伪造为 Prisma Enum 或 PostgreSQL Enum。
+10. 如后续需要变更枚举集合或语义，必须经项目负责人批准并完成正式变更流程。
 
-## 6. 正式结论
+## 6. Task 7.7 字段级 Check 值域
 
-- 文档版本：v1.4；
+以下状态代码只属于表内字段级 Check，不属于 PostgreSQL Enum，不进入正式 PostgreSQL Enum 数量统计。
+
+### 6.1 `event_outbox.status`
+
+| 英文代码 | 中文含义 |
+| --- | --- |
+| `pending` | 待发布 |
+| `publishing` | 发布中 |
+| `published` | 已发布 |
+| `failed` | 发布失败 |
+| `dead_letter` | 已进入死信 |
+| `cancelled` | 已取消 |
+
+### 6.2 `event_consumptions.status`
+
+| 英文代码 | 中文含义 |
+| --- | --- |
+| `pending` | 待消费 |
+| `running` | 消费中 |
+| `succeeded` | 消费成功 |
+| `retrying` | 等待重试 |
+| `failed` | 消费失败 |
+| `dead_letter` | 已进入死信 |
+| `ignored` | 已忽略 |
+
+### 6.3 `event_deliveries.status`
+
+| 英文代码 | 中文含义 |
+| --- | --- |
+| `pending` | 待投递 |
+| `delivering` | 投递中 |
+| `succeeded` | 投递成功 |
+| `retrying` | 等待重试 |
+| `failed` | 投递失败 |
+| `dead_letter` | 已进入死信 |
+| `cancelled` | 已取消 |
+
+### 6.4 `event_dead_letters.status`
+
+| 英文代码 | 中文含义 |
+| --- | --- |
+| `open` | 待处理 |
+| `in_review` | 处理中 |
+| `replayed` | 已重放 |
+| `resolved` | 已解决 |
+| `ignored` | 已忽略 |
+
+### 6.5 `event_dead_letters.failure_stage`
+
+| 英文代码 | 中文含义 |
+| --- | --- |
+| `publish` | 发布阶段失败 |
+| `consume` | 消费阶段失败 |
+| `deliver` | 投递阶段失败 |
+
+## 7. 正式结论
+
+- 文档版本：v1.5；
 - 文档状态：Completed / Approved / Frozen；
 - `warehouse_type` 正式枚举数量：5；
 - `access_level` 正式枚举数量：3；
@@ -78,4 +138,5 @@ Task 7.6 Background Job Database Change Request 为 `jobs.status`、`job_attempt
 - DCR-002 及其 Completion Fix 新增 PostgreSQL Enum 数量：0；
 - DCR-003 新增 PostgreSQL Enum 数量：0；
 - Task 7.6 新增 PostgreSQL Enum 数量：0；
+- Task 7.7 新增 PostgreSQL Enum 数量：0；
 - 后续数据库物理映射、DTO 和 Validation 必须以本文档为 `warehouse_type` 与 `access_level` 枚举的唯一正式输入。
