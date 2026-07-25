@@ -2,6 +2,8 @@ import { AuditUnavailableError } from "../errors/app-error.js";
 
 export type AuditPrimitive = boolean | null | number | string;
 export type AuditValue = AuditPrimitive | AuditValue[] | { [key: string]: AuditValue };
+export type AuditCategory =
+  "business_operation" | "data_change" | "event" | "job" | "security" | "system";
 
 type AuditEventBase = Readonly<{
   action: string;
@@ -46,6 +48,16 @@ export type RecordAuditOptions = Readonly<{
   failureMode?: AuditFailureMode;
   onFailure?: () => void;
 }>;
+
+export function createAuditMetadata(
+  category: AuditCategory,
+  metadata: unknown = {},
+): Readonly<{ auditCategory: AuditCategory; metadata: AuditValue }> {
+  return Object.freeze({
+    auditCategory: category,
+    metadata: sanitizeAuditValue(metadata),
+  });
+}
 
 const SENSITIVE_KEYS = new Set([
   "accesstoken",

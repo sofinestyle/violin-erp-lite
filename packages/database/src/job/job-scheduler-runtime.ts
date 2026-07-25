@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { Logger, MetricsRegistry } from "@violin-erp/api";
 import {
   type CreateJobInput,
   type JobRecord,
@@ -36,6 +37,8 @@ export type JobSchedulerRepository = Pick<
 export type JobSchedulerRuntimeOptions = Readonly<{
   clock?: () => Date;
   lockLeaseMilliseconds?: number;
+  logger?: Logger;
+  metrics?: MetricsRegistry;
   onError?: (error: unknown, context?: SchedulerJobFactoryContext) => void;
   repository: JobSchedulerRepository;
   rules: readonly SchedulerRule[];
@@ -82,6 +85,8 @@ function schedulerLockKey(rule: SchedulerRule): string {
 export class JobSchedulerRuntime {
   readonly #clock: () => Date;
   readonly #lockLeaseMilliseconds: number;
+  readonly #logger: Logger | undefined;
+  readonly #metrics: MetricsRegistry | undefined;
   readonly #nextRunAtByRuleId = new Map<string, Date>();
   readonly #onError: (error: unknown, context?: SchedulerJobFactoryContext) => void;
   readonly #repository: JobSchedulerRepository;
@@ -114,6 +119,8 @@ export class JobSchedulerRuntime {
     }
 
     this.#clock = options.clock ?? (() => new Date());
+    this.#logger = options.logger;
+    this.#metrics = options.metrics;
     this.#onError = options.onError ?? (() => undefined);
     this.#repository = options.repository;
     this.#rules = options.rules;
@@ -204,8 +211,29 @@ export class JobSchedulerRuntime {
       for (const job of jobs) {
         createdJobs.push(await this.#repository.createJob(job));
       }
+      this.#metrics?.incrementCounter(
+        "job_scheduler_created_count",
+        {
+          rule_id: rule.ruleId,
+        },
+        createdJobs.length,
+      );
+      this.#logger?.info("job.scheduler.trigger.succeeded", {
+        created_count: createdJobs.length,
+        lock_key: lockKey,
+        request_trace_id: context.requestTraceId,
+        rule_id: rule.ruleId,
+        scheduler_id: this.#schedulerId,
+      });
       return createdJobs;
     } catch (error) {
+      this.#metrics?.incrementCounter("job_scheduler_failed_count", { rule_id: rule.ruleId });
+      this.#logger?.error("job.scheduler.trigger.failed", {
+        lock_key: lockKey,
+        request_trace_id: context.requestTraceId,
+        rule_id: rule.ruleId,
+        scheduler_id: this.#schedulerId,
+      });
       this.#onError(error, context);
       return [];
     } finally {

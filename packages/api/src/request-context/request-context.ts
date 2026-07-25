@@ -6,13 +6,31 @@ const REQUEST_ID_PATTERN =
 const requestContextStorage = new AsyncLocalStorage<RequestContext>();
 
 export type RequestContext = Readonly<{
+  actorUserId?: string;
+  consumerId?: string;
+  eventId?: string;
+  jobAttemptId?: string;
+  jobId?: string;
   requestId: string;
+  requestTraceId: string;
+  service?: string;
   timestamp: string;
 }>;
 
 export type RequestContextOptions = Readonly<{
   generateRequestId?: () => string;
   now?: () => Date;
+  service?: string;
+}>;
+
+export type TraceContextInput = Readonly<{
+  actorUserId?: string;
+  consumerId?: string;
+  eventId?: string;
+  jobAttemptId?: string;
+  jobId?: string;
+  requestTraceId: string;
+  service?: string;
 }>;
 
 export function isValidRequestId(value: string | null): value is string {
@@ -29,7 +47,31 @@ export function createRequestContext(
     : (options.generateRequestId ?? randomUUID)();
   const timestamp = (options.now ?? (() => new Date()))().toISOString();
 
-  return Object.freeze({ requestId, timestamp });
+  return Object.freeze({
+    requestId,
+    requestTraceId: requestId,
+    ...(options.service === undefined ? {} : { service: options.service }),
+    timestamp,
+  });
+}
+
+export function createTraceContext(
+  input: TraceContextInput,
+  options: RequestContextOptions = {},
+): RequestContext {
+  const timestamp = (options.now ?? (() => new Date()))().toISOString();
+
+  return Object.freeze({
+    ...(input.actorUserId === undefined ? {} : { actorUserId: input.actorUserId }),
+    ...(input.consumerId === undefined ? {} : { consumerId: input.consumerId }),
+    ...(input.eventId === undefined ? {} : { eventId: input.eventId }),
+    ...(input.jobAttemptId === undefined ? {} : { jobAttemptId: input.jobAttemptId }),
+    ...(input.jobId === undefined ? {} : { jobId: input.jobId }),
+    requestId: input.requestTraceId,
+    requestTraceId: input.requestTraceId,
+    ...((input.service ?? options.service) ? { service: input.service ?? options.service } : {}),
+    timestamp,
+  });
 }
 
 export function runWithRequestContext<T>(context: RequestContext, callback: () => T): T {
@@ -38,4 +80,8 @@ export function runWithRequestContext<T>(context: RequestContext, callback: () =
 
 export function getRequestContext(): RequestContext | undefined {
   return requestContextStorage.getStore();
+}
+
+export function getRequestTraceId(): string | undefined {
+  return getRequestContext()?.requestTraceId;
 }

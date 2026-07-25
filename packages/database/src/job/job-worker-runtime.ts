@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { Logger, MetricsRegistry } from "@violin-erp/api";
 import {
   type ClaimedJob,
   type FailedAttemptSettlement,
@@ -39,6 +40,8 @@ export type JobWorkerRuntimeOptions = Readonly<{
   clock?: () => Date;
   handlers: JobHandlerRegistry;
   leaseMilliseconds?: number;
+  logger?: Logger;
+  metrics?: MetricsRegistry;
   onError?: (error: unknown, context?: JobExecutionContext) => void;
   pollIntervalMilliseconds?: number;
   repository: JobWorkerRepository;
@@ -111,6 +114,8 @@ export class JobWorkerRuntime {
   readonly #clock: () => Date;
   readonly #handlers: JobHandlerRegistry;
   readonly #leaseMilliseconds: number;
+  readonly #logger: Logger | undefined;
+  readonly #metrics: MetricsRegistry | undefined;
   readonly #onError: (error: unknown, context?: JobExecutionContext) => void;
   readonly #pollIntervalMilliseconds: number;
   readonly #repository: JobWorkerRepository;
@@ -136,6 +141,8 @@ export class JobWorkerRuntime {
 
     this.#clock = options.clock ?? (() => new Date());
     this.#handlers = options.handlers;
+    this.#logger = options.logger;
+    this.#metrics = options.metrics;
     this.#onError = options.onError ?? (() => undefined);
     this.#repository = options.repository;
     this.#retryPolicy = options.retryPolicy ?? {};
@@ -217,6 +224,13 @@ export class JobWorkerRuntime {
   async #executeClaimedJob(claimedJob: ClaimedJob): Promise<void> {
     const context = toExecutionContext(claimedJob, this.#workerId);
     const handler = getHandler(this.#handlers, claimedJob.job.jobType);
+    const startedAt = this.#clock().getTime();
+    this.#logger?.info("job.execution.started", {
+      job_id: context.jobId,
+      job_type: context.jobType,
+      request_trace_id: context.requestTraceId,
+      worker_id: this.#workerId,
+    });
     if (!handler) {
       await this.#markFailed(context, {
         errorCode: "JOB_HANDLER_NOT_FOUND",
@@ -233,6 +247,17 @@ export class JobWorkerRuntime {
         jobId: context.jobId,
         now: this.#clock(),
         workerId: this.#workerId,
+      });
+      this.#metrics?.incrementCounter("job_success_count", { job_type: context.jobType });
+      this.#metrics?.observeHistogram("job_execution_duration_ms", this.#durationSince(startedAt), {
+        job_type: context.jobType,
+      });
+      this.#logger?.info("job.execution.succeeded", {
+        duration_ms: this.#durationSince(startedAt),
+        job_id: context.jobId,
+        job_type: context.jobType,
+        request_trace_id: context.requestTraceId,
+        worker_id: this.#workerId,
       });
     } catch (error) {
       await this.#markFailed(context, {
@@ -261,7 +286,7 @@ export class JobWorkerRuntime {
         this.#retryPolicy,
       );
 
-      return await this.#repository.settleFailedAttempt({
+      const settlement = await this.#repository.settleFailedAttempt({
         attemptId: context.attemptId,
         errorCode: failure.errorCode,
         errorMessage: failure.errorMessage,
@@ -278,9 +303,32 @@ export class JobWorkerRuntime {
             }),
         workerId: this.#workerId,
       });
+      this.#metrics?.incrementCounter("job_failed_count", {
+        error_code: failure.errorCode,
+        job_type: context.jobType,
+      });
+      if (decision.outcome === "retry") {
+        this.#metrics?.incrementCounter("job_retry_count", { job_type: context.jobType });
+      }
+      if (decision.outcome === "dead_letter") {
+        this.#metrics?.incrementCounter("job_dead_letter_count", { job_type: context.jobType });
+      }
+      this.#logger?.warn("job.execution.failed", {
+        error_code: failure.errorCode,
+        job_id: context.jobId,
+        job_type: context.jobType,
+        request_trace_id: context.requestTraceId,
+        retry_outcome: decision.outcome === "retry" ? "retry" : "dead_letter",
+        worker_id: this.#workerId,
+      });
+      return settlement;
     } catch (error) {
       this.#onError(error, context);
       return null;
     }
+  }
+
+  #durationSince(startedAt: number): number {
+    return Math.max(0, this.#clock().getTime() - startedAt);
   }
 }

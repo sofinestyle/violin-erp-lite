@@ -7,6 +7,15 @@ import {
   type JobWorkerRepository,
 } from "../src";
 
+function metricsRecorder() {
+  return {
+    incrementCounter: vi.fn(),
+    observeHistogram: vi.fn(),
+    setGauge: vi.fn(),
+    snapshot: vi.fn().mockReturnValue([]),
+  };
+}
+
 const NOW = new Date("2026-07-25T10:00:00.000Z");
 const LEASE_UNTIL = new Date("2026-07-25T10:05:00.000Z");
 
@@ -158,6 +167,51 @@ describe("Job Worker Runtime", () => {
       workerId: "worker-1",
     });
     expect(repository.settleFailedAttempt).not.toHaveBeenCalled();
+  });
+
+  it("records Job success, failure, retry and Dead Letter metrics without changing Job state", async () => {
+    const successful = claimedJob({ jobType: "metrics.success" });
+    const retryable = claimedJob({ jobType: "metrics.retry", maxAttempts: 2 });
+    const deadLetter = claimedJob({ jobType: "metrics.dead", maxAttempts: 1 });
+    const metrics = metricsRecorder();
+    const repository = createRepository([successful, retryable, deadLetter]);
+    const worker = new JobWorkerRuntime({
+      clock: () => NOW,
+      handlers: {
+        "metrics.dead": vi.fn<JobHandler>().mockRejectedValue(new Error("dead")),
+        "metrics.retry": vi.fn<JobHandler>().mockRejectedValue(new Error("retry")),
+        "metrics.success": vi.fn<JobHandler>().mockResolvedValue(undefined),
+      },
+      metrics,
+      retryPolicy: { baseDelayMilliseconds: 1_000, maxDelayMilliseconds: 60_000 },
+      repository,
+      workerId: "worker-1",
+    });
+
+    await worker.runOnce();
+
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("job_success_count", {
+      job_type: "metrics.success",
+    });
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("job_failed_count", {
+      error_code: "JOB_HANDLER_FAILED",
+      job_type: "metrics.retry",
+    });
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("job_retry_count", {
+      job_type: "metrics.retry",
+    });
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("job_dead_letter_count", {
+      job_type: "metrics.dead",
+    });
+    expect(metrics.observeHistogram).toHaveBeenCalledWith(
+      "job_execution_duration_ms",
+      expect.any(Number),
+      { job_type: "metrics.success" },
+    );
+    expect(repository.markSucceeded).toHaveBeenCalledWith(
+      expect.objectContaining({ jobId: successful.job.id }),
+    );
+    expect(repository.settleFailedAttempt).toHaveBeenCalledTimes(2);
   });
 
   it("captures retryable Handler failures and schedules a Retry when attempts remain", async () => {

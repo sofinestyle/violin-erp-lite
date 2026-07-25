@@ -12,6 +12,15 @@ import {
   type EventOutboxRecord,
 } from "../src";
 
+function metricsRecorder() {
+  return {
+    incrementCounter: vi.fn(),
+    observeHistogram: vi.fn(),
+    setGauge: vi.fn(),
+    snapshot: vi.fn().mockReturnValue([]),
+  };
+}
+
 const NOW = new Date("2026-07-25T12:00:00.000Z");
 const LEASE_UNTIL = new Date("2026-07-25T12:01:00.000Z");
 
@@ -192,6 +201,98 @@ describe("Event Infrastructure runtime", () => {
         id: event.id,
         nextRetryAt: new Date(NOW.getTime() + 1000),
         retryOutcome: "retry",
+      }),
+    );
+  });
+
+  it("records Event publish, consume and delivery failure metrics with trace context", async () => {
+    const metrics = metricsRecorder();
+    const registry = new EventRegistry();
+    const outbox = outboxRecord({ attemptCount: 3, maxAttempts: 3 });
+    const outboxRepository = {
+      claimOutbox: vi.fn().mockResolvedValue([outbox]),
+      createConsumerInboxes: vi.fn().mockRejectedValue(new Error("inbox unavailable")),
+      createDeliveries: vi.fn(),
+      markOutboxPublished: vi.fn(),
+      recoverExpiredLeases: vi.fn().mockResolvedValue(0),
+      settleOutboxFailure: vi.fn().mockResolvedValue(null),
+    };
+    const publisher = new EventPublisherRuntime({
+      clock: () => NOW,
+      metrics,
+      publisherId: "publisher-1",
+      registry,
+      repository: outboxRepository,
+    });
+
+    await publisher.runOnce();
+
+    const consumption = consumptionRecord({ attemptCount: 3, maxAttempts: 3 });
+    registry.registerConsumer({
+      consumerName: "consumer-a",
+      eventType: consumption.event.eventType,
+      handler: vi.fn().mockRejectedValue(new Error("consume failed")),
+    });
+    const consumptionRepository = {
+      claimConsumptions: vi.fn().mockResolvedValue([consumption]),
+      markConsumptionSucceeded: vi.fn(),
+      recoverExpiredLeases: vi.fn().mockResolvedValue(0),
+      settleConsumptionFailure: vi.fn().mockResolvedValue(null),
+    };
+    const consumer = new EventConsumerRuntime({
+      clock: () => NOW,
+      consumerName: "consumer-a",
+      metrics,
+      registry,
+      repository: consumptionRepository,
+      workerId: "worker-1",
+    });
+
+    await consumer.runOnce();
+
+    const delivery = deliveryRecord({ attemptCount: 3, maxAttempts: 3 });
+    const deliveryRepository = {
+      claimDeliveries: vi.fn().mockResolvedValue([delivery]),
+      markDeliverySucceeded: vi.fn(),
+      recoverExpiredLeases: vi.fn().mockResolvedValue(0),
+      settleDeliveryFailure: vi.fn().mockResolvedValue(null),
+    };
+    const deliveryRuntime = new EventDeliveryRuntime({
+      clock: () => NOW,
+      metrics,
+      registry,
+      repository: deliveryRepository,
+      workerId: "delivery-worker-1",
+    });
+
+    await deliveryRuntime.runOnce();
+
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("event_publish_failed_count", {
+      error_code: "EVENT_PUBLISHER_FAILED",
+      event_type: outbox.eventType,
+    });
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("event_consume_failed_count", {
+      consumer_name: "consumer-a",
+      error_code: "EVENT_CONSUMER_FAILED",
+      event_type: consumption.event.eventType,
+    });
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("event_delivery_failed_count", {
+      delivery_target_type: delivery.deliveryTargetType,
+      event_type: delivery.event.eventType,
+    });
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("event_dead_letter_count", {
+      failure_stage: "publish",
+    });
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("event_dead_letter_count", {
+      failure_stage: "consume",
+    });
+    expect(metrics.incrementCounter).toHaveBeenCalledWith("event_dead_letter_count", {
+      failure_stage: "deliver",
+    });
+    expect(consumptionRepository.settleConsumptionFailure).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: consumption.id,
+        retryOutcome: "dead_letter",
       }),
     );
   });

@@ -1,5 +1,6 @@
 import { normalizeError } from "../errors/app-error.js";
 import { createLogger, type Logger } from "../logging/logger.js";
+import { defaultMetricsRegistry, type MetricsRegistry } from "../observability/metrics.js";
 import {
   createRequestContext,
   runWithRequestContext,
@@ -12,6 +13,7 @@ export type RouteHandler = (request: Request, context: RequestContext) => Promis
 export type RouteHandlerOptions = Readonly<{
   generateRequestId?: () => string;
   logger?: Logger;
+  metrics?: MetricsRegistry;
   now?: () => Date;
 }>;
 
@@ -46,14 +48,28 @@ export function createRouteHandler(
       ...(options.now ? { now: options.now } : {}),
     });
     const logger = options.logger ?? defaultLogger;
+    const metrics = options.metrics ?? defaultMetricsRegistry;
     const path = safePath(request);
+    const startedAt = Date.now();
 
     return runWithRequestContext(context, async () => {
       logger.info("http.request.started", { method: request.method, path });
 
       try {
         const response = responseWithRequestId(await handler(request, context), context.requestId);
+        const statusClass = `${Math.floor(response.status / 100)}xx`;
+        metrics.incrementCounter("http_request_count", {
+          method: request.method,
+          route: path,
+          status_class: statusClass,
+        });
+        metrics.observeHistogram("http_request_latency_ms", Date.now() - startedAt, {
+          method: request.method,
+          route: path,
+          status_class: statusClass,
+        });
         logger.info("http.request.completed", {
+          duration_ms: Date.now() - startedAt,
           method: request.method,
           path,
           status: response.status,
@@ -61,7 +77,23 @@ export function createRouteHandler(
         return response;
       } catch (error) {
         const appError = normalizeError(error);
+        metrics.incrementCounter("http_request_count", {
+          method: request.method,
+          route: path,
+          status_class: `${Math.floor(appError.httpStatus / 100)}xx`,
+        });
+        metrics.incrementCounter("http_error_count", {
+          error_code: appError.code,
+          method: request.method,
+          route: path,
+        });
+        metrics.observeHistogram("http_request_latency_ms", Date.now() - startedAt, {
+          method: request.method,
+          route: path,
+          status_class: `${Math.floor(appError.httpStatus / 100)}xx`,
+        });
         logger.error("http.request.failed", {
+          duration_ms: Date.now() - startedAt,
           errorCode: appError.code,
           method: request.method,
           path,

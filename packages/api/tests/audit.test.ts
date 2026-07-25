@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   InMemoryAuditWriter,
+  createAuditMetadata,
   recordAuditEvent,
   sanitizeAuditEvent,
   sanitizeAuditValue,
@@ -62,6 +63,24 @@ describe("audit foundation", () => {
     ).resolves.toBe(true);
     expect(writer.events).toHaveLength(1);
     expect(writer.events[0]?.metadata).toEqual({ cookie: "[REDACTED]", safe: "value" });
+  });
+
+  it("classifies Security Audit metadata without creating a parallel audit source", async () => {
+    const writer = new InMemoryAuditWriter();
+
+    await recordAuditEvent(writer, {
+      ...BASE_EVENT,
+      action: "auth.login.failed",
+      failureReason: "AUTH_CREDENTIAL_INVALID",
+      metadata: createAuditMetadata("security", { password: "plain", username: "dev-admin" }),
+      result: "failure",
+    });
+
+    expect(writer.events[0]?.metadata).toEqual({
+      auditCategory: "security",
+      metadata: { password: "[REDACTED]", username: "dev-admin" },
+    });
+    expect(writer.events[0]?.requestId).toBe(BASE_EVENT.requestId);
   });
 
   it("replaces sensitive internal failure reasons", () => {

@@ -1,4 +1,5 @@
 import type { CreateJobInput, PrismaJobRepository } from "../job/prisma-job-repository.js";
+import type { Logger, MetricsRegistry } from "@violin-erp/api";
 import { evaluateEventRetry, type EventRetryPolicy } from "./event-retry-engine.js";
 import { EventRegistry } from "./event-registry.js";
 import {
@@ -41,6 +42,8 @@ export type EventPublisherRuntimeOptions = Readonly<{
   claimLimit?: number;
   clock?: () => Date;
   leaseMilliseconds?: number;
+  logger?: Logger;
+  metrics?: MetricsRegistry;
   onError?: (error: unknown, event?: EventOutboxRecord) => void;
   pollIntervalMilliseconds?: number;
   publisherId: string;
@@ -55,6 +58,8 @@ export type EventConsumerRuntimeOptions = Readonly<{
   clock?: () => Date;
   consumerName: string;
   leaseMilliseconds?: number;
+  logger?: Logger;
+  metrics?: MetricsRegistry;
   onError?: (error: unknown, event?: EventConsumptionRecord) => void;
   pollIntervalMilliseconds?: number;
   registry: EventRegistry;
@@ -68,6 +73,8 @@ export type EventDeliveryRuntimeOptions = Readonly<{
   claimLimit?: number;
   clock?: () => Date;
   leaseMilliseconds?: number;
+  logger?: Logger;
+  metrics?: MetricsRegistry;
   onError?: (error: unknown, event?: EventDeliveryRecord) => void;
   pollIntervalMilliseconds?: number;
   registry: EventRegistry;
@@ -187,6 +194,8 @@ abstract class LoopRuntime {
 export class EventPublisherRuntime extends LoopRuntime {
   readonly #claimLimit: number;
   readonly #leaseMilliseconds: number;
+  readonly #logger: Logger | undefined;
+  readonly #metrics: MetricsRegistry | undefined;
   readonly #onError: (error: unknown, event?: EventOutboxRecord) => void;
   readonly #publisherId: string;
   readonly #registry: EventRegistry;
@@ -201,6 +210,8 @@ export class EventPublisherRuntime extends LoopRuntime {
     assertPositiveInteger(this.#leaseMilliseconds, "Event Publisher lease milliseconds");
     assertNonEmpty(options.publisherId, "Event Publisher ID");
     this.#onError = options.onError ?? (() => undefined);
+    this.#logger = options.logger;
+    this.#metrics = options.metrics;
     this.#publisherId = options.publisherId;
     this.#registry = options.registry;
     this.#repository = options.repository;
@@ -256,6 +267,11 @@ export class EventPublisherRuntime extends LoopRuntime {
         now,
         publisherId: this.#publisherId,
       });
+      this.#logger?.info("event.publish.succeeded", {
+        event_id: event.eventId,
+        event_type: event.eventType,
+        request_trace_id: event.requestTraceId,
+      });
     } catch (error) {
       const decision = evaluateEventRetry(
         {
@@ -276,6 +292,19 @@ export class EventPublisherRuntime extends LoopRuntime {
         now,
         publisherId: this.#publisherId,
       });
+      this.#metrics?.incrementCounter("event_publish_failed_count", {
+        error_code: "EVENT_PUBLISHER_FAILED",
+        event_type: event.eventType,
+      });
+      if (decision.outcome === "dead_letter") {
+        this.#metrics?.incrementCounter("event_dead_letter_count", { failure_stage: "publish" });
+      }
+      this.#logger?.error("event.publish.failed", {
+        error_code: "EVENT_PUBLISHER_FAILED",
+        event_id: event.eventId,
+        event_type: event.eventType,
+        request_trace_id: event.requestTraceId,
+      });
       this.#onError(error, event);
     }
   }
@@ -285,6 +314,8 @@ export class EventConsumerRuntime extends LoopRuntime {
   readonly #claimLimit: number;
   readonly #consumerName: string;
   readonly #leaseMilliseconds: number;
+  readonly #logger: Logger | undefined;
+  readonly #metrics: MetricsRegistry | undefined;
   readonly #onError: (error: unknown, event?: EventConsumptionRecord) => void;
   readonly #registry: EventRegistry;
   readonly #repository: EventConsumerRepository;
@@ -300,6 +331,8 @@ export class EventConsumerRuntime extends LoopRuntime {
     assertNonEmpty(options.consumerName, "Event Consumer name");
     assertNonEmpty(options.workerId, "Event Consumer worker ID");
     this.#consumerName = options.consumerName;
+    this.#logger = options.logger;
+    this.#metrics = options.metrics;
     this.#onError = options.onError ?? (() => undefined);
     this.#registry = options.registry;
     this.#repository = options.repository;
@@ -347,6 +380,7 @@ export class EventConsumerRuntime extends LoopRuntime {
     }
 
     try {
+      const startedAt = this.clock().getTime();
       await handler.handler({
         attemptCount: consumption.attemptCount,
         consumerName: consumption.consumerName,
@@ -359,6 +393,17 @@ export class EventConsumerRuntime extends LoopRuntime {
         id: consumption.id,
         now: this.clock(),
         workerId: this.#workerId,
+      });
+      this.#metrics?.observeHistogram("event_consume_duration_ms", this.#durationSince(startedAt), {
+        consumer_name: consumption.consumerName,
+        event_type: consumption.event.eventType,
+      });
+      this.#logger?.info("event.consume.succeeded", {
+        consumer_id: consumption.consumerName,
+        duration_ms: this.#durationSince(startedAt),
+        event_id: consumption.eventId,
+        event_type: consumption.event.eventType,
+        request_trace_id: consumption.requestTraceId,
       });
     } catch (error) {
       const retryable = true;
@@ -382,14 +427,35 @@ export class EventConsumerRuntime extends LoopRuntime {
         now,
         workerId: this.#workerId,
       });
+      this.#metrics?.incrementCounter("event_consume_failed_count", {
+        consumer_name: consumption.consumerName,
+        error_code: "EVENT_CONSUMER_FAILED",
+        event_type: consumption.event.eventType,
+      });
+      if (decision.outcome === "dead_letter") {
+        this.#metrics?.incrementCounter("event_dead_letter_count", { failure_stage: "consume" });
+      }
+      this.#logger?.warn("event.consume.failed", {
+        consumer_id: consumption.consumerName,
+        error_code: "EVENT_CONSUMER_FAILED",
+        event_id: consumption.eventId,
+        event_type: consumption.event.eventType,
+        request_trace_id: consumption.requestTraceId,
+      });
       this.#onError(error, consumption);
     }
+  }
+
+  #durationSince(startedAt: number): number {
+    return Math.max(0, this.clock().getTime() - startedAt);
   }
 }
 
 export class EventDeliveryRuntime extends LoopRuntime {
   readonly #claimLimit: number;
   readonly #leaseMilliseconds: number;
+  readonly #logger: Logger | undefined;
+  readonly #metrics: MetricsRegistry | undefined;
   readonly #onError: (error: unknown, event?: EventDeliveryRecord) => void;
   readonly #registry: EventRegistry;
   readonly #repository: EventDeliveryRepository;
@@ -405,6 +471,8 @@ export class EventDeliveryRuntime extends LoopRuntime {
     assertPositiveInteger(this.#claimLimit, "Event Delivery claim limit");
     assertPositiveInteger(this.#leaseMilliseconds, "Event Delivery lease milliseconds");
     assertNonEmpty(options.workerId, "Event Delivery worker ID");
+    this.#logger = options.logger;
+    this.#metrics = options.metrics;
     this.#onError = options.onError ?? (() => undefined);
     this.#registry = options.registry;
     this.#repository = options.repository;
@@ -452,6 +520,17 @@ export class EventDeliveryRuntime extends LoopRuntime {
         retryOutcome: "dead_letter",
         workerId: this.#workerId,
       });
+      this.#metrics?.incrementCounter("event_delivery_failed_count", {
+        delivery_target_type: delivery.deliveryTargetType,
+        event_type: delivery.event.eventType,
+      });
+      this.#metrics?.incrementCounter("event_dead_letter_count", { failure_stage: "deliver" });
+      this.#logger?.warn("event.delivery.failed", {
+        error_code: "EVENT_DELIVERY_TARGET_NOT_FOUND",
+        event_id: delivery.eventId,
+        event_type: delivery.event.eventType,
+        request_trace_id: delivery.requestTraceId,
+      });
       return;
     }
 
@@ -468,6 +547,11 @@ export class EventDeliveryRuntime extends LoopRuntime {
         now: this.clock(),
         responseSummary: responseSummary ?? null,
         workerId: this.#workerId,
+      });
+      this.#logger?.info("event.delivery.succeeded", {
+        event_id: delivery.eventId,
+        event_type: delivery.event.eventType,
+        request_trace_id: delivery.requestTraceId,
       });
     } catch (error) {
       const decision = evaluateEventRetry(
@@ -489,6 +573,19 @@ export class EventDeliveryRuntime extends LoopRuntime {
         now,
         responseSummary: { target: delivery.deliveryTarget },
         workerId: this.#workerId,
+      });
+      this.#metrics?.incrementCounter("event_delivery_failed_count", {
+        delivery_target_type: delivery.deliveryTargetType,
+        event_type: delivery.event.eventType,
+      });
+      if (decision.outcome === "dead_letter") {
+        this.#metrics?.incrementCounter("event_dead_letter_count", { failure_stage: "deliver" });
+      }
+      this.#logger?.warn("event.delivery.failed", {
+        error_code: "EVENT_DELIVERY_FAILED",
+        event_id: delivery.eventId,
+        event_type: delivery.event.eventType,
+        request_trace_id: delivery.requestTraceId,
       });
       this.#onError(error, delivery);
     }

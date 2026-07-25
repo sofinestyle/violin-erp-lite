@@ -20,6 +20,8 @@ export * from "./attachment/types.js";
 export * from "./attachment/validator.js";
 export * from "./errors/app-error.js";
 export * from "./logging/logger.js";
+export * from "./observability/health.js";
+export * from "./observability/metrics.js";
 export * from "./master-data/master-data.js";
 export * from "./inventory-workflow/inventory-workflow.js";
 export * from "./idempotency/configuration.js";
