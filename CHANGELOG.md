@@ -11,6 +11,32 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.26] - 2026-07-25
+
+### Changed
+
+- Task 7.6 Background Job & Distributed Lock 正式更新为 `Completed / Approved`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md`、`README.md` 与 Phase 7 Platform Foundation 文档同步 Task 7.6 完成状态
+- 新增 DEC-093，记录 Task 7.6 完成批准与平台能力边界
+
+### Added
+
+- 后台任务基础能力完成：Job Repository、PostgreSQL-backed Queue、Worker Runtime、Scheduler Runtime
+- Retry、Dead Letter、Lease Timeout Recovery 与 Job Audit Integration 完成收口
+- Task 7.6 最终一致性验证完成，确认 Database SSOT v2.4、Prisma Schema、Migration 与 Runtime 保持一致
+
+### Verified
+
+- `pnpm status:check` 通过
+- Task 7.6 Final Consistency Review Re-run 通过
+- `pnpm check`、Prisma validate 与 `git diff --check` 均通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改代码、Schema、Migration、API、Permission 或业务规则
+- Task 7.7 至 Task 7.9 继续保持 `Waiting / Not Started`
+
 ## [0.11.25] - 2026-07-25
 
 ### Changed

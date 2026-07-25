@@ -2302,3 +2302,31 @@ Approved
 ### 影响
 
 本决定只更新 Database SSOT 与关联治理摘要，不修改 API Master Specification v1.5、Permission、DTO、业务代码、Prisma Schema、Migration 或 Mapping Audit；不修改 Product、SKU、Purchase、Production、Inventory、Inbound、Outbound、Cross Border 等业务领域表。Database Logical Design v2.4 当前状态为 Completed / Approved / Pending Migration，后续物理同步必须另行完成 Forward-only Migration、Prisma Schema 更新、Mapping Audit 与 PostgreSQL 验证。
+
+## DEC-093 批准Task 7.6 Background Job & Distributed Lock完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 Task 7.6 Background Job & Distributed Lock 完成，状态更新为 Completed / Approved；
+- Background Job Foundation 已完成统一后台任务基础能力；
+- PostgreSQL-backed Queue 已作为第一阶段 Queue 事实来源落地；
+- Job Repository 已完成 Job 创建、查询、状态更新、Claim、Lease 更新与 Lease Timeout Recovery；
+- Worker Runtime 已完成 Job 消费循环、Handler 执行上下文、启动停止、错误捕获和失败落库；
+- Scheduler Runtime 已完成周期触发、Scheduler Lock、Job 创建和防重复触发；
+- Retry 已完成最大次数、Backoff、`failed → retrying` 与重新执行基础能力；
+- Dead Letter 已完成重试耗尽归档、失败原因保存和后续人工处理基础数据；
+- Lease Recovery 已完成 `running + locked_until < now()` 的超时恢复闭环，可恢复 Job 转为 `retrying` 并释放 Lease，重试耗尽 Job 转为 `dead_letter`；
+- Job Audit 已完成 Job 生命周期、Attempt、Retry、Timeout 与 Dead Letter 的审计集成；
+- Task 7.6 Final Consistency Review Re-run 已确认 Database SSOT v2.4、Prisma Schema、Migration 与 Runtime 保持一致。
+
+### 影响
+
+本决定只同步 Task 7.6 完成批准状态，不修改代码、Schema、Migration、API、Permission、DTO、业务规则或业务模块。Task 7.7 Cache & Event Infrastructure、Task 7.8 Audit, Trace & Observability 与 Task 7.9 Platform Final Consistency Review 继续保持 Waiting / Not Started；Phase 8 Application Development 未启动。后续 Attachment、Import、Backup 等业务接入必须在对应获批 Task 中复用 Task 7.6 平台能力，不得建立平行 Queue、Worker、Scheduler、Lock、Retry、Dead Letter 或 Job Audit 事实来源。

@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 2.0
+version: 2.1
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -22,7 +22,7 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 - Phase：Phase 7 Platform Foundation；
 - Phase Status：In Progress；
 - Current Task：Task 7.6 Background Job & Distributed Lock；
-- Current Task Status：Waiting / Not Started；
+- Current Task Status：Completed / Approved；
 - Phase 8 Application Development：Waiting / Not Started；
 - Phase 9 Test Plan & System Integration：Waiting / Not Started；
 - Phase 10 Release & Acceptance：Waiting / Not Started。
@@ -52,12 +52,12 @@ DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步，并作
 | Task 7.3 | Object Storage & File Lifecycle | Completed / Approved |
 | Task 7.4 | Attachment Framework | Completed / Approved |
 | Task 7.5 | Idempotency & Concurrency Control | Completed / Approved |
-| Task 7.6 | Background Job & Distributed Lock | Waiting / Not Started |
+| Task 7.6 | Background Job & Distributed Lock | Completed / Approved |
 | Task 7.7 | Cache & Event Infrastructure | Waiting / Not Started |
 | Task 7.8 | Audit, Trace & Observability | Waiting / Not Started |
 | Task 7.9 | Platform Final Consistency Review | Waiting / Not Started |
 
-Task 7.1 至 Task 7.5 已完成并获得批准。Current Task 已切换为 Task 7.6，但 Task 7.6 仍为 Waiting / Not Started；Task 7.6 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
+Task 7.1 至 Task 7.6 已完成并获得批准。Task 7.7 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
 
 ## 5. 平台边界
 
@@ -163,7 +163,7 @@ Task 7.6 Architecture Decision 已冻结以下设计方向：
 9. 后续如需新增 Job、Attempt、Lock、Dead Letter、Job Result 或 Job Audit 持久化对象，必须先提交 DCR；
 10. 后续如需新增客户端可见 Job API、DTO、权限、错误码或状态契约，必须先提交 API Change Request。
 
-本架构决策只冻结平台原则，不创建 Queue、Worker、Scheduler、Distributed Lock、数据库结构、API 或业务接入实现。Task 7.6 正式设计文档为 [`TASK_7_6_BACKGROUND_JOB_AND_DISTRIBUTED_LOCK.md`](TASK_7_6_BACKGROUND_JOB_AND_DISTRIBUTED_LOCK.md)。
+Task 7.6 已完成 Background Job Foundation 的设计、Database SSOT、Prisma Schema、Forward-only Migration、Job Repository、PostgreSQL-backed Queue Claim、Worker Runtime、Scheduler Runtime、Retry、Dead Letter、Lease Timeout Recovery 与 Job Audit Integration，并已通过最终一致性复核。Task 7.6 未接入 Attachment、Import、Backup 等业务模块，未新增客户端 API、DTO 或 Permission。后续业务模块接入必须在对应获批 Task 中复用本平台能力，不得建立平行 Queue、Worker、Scheduler 或 Lock 事实来源。Task 7.6 正式设计文档为 [`TASK_7_6_BACKGROUND_JOB_AND_DISTRIBUTED_LOCK.md`](TASK_7_6_BACKGROUND_JOB_AND_DISTRIBUTED_LOCK.md)。
 
 ### 5.6 Cache & Event Infrastructure
 
@@ -195,4 +195,4 @@ Task 7.6 Architecture Decision 已冻结以下设计方向：
 
 ## 8. 当前结论
 
-Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.5 已为 Completed / Approved；Current Task 已切换为 Task 7.6，但 Task 7.6 仍为 Waiting / Not Started，未授权实施 Queue、Worker、Scheduler 或 Distributed Lock。Task 7.7 至 Task 7.9 均为 Waiting / Not Started，业务应用开发保持暂停。
+Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.6 已为 Completed / Approved；Task 7.7 至 Task 7.9 均为 Waiting / Not Started，业务应用开发保持暂停。
