@@ -1,8 +1,8 @@
 ---
 document_name: Attachment Framework SSOT Completion 001
 project: Violin ERP Lite
-version: 1.0
-status: Proposed / Pending Approval
+version: 1.1
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-25
 updated_date: 2026-07-25
@@ -11,37 +11,38 @@ related_phase: Phase 7
 
 # Attachment Framework SSOT Completion 001
 
-> 本文件是 Task 7.4 Attachment Framework 的 SSOT 补齐提案，不是已批准规范。Database Logical Design v2.1 与 API Master Specification v1.3 继续保持 Completed / Approved / Frozen；在本提案、DCR-005、API CR-005 及其依赖完成批准和正式同步前，不得恢复 Attachment Framework 实现。
+> 本文件提出的 Attachment Framework SSOT 补齐方案已由项目负责人批准。Database Logical Design v2.3 与 API Master Specification v1.5 均为 Completed / Approved / Frozen；Task 7.4 已恢复并为 Current Task。本文件只记录已批准的 SSOT 补齐结论，不代表 Attachment Framework 业务代码已经实现。
 
 ## 1. 审计结论
 
 Task 7.4 实现前审计确认：
 
 1. Frozen `attachments`、`attachment_links`、6 个 `attachment.file.*` 权限及 `field.attachment-sensitive.read` 可以作为统一 Attachment Framework 的数据和权限基础；
-2. `attachments.status` 为必填字符串，但 Database v2.1 未定义允许值、默认值或 Check；
-3. `ATT-001` 至 `ATT-008` 已冻结编号、路径、方法和高层语义，但未形成可执行 Request/Response DTO；
-4. `attachment_links.object_type` 与 `attachment_category` 均为字符串，现有 SSOT 未形成封闭值域；
-5. 历史保护原则已存在，但解除关联、Attachment Soft Delete、Storage Soft Delete、Storage Physical Delete 和补偿失败没有可执行矩阵；
-6. Frozen API 只有 4 个附件专项错误码，无法稳定表达全部已批准失败边界；
-7. `ATT-001` 要求生产级首次结果重放，但通用持久化幂等仍属于 DCR-004/API CR-004 Proposed 内容。
+2. Database v2.3 已为 `attachments.status` 冻结五值域、`active` 默认值、Check 与状态定位索引；
+3. API v1.5 已为 `ATT-001` 至 `ATT-008` 冻结可执行 Request/Response DTO；
+4. API v1.5 已形成封闭 Object Type 与 Attachment Category；
+5. 解除关联、Attachment Soft Delete、Storage Soft Delete、Storage Physical Delete 和补偿失败已有可执行矩阵；
+6. API v1.5 已新增且仅新增 9 个附件专项错误码；
+7. Task 7.5 已完成通用持久化幂等平台并获得批准。
 
-因此 Task 7.4 正式状态继续为 In Progress，实现状态记录为 **Paused / Frozen SSOT Conflict**。该实现状态不进入 `CURRENT_STATUS.md`。
+因此 Attachment Framework 的 Frozen SSOT 缺口已经关闭。Task 7.4 正式状态继续为 In Progress，并已恢复为 Current Task。
 
 ## 2. 正式来源
 
-- Database Logical Design v2.1；
-- API Master Specification v1.3；
+- Database Logical Design v2.3；
+- API Master Specification v1.5；
 - Frozen `ROLE_PERMISSION_SPEC.md`；
 - Task 5.1 附件通用原则；
 - Task 5.5 `ATT-001` 至 `ATT-008`、附件统一契约和错误码；
 - Task 6.2 统一模块覆盖矩阵；
 - Task 6.3 公共能力附件生命周期；
 - Task 7.3 Object Storage Adapter、Metadata 与生命周期；
-- DCR-004 与 API CR-004（均为 Proposed / Pending Approval）。
+- DCR-004、API CR-004、DCR-005 与 API CR-005（均为 Completed / Approved）；
+- Task 7.5 Idempotency & Concurrency Control（Completed / Approved）。
 
-## 3. 推荐 Attachment 状态
+## 3. 正式 Attachment 状态
 
-推荐 `attachments.status` 使用以下最小完整集合：
+`attachments.status` 使用以下最小完整集合：
 
 | 状态 | 含义 | 下载 | 新增关联 | 是否终止 |
 | --- | --- | --- | --- | --- |
@@ -82,9 +83,9 @@ pending_physical_delete
 
 `attachments` 继续是正式业务 Metadata 唯一来源，Task 7.3 Storage Metadata 继续是二进制技术 Metadata 唯一来源。业务层不得重复计算 Checksum 或另建 Metadata。
 
-## 5. Object Type 推荐集合
+## 5. Object Type 正式集合
 
-推荐封闭 `AttachmentObjectType`：
+正式封闭 `AttachmentObjectType`：
 
 ```text
 purchase_order
@@ -112,9 +113,9 @@ import_task
 
 其他对象可否上传、关联、解除或删除，必须同时由对象当前 Frozen 状态、对象写权限、数据范围和 Attachment Category 决定；对象进入正式历史状态后转为只读或证据保护。
 
-## 6. Attachment Category 推荐集合
+## 6. Attachment Category 正式集合
 
-推荐封闭 `AttachmentCategory`：
+正式封闭 `AttachmentCategory`：
 
 | 代码 | 默认敏感 | 证据类 | 默认删除规则 | 适用对象 |
 | --- | --- | --- | --- | --- |
@@ -158,7 +159,7 @@ import_task
 - `SECURITY_REPLAY_DETECTED`；
 - `SYSTEM_SERVICE_UNAVAILABLE`。
 
-API CR-005 建议新增 9 个代码：
+API v1.5 新增且仅新增 9 个代码：
 
 ```text
 VALIDATION_ATTACHMENT_OBJECT_TYPE_UNSUPPORTED
@@ -176,13 +177,12 @@ SYSTEM_ATTACHMENT_STORAGE_DELETE_FAILED
 
 ## 9. ATT-001 幂等裁决
 
-正式推荐 **方案 A**：
+正式采用 **方案 A**：
 
-1. 先批准并同步 DCR-004；
-2. 再批准并同步 API CR-004；
-3. 完成通用持久化幂等基础能力；
-4. 批准并同步 DCR-005 与 API CR-005；
-5. 由项目负责人另行下令恢复 Task 7.4。
+1. DCR-004 与 API CR-004 已完成批准和同步；
+2. Task 7.5 通用持久化幂等基础能力已完成并获得批准；
+3. DCR-005 与 API CR-005 已完成批准和同步；
+4. Task 7.4 已恢复并为 Current Task。
 
 Task 7.4 可以依赖通用 `IdempotencyAdapter`，但不得实现其持久化后端。`ATT-001` Canonical Request Hash 必须包含 API ID、认证主体、规范路径、对象类型/ID/明细 ID、Category、敏感标记、排序和服务端计算的文件 SHA-256；同 Key 不同 Hash 返回 `SECURITY_REPLAY_DETECTED`，同 Key 同 Hash重放首次安全结果。
 
@@ -192,31 +192,29 @@ Storage 已成功但业务事务或幂等终态写入失败时，必须 Soft Del
 
 ### 10.1 Database
 
-- 当前正式版本保持 v2.1；
-- 若先完成 DCR-004，DCR-005 建议把 Database v2.2 升级为 v2.3；
-- DCR-005 不新增表或字段，建议新增 1 个 Check、1 个普通索引及 `status` 默认值；
-- Prisma Schema、Forward Only Migration 与 Mapping Audit 仅在批准后的独立同步任务修改；
-- Seed 不需要业务数据变更，只需验证任何附件 Seed 使用正式状态。
+- Database Logical Design v2.3 已为 Completed / Approved / Frozen；
+- DCR-005 未新增表或字段，已新增 1 个 Check、1 个普通索引及 `status` 默认值；
+- Prisma Schema、Forward-only Migration 与 Mapping Audit 已在独立同步任务完成；
+- Seed 不需要业务数据变更。
 
 ### 10.2 API
 
-- 当前正式版本保持 v1.3；
-- 若先完成 API CR-004，API CR-005 建议把 API v1.4 升级为 v1.5；
+- API Master Specification v1.5 已为 Completed / Approved / Frozen；
 - API 数量保持 335；
 - 只补全 `ATT-001` 至 `ATT-008`，不新增路径、编号、角色或权限；
-- 建议新增 9 个稳定错误码。
+- 已新增且仅新增 9 个稳定错误码。
 
 ### 10.3 Implementation
 
-批准和正式同步后影响 Attachment Route、Service、Repository、Object Registry、Task 7.3 Storage Adapter 接入、Audit Writer、HTTP Integration 与 PostgreSQL Integration。不得修改业务页面或建立第二套 Storage、Metadata、权限或幂等能力。
+后续实现影响 Attachment Route、Service、Repository、Object Registry、Task 7.3 Storage Adapter 接入、Audit Writer、HTTP Integration 与 PostgreSQL Integration。不得修改业务页面或建立第二套 Storage、Metadata、权限或幂等能力。
 
 ## 11. 本提案状态
 
-- Attachment Framework SSOT Completion 001：Proposed / Pending Approval；
-- Database Change Request 005：Proposed / Pending Approval；
-- API Change Request 005：Proposed / Pending Approval；
-- DCR-004 / API CR-004：继续 Proposed / Pending Approval；
+- Attachment Framework SSOT Completion 001：Completed / Approved；
+- Database Change Request 005：Completed / Approved；
+- API Change Request 005：Completed / Approved；
+- DCR-004 / API CR-004：Completed / Approved；
 - Task 7.4：In Progress；
-- Task 7.4 实现：Paused / Frozen SSOT Conflict。
+- Task 7.4：已恢复并为 Current Task。
 
-本轮未修改 Frozen Database/API、Prisma、Migration、Mapping Audit、业务代码、Storage、Attachment 实现或测试逻辑。
+本轮只同步 API SSOT 文档，未修改 Database v2.3、Prisma、Migration、Mapping Audit、业务代码、Storage、Attachment 实现或测试逻辑。

@@ -1,6 +1,6 @@
 ---
 document_name: Task 5.1 API 总体规范与安全规则设计
-version: 1.1
+version: 1.2
 status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
@@ -401,7 +401,7 @@ API 必须执行并返回明确结果的校验至少包括：
 - 客户端重试必须复用原幂等键，不得每次生成新键规避保护；
 - 幂等成功不得掩盖首次请求的业务失败结果。
 
-持久化只使用 Frozen Database Logical Design v2.2 的 `idempotency_records`。本文件不授权新增其他幂等表、字段或平行事实来源。
+持久化只使用 Frozen Database Logical Design v2.3 的 `idempotency_records`。本文件不授权新增其他幂等表、字段或平行事实来源。
 
 ## 16. 并发控制规则
 
@@ -628,3 +628,17 @@ API Master Specification v1.4 已按获批 API CR-004 补齐统一持久化幂�
 5. 任意状态下同 Key 不同 Hash 均返回 `409 SECURITY_REPLAY_DETECTED`，无业务副作用；
 6. 每次首次执行和重放均重新校验用户状态、身份、权限和数据范围；
 7. 本次新增 API、DTO 字段、权限和错误码均为 0，正式接口总数保持 335。
+
+## 28. API Change Request 005 正式同步
+
+API Master Specification v1.5 已按获批 API CR-005 补齐 Attachment 通用契约：
+
+1. `AttachmentObjectType` 固定为 17 个代码，`AttachmentCategory` 固定为 10 个代码，未知代码在访问业务数据前拒绝；
+2. `AttachmentLinkDto`、`AttachmentPermissionDto` 与 `AttachmentResponseDto` 使用 API v1.5 第 23 节正式字段；
+3. Storage 访问只经 Task 7.3 Adapter，下载使用 `stream()`，业务响应不返回 Storage Key、路径、永久 URL 或凭证；
+4. 写动作统一接入 Task 7.5 持久化幂等；Link 唯一竞争由 PostgreSQL 裁决，Attachment 状态写入使用 `updatedAt` 版本投影；
+5. 权限由服务端实时派生并同时检查 Attachment、对象、数据范围、仓库、店铺、厂家、敏感字段和对象状态；
+6. 生命周期只允许 Database v2.3 的 5 个状态和正式迁移，`physically_deleted` 保留墓碑；
+7. API v1.5 新增 9 个稳定 Attachment 错误码，不新增权限代码，不新增或删除 API；
+8. `ATT-001` 至 `ATT-008` 仍为 8 个，正式接口总数保持 335；
+9. 完整接口契约以 API Master Specification v1.5 第 23 节为准。

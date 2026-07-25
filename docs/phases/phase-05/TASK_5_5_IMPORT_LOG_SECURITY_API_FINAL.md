@@ -1,6 +1,6 @@
 ---
 document_name: Task 5.5 导入、附件、日志、安全与 API 最终收口
-version: 1.3
+version: 1.4
 status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
@@ -26,7 +26,7 @@ updated_date: 2026-07-25
 | 审计与操作日志 | `audit_logs` | 只追加；日志类型是查询分类，不新增日志表 |
 | 导入日志 | `audit_logs`、`import_tasks`、`import_task_items` | 任务/行结果与审计事件联合投影，不建立平行日志对象 |
 | 导出、登录、安全日志 | `audit_logs` | 仅记录能够合法映射现有用户或受控对象的事件；不得伪造对象标识 |
-| 身份与权限 | `users`、`user_wechat_identities`、`auth_sessions`、`roles`、`permissions`、`user_roles`、`role_permissions`、`role_warehouses`、`role_stores` | Database v2.1 正式保存微信映射与认证会话；不得新增平行身份、会话或授权来源 |
+| 身份与权限 | `users`、`user_wechat_identities`、`auth_sessions`、`roles`、`permissions`、`user_roles`、`role_permissions`、`role_warehouses`、`role_stores` | Database v2.3 正式保存微信映射与认证会话；不得新增平行身份、会话或授权来源 |
 
 接口字段使用 lowerCamelCase 映射 Frozen snake_case。任何派生字段均不得成为新的数据库事实。
 
@@ -376,3 +376,18 @@ API Master Specification v1.4 对本 Task 既有 Import 与安全契约增加以
 - 有效 `processing` 与恢复中的过期 `processing` 返回稳定 `409 SECURITY_REPLAY_DETECTED`；
 - `completed` 和 `failed` 按首次安全结果重放，且每次重放重新校验当前权限与数据范围；
 - API、DTO、权限、错误码和正式接口总数均不变化。
+
+## 15. API Change Request 005 正式同步
+
+API Master Specification v1.5 对本 Task 既有 `ATT-001` 至 `ATT-008` 契约完成以下正式收口：
+
+- Attachment API 保持 8 个，未新增 `ATT-009`，正式 API 总数保持 335；
+- Object Type 固定为 17 个，Category 固定为 10 个；兼容、默认敏感、证据保护和删除规则以 API v1.5 第 23 节矩阵为准；
+- 正式同步 `AttachmentLinkDto`、`AttachmentPermissionDto`、`AttachmentResponseDto`，权限摘要全部由服务端实时派生；
+- `ATT-001` 单文件上传依次执行认证、授权、Registry/Category/文件校验、持久化幂等认领、Storage Store、数据库事务和幂等终态；
+- `ATT-004` 只允许 `active` 附件通过 Task 7.3 `stream()` 下载，不返回永久 URL 或 Storage Reference；
+- `ATT-005` 至 `ATT-007` 统一使用 Task 7.5 幂等、数据库唯一竞争、锁定重读和版本校验；
+- `ATT-008` 只从正式 Attachment、Link、Audit 与 Storage Metadata 派生生命周期，不新增历史表；
+- 生命周期只允许 Database v2.3 的 5 个状态；零 Link、证据保护、墓碑与失败保留规则均已冻结；
+- 新增且仅新增 9 个 Attachment 错误码；权限代码变化为 0；
+- 本节只同步契约，不创建 Route、Service、Repository、Object Registry、Upload、删除逻辑或 Worker。

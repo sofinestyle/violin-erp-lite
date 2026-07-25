@@ -1,8 +1,8 @@
 ---
 document_name: API Change Request 005：Attachment API 契约补齐
 project: Violin ERP Lite
-version: 1.0
-status: Proposed / Pending Approval
+version: 1.1
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-25
 updated_date: 2026-07-25
@@ -11,33 +11,32 @@ related_phase: Phase 5 / Phase 7
 
 # API Change Request 005：Attachment API 契约补齐
 
-> 本 Change Request 尚未批准。API Master Specification 当前仍为 v1.3 Completed / Approved / Frozen，正式接口总数仍为 335。本文只提出既有 `ATT-001` 至 `ATT-008` 的可执行契约，不新增第九个 Attachment API。
+> 本 Change Request 已由项目负责人批准并完成正式同步。API Master Specification v1.4 原状态为 Completed / Approved / Frozen；本次只补齐既有 `ATT-001` 至 `ATT-008` 的可执行契约并形成 API v1.5，不新增第九个 Attachment API，正式接口总数保持 335。
 
 ## 1. 变更原因与边界
 
 现有 Frozen API 已定义 8 个 Attachment 接口的编号、路径、方法、权限语义和高层规则，但未定义完整 DTO、封闭 Object Type/Category、删除裁决、Storage 错误映射与生产级幂等依赖。
 
-本提案：
+本次正式同步：
 
 - API 新增：0；
 - API 删除：0；
 - 路径或方法变化：0；
 - 正式接口总数：335；
 - 权限代码变化：0；
-- 建议新增稳定错误码：9；
+- 新增稳定错误码：9；
 - 只复用 `attachments`、`attachment_links`、Task 7.3 Storage 和既有审计体系。
 
-## 2. 依赖与版本建议
+## 2. 依赖与正式版本顺序
 
-推荐批准顺序：
+依赖已按以下顺序完成：
 
-1. DCR-004 正式同步 Database v2.2；
-2. API CR-004 正式同步 API v1.4；
-3. DCR-005 正式同步 Database v2.3；
-4. 本 API CR-005 正式同步 API v1.5；
-5. 完成独立 GitHub 技术验收后，由项目负责人另行恢复 Task 7.4。
+1. DCR-004：Completed / Approved，已形成 Database v2.2；
+2. API CR-004：Completed / Approved，已形成 API v1.4；
+3. DCR-005：Completed / Approved，已形成 Database v2.3；
+4. API CR-005：Completed / Approved，本轮形成 API v1.5。
 
-若 API CR-004 被拒绝或撤回，本提案必须重新基于 v1.3 审核，并可改为 v1.4；不得与 API CR-004 同时占用 v1.4。
+Database Logical Design v2.3 为 Completed / Approved / Frozen。Task 7.4 已恢复并为 Current Task；本轮只完成其 API 前置契约，不实施 Attachment 业务代码。
 
 ## 3. 通用类型
 
@@ -474,7 +473,7 @@ Audit：`attachment.lifecycle.read`、拒绝和异常事件。
 | `SECURITY_REPLAY_DETECTED` | 幂等 Key 冲突或处理中重放 |
 | `SYSTEM_SERVICE_UNAVAILABLE` | Attachment 依赖整体暂不可用 |
 
-### 14.2 建议新增
+### 14.2 正式新增
 
 | 错误码 | HTTP | 含义 |
 | --- | ---: | --- |
@@ -492,7 +491,7 @@ Audit：`attachment.lifecycle.read`、拒绝和异常事件。
 
 ## 15. Audit Event
 
-建议封闭 Attachment Audit Event：
+正式封闭 Attachment Audit Event：
 
 ```text
 attachment.upload.succeeded
@@ -517,19 +516,19 @@ attachment.lifecycle.read
 
 ## 16. ATT-001 与通用幂等
 
-正式推荐方案 A，不采用 Attachment 专用表：
+正式采用方案 A，不采用 Attachment 专用表：
 
 - Task 7.4 只接入通用 `IdempotencyAdapter`；
 - 持久化、租约、首次结果和恢复由 DCR-004/API CR-004 及 Task 7.5 统一提供；
 - 文件 SHA-256 必须参与 Canonical Request Hash；
 - Attachment 专用进程内 Map 禁止用于生产；
-- DCR-004/API CR-004 未批准前，`ATT-001`、`ATT-005`、`ATT-006`、`ATT-007` 不能达到 Frozen 契约完成条件。
+- DCR-004、API CR-004 与 Task 7.5 已完成并获得批准，`ATT-001`、`ATT-005`、`ATT-006`、`ATT-007` 可复用统一生产级持久化幂等平台。
 
-本提案不批准 DCR-004/API CR-004，也不启动 Task 7.5。
+本次不修改幂等平台实现，也不启动 Task 7.6。
 
 ## 17. 测试影响
 
-批准并正式同步后至少验证：
+后续 Attachment Framework 实现至少验证：
 
 - 每个 DTO 的 Header、Path、Query、Body、multipart、分页和错误；
 - 17 个 Object Type 的存在性、明细归属、状态、权限与数据范围；
@@ -545,9 +544,9 @@ attachment.lifecycle.read
 - PostgreSQL 18.4 Repository Integration；
 - SEC-001 至 SEC-005、Task 7.3 Storage 与既有业务 API 回归。
 
-## 18. 批准 Gate
+## 18. 批准结论
 
-项目负责人需确认：
+项目负责人已确认：
 
 1. 17 个 Object Type；
 2. 10 个 Category；
@@ -557,6 +556,6 @@ attachment.lifecycle.read
 6. 9 个新增错误码；
 7. 16 个 Attachment Audit Event；
 8. 方案 A 及 DCR-004/API CR-004 前置依赖；
-9. API v1.5 建议版本与总数 335 不变。
+9. API v1.5 与总数 335 不变。
 
-当前状态：**Proposed / Pending Approval**。批准前不得修改 API_SPEC、业务代码、Route、Service、Repository、测试、数据库或 Storage。
+当前状态：**Completed / Approved**。API Master Specification v1.5 已完成正式文档同步并冻结为 Completed / Approved / Frozen。本次未创建 Route、Service、Repository、Object Registry、Upload、删除逻辑或 Worker，未修改 Database v2.3、Prisma、Migration 或 Mapping Audit。

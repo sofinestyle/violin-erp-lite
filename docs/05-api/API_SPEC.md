@@ -1,7 +1,7 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.4
+version: 1.5
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -15,7 +15,7 @@ related_phase: Phase 5
 
 本文件是 Violin ERP Lite Phase 5 正式 API 规范总入口，统一 Task 5.1 至 Task 5.5 的接口编号、Header、请求、响应、分页、排序、筛选、命名、版本、错误码、权限、日志、导入、附件和安全规则。
 
-API Master Specification v1.4 为 Completed / Approved / Frozen，正式接口总数保持 335。API Change Request 004 已正式批准，在不新增路径、编号、DTO 字段、权限或错误码的前提下补齐持久化幂等、重放和 Import 并发重复行为。API Master Specification v1.3 及其 335 个接口保留为历史冻结基线。
+API Master Specification v1.5 为 Completed / Approved / Frozen，正式接口总数保持 335。API Change Request 005 已正式批准，在不新增路径、编号或权限代码的前提下补齐既有 `ATT-001` 至 `ATT-008` 的 DTO、封闭代码集合、生命周期、Storage、幂等、并发、审计与错误映射。API Master Specification v1.4 及其 335 个接口保留为历史冻结基线。
 
 ## 2. 正式文档入口
 
@@ -35,8 +35,10 @@ API Master Specification v1.4 为 Completed / Approved / Frozen，正式接口�
 14. 本文件第 21 节：API Master Specification v1.3 Import 状态正式契约
 15. [API Change Request 004：幂等处理中与 Import 重复竞争行为](../00-governance/API_CHANGE_REQUEST_004.md)
 16. 本文件第 22 节：API Master Specification v1.4 持久化幂等正式契约
+17. [API Change Request 005：Attachment API 契约补齐](../00-governance/API_CHANGE_REQUEST_005.md)
+18. 本文件第 23 节：API Master Specification v1.5 Attachment Framework 正式契约
 
-发生冲突时，Frozen 业务规则、Frozen Database Logical Design v2.2 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
+发生冲突时，Frozen 业务规则、Frozen Database Logical Design v2.3 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
 
 ## 3. 接口编号与数量
 
@@ -60,7 +62,7 @@ API Master Specification v1.4 为 Completed / Approved / Frozen，正式接口�
 | API CR-001 | 库存盘点 `STC-*` | 17 | Completed / Approved |
 | API CR-001 | 销售退货 `SRT-*` | 13 | Completed / Approved |
 | API CR-001 | 报损 `DMG-*` | 13 | Completed / Approved |
-| 合计 | API Master Specification v1.4 正式接口 | 335 | Completed / Approved / Frozen |
+| 合计 | API Master Specification v1.5 正式接口 | 335 | Completed / Approved / Frozen |
 
 逐模块复核结果为 `74 + 29 + 29 + 10 + 26 + 18 + 17 + 15 + 22 + 15 + 8 + 4 + 5 + 16 + 4 + 17 + 13 + 13 = 335`。接口编号唯一且稳定，不得复用、改义或因排序调整重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。`STC-*`、`SRT-*` 和 `DMG-*` 的完整正式契约以 API Change Request 001 及 Task 5.4 补充章节为准；`SEC-006` 至 `SEC-021` 的完整正式契约以本文件第 16 节为准；`SEC-022` 至 `SEC-025` 的完整正式契约以本文件第 17 节为准；`CBR-003` 的 `transportMethod` 字段补充契约以本文件第 18 节为准。
 
@@ -160,7 +162,7 @@ API Master Specification v1.4 为 Completed / Approved / Frozen，正式接口�
 - 正式单据更新使用现有 `versionNo`，无版本字段对象使用 `updatedAt`、当前状态、唯一约束和事务；
 - 库存事务、导入执行和跨仓动作必须在原子事务内完成余额、流水、来源状态和审计；
 - 禁止重复库存流水、重复导入成功行、重复附件关联和重复审批；
-- 持久化只使用 Frozen Database Logical Design v2.2 的 `idempotency_records`；不得回退为进程内 Map 作为生产级事实来源。
+- 持久化只使用 Frozen Database Logical Design v2.3 的 `idempotency_records`；不得回退为进程内 Map 作为生产级事实来源。
 
 ## 12. Import
 
@@ -182,9 +184,9 @@ Audit Log、Operation Log、Import Log、Export Log、Login Log 和 Security Log
 
 ## 15. Security
 
-`SEC-001` 至 `SEC-005` 定义登录、刷新、登出、当前会话和当前权限能力；`SEC-006` 至 `SEC-021` 定义用户、角色、角色权限、用户角色和权限目录管理能力；`SEC-022` 至 `SEC-025` 定义角色仓库与店铺数据范围查询及整体替换能力。Authentication、Authorization、Token、Refresh Token、Session、Permission Validation、Replay Protection、Idempotency、Rate Limit、IP White List 和 Header 安全规则适用于 v1.4 的全部 335 个 Frozen 接口。
+`SEC-001` 至 `SEC-005` 定义登录、刷新、登出、当前会话和当前权限能力；`SEC-006` 至 `SEC-021` 定义用户、角色、角色权限、用户角色和权限目录管理能力；`SEC-022` 至 `SEC-025` 定义角色仓库与店铺数据范围查询及整体替换能力。Authentication、Authorization、Token、Refresh Token、Session、Permission Validation、Replay Protection、Idempotency、Rate Limit、IP White List 和 Header 安全规则适用于 v1.5 的全部 335 个 Frozen 接口。
 
-认证持久化只使用 Frozen Database Logical Design v2.2 的 `users`、`user_wechat_identities` 和 `auth_sessions`；不得新增平行用户、微信映射或会话来源。网关、限流器、IP 配置及安全遥测的技术实现留待后续阶段。生产环境必须使用 HTTPS，并执行最小权限、数据脱敏、文件安全、输入白名单和安全错误处理。
+认证持久化只使用 Frozen Database Logical Design v2.3 的 `users`、`user_wechat_identities` 和 `auth_sessions`；不得新增平行用户、微信映射或会话来源。网关、限流器、IP 配置及安全遥测的技术实现留待后续阶段。生产环境必须使用 HTTPS，并执行最小权限、数据脱敏、文件安全、输入白名单和安全错误处理。
 
 ## 16. API Coverage Completion 002：用户、角色与权限管理
 
@@ -1022,3 +1024,296 @@ API Master Specification v1.3 已完成、批准并冻结。本次只补齐既�
 - 响应不得暴露 Key Hash、Request Hash、租约、内部锁、Session、Storage Key、SQL 或堆栈；
 - API v1.4 只补充既有高风险写 API 的可观察幂等行为，不扩大 `Idempotency-Key` 必填范围；
 - 本次不创建 Route、Service、Repository、幂等 Adapter、前端或测试实现，不启动 Task 7.5。
+
+## 23. API Change Request 005：Attachment Framework 正式契约
+
+### 23.1 版本、数量与依赖
+
+1. API Change Request 005：Completed / Approved；
+2. API Master Specification：v1.5，Completed / Approved / Frozen；
+3. Database Logical Design v2.3：Completed / Approved / Frozen；
+4. Task 7.3 Object Storage 与 Task 7.5 Persistent Idempotency：Completed / Approved；
+5. 新增 API 0、删除 API 0、Path 变化 0、Method 变化 0、权限代码变化 0；
+6. Attachment API 保持 `ATT-001` 至 `ATT-008` 共 8 个，正式 API 总数保持 335；
+7. 本节只冻结契约，不创建 Route、Service、Repository、Object Registry、Upload、删除逻辑或 Worker。
+
+### 23.2 封闭 Object Type 与 Object Registry
+
+`AttachmentObjectType` 只允许以下 17 个代码：
+
+```text
+purchase_order
+purchase_payment
+purchase_return
+production_order
+production_progress_record
+production_completion_record
+production_payment
+inspection_order
+inventory_adjustment
+stock_count
+inbound_order
+outbound_order
+sales_return
+damage_report
+transfer_order
+cross_border_shipment
+import_task
+```
+
+| Object Type | 正式对象 | 权限资源 | 数据范围与写入边界 |
+| --- | --- | --- | --- |
+| `purchase_order` | `purchase_orders` | `purchase.order` | 采购记录、仓库、业务关联；受对象状态限制 |
+| `purchase_payment` | `purchase_payments` | `purchase.payment` | 来源采购单和金额字段；凭证创建后保护 |
+| `purchase_return` | `purchase_returns` | `purchase.return` | 来源采购和退货仓；受对象状态限制 |
+| `production_order` | `production_orders` | `production.order` | 厂家、目标仓、业务关联；受对象状态限制 |
+| `production_progress_record` | `production_progress_records` | `production.progress` | 来源生产单和厂家；记录创建后保护 |
+| `production_completion_record` | `production_completion_records` | `production.completion` | 来源生产单和目标仓；正式完成后保护 |
+| `production_payment` | `production_payments` | `production.payment` | 来源生产单、厂家和金额字段；凭证创建后保护 |
+| `inspection_order` | `inspection_orders` | `inspection.order` | 来源单据、验收仓和厂家；提交或确认后保护 |
+| `inventory_adjustment` | `inventory_adjustments` | `inventory.adjustment` | 调整仓和成本字段；提交或执行后保护 |
+| `stock_count` | `stock_counts` | `inventory.stock-count` | 盘点仓库；开始或提交后保护 |
+| `inbound_order` | `inbound_orders` | `inbound.order` | 来源和目标仓；提交或确认后保护 |
+| `outbound_order` | `outbound_orders` | `outbound.order` | 来源仓、店铺和个人字段；提交或确认后保护 |
+| `sales_return` | `sales_returns` | `outbound.sales-return` | 店铺、原出库和接收仓；提交或确认后保护 |
+| `damage_report` | `damage_reports` | `inventory.damage` | 仓库和成本字段；提交或确认后保护 |
+| `transfer_order` | `transfer_orders` | `transfer.order` | 来源、在途和目的仓；提交或调出后保护 |
+| `cross_border_shipment` | `cross_border_shipments` | `cross-border.shipment` | 三仓、厂家和业务关联；提交或发运后保护 |
+| `import_task` | `import_tasks` | `import.task` | 仓库或店铺目标；ATT 外部只读，写入只允许 `IMP-*` 调用统一 Attachment Service |
+
+每个 Registry Entry 必须提供存在性、可见性、对象状态、明细归属、读写权限、仓库/店铺/厂家数据范围和证据保护点解析。未知 Object Type 或缺失 Registry Entry 必须在查询业务数据前返回 `VALIDATION_ATTACHMENT_OBJECT_TYPE_UNSUPPORTED`，不得把客户端字符串映射为表名或 SQL。
+
+### 23.3 封闭 Attachment Category
+
+`AttachmentCategory` 只允许以下 10 个代码：
+
+| Category | 默认敏感 | 证据类 | 删除与保留规则 | 允许对象 |
+| --- | --- | --- | --- | --- |
+| `general_business_document` | 否 | 否 | 对象尚未形成正式历史且解除全部 Link 后可删 | 除 `import_task` 外全部可写对象 |
+| `inspection_evidence` | 否 | 是 | 验收提交或确认后永久保护 | `inspection_order` |
+| `inbound_evidence` | 否 | 是 | 入库提交或形成库存事实后永久保护 | `inbound_order`、`sales_return`、`transfer_order` |
+| `outbound_evidence` | 否 | 是 | 出库提交或形成库存事实后永久保护 | `outbound_order`、`purchase_return`、`damage_report`、`transfer_order`、`cross_border_shipment` |
+| `inventory_evidence` | 否 | 是 | 提交、执行、完成或形成库存事实后永久保护 | `inventory_adjustment`、`stock_count`、`sales_return`、`damage_report` |
+| `import_source_file` | 是 | 是 | Import Task 存在期间不得解除或删除 | `import_task` |
+| `import_error_report` | 是 | 是 | 随 Import Task 和审计链保留，不允许普通删除 | `import_task` |
+| `payment_voucher` | 是 | 是 | 付款事实创建后永久保护 | `purchase_payment`、`production_payment` |
+| `production_progress_evidence` | 否 | 是 | 进度记录创建后永久保护 | `production_progress_record`、`production_completion_record` |
+| `cross_border_shipping_evidence` | 是 | 是 | 发货提交或发运后永久保护 | `cross_border_shipment` |
+
+客户端不得使用自由文本 Category，也不得降低 Category 默认敏感级别。正式 `isSensitive` 为类别默认值与操作者合法提升标记的逻辑或。
+
+### 23.4 通用 DTO
+
+`AttachmentLinkDto`：
+
+```text
+id: UUID
+objectType: AttachmentObjectType
+objectId: UUID
+objectItemId: UUID | null
+attachmentCategory: AttachmentCategory
+sortOrder: non-negative integer
+linkedAt: ISO-8601 datetime
+linkedBy: SafeUserSummaryDto
+```
+
+`AttachmentPermissionDto`：
+
+```text
+canRead: boolean
+canDownload: boolean
+canLink: boolean
+canUnlink: boolean
+canDelete: boolean
+```
+
+`AttachmentResponseDto`：
+
+```text
+id: UUID
+originalFilename: string
+fileExtension: lowercase string
+mimeType: string
+fileSize: decimal string
+checksum: string | omitted when metadata permission is absent
+uploadedAt: ISO-8601 datetime
+uploadedBy: SafeUserSummaryDto
+isSensitive: boolean
+status: active | soft_deleted | pending_physical_delete | physical_delete_failed | physically_deleted
+version: ISO-8601 updatedAt projection
+storageStrategy: stream
+links: AttachmentLinkDto[] limited to currently visible links
+permission: AttachmentPermissionDto derived by the server in real time
+```
+
+响应不得返回 Storage Key、服务器路径、永久 URL、Token、临时凭证或内部 Storage Reference。客户端不得提交权限摘要。敏感附件无权访问时不得通过删减字段、列表数量或错误差异泄露存在性；`physically_deleted` 只保留墓碑投影，不返回任何 Storage Reference。
+
+### 23.5 通用权限、状态、并发与审计
+
+- 每次动作都重新校验 Attachment 功能权限、目标对象权限、记录范围、仓库、店铺、厂家派生范围、字段级敏感权限和对象状态；
+- 只有 `active` 可下载、生成受控流或新增 Link；其他状态一律拒绝；
+- Link 唯一性由数据库正式唯一约束裁决；并发新增相同 Link 只允许一个成功；
+- Attachment 状态写入使用 `version = updatedAt` 进行乐观并发校验；删除前锁定 Attachment 和当前 Link 并重新读取正式状态；
+- 并发解除与删除必须重新鉴权、重新读取对象状态和保护点；重复删除返回首次稳定幂等结果；
+- 不使用进程内锁，不提前引入 Task 7.6 Distributed Lock；
+- 高风险动作必须在副作用前完成审计写入或在同一事务内写入审计；审计失败时不得宣告成功；
+- 审计事件只允许 `attachment.upload.succeeded`、`attachment.upload.failed`、`attachment.metadata.read`、`attachment.download.allowed`、`attachment.download.denied`、`attachment.link.created`、`attachment.link.rejected`、`attachment.link.unlinked`、`attachment.link.unlink_denied`、`attachment.delete.requested`、`attachment.delete.denied`、`attachment.soft_deleted`、`attachment.physical_delete.succeeded`、`attachment.physical_delete.failed`、`attachment.storage.compensation_failed`、`attachment.lifecycle.read`。
+
+### 23.6 `ATT-001` 上传并关联附件
+
+- Method / Path：`POST /api/v1/attachments`；
+- Header：必填 `Authorization`、`Content-Type: multipart/form-data`、`Idempotency-Key`；可选 `X-Request-ID`、`X-Client-Type`；
+- Authentication / Permission：已登录；`attachment.file.upload`、`attachment.file.link`、目标对象写权限及数据范围；敏感类别执行字段级权限；
+- Multipart：单个 `file`，以及 `objectType`、`objectId`、可选 `objectItemId`、`attachmentCategory`、可选 `isSensitive`、可选非负 `sortOrder`；禁止多文件；
+- Validation：先校验 Object Registry、对象存在性和状态、明细归属、Category 兼容、文件大小、MIME、Extension、签名与内容安全；
+- 状态：新 Attachment 为 `active`；
+- Response：`201 AttachmentResponseDto`；
+- Idempotency：Canonical Request Hash 覆盖 API ID、主体、Path、对象/明细、Category、敏感标记、排序和服务端计算的 SHA-256；同 Key 同 Hash 重放首次安全结果，同 Key 不同 Hash 返回 `409 SECURITY_REPLAY_DETECTED`；
+- 执行顺序：认证 → 权限 → 对象/Category/文件校验 → 持久化幂等原子认领 → Storage `store()` → 数据库事务写 `attachments`、`attachment_links` 和 Audit → 幂等终态；
+- Storage：复用 Task 7.3 Adapter 和 Metadata；Storage 成功但数据库失败时补偿删除，补偿失败必须审计且不得返回成功；
+- Reconciliation：数据库已成功而幂等终态失败时先对账，不得重复上传；
+- 并发：相同幂等 Scope 由 Task 7.5 裁决，相同 Link 由数据库唯一约束裁决；
+- 主要错误：文件安全、Object/Category、权限、对象状态、幂等、Storage 与统一系统错误。
+
+### 23.7 `ATT-002` 附件列表
+
+- Method / Path：`GET /api/v1/attachments`；
+- Header：必填 `Authorization`；可选 `X-Request-ID`、`X-Client-Type`；
+- Authentication / Permission：`attachment.file.read` 与目标对象读权限、数据范围；敏感附件需字段级权限；
+- Query：必填 `objectType`、`objectId`；可选 `objectItemId`、`attachmentCategory`；`page` 默认 1，`pageSize` 默认 20、最大 100，`sortBy = uploadedAt | originalFilename | sortOrder`，`sortOrder = asc | desc`，默认排序为 `uploadedAt desc, id desc`；
+- Validation：未知 Object Type/Category 在查询业务数据前拒绝；验证对象存在性、可见性和明细归属；
+- Response：统一分页 Envelope，`items` 为 `AttachmentResponseDto[]`；
+- 状态与敏感：只返回可见的 `active` 记录；无敏感权限的记录必须同时从 `items` 和 `total` 排除；
+- Idempotency / Transaction / Storage：只读，不要求 Idempotency-Key；使用一致性读，不读取二进制，不生成 URL；
+- Audit：按列表查询规则记录允许、拒绝及异常；
+- 并发：分页结果以查询时正式数据库状态为准。
+
+### 23.8 `ATT-003` 附件详情
+
+- Method / Path：`GET /api/v1/attachments/{attachmentId}`；
+- Header：必填 `Authorization`；可选 `X-Request-ID`；Path `attachmentId: UUID`；
+- Authentication / Permission：`attachment.file.read`、至少一个可见 Link 对象读权限和数据范围；敏感附件需字段级权限；
+- Request：无 Query 和 Body；
+- Response：`200 AttachmentResponseDto`；
+- 状态：详情按正式可见性返回；不可见或不得泄露存在性时使用统一 Not Found/Permission 策略；
+- Storage：调用 `metadata()` 与 `exists()` 校验业务 Metadata 和技术 Metadata；不得返回 Storage Reference；
+- Audit：`attachment.metadata.read`；
+- Idempotency / Transaction：只读，不要求 Idempotency-Key；一致性读；
+- 并发：返回当前 `version`。
+
+### 23.9 `ATT-004` 下载附件
+
+- Method / Path：`GET /api/v1/attachments/{attachmentId}/download`；
+- Header：必填 `Authorization`；可选 `X-Request-ID`；Path `attachmentId: UUID`；
+- Authentication / Permission：`attachment.file.download`、可见对象读权限与数据范围；敏感附件需字段级权限；
+- Request：无 Query 和 Body；
+- 状态：只允许 `active`；
+- Response：`200` 流式二进制，设置安全 `Content-Type`、`Content-Length`、`Content-Disposition` 和 Request ID；
+- Storage：先 `exists()` 与 `metadata()` 完整性校验，再使用 `stream()`；不得一次性加载整个文件，不生成永久 URL；
+- Audit：必须在开始流式输出前完成 `attachment.download.allowed`；拒绝写 `attachment.download.denied`，审计失败不得输出文件；
+- Idempotency / Transaction：GET 不要求 Idempotency-Key；授权和正式状态读取完成后才获取流；
+- 错误：缺失对象返回 `SYSTEM_ATTACHMENT_STORAGE_OBJECT_NOT_FOUND`，完整性异常返回 `SYSTEM_ATTACHMENT_STORAGE_INTEGRITY_ERROR`。
+
+### 23.10 `ATT-005` 新增附件关联
+
+- Method / Path：`POST /api/v1/attachments/{attachmentId}/links`；
+- Header：必填 `Authorization`、`Idempotency-Key`、`Content-Type: application/json`；可选 `X-Request-ID`；
+- Authentication / Permission：`attachment.file.link`、目标对象写权限与数据范围；敏感附件需字段级权限；
+- Path：`attachmentId: UUID`；
+- Body `CreateAttachmentLinkDto`：`objectType`、`objectId`、可选 `objectItemId`、`attachmentCategory`、可选非负 `sortOrder`（默认 0）；
+- Validation：Object Registry、对象存在和状态、明细归属、Category 兼容与保护规则；
+- 状态：只允许 `active`；
+- Response：`201 AttachmentResponseDto` 最新投影；
+- Idempotency：使用 Task 7.5；同 Key 不同 Hash 返回 `SECURITY_REPLAY_DETECTED`；
+- Transaction / Concurrency：锁定 Attachment、重读状态、写 Link 和 Audit；相同 Link 并发只允许一个成功，其他返回 `CONFLICT_ATTACHMENT_LINK_DUPLICATE`；
+- Storage：不移动或复制对象；只校验必要 Metadata；
+- Audit：`attachment.link.created` 或 `attachment.link.rejected`。
+
+### 23.11 `ATT-006` 解除附件关联
+
+- Method / Path：`POST /api/v1/attachments/{attachmentId}/links/unlink`；
+- Header：必填 `Authorization`、`Idempotency-Key`、`Content-Type: application/json`；可选 `X-Request-ID`；
+- Authentication / Permission：`attachment.file.unlink`、目标对象写权限与数据范围；敏感附件需字段级权限；
+- Path：`attachmentId: UUID`；
+- Body：`attachmentLinkId: UUID`、`reason: string`（去空格后非空，最大 500）；
+- Validation：Link 必须属于 Attachment；重新校验对象、状态、证据保护点与 Category；
+- Response：`200 AttachmentResponseDto` 最新投影；
+- Idempotency：使用 Task 7.5，重复调用返回首次稳定结果；
+- Transaction / Concurrency：锁定 Attachment 和 Link，重读保护状态，删除指定 Link 并写 Audit；不得影响其他 Link；
+- Storage：不删除或 Soft Delete Storage Object；
+- Audit：`attachment.link.unlinked` 或 `attachment.link.unlink_denied`；
+- 错误：保护冲突使用 `STATE_ATTACHMENT_HISTORY_PROTECTED`，状态冲突使用 `STATE_ATTACHMENT_ACTION_NOT_ALLOWED`。
+
+### 23.12 `ATT-007` 逻辑删除附件
+
+- Method / Path：`POST /api/v1/attachments/{attachmentId}/delete`；
+- Header：必填 `Authorization`、`Idempotency-Key`、`Content-Type: application/json`；可选 `X-Request-ID`；
+- Authentication / Permission：`attachment.file.delete`，重新检查全部历史 Link 的对象权限、数据范围和保护点；敏感附件需字段级权限；
+- Path：`attachmentId: UUID`；
+- Body：`reason: string`（去空格后非空，最大 500）、`version: ISO-8601 updatedAt`；
+- 前置条件：零有效 Link、非受保护 Category、版本一致；`import_task` 外部删除禁止；
+- Response：`200 { attachmentId, status: "physically_deleted", deleted: true }`；重复请求重放首次稳定结果；
+- Idempotency：使用 Task 7.5；同 Key 不同 Hash 无副作用；
+- Transaction / Concurrency：锁定 Attachment 和 Link，重新读取正式状态、版本与保护点；状态序列和每次审计在受控事务边界内持久化；
+- Storage：依次执行 Attachment `active → soft_deleted`、Storage Soft Delete、`soft_deleted → pending_physical_delete`、Storage Physical Delete、成功后 `→ physically_deleted`；失败时 `→ physical_delete_failed` 并保留墓碑；
+- Audit：`attachment.delete.requested`、拒绝、Soft Delete、Physical Delete 成功/失败及补偿失败事件；
+- 错误：仍有 Link、历史保护、状态或版本冲突、Storage 删除失败分别使用正式错误码；Storage 成功前不得标记 `physically_deleted`；
+- 本接口不授权后台 Worker 或普通恢复 API。
+
+### 23.13 `ATT-008` 附件生命周期
+
+- Method / Path：`GET /api/v1/attachments/{attachmentId}/lifecycle`；
+- Header：必填 `Authorization`；可选 `X-Request-ID`；Path `attachmentId: UUID`；
+- Authentication / Permission：`attachment.file.read`、`audit.log.read`、可见对象读权限与数据范围；敏感附件需字段级权限；
+- Request：无 Query 和 Body；
+- Response `AttachmentLifecycleResponseDto`：`attachmentId`、`status`、`version`、`storageAvailability: available | unavailable`、`activeLinkCount`、`protected`、`events: AttachmentLifecycleEventDto[]`；
+- `AttachmentLifecycleEventDto`：`event`、`occurredAt`、`operator`、`result: succeeded | failed | denied`、可见 `objectType`/`objectId`（不可见时为 `null`）、脱敏 `reason`、`requestId`；
+- Storage：只使用 `metadata()` 与 `exists()` 判断可用性，不读取二进制，不返回 Storage Reference；
+- Projection：事件只从 `attachments`、可见 Link 与正式 Audit 派生，不新增历史表，不伪造缺失事件；
+- Idempotency / Transaction：只读，不要求 Idempotency-Key；一致性读；
+- Audit：`attachment.lifecycle.read`；
+- Error：Storage 不一致使用正式系统错误，成功响应不暴露内部损坏细节。
+
+### 23.14 生命周期、删除与保留
+
+正式状态只允许：
+
+```text
+active
+soft_deleted
+pending_physical_delete
+physical_delete_failed
+physically_deleted
+```
+
+初始状态为 `active`，终止状态为 `physically_deleted`。合法迁移仅为：
+
+```text
+active → soft_deleted
+soft_deleted → pending_physical_delete
+pending_physical_delete → physically_deleted
+pending_physical_delete → physical_delete_failed
+physical_delete_failed → pending_physical_delete
+```
+
+仍有 Link 时不得删除 Attachment；解除前必须重新校验对象权限、对象状态和证据保护。Evidence、Voucher、Source File 与 Error Report 按第 23.3 节永久或条件保护。`physically_deleted` 保留数据库墓碑、业务 Metadata 和审计外键；不得删除数据库行。物理删除失败必须保持记录与不可访问状态。Storage 删除成功前不得宣告 `physically_deleted`。本期不存在普通恢复 API 或后台清理 Worker。
+
+### 23.15 正式错误码
+
+继续复用 `RESOURCE_ATTACHMENT_NOT_FOUND`、对象既有 `RESOURCE_*_NOT_FOUND`、`ATTACHMENT_FILE_UNSAFE`、`STATE_ATTACHMENT_HISTORY_PROTECTED`、`PERMISSION_ATTACHMENT_DENIED`、`SECURITY_REPLAY_DETECTED` 和 `SYSTEM_SERVICE_UNAVAILABLE`。
+
+API v1.5 新增且仅新增以下 9 个稳定错误码：
+
+| 错误码 | HTTP | 正式语义 |
+| --- | ---: | --- |
+| `VALIDATION_ATTACHMENT_OBJECT_TYPE_UNSUPPORTED` | 422 | Object Type 不属于封闭集合 |
+| `VALIDATION_ATTACHMENT_CATEGORY_UNSUPPORTED` | 422 | Category 不属于封闭集合 |
+| `VALIDATION_ATTACHMENT_CATEGORY_OBJECT_MISMATCH` | 422 | Category 不允许关联目标对象或明细 |
+| `CONFLICT_ATTACHMENT_LINK_DUPLICATE` | 409 | 相同 Attachment/Object/Item/Category 已关联 |
+| `STATE_ATTACHMENT_STILL_REFERENCED` | 409 | Attachment 仍有一个或多个有效 Link |
+| `STATE_ATTACHMENT_ACTION_NOT_ALLOWED` | 409 | 当前 Attachment 状态或版本不允许动作 |
+| `SYSTEM_ATTACHMENT_STORAGE_OBJECT_NOT_FOUND` | 503 | 正式记录存在但 Storage Object 缺失 |
+| `SYSTEM_ATTACHMENT_STORAGE_INTEGRITY_ERROR` | 500 | Storage 二进制与 Metadata/正式记录不一致 |
+| `SYSTEM_ATTACHMENT_STORAGE_DELETE_FAILED` | 503 | Storage 删除失败且状态已安全保留 |
+
+错误响应不得返回 Storage Key、路径、Checksum 差异、SQL、堆栈、锁、Hash 或无权对象信息。API v1.5 的错误码净增加 9，权限代码变化为 0，正式 API 总数仍为 335。

@@ -11,6 +11,36 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.19] - 2026-07-25
+
+### Changed
+
+- API Change Request 005 更新为 `Completed / Approved`
+- Attachment Framework SSOT Completion 001 更新为 `Completed / Approved`
+- API Master Specification 从 v1.4 升级并冻结为 v1.5
+- `ATT-001` 至 `ATT-008` 正式同步完整 DTO、权限、数据范围、Object Registry、Category、生命周期、幂等、Storage、并发、审计与错误映射
+- PROJECT、README、ROADMAP 与 Phase 5 相关 API 文档同步 API v1.5 和 Database v2.3 当前引用
+
+### Added
+
+- 冻结 17 个 `AttachmentObjectType` 与 10 个 `AttachmentCategory`
+- 正式同步 `AttachmentLinkDto`、`AttachmentPermissionDto` 与 `AttachmentResponseDto`
+- 新增且仅新增 9 个稳定 Attachment 错误码
+
+### Verified
+
+- Attachment API 保持 `ATT-001` 至 `ATT-008` 共 8 个，正式 API 总数保持 335
+- API 新增、删除、Path、Method 和权限代码变化均为 0
+- Database Logical Design v2.3、Task 7.3 Storage 与 Task 7.5 Persistent Idempotency 的依赖引用一致
+- Task 7.4 继续为 Current Task / In Progress，未重新标记为暂停
+
+### Scope
+
+- 本轮只同步 API SSOT 与关联文档
+- 未修改 Database v2.3、Prisma Schema、Migration 或 Mapping Audit
+- 未实现 Attachment Route、Service、Repository、Object Registry、Upload、删除逻辑或 Worker
+- 未启动 Task 7.6
+
 ## [0.11.18] - 2026-07-25
 
 ### Added

@@ -1,6 +1,6 @@
 ---
 document_name: Phase 5 Final Consistency Review
-version: 1.0
+version: 1.1
 status: Completed / Approved
 project: Violin ERP Lite
 owner: Project Manager
@@ -181,3 +181,15 @@ API Master Specification v1.1 正式总数为 315，当前为 Completed / Approv
 原审查结论仅对 v1.0 历史基线有效；其“页面及 Frozen 映射一致”结论遗漏库存盘点、销售退货和报损，现由 API Change Request 001 正式修正。原 272 个接口未发现重复编号，本次 43 个正式编号亦不与其冲突。
 
 原 Phase 5 Final Consistency Review 与 v1.0 Freeze 记录保留为历史。API Change Request 001 为 Completed / Approved，API Master Specification v1.1 已重新冻结；当前下一步为 Phase 6 Final Consistency Review GitHub 验收。
+
+## 19. API v1.5 Attachment 契约补充复核
+
+API Change Request 005 已完成批准和正式同步。API Master Specification v1.5 在既有 335 个接口中补齐 `ATT-001` 至 `ATT-008` 共 8 个 Attachment API 的 DTO、17 个 Object Type、10 个 Category、生命周期、权限、Storage、幂等、并发、审计及 9 个新增错误码。
+
+本次复核确认：
+
+1. 新增 API、删除 API、Path、Method 和权限代码变化均为 0；
+2. Database Logical Design v2.3 已提供 5 个 Attachment 状态、默认值、Check 与索引，不需要额外数据库变更；
+3. Attachment 契约复用 Task 7.3 Object Storage 与 Task 7.5 Persistent Idempotency，不建立平行能力；
+4. 不存在 `ATT-009`，正式 API 总数继续为 335；
+5. 本次只同步 Frozen API 文档，未创建 Route、Service、Repository、Object Registry、Upload、删除逻辑或 Worker。

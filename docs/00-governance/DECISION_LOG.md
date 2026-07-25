@@ -2173,3 +2173,29 @@ Approved
 ### 影响
 
 本决定只批准和实施 DCR-005。API Master Specification v1.4、API 总数、DTO、权限和错误码保持不变；API CR-005 继续为 Proposed / Pending Approval。不新增表、字段、外键、唯一约束、Enum、Seed 或 Worker，不实现 Attachment Route、Service、Repository、Upload、状态迁移或删除 Worker，不修改 CURRENT_STATUS 或 Current Task。
+
+## DEC-088 批准API CR-005并冻结API v1.5
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 API Change Request 005，状态更新为 Completed / Approved；
+- Attachment Framework SSOT Completion 001 的补齐方案完成批准，状态更新为 Completed / Approved；
+- API Master Specification 从 v1.4 升级为 v1.5，并冻结为 Completed / Approved / Frozen；
+- `ATT-001` 至 `ATT-008` 仍为 8 个，正式 API 总数保持 335，不新增 `ATT-009`；
+- 正式冻结 17 个 Attachment Object Type、10 个 Attachment Category、3 个通用 Attachment DTO、5 个生命周期状态及其删除和墓碑规则；
+- 新增且仅新增 9 个稳定 Attachment 错误码，权限代码变化为 0；
+- Attachment 写动作复用 Task 7.5 Persistent Idempotency，二进制与 Metadata 访问复用 Task 7.3 Object Storage；
+- Database Logical Design v2.3 保持 Completed / Approved / Frozen；
+- Task 7.4 继续为 Current Task / In Progress，本次只完成其 API 前置契约。
+
+### 影响
+
+本决定只同步 API SSOT 与关联治理文档，不修改 Database v2.3、Prisma Schema、Migration 或 Mapping Audit，不创建 Attachment Route、Service、Repository、Object Registry、Upload、删除逻辑或 Worker，不启动 Task 7.6，不修改 Current Task 或 Task 状态。
