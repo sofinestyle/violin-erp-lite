@@ -11,6 +11,35 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.28] - 2026-07-25
+
+### Changed
+
+- Task 7.8 Audit, Trace & Observability 正式更新为 `Completed / Approved`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md`、`README.md` 与 Phase 7 Platform Foundation 文档同步 Task 7.8 完成状态
+- 新增 DEC-095，记录 Task 7.8 完成批准与 Observability 平台边界
+
+### Added
+
+- Audit 增强完成，继续保持 `audit_logs` 作为唯一正式审计事实来源
+- Trace Foundation 完成，`request_trace_id` 贯通 HTTP、Service、Database、Job、Event 与 Consumer 链路
+- Structured Logging 完成，支持统一 JSON 字段与敏感信息脱敏
+- Metrics Foundation 完成，提供内存 Counter、Gauge 与 Histogram
+- Health Foundation 完成，支持 liveness、readiness 语义及 healthy、degraded、unhealthy 状态模型
+
+### Verified
+
+- Task 7.8 Final Consistency Review 通过
+- `pnpm check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改业务代码、Database Schema、Migration、API、Permission 或业务规则
+- 未引入 Prometheus、Grafana、OpenTelemetry、ELK 或商业监控平台
+- Task 7.9 继续保持 `Waiting / Not Started`
+
 ## [0.11.27] - 2026-07-25
 
 ### Changed

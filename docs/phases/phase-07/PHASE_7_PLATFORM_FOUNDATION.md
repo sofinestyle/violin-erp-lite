@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 2.2
+version: 2.3
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -21,7 +21,7 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 
 - Phase：Phase 7 Platform Foundation；
 - Phase Status：In Progress；
-- Current Task：Task 7.7 Cache & Event Infrastructure；
+- Current Task：Task 7.8 Audit, Trace & Observability；
 - Current Task Status：Completed / Approved；
 - Phase 8 Application Development：Waiting / Not Started；
 - Phase 9 Test Plan & System Integration：Waiting / Not Started；
@@ -54,10 +54,10 @@ DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步，并作
 | Task 7.5 | Idempotency & Concurrency Control | Completed / Approved |
 | Task 7.6 | Background Job & Distributed Lock | Completed / Approved |
 | Task 7.7 | Cache & Event Infrastructure | Completed / Approved |
-| Task 7.8 | Audit, Trace & Observability | Waiting / Not Started |
+| Task 7.8 | Audit, Trace & Observability | Completed / Approved |
 | Task 7.9 | Platform Final Consistency Review | Waiting / Not Started |
 
-Task 7.1 至 Task 7.7 已完成并获得批准。Task 7.8 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
+Task 7.1 至 Task 7.8 已完成并获得批准。Task 7.9 必须通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
 
 ## 5. 平台边界
 
@@ -177,6 +177,10 @@ Task 7.7 第一阶段未引入 Redis、Kafka、RabbitMQ 或其他 MQ，未新增
 
 统一 Request ID、Trace、结构化日志、Audit Log、安全脱敏、健康检查和运行指标，不把普通日志代替正式审计事实。
 
+Task 7.8 已完成 Audit、Trace 与 Observability 的 Capability Audit、Architecture Decision、Trace Foundation、Structured Logging、Audit Enhancement、Metrics Foundation 与 Health Foundation，并已通过最终一致性复核。
+
+Task 7.8 第一阶段保持 `audit_logs` 作为唯一正式审计事实来源，Logger、Event History、Job Attempt 与 Metrics 均不得替代 Audit。`request_trace_id` 已在 HTTP、Service、Database、Job、Event 与 Consumer 链路中作为关联上下文贯通。Structured Logging 采用 JSON 字段输出并执行敏感信息脱敏；Metrics 第一阶段仅提供内存 Counter、Gauge 与 Histogram；Health 支持 liveness、readiness 语义及 healthy、degraded、unhealthy 状态模型。Task 7.8 未新增 Database Schema、Migration、公开 API、Permission 或业务规则，未引入 Prometheus、Grafana、OpenTelemetry、ELK 或商业监控平台。Task 7.8 正式架构文档为 [`TASK_7_8_AUDIT_TRACE_OBSERVABILITY_ARCHITECTURE_DECISION.md`](TASK_7_8_AUDIT_TRACE_OBSERVABILITY_ARCHITECTURE_DECISION.md)。
+
 ## 6. 已有成果迁移原则
 
 1. 原 Phase 7 / Task 7.x 已完成成果迁移为 Phase 8 / Task 8.x；
@@ -199,4 +203,4 @@ Task 7.7 第一阶段未引入 Redis、Kafka、RabbitMQ 或其他 MQ，未新增
 
 ## 8. 当前结论
 
-Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.7 已为 Completed / Approved；Task 7.8 至 Task 7.9 均为 Waiting / Not Started，业务应用开发保持暂停。
+Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.8 已为 Completed / Approved；Task 7.9 为 Waiting / Not Started，业务应用开发保持暂停。

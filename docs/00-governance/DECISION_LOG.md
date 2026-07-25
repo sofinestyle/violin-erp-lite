@@ -2357,3 +2357,30 @@ Approved
 ### 影响
 
 本决定只同步 Task 7.7 完成批准状态，不修改业务代码、Database Schema、Migration、API、Permission、DTO、业务规则或业务模块。Task 7.8 Audit, Trace & Observability 与 Task 7.9 Platform Final Consistency Review 继续保持 Waiting / Not Started；Phase 8 Application Development 未启动。后续 Attachment、Import、Backup、Inventory、Purchase、Production 等业务接入必须在对应获批 Task 中复用本平台能力，不得建立平行 Cache、Event Bus、Outbox、Inbox、Delivery、Dead Letter 或事件审计事实来源。
+
+## DEC-095 批准Task 7.8 Audit, Trace & Observability完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- 项目负责人正式批准 Task 7.8 Audit, Trace & Observability 完成，状态更新为 Completed / Approved；
+- Audit 增强已完成，继续保持 `audit_logs` 作为唯一正式审计事实来源；
+- Audit、Logger、Event History、Job Attempt 与 Metrics 的职责边界已确认，Logger、Event History、Job Attempt 与 Metrics 均不得替代 Audit；
+- Trace Foundation 已完成，`request_trace_id` 贯通 HTTP、Service、Database、Job、Event 与 Consumer 链路；
+- Structured Logging 已完成，支持 timestamp、level、service、event、request_trace_id、error_code、duration_ms 等统一字段，并执行敏感信息脱敏；
+- Metrics Foundation 已完成，第一阶段仅提供内存 Counter、Gauge 与 Histogram；
+- Health Foundation 已完成，支持 liveness、readiness 语义以及 healthy、degraded、unhealthy 状态模型；
+- 第一阶段未引入 Prometheus、Grafana、OpenTelemetry、ELK 或商业监控平台；
+- Task 7.8 Final Consistency Review 已确认 Capability Audit、Architecture Decision 与 Implementation 保持一致；
+- `pnpm check` 与 `git diff --check` 已通过。
+
+### 影响
+
+本决定只同步 Task 7.8 完成批准状态，不修改业务代码、Database Schema、Migration、API、Permission、DTO、业务规则或业务模块。Task 7.9 Platform Final Consistency Review 继续保持 Waiting / Not Started；Phase 8 Application Development 未启动。后续新增 `/metrics`、`/health/liveness`、`/health/readiness`、Trace 查询、Audit 查询、Alert 查询或引入 Prometheus、Grafana、OpenTelemetry、ELK、商业监控平台，必须先经过对应 API Change Request、Architecture Decision Update 或正式依赖审批。
