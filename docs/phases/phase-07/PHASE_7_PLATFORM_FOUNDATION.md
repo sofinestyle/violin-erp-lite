@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.4
+version: 1.5
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -21,7 +21,7 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 
 - Phase：Phase 7 Platform Foundation；
 - Phase Status：In Progress；
-- Current Task：Task 7.4 Attachment Framework；
+- Current Task：Task 7.5 Idempotency & Concurrency Control；
 - Current Task Status：In Progress；
 - Phase 8 Application Development：Waiting / Not Started；
 - Phase 9 Test Plan & System Integration：Waiting / Not Started；
@@ -41,7 +41,7 @@ Phase 7 在 Phase 6 Functional Design 与 Phase 8 Application Development 之间
 - Completed / Approved 的 Phase Renumbering Change Request 001；
 - Completed / Approved 的 DCR-004 与 API CR-004。
 
-DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步；其获批不等于 Task 7.5 已启动，也不授权提前实现通用幂等代码。
+DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步，现作为 Task 7.5 的正式实现输入。
 
 ## 4. Task 结构
 
@@ -51,13 +51,13 @@ DCR-004 与 API CR-004 已分别完成独立批准和正式 SSOT 同步；其获
 | Task 7.2 | Authentication & Authorization | Completed / Approved |
 | Task 7.3 | Object Storage & File Lifecycle | Completed / Approved |
 | Task 7.4 | Attachment Framework | In Progress |
-| Task 7.5 | Idempotency & Concurrency Control | Waiting / Not Started |
+| Task 7.5 | Idempotency & Concurrency Control | In Progress |
 | Task 7.6 | Background Job & Distributed Lock | Waiting / Not Started |
 | Task 7.7 | Cache & Event Infrastructure | Waiting / Not Started |
 | Task 7.8 | Audit, Trace & Observability | Waiting / Not Started |
 | Task 7.9 | Platform Final Consistency Review | Waiting / Not Started |
 
-Task 7.1 至 Task 7.3 已完成并获得批准；当前只启动 Task 7.4。Task 7.5 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
+Task 7.1 至 Task 7.3 已完成并获得批准；Task 7.4 保持 In Progress，但其实现依赖 Task 7.5 的统一平台幂等能力，当前执行重点已切换至 Task 7.5。Task 7.6 至 Task 7.9 必须依次通过正式启动、独立 Commit、Push、GitHub 技术验收和项目负责人批准，不得并行提前实施。
 
 ## 5. 平台边界
 
@@ -117,7 +117,7 @@ Task 7.4 实现前审计发现以下 Frozen SSOT 缺口：
 5. 现有错误码不足以稳定映射全部 Attachment/Storage 失败；
 6. `ATT-001` 的生产级首次结果重放依赖已由 DCR-004/API CR-004 补齐，但 Attachment 状态、DTO、类别与删除规则仍等待 DCR-005/API CR-005 批准。
 
-因此 Task 7.4 正式状态继续为 `In Progress`，实现状态为 `Paused / Frozen SSOT Conflict`。暂停只记录在本 Task 边界和 `CHANGELOG.md`，不写入 `CURRENT_STATUS.md`。
+Database v2.2 与 API v1.4 已补齐生产级持久化幂等的正式数据和契约基础。由于 `ATT-001` 必须依赖统一 Platform Idempotency Framework，Task 7.4 正式状态继续为 `In Progress`，实现状态调整为 `Paused / Dependency on Task 7.5`。Task 7.4 不得使用进程内 Map、建立 Attachment 专用幂等或绕过统一平台幂等框架；Task 7.5 完成后再恢复 Task 7.4。暂停只记录在 Task 7.4 文档、本 Phase 文档和 `CHANGELOG.md`，不写入 `CURRENT_STATUS.md`。
 
 已提出但尚未批准：
 
@@ -125,11 +125,26 @@ Task 7.4 实现前审计发现以下 Frozen SSOT 缺口：
 - `DATABASE_CHANGE_REQUEST_005.md`；
 - `API_CHANGE_REQUEST_005.md`。
 
-上述 Attachment 提案、DCR-005 与 API CR-005 未完成批准和正式同步前，不实施 Attachment、Storage、数据库、API 或测试代码。
+上述 Attachment 提案、DCR-005 与 API CR-005 继续保持原状态，本轮不批准、不修改、不实施。
 
 ### 5.4 Idempotency & Concurrency Control
 
-建立写 API 的通用幂等、请求摘要、原子认领、重放、租约、并发冲突和过期清理框架。DCR-004 与 API CR-004 已成为正式输入，但 Task 7.5 仍为 Waiting / Not Started，未经正式启动不得实现。
+Task 7.5 已正式启动并成为 Current Task，后续实施范围限定为：
+
+1. 建立 `idempotency_records` Repository；
+2. 实现原子认领；
+3. 生成 Canonical Request Hash；
+4. 生成 Key HMAC Hash；
+5. 管理 `processing` 租约；
+6. 重放 `completed` / `failed` 首次安全结果；
+7. 拒绝同 Key、不同 Request Hash；
+8. 对过期 `processing` 进行对账与回收；
+9. 持久化安全响应；
+10. 建立高风险 API Adapter 与中间件边界；
+11. 收口并发控制；
+12. 不提前实现 Attachment、Import 或后台 Worker。
+
+本轮只同步治理状态，不实现上述代码。任何超出 Database v2.2 或 API v1.4 的数据库或接口变更，仍须先通过独立 DCR 或 API Change Request。
 
 ### 5.5 Background Job & Distributed Lock
 
@@ -165,4 +180,4 @@ Task 7.4 实现前审计发现以下 Frozen SSOT 缺口：
 
 ## 8. 当前结论
 
-Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.3 已为 Completed / Approved；当前 Task 7.4 为 In Progress；Task 7.5 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。
+Phase 7 Platform Foundation 保持 In Progress。Task 7.1 至 Task 7.3 已为 Completed / Approved；Task 7.4 保持 In Progress，其实现因依赖 Task 7.5 暂停；Current Task 为 Task 7.5，状态为 In Progress；Task 7.6 至 Task 7.9 均为 Waiting / Not Started。业务应用开发保持暂停。

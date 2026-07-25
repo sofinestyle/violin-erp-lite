@@ -11,6 +11,25 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.15] - 2026-07-25
+
+### Added
+
+- 新增 Task 7.4 Attachment Framework 正式入口，记录其依赖暂停边界
+- 新增 Task 7.5 Idempotency & Concurrency Control 正式入口，固化后续实施范围
+
+### Changed
+
+- Task 7.4 正式状态保持 `In Progress`，实现因依赖 Task 7.5 的统一生产级持久化幂等能力暂停
+- Task 7.5 更新为 `In Progress` 并成为 Current Task
+- 同步 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md`、`README.md` 与 Phase 7 文档
+
+### Scope
+
+- Task 7.4 的依赖暂停只记录在 Task 7.4、Phase 7 文档及本变更记录
+- 本轮未实现 Attachment、Idempotency、Import 或后台 Worker
+- 未修改业务代码、Database v2.2、API v1.4、Prisma、Migration、Mapping Audit、DCR-005 或 API CR-005
+
 ## [0.11.14] - 2026-07-25
 
 ### Changed

@@ -2102,3 +2102,26 @@ Approved
 ### 影响
 
 本决定只同步 API CR-004 与 API v1.4 正式文档，不创建 Route、Service、Repository、幂等实现、Attachment 实现或 Task 7.5 代码，不修改 Database v2.2、Prisma、Migration 或 Mapping Audit。DCR-005 与 API CR-005 继续保持 Proposed / Pending Approval；CURRENT_STATUS 与当前 Task 状态不变。
+
+## DEC-085 启动Task 7.5并切换Current Task
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- Phase 7 Platform Foundation 继续保持 In Progress；
+- Task 7.4 Attachment Framework 正式状态保持 In Progress；
+- Database v2.2 与 API v1.4 已完成前置冻结，统一生产级持久化幂等能力具备正式数据库与接口输入；
+- Task 7.5 Idempotency & Concurrency Control 正式启动并成为 Current Task，状态为 In Progress；
+- Task 7.6 至 Task 7.9 保持 Waiting / Not Started；
+- `CURRENT_STATUS.md` 继续只记录 Phase 与 Task 正式状态。
+
+### 影响
+
+本决定只同步 Phase 与 Task 治理状态及 Task 7.5 后续实施边界，不实现 Attachment、Idempotency、Import 或后台 Worker，不修改业务代码、Database v2.2、API v1.4、Prisma、Migration、Mapping Audit、DCR-005 或 API CR-005。
