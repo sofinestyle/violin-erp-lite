@@ -15,6 +15,8 @@ export * from "./response/api-response.js";
 export * from "./route-handler/health-check.js";
 export * from "./route-handler/route-handler.js";
 export * from "./security/security-management.js";
+export * from "./storage/local-object-storage.js";
+export * from "./storage/object-storage.js";
 export * from "./upload/local-storage.js";
 export * from "./upload/upload.js";
 export * from "./validation/validation.js";

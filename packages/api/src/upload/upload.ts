@@ -2,6 +2,11 @@ import { createHash } from "node:crypto";
 import { extname, posix, win32 } from "node:path";
 import { fileTypeFromBuffer } from "file-type";
 import { AppError } from "../errors/app-error.js";
+import type {
+  ObjectStorageAdapter,
+  ObjectStorageMetadata,
+  StorageObjectInput,
+} from "../storage/object-storage.js";
 
 const SAFE_FILENAME_CHARACTER_PATTERN = /[^\p{L}\p{N}._()\- ]/gu;
 const MAX_FILENAME_LENGTH = 255;
@@ -29,29 +34,11 @@ export type DetectedFileType = Readonly<{
 
 export type FileContentDetector = (content: Uint8Array) => Promise<DetectedFileType | undefined>;
 
-export type ValidatedUpload = Readonly<{
-  checksum: string;
-  content: Uint8Array;
-  extension: string;
-  fileSize: number;
-  mimeType: string;
-  originalFilename: string;
-}>;
+export type ValidatedUpload = StorageObjectInput;
 
-export type StoredUpload = Readonly<{
-  checksum: string;
-  extension: string;
-  fileSize: number;
-  mimeType: string;
-  originalFilename: string;
-  storageKey: string;
-  storedFilename: string;
-}>;
+export type StoredUpload = ObjectStorageMetadata;
 
-export type UploadStorageAdapter = Readonly<{
-  delete: (storageKey: string) => Promise<void>;
-  store: (upload: ValidatedUpload) => Promise<StoredUpload>;
-}>;
+export type UploadStorageAdapter = ObjectStorageAdapter;
 
 export type UploadEnvironment = Readonly<{
   UPLOAD_MAX_FILE_SIZE?: string;

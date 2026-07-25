@@ -11,6 +11,30 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.10] - 2026-07-25
+
+### Added
+
+- 新增统一 `ObjectStorageAdapter`，覆盖 `store`、`read`、`stream`、`exists`、`delete`、`metadata` 和 `generateUrl`
+- 新增 Active、Soft Delete、恢复与 Physical Delete 技术生命周期
+- 新增可注入 URL Strategy，为 Local、未来 S3、OSS 与 MinIO 保留统一边界
+- 新增技术 Metadata、一致性校验、对象清单和只读孤儿清理计划
+- 新增 Task 7.3 Object Storage & File Lifecycle 完成报告
+
+### Changed
+
+- Local Storage 升级为统一 Object Storage 默认实现，保留原上传工厂兼容入口
+- Local Storage 补齐流式读取、统一不存在错误、路径安全、原子 Metadata 和 `0600` 权限检查
+- 上传时生成的 SHA-256、文件大小、MIME、扩展名和原文件名由 Storage Metadata 直接复用，不在业务层重复计算
+
+### Verification
+
+- Node v22.23.1 下 Object Storage、Metadata、Streaming、URL、Lifecycle、Local Storage 与清理计划测试通过
+- `pnpm status:check`、format、lint、typecheck、test、build 和 `git diff --check` 全部通过
+- 本轮未修改 Database、Prisma、Migration、Mapping Audit、Frozen API、权限规格或业务规则
+- 未实现 Attachment API、Route、Service、Repository、数据库关联、附件权限或后台 Worker
+- Task 7.3 正式状态继续保持 `In Progress`，等待 GitHub 技术验收
+
 ## [0.11.9] - 2026-07-25
 
 ### Changed
