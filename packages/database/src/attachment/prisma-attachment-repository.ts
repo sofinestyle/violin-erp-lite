@@ -13,6 +13,7 @@ import { getPrismaClient } from "../client.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 
 type AttachmentRow = NonNullable<Awaited<ReturnType<PrismaClient["attachments"]["findUnique"]>>>;
+type AttachmentPrismaClient = Pick<PrismaClient, "attachments">;
 
 const statusSet = new Set<string>(ATTACHMENT_STATUSES);
 
@@ -49,9 +50,9 @@ function assertTarget(input: AttachmentStatusMutation, expected: AttachmentStatu
 }
 
 export class PrismaAttachmentRepository implements AttachmentRepository {
-  readonly #client: PrismaClient;
+  readonly #client: AttachmentPrismaClient;
 
-  constructor(client: PrismaClient = getPrismaClient()) {
+  constructor(client: AttachmentPrismaClient = getPrismaClient()) {
     this.#client = client;
   }
 

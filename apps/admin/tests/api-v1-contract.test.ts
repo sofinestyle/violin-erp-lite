@@ -40,6 +40,25 @@ describe("Frozen v1 API route boundary", () => {
     });
   });
 
+  it("protects ATT-001 through ATT-004 before Attachment runtime initialization", async () => {
+    for (const path of [
+      "/api/v1/attachments?objectType=purchase_order&objectId=11111111-1111-4111-8111-111111111111",
+      "/api/v1/attachments/11111111-1111-4111-8111-111111111111",
+      "/api/v1/attachments/11111111-1111-4111-8111-111111111111/download",
+    ]) {
+      const response = await GET(new Request(`http://localhost${path}`));
+      const body = (await response.json()) as {
+        error: { code: string };
+        success: boolean;
+      };
+      expect(response.status).toBe(401);
+      expect(body).toMatchObject({
+        success: false,
+        error: { code: "AUTH_UNAUTHORIZED" },
+      });
+    }
+  });
+
   it("rejects missing credentials before loading runtime configuration", async () => {
     const accessSecret = process.env.JWT_ACCESS_SECRET;
     const refreshPepper = process.env.JWT_REFRESH_PEPPER;

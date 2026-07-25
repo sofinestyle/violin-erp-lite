@@ -1,4 +1,5 @@
 import type { DataScopeType, PermissionCode } from "../authorization/permissions.js";
+import type { AuditWriter } from "../audit/audit.js";
 
 export const ATTACHMENT_OBJECT_TYPES = [
   "purchase_order",
@@ -159,6 +160,10 @@ export type AttachmentAccessContext = Readonly<{
   warehouseIds?: readonly string[];
 }>;
 
+export type AttachmentAccessScopeResolver = Readonly<{
+  resolveManufacturerIds(warehouseIds: readonly string[]): Promise<readonly string[]>;
+}>;
+
 export type AttachmentObjectSnapshot = Readonly<{
   createdBy: string;
   id: string;
@@ -181,7 +186,7 @@ export type AttachmentObjectReader = Readonly<{
   ): Promise<AttachmentObjectSnapshot | null>;
 }>;
 
-export type AttachmentValidationOperation = "delete" | "link" | "read" | "unlink";
+export type AttachmentValidationOperation = "delete" | "download" | "link" | "read" | "unlink";
 
 export type ValidateAttachmentObjectInput = Readonly<{
   access: AttachmentAccessContext;
@@ -198,4 +203,101 @@ export type ValidatedAttachmentObject = Readonly<{
   object: AttachmentObjectSnapshot;
   objectType: AttachmentObjectType;
   protected: boolean;
+}>;
+
+export type AttachmentUserSummaryDto = Readonly<{
+  id: string;
+}>;
+
+export type AttachmentLinkDto = Readonly<{
+  attachmentCategory: AttachmentCategory;
+  id: string;
+  linkedAt: string;
+  linkedBy: AttachmentUserSummaryDto;
+  objectId: string;
+  objectItemId: string | null;
+  objectType: AttachmentObjectType;
+  sortOrder: number;
+}>;
+
+export type AttachmentPermissionDto = Readonly<{
+  canDelete: boolean;
+  canDownload: boolean;
+  canLink: boolean;
+  canRead: boolean;
+  canUnlink: boolean;
+}>;
+
+export type AttachmentResponseDto = Readonly<{
+  checksum?: string;
+  fileExtension: string;
+  fileSize: string;
+  id: string;
+  isSensitive: boolean;
+  links: readonly AttachmentLinkDto[];
+  mimeType: string;
+  originalFilename: string;
+  permission: AttachmentPermissionDto;
+  status: AttachmentStatus;
+  storageStrategy: "stream";
+  uploadedAt: string;
+  uploadedBy: AttachmentUserSummaryDto;
+  version: string;
+}>;
+
+export type AttachmentListQueryDto = Readonly<{
+  attachmentCategory?: AttachmentCategory;
+  objectId: string;
+  objectItemId?: string;
+  objectType: AttachmentObjectType;
+  page: number;
+  pageSize: number;
+  sortBy: "originalFilename" | "sortOrder" | "uploadedAt";
+  sortOrder: "asc" | "desc";
+}>;
+
+export type AttachmentListResult = Readonly<{
+  items: readonly AttachmentResponseDto[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}>;
+
+export type AttachmentUploadDto = Readonly<{
+  attachmentCategory: AttachmentCategory;
+  file: Readonly<{
+    content: Uint8Array;
+    declaredMimeType: string;
+    originalFilename: string;
+  }>;
+  isSensitive?: boolean;
+  objectId: string;
+  objectItemId?: string;
+  objectType: AttachmentObjectType;
+  sortOrder: number;
+}>;
+
+export type AttachmentTransactionContext = Readonly<{
+  attachments: AttachmentRepository;
+  audit: AuditWriter;
+  links: AttachmentLinkRepository;
+}>;
+
+export type AttachmentTransactionRunner = Readonly<{
+  run<T>(operation: (context: AttachmentTransactionContext) => Promise<T>): Promise<T>;
+}>;
+
+export type AttachmentUploadReceiptReader = Readonly<{
+  findAttachmentIdByRequestId(requestId: string): Promise<string | null>;
+}>;
+
+export type AttachmentContentScanInput = Readonly<{
+  content: Uint8Array;
+  extension: string;
+  mimeType: string;
+}>;
+
+export type AttachmentContentScanner = Readonly<{
+  scan(input: AttachmentContentScanInput): Promise<void>;
 }>;

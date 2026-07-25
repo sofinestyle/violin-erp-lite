@@ -11,6 +11,36 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.21] - 2026-07-25
+
+### Added
+
+- 实现 `ATT-001` 单文件上传与关联，接入统一 Attachment Service、Task 7.3 Storage 和 Task 7.5 Persistent Idempotency
+- 实现 `ATT-002` 对象附件列表、稳定分页排序、状态过滤和敏感附件安全过滤
+- 实现 `ATT-003` 安全详情、可见 Link、实时 Permission 与 Storage Metadata 一致性校验
+- 实现 `ATT-004` 基于 `ObjectStorageAdapter.stream()` 的流式下载和安全响应 Header
+- 新增 Frozen multipart/query DTO 解析、文件内容安全扫描边界、统一 Attachment Error Mapper
+- 新增 Prisma Attachment 事务运行器和上传 Audit Receipt 对账读取器
+- 新增 Attachment HTTP 单元测试、Route 认证边界测试及 PostgreSQL/Storage 集成测试
+
+### Verified
+
+- PostgreSQL 18.4 + Local Storage 集成测试 6/6 通过
+- 20 个独立 Service/Repository 实例使用相同 Key 并发时仅一次 Storage 写入
+- 相同 Key/相同 Hash 安全重放，相同 Key/不同 Hash 使用 `SECURITY_REPLAY_DETECTED`
+- `attachments`、`attachment_links`、`audit_logs` 在同一事务提交，审计失败整体回滚
+- 数据库事务失败后完成 Storage Soft Delete 与 Physical Delete 补偿
+- 幂等终态写入失败后通过既有审计事实完成对账，不重复上传
+- 敏感附件在列表、详情和下载边界均执行字段权限与对象数据范围校验
+- 下载只允许 `active` Attachment，并验证真实文件流与安全 Header
+
+### Scope
+
+- Batch 7.4-B 实现状态为 `Completed / Pending Approval`，Task 7.4 正式状态继续为 `In Progress`
+- 未实现 `ATT-005` 至 `ATT-008`、独立 Link/Unlink API、Attachment 删除流程、Worker、Import 接入或前端功能
+- 未修改 Database v2.3、API v1.5、Prisma Schema、Migration、Mapping Audit、Object Type、Category、Status、DTO 字段、权限、错误码或 API 总数
+- 未修改 `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 或 `README.md`
+
 ## [0.11.20] - 2026-07-25
 
 ### Added

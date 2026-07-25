@@ -12,6 +12,7 @@ import { Prisma, type PrismaClient } from "../generated/prisma/client.js";
 type AttachmentLinkRow = NonNullable<
   Awaited<ReturnType<PrismaClient["attachment_links"]["findUnique"]>>
 >;
+type AttachmentLinkPrismaClient = Pick<PrismaClient, "attachment_links">;
 
 const categories = new AttachmentCategoryRegistry();
 
@@ -38,9 +39,9 @@ function uniqueConflict(error: unknown): boolean {
 }
 
 export class PrismaAttachmentLinkRepository implements AttachmentLinkRepository {
-  readonly #client: PrismaClient;
+  readonly #client: AttachmentLinkPrismaClient;
 
-  constructor(client: PrismaClient = getPrismaClient()) {
+  constructor(client: AttachmentLinkPrismaClient = getPrismaClient()) {
     this.#client = client;
   }
 

@@ -9,6 +9,7 @@ import type { ValidateAttachmentObjectInput, ValidatedAttachmentObject } from ".
 
 const attachmentPermission = {
   delete: "attachment.file.delete",
+  download: "attachment.file.download",
   link: "attachment.file.link",
   read: "attachment.file.read",
   unlink: "attachment.file.unlink",
@@ -43,7 +44,7 @@ export class AttachmentValidator {
     if (!input.access.permissionCodes.includes(attachmentPermission[input.operation])) {
       throw new AttachmentPermissionDeniedError();
     }
-    if (input.operation === "read") {
+    if (input.operation === "read" || input.operation === "download") {
       this.#objects.checkReadPermission(objectType, input.access);
     } else {
       this.#objects.checkWritePermission(objectType, input.access);

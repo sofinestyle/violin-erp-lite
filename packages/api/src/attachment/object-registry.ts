@@ -51,6 +51,7 @@ export const ATTACHMENT_OBJECT_DEFINITIONS: Readonly<
 
 const READ_ACTION = "read";
 const NON_WRITING_ACTIONS = new Set(["export", "read"]);
+const READ_OPERATIONS = new Set<AttachmentValidationOperation>(["download", "read"]);
 
 function intersects(left: readonly string[], right: readonly string[]): boolean {
   const rightSet = new Set(right);
@@ -133,7 +134,7 @@ export class AttachmentObjectRegistry {
     operation: AttachmentValidationOperation,
   ): void {
     if (!object.itemExists) throw new AttachmentNotFoundError();
-    if (operation !== "read" && !this.#definition(object.objectType).externalWrite) {
+    if (!READ_OPERATIONS.has(operation) && !this.#definition(object.objectType).externalWrite) {
       throw new AttachmentObjectStateError();
     }
   }

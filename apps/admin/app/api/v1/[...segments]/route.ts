@@ -1,10 +1,12 @@
 import { createHmac } from "node:crypto";
+import { Readable } from "node:stream";
 import {
   AppError,
   AuthenticationIdempotencyStore,
   AuthenticationRateLimiter,
   AuthenticationService,
   assertMasterDataResource,
+  createAttachmentDownloadHeaders,
   createSessionAuthenticationContext,
   createRouteHandler,
   createSuccessResponse,
@@ -15,23 +17,30 @@ import {
   loadJwtConfiguration,
   loadWechatConfiguration,
   MasterDataService,
+  mapAttachmentError,
   matchInventoryWorkflowEndpoint,
   matchWorkflowEndpoint,
+  parseAttachmentId,
+  parseAttachmentListQuery,
+  parseAttachmentUploadRequest,
   parseMasterDataListQuery,
   parseLoginRequest,
   parseRefreshRequest,
   parseSecurityListQuery,
   recordAuditEvent,
   requireClientType,
+  requireIdempotencyKey as requirePersistentIdempotencyKey,
   SecurityManagementService,
   WorkflowService,
   withAuthentication,
   type AuthRepository,
   type AuthenticationContext,
+  type IdempotencySafeResponse,
   type RequestContext,
   type WechatIdentityAdapter,
 } from "@violin-erp/api";
 import {
+  createAttachmentService,
   createCurrentUserResolver,
   PrismaAuthRepository,
   PrismaAuditWriter,
@@ -94,6 +103,17 @@ function services() {
     security: new SecurityManagementService(new PrismaSecurityRepository(), audit),
     workflow: new WorkflowService(new PrismaWorkflowRepository(), audit),
   };
+}
+
+function idempotencyResponse(response: IdempotencySafeResponse, context: RequestContext): Response {
+  const body =
+    response.body && typeof response.body === "object" && !Array.isArray(response.body)
+      ? { ...response.body, requestId: context.requestId, timestamp: context.timestamp }
+      : response.body;
+  return new Response(JSON.stringify(body), {
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+    status: response.httpStatus,
+  });
 }
 
 const unavailableWechatAdapter: WechatIdentityAdapter = {
@@ -262,6 +282,62 @@ async function dispatchAuthentication(
     );
   }
   throw new AppError("RESOURCE_NOT_FOUND", 404, "接口不存在");
+}
+
+async function dispatchAttachment(
+  request: Request,
+  context: RequestContext,
+  authentication: AuthenticationContext,
+  segments: string[],
+): Promise<Response | null> {
+  if (segments[0] !== "attachments") return null;
+  const endpoint = createAttachmentService();
+  try {
+    if (segments.length === 1 && request.method === "POST") {
+      const input = await parseAttachmentUploadRequest(request);
+      return idempotencyResponse(
+        await endpoint.upload(
+          input,
+          requirePersistentIdempotencyKey(request),
+          authentication,
+          context,
+        ),
+        context,
+      );
+    }
+    if (segments.length === 1 && request.method === "GET") {
+      const result = await endpoint.list(
+        parseAttachmentListQuery(new URL(request.url).searchParams),
+        authentication,
+        context,
+      );
+      return createSuccessResponse(result.items, context, {
+        meta: {
+          page: result.page,
+          pageSize: result.pageSize,
+          total: result.total,
+          totalPages: result.totalPages,
+        },
+      });
+    }
+    const attachmentId = parseAttachmentId(segments[1]);
+    if (segments.length === 2 && request.method === "GET") {
+      return createSuccessResponse(
+        await endpoint.detail(attachmentId, authentication, context),
+        context,
+      );
+    }
+    if (segments.length === 3 && segments[2] === "download" && request.method === "GET") {
+      const download = await endpoint.download(attachmentId, authentication, context);
+      return new Response(Readable.toWeb(download.stream) as ReadableStream, {
+        headers: createAttachmentDownloadHeaders(download.attachment, context.requestId),
+        status: 200,
+      });
+    }
+    throw new AppError("RESOURCE_NOT_FOUND", 404, "接口不存在");
+  } catch (error) {
+    throw mapAttachmentError(error);
+  }
 }
 
 async function dispatchWorkflow(
@@ -671,6 +747,8 @@ const handler = createRouteHandler(async (request, context) => {
     createCurrentUserResolver(),
     async (authentication) => {
       try {
+        const attachment = await dispatchAttachment(request, context, authentication, segments);
+        if (attachment) return attachment;
         if (segments[0] === "users" || segments[0] === "roles" || segments[0] === "permissions") {
           return await dispatchSecurity(request, context, authentication, segments);
         }
