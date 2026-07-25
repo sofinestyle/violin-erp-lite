@@ -1,7 +1,7 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.5
+version: 1.6
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -15,7 +15,7 @@ related_phase: Phase 5
 
 本文件是 Violin ERP Lite Phase 5 正式 API 规范总入口，统一 Task 5.1 至 Task 5.5 的接口编号、Header、请求、响应、分页、排序、筛选、命名、版本、错误码、权限、日志、导入、附件和安全规则。
 
-API Master Specification v1.5 为 Completed / Approved / Frozen，正式接口总数保持 335。API Change Request 005 已正式批准，在不新增路径、编号或权限代码的前提下补齐既有 `ATT-001` 至 `ATT-008` 的 DTO、封闭代码集合、生命周期、Storage、幂等、并发、审计与错误映射。API Master Specification v1.4 及其 335 个接口保留为历史冻结基线。
+API Master Specification v1.6 为 Completed / Approved / Frozen，正式接口总数保持 335。API Change Request 006 已正式批准，在不新增路径、编号、权限代码、错误码或数据库结构的前提下，为 Attachment Framework 正式新增 `AttachmentObjectType = product`、`product` → `products` Object Registry 映射，并允许 `general_business_document` 关联 Product。API Master Specification v1.5 及其 335 个接口保留为历史冻结基线。
 
 ## 2. 正式文档入口
 
@@ -36,7 +36,8 @@ API Master Specification v1.5 为 Completed / Approved / Frozen，正式接口�
 15. [API Change Request 004：幂等处理中与 Import 重复竞争行为](../00-governance/API_CHANGE_REQUEST_004.md)
 16. 本文件第 22 节：API Master Specification v1.4 持久化幂等正式契约
 17. [API Change Request 005：Attachment API 契约补齐](../00-governance/API_CHANGE_REQUEST_005.md)
-18. 本文件第 23 节：API Master Specification v1.5 Attachment Framework 正式契约
+18. 本文件第 23 节：API Master Specification v1.6 Attachment Framework 正式契约
+19. [API Change Request 006：Product Attachment Object Type](../00-governance/API_CHANGE_REQUEST_006.md)
 
 发生冲突时，Frozen 业务规则、Frozen Database Logical Design v2.3 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
 
@@ -62,7 +63,7 @@ API Master Specification v1.5 为 Completed / Approved / Frozen，正式接口�
 | API CR-001 | 库存盘点 `STC-*` | 17 | Completed / Approved |
 | API CR-001 | 销售退货 `SRT-*` | 13 | Completed / Approved |
 | API CR-001 | 报损 `DMG-*` | 13 | Completed / Approved |
-| 合计 | API Master Specification v1.5 正式接口 | 335 | Completed / Approved / Frozen |
+| 合计 | API Master Specification v1.6 正式接口 | 335 | Completed / Approved / Frozen |
 
 逐模块复核结果为 `74 + 29 + 29 + 10 + 26 + 18 + 17 + 15 + 22 + 15 + 8 + 4 + 5 + 16 + 4 + 17 + 13 + 13 = 335`。接口编号唯一且稳定，不得复用、改义或因排序调整重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。`STC-*`、`SRT-*` 和 `DMG-*` 的完整正式契约以 API Change Request 001 及 Task 5.4 补充章节为准；`SEC-006` 至 `SEC-021` 的完整正式契约以本文件第 16 节为准；`SEC-022` 至 `SEC-025` 的完整正式契约以本文件第 17 节为准；`CBR-003` 的 `transportMethod` 字段补充契约以本文件第 18 节为准。
 
@@ -1025,21 +1026,22 @@ API Master Specification v1.3 已完成、批准并冻结。本次只补齐既�
 - API v1.4 只补充既有高风险写 API 的可观察幂等行为，不扩大 `Idempotency-Key` 必填范围；
 - 本次不创建 Route、Service、Repository、幂等 Adapter、前端或测试实现，不启动 Task 7.5。
 
-## 23. API Change Request 005：Attachment Framework 正式契约
+## 23. API Change Request 005 / 006：Attachment Framework 正式契约
 
 ### 23.1 版本、数量与依赖
 
 1. API Change Request 005：Completed / Approved；
-2. API Master Specification：v1.5，Completed / Approved / Frozen；
-3. Database Logical Design v2.3：Completed / Approved / Frozen；
-4. Task 7.3 Object Storage 与 Task 7.5 Persistent Idempotency：Completed / Approved；
-5. 新增 API 0、删除 API 0、Path 变化 0、Method 变化 0、权限代码变化 0；
-6. Attachment API 保持 `ATT-001` 至 `ATT-008` 共 8 个，正式 API 总数保持 335；
-7. 本节只冻结契约，不创建 Route、Service、Repository、Object Registry、Upload、删除逻辑或 Worker。
+2. API Change Request 006：Completed / Approved；
+3. API Master Specification：v1.6，Completed / Approved / Frozen；
+4. Database Logical Design v2.3：Completed / Approved / Frozen；
+5. Task 7.3 Object Storage 与 Task 7.5 Persistent Idempotency：Completed / Approved；
+6. 新增 API 0、删除 API 0、Path 变化 0、Method 变化 0、权限代码变化 0、错误码变化 0；
+7. Attachment API 保持 `ATT-001` 至 `ATT-008` 共 8 个，正式 API 总数保持 335；
+8. 本节只冻结契约，不创建 Route、Service、Repository、Object Registry、Upload、删除逻辑或 Worker。
 
 ### 23.2 封闭 Object Type 与 Object Registry
 
-`AttachmentObjectType` 只允许以下 17 个代码：
+`AttachmentObjectType` 只允许以下 18 个代码：
 
 ```text
 purchase_order
@@ -1059,6 +1061,7 @@ damage_report
 transfer_order
 cross_border_shipment
 import_task
+product
 ```
 
 | Object Type | 正式对象 | 权限资源 | 数据范围与写入边界 |
@@ -1080,6 +1083,7 @@ import_task
 | `transfer_order` | `transfer_orders` | `transfer.order` | 来源、在途和目的仓；提交或调出后保护 |
 | `cross_border_shipment` | `cross_border_shipments` | `cross-border.shipment` | 三仓、厂家和业务关联；提交或发运后保护 |
 | `import_task` | `import_tasks` | `import.task` | 仓库或店铺目标；ATT 外部只读，写入只允许 `IMP-*` 调用统一 Attachment Service |
+| `product` | `products` | `master.product` | 产品主数据；新增/修改/启用/停用受基础资料权限控制；已被业务引用后保护历史可读 |
 
 每个 Registry Entry 必须提供存在性、可见性、对象状态、明细归属、读写权限、仓库/店铺/厂家数据范围和证据保护点解析。未知 Object Type 或缺失 Registry Entry 必须在查询业务数据前返回 `VALIDATION_ATTACHMENT_OBJECT_TYPE_UNSUPPORTED`，不得把客户端字符串映射为表名或 SQL。
 
@@ -1089,7 +1093,7 @@ import_task
 
 | Category | 默认敏感 | 证据类 | 删除与保留规则 | 允许对象 |
 | --- | --- | --- | --- | --- |
-| `general_business_document` | 否 | 否 | 对象尚未形成正式历史且解除全部 Link 后可删 | 除 `import_task` 外全部可写对象 |
+| `general_business_document` | 否 | 否 | 对象尚未形成正式历史且解除全部 Link 后可删 | 除 `import_task` 外全部可写对象，包含 `product` |
 | `inspection_evidence` | 否 | 是 | 验收提交或确认后永久保护 | `inspection_order` |
 | `inbound_evidence` | 否 | 是 | 入库提交或形成库存事实后永久保护 | `inbound_order`、`sales_return`、`transfer_order` |
 | `outbound_evidence` | 否 | 是 | 出库提交或形成库存事实后永久保护 | `outbound_order`、`purchase_return`、`damage_report`、`transfer_order`、`cross_border_shipment` |
@@ -1101,6 +1105,8 @@ import_task
 | `cross_border_shipping_evidence` | 是 | 是 | 发货提交或发运后永久保护 | `cross_border_shipment` |
 
 客户端不得使用自由文本 Category，也不得降低 Category 默认敏感级别。正式 `isSensitive` 为类别默认值与操作者合法提升标记的逻辑或。
+
+API Change Request 006 正式确认：`product` 只允许与 `general_business_document` 关联。Evidence、Voucher、Import 类 Category 不得关联 Product，包括但不限于 `inspection_evidence`、`inbound_evidence`、`outbound_evidence`、`inventory_evidence`、`import_source_file`、`import_error_report`、`payment_voucher`、`production_progress_evidence` 和 `cross_border_shipping_evidence`。
 
 ### 23.4 通用 DTO
 
@@ -1165,6 +1171,7 @@ permission: AttachmentPermissionDto derived by the server in real time
 - Header：必填 `Authorization`、`Content-Type: multipart/form-data`、`Idempotency-Key`；可选 `X-Request-ID`、`X-Client-Type`；
 - Authentication / Permission：已登录；`attachment.file.upload`、`attachment.file.link`、目标对象写权限及数据范围；敏感类别执行字段级权限；
 - Multipart：单个 `file`，以及 `objectType`、`objectId`、可选 `objectItemId`、`attachmentCategory`、可选 `isSensitive`、可选非负 `sortOrder`；禁止多文件；
+- CR-006：`objectType` 支持 `product`；`product` 仅允许搭配 `general_business_document`；
 - Validation：先校验 Object Registry、对象存在性和状态、明细归属、Category 兼容、文件大小、MIME、Extension、签名与内容安全；
 - 状态：新 Attachment 为 `active`；
 - Response：`201 AttachmentResponseDto`；
@@ -1181,6 +1188,7 @@ permission: AttachmentPermissionDto derived by the server in real time
 - Header：必填 `Authorization`；可选 `X-Request-ID`、`X-Client-Type`；
 - Authentication / Permission：`attachment.file.read` 与目标对象读权限、数据范围；敏感附件需字段级权限；
 - Query：必填 `objectType`、`objectId`；可选 `objectItemId`、`attachmentCategory`；`page` 默认 1，`pageSize` 默认 20、最大 100，`sortBy = uploadedAt | originalFilename | sortOrder`，`sortOrder = asc | desc`，默认排序为 `uploadedAt desc, id desc`；
+- CR-006：`objectType` 支持 `product`，用于查询产品关联的普通业务附件；
 - Validation：未知 Object Type/Category 在查询业务数据前拒绝；验证对象存在性、可见性和明细归属；
 - Response：统一分页 Envelope，`items` 为 `AttachmentResponseDto[]`；
 - 状态与敏感：只返回可见的 `active` 记录；无敏感权限的记录必须同时从 `items` 和 `total` 排除；
@@ -1221,6 +1229,7 @@ permission: AttachmentPermissionDto derived by the server in real time
 - Authentication / Permission：`attachment.file.link`、目标对象写权限与数据范围；敏感附件需字段级权限；
 - Path：`attachmentId: UUID`；
 - Body `CreateAttachmentLinkDto`：`objectType`、`objectId`、可选 `objectItemId`、`attachmentCategory`、可选非负 `sortOrder`（默认 0）；
+- CR-006：`objectType` 支持 `product`；`product` 仅允许新增 `general_business_document` 关联；
 - Validation：Object Registry、对象存在和状态、明细归属、Category 兼容与保护规则；
 - 状态：只允许 `active`；
 - Response：`201 AttachmentResponseDto` 最新投影；
@@ -1236,6 +1245,7 @@ permission: AttachmentPermissionDto derived by the server in real time
 - Authentication / Permission：`attachment.file.unlink`、目标对象写权限与数据范围；敏感附件需字段级权限；
 - Path：`attachmentId: UUID`；
 - Body：`attachmentLinkId: UUID`、`reason: string`（去空格后非空，最大 500）；
+- CR-006：当 Link 指向 `objectType = product` 时，按 Product Object Registry 校验产品存在性、可见性、写权限、数据范围与历史保护点；
 - Validation：Link 必须属于 Attachment；重新校验对象、状态、证据保护点与 Category；
 - Response：`200 AttachmentResponseDto` 最新投影；
 - Idempotency：使用 Task 7.5，重复调用返回首次稳定结果；
