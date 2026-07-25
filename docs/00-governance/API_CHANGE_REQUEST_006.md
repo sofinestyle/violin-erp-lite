@@ -1,8 +1,8 @@
 ---
 document_name: API Change Request 006：Product Attachment Object Type
 project: Violin ERP Lite
-version: 1.0
-status: Proposed / Pending Approval
+version: 1.1
+status: Approved
 owner: Project Manager
 created_date: 2026-07-25
 updated_date: 2026-07-25
@@ -10,6 +10,21 @@ related_phase: Phase 8
 ---
 
 # API Change Request 006：Product Attachment Object Type
+
+## 0. Approval Record
+
+- Approved By: Project Manager
+- Approval Date: 2026-07-25
+- Approval Status: Approved
+
+Approval Scope：
+
+1. 新增 AttachmentObjectType：`product`；
+2. 新增 `product` → `products` 正式对象映射；
+3. 允许 `general_business_document` 支持 Product Attachment；
+4. 不新增 Database Schema；
+5. 不新增 Permission Code；
+6. 不新增 Error Code。
 
 ## 1. Change Reason
 
@@ -167,29 +182,29 @@ API CR：Required。
 6. Product 附件关联测试；
 7. Task 8-B2-2 Master Data Core Implementation 文档。
 
-不得在本 CR 批准前实现 `objectType = product`。
+不得超出本 CR 批准范围实现 `objectType = product`。
 
-## 8. Approval Required
+## 8. Approval Scope
 
-需要项目负责人批准：
+项目负责人已批准：
 
-1. 是否允许 Product 成为 Attachment Object Type；
-2. 是否仅允许 `general_business_document` Category 关联 Product；
-3. 是否复用 `master.product.update` 作为产品附件写权限；
-4. 是否确认不新增数据库对象；
-5. 是否确认不新增 Permission Code；
-6. 是否授权 Task 8-B2-2 在批准后继续实现 Product 附件关联。
+1. 允许 Product 成为 Attachment Object Type；
+2. 仅允许 `general_business_document` Category 关联 Product；
+3. 复用 `master.product.update` 作为产品附件写权限；
+4. 确认不新增数据库对象；
+5. 确认不新增 Permission Code；
+6. 授权 Task 8-B2-2 在批准范围内继续实现 Product 附件关联。
 
 ## 9. Current Task Impact
 
 Task `8-B2-2 Master Data Development - Core` 当前受阻于 Product 附件关联契约不足。
 
-在本 CR 批准前：
+本 CR 批准后，后续实施必须遵守批准范围：
 
-1. 不得修改 API Spec；
-2. 不得修改 Attachment Object Type 代码；
-3. 不得修改 Attachment Object Registry；
-4. 不得实现 Product 附件关联；
+1. API SSOT 更新必须仅限 Attachment Object Type、Object Registry、Category Matrix 与相关 DTO 允许值说明；
+2. 不得新增 DTO 字段、响应字段或错误码；
+3. 不得新增数据库 Schema、Migration 或数据库 Check Value；
+4. 不得新增 Permission Code；
 5. 不得以自由文本 `objectType = product` 绕过封闭 Registry。
 
-Category、Brand、Product、SKU 的非附件基础 CRUD 能力已有既有实现基础，但本任务包含 Product 附件关联，因此建议先批准或拒绝本 CR 后再继续完整实现与验收。
+Category、Brand、Product、SKU 的非附件基础 CRUD 能力已有既有实现基础。Product 附件关联需在 API SSOT 同步完成后，按本 CR 批准范围继续实现与验收。
