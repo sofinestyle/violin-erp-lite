@@ -2125,3 +2125,25 @@ Approved
 ### 影响
 
 本决定只同步 Phase 与 Task 治理状态及 Task 7.5 后续实施边界，不实现 Attachment、Idempotency、Import 或后台 Worker，不修改业务代码、Database v2.2、API v1.4、Prisma、Migration、Mapping Audit、DCR-005 或 API CR-005。
+
+## DEC-086 完成Task 7.5实现并提交技术验收
+
+### 状态
+
+Pending Approval
+
+### 日期
+
+2026-07-25
+
+### 决定
+
+- Task 7.5 已按 Database v2.2 与 API v1.4 完成统一持久化幂等与并发控制实现；
+- 实现状态更新为 Completed / Pending Approval，等待 GitHub 技术验收；
+- PostgreSQL 18.4 的 20 并发与多实例竞争验证通过；
+- Current Task 继续为 Task 7.5，正式状态继续为 In Progress；
+- Task 7.4 不恢复，Task 7.6 至 Task 7.9 不启动。
+
+### 影响
+
+本次新增平台幂等组件、Prisma Repository、环境变量模板和测试，不修改 Frozen Database/API、Prisma Schema、Migration、Mapping Audit、API 数量、DTO、权限或错误码；不实现 Attachment、Import 业务流程或 Background Worker。

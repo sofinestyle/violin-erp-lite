@@ -7,6 +7,8 @@ export {
   applyInventoryMovements,
   PrismaInventoryWorkflowRepository,
 } from "./inventory-workflow/prisma-inventory-workflow-repository.js";
+export { PrismaIdempotencyRepository } from "./idempotency/prisma-idempotency-repository.js";
+export { createPersistentIdempotencyAdapter } from "./idempotency/persistent-idempotency.js";
 export { PrismaSecurityRepository } from "./security/prisma-security-repository.js";
 export { PrismaWorkflowRepository } from "./workflow/prisma-workflow-repository.js";
 export type { PrismaClient } from "./generated/prisma/client.js";

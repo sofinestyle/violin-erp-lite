@@ -1,7 +1,7 @@
 ---
 document_name: Phase 7 Platform Foundation
 project: Violin ERP Lite
-version: 1.5
+version: 1.6
 status: In Progress
 owner: Project Manager
 created_date: 2026-07-24
@@ -144,7 +144,7 @@ Task 7.5 已正式启动并成为 Current Task，后续实施范围限定为：
 11. 收口并发控制；
 12. 不提前实现 Attachment、Import 或后台 Worker。
 
-本轮只同步治理状态，不实现上述代码。任何超出 Database v2.2 或 API v1.4 的数据库或接口变更，仍须先通过独立 DCR 或 API Change Request。
+Task 7.5 已完成通用持久化幂等平台、Prisma Repository、Hash、Scope、安全响应、租约、重放、对账与统一 Adapter/Middleware 实现，并通过真实 PostgreSQL 18.4 的 20 并发和多实例验证。实现状态为 `Completed / Pending Approval`；正式 Current Task 继续为 Task 7.5 / In Progress，等待 GitHub 技术验收和项目负责人批准。任何超出 Database v2.2 或 API v1.4 的数据库或接口变更，仍须先通过独立 DCR 或 API Change Request。
 
 ### 5.5 Background Job & Distributed Lock
 

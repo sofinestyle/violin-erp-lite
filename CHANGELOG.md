@@ -11,6 +11,32 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.16] - 2026-07-25
+
+### Added
+
+- 新增全系统统一 `IdempotencyAdapter`、Header Middleware、HMAC Key Hasher、Canonical Request Hasher、Scope Resolver、Response Sanitizer 与 Reconciliation Strategy
+- 新增基于 Database v2.2 `idempotency_records` 的 `PrismaIdempotencyRepository` 及生产 PostgreSQL 组装入口
+- 新增 Repository、Hash、HMAC、Scope、安全过滤、Replay、Lease、Reconciliation、20 并发与多实例测试
+- `.env.example` 新增服务端幂等 Secret、集中租约、保留期和安全响应大小配置
+
+### Changed
+
+- Task 7.5 实现状态更新为 `Completed / Pending Approval`
+- Phase 7 记录 Task 7.5 已完成实现并等待 GitHub 技术验收
+
+### Verified
+
+- PostgreSQL 18.4 隔离测试库成功部署全部正式 Migration
+- 20 个同 Key、同请求并发仅 1 个认领、1 次业务执行、1 条正式记录，其余 19 个稳定冲突
+- 4 个独立 Prisma Client / Repository 实例共同竞争时仍由数据库唯一约束裁决
+
+### Scope
+
+- Current Task 仍为 Task 7.5 / In Progress，不恢复 Task 7.4
+- 未实现 Attachment、Import 业务流程或 Background Worker
+- 未修改 Frozen Database v2.2、API v1.4、Prisma Schema、Migration、Mapping Audit、API 数量、DTO、权限或错误码
+
 ## [0.11.15] - 2026-07-25
 
 ### Added
