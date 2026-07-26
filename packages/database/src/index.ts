@@ -17,6 +17,7 @@ export {
   applyInventoryMovements,
   PrismaInventoryWorkflowRepository,
 } from "./inventory-workflow/prisma-inventory-workflow-repository.js";
+export { PrismaInventoryQueryRepository } from "./inventory-query/prisma-inventory-query-repository.js";
 export { PrismaIdempotencyRepository } from "./idempotency/prisma-idempotency-repository.js";
 export { createPersistentIdempotencyAdapter } from "./idempotency/persistent-idempotency.js";
 export {

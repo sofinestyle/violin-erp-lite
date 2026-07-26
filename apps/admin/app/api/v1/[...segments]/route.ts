@@ -12,6 +12,7 @@ import {
   createSuccessResponse,
   extractBearerToken,
   HttpWechatIdentityAdapter,
+  InventoryQueryService,
   InventoryWorkflowService,
   JwtService,
   loadJwtConfiguration,
@@ -25,6 +26,7 @@ import {
   parseAttachmentUploadRequest,
   parseCreateAttachmentLink,
   parseDeleteAttachment,
+  parseInventoryListQuery,
   parseMasterDataListQuery,
   parseLoginRequest,
   parseRefreshRequest,
@@ -47,6 +49,7 @@ import {
   createCurrentUserResolver,
   PrismaAuthRepository,
   PrismaAuditWriter,
+  PrismaInventoryQueryRepository,
   PrismaInventoryWorkflowRepository,
   PrismaMasterDataRepository,
   PrismaSecurityRepository,
@@ -108,6 +111,7 @@ async function attachmentJsonBody(request: Request): Promise<unknown> {
 function services() {
   const audit = new PrismaAuditWriter();
   return {
+    inventoryQuery: new InventoryQueryService(new PrismaInventoryQueryRepository()),
     masterData: new MasterDataService(new PrismaMasterDataRepository(), audit),
     inventoryWorkflow: new InventoryWorkflowService(new PrismaInventoryWorkflowRepository(), audit),
     security: new SecurityManagementService(new PrismaSecurityRepository(), audit),
@@ -510,6 +514,88 @@ async function dispatchInventoryWorkflow(
   });
 }
 
+async function dispatchInventoryQuery(
+  request: Request,
+  context: RequestContext,
+  authentication: AuthenticationContext,
+  segments: string[],
+): Promise<Response | null> {
+  const endpoint = services().inventoryQuery;
+  const url = new URL(request.url);
+
+  if (request.method !== "GET") return null;
+  if (segments[0] !== "inventories") return null;
+
+  const query = parseInventoryListQuery(url.searchParams);
+
+  if (segments.length === 2 && segments[0] === "inventories" && segments[1] === "summary") {
+    const skuId = url.searchParams.get("skuId")?.trim();
+    if (skuId) {
+      return createSuccessResponse(
+        await endpoint.summaryBySku(skuId, query, authentication, context),
+        context,
+      );
+    }
+    return createSuccessResponse(await endpoint.summary(query, authentication, context), context);
+  }
+
+  if (segments.length === 2 && segments[0] === "inventories" && segments[1] === "by-warehouse") {
+    const warehouseId = url.searchParams.get("warehouseId")?.trim();
+    if (warehouseId) {
+      return createSuccessResponse(
+        await endpoint.byWarehouse(warehouseId, query, authentication, context),
+        context,
+      );
+    }
+    const result = await endpoint.list(query, authentication, context);
+    return createSuccessResponse(result.items, context, {
+      meta: {
+        page: result.page,
+        pageSize: result.pageSize,
+        total: result.total,
+        totalPages: result.totalPages,
+      },
+    });
+  }
+
+  if (
+    segments.length === 2 &&
+    segments[0] === "inventories" &&
+    segments[1] === "manufacturer-warehouses"
+  ) {
+    const result = await endpoint.manufacturerWarehouses(query, authentication, context);
+    return createSuccessResponse(result.items, context, {
+      meta: {
+        page: result.page,
+        pageSize: result.pageSize,
+        total: result.total,
+        totalPages: result.totalPages,
+      },
+    });
+  }
+
+  if (segments.length === 1 && segments[0] === "inventories") {
+    const result = await endpoint.list(query, authentication, context);
+    return createSuccessResponse(result.items, context, {
+      meta: {
+        page: result.page,
+        pageSize: result.pageSize,
+        total: result.total,
+        totalPages: result.totalPages,
+      },
+    });
+  }
+
+  if (segments.length === 2 && segments[0] === "inventories") {
+    return createSuccessResponse(
+      await endpoint.detail(assertUuid(segments[1]), authentication, context),
+      context,
+    );
+  }
+
+  return null;
+}
+
 async function dispatchMasterData(
   request: Request,
   context: RequestContext,
@@ -809,6 +895,13 @@ const handler = createRouteHandler(async (request, context) => {
         if (segments[0] === "users" || segments[0] === "roles" || segments[0] === "permissions") {
           return await dispatchSecurity(request, context, authentication, segments);
         }
+        const inventoryQuery = await dispatchInventoryQuery(
+          request,
+          context,
+          authentication,
+          segments,
+        );
+        if (inventoryQuery) return inventoryQuery;
         const inventoryWorkflow = await dispatchInventoryWorkflow(
           request,
           context,
