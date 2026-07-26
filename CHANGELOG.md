@@ -11,6 +11,38 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.37] - 2026-07-26
+
+### Changed
+
+- Phase 9 Test Plan & System Integration 更新为 `Completed / Approved`
+- Current Phase 切换为 `Phase 10`
+- Phase 10 Release & Acceptance 状态为 `Waiting / Not Started`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 与 `README.md` 同步 Phase 9 完成与 Phase 10 当前状态
+- 新增 DEC-104，记录 Phase 9 Test Plan & System Integration 完成批准
+
+### Added
+
+- 新增 `TASK_9_C_FINAL_QA_REVIEW.md`
+- 记录 9-A Test Plan 与 9-B Full System Integration Testing 均为 Completed / Approved
+- 记录最终测试结果为 `Pass with Known Issues`
+- 记录 Known Issues 2 项，均为 Accepted / Non-blocking
+
+### Verified
+
+- Blocker / Critical / Major / Minor Bug 均为 0
+- Database Status：Approved
+- API Status：Approved
+- Permission Status：Approved
+- `pnpm status:check` 通过
+- `pnpm check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改业务代码、Database Schema、Migration、API Contract、Permission 或业务规则
+
 ## [0.11.36] - 2026-07-26
 
 ### Changed

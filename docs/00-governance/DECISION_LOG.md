@@ -2603,3 +2603,33 @@ Approved
 ### 影响
 
 本决定只同步 Phase 8 Application Development 最终审查、冻结状态与 Phase 9 当前状态，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Phase 8 后续如需新增或修改业务模块、业务对象、数据库、API、权限、库存边界、外部平台同步、报表快照、高级分析、AI 能力或平台能力接入，必须先经过对应 DCR、API Change Request、Permission 评估、Architecture Decision Update 或独立获批任务。Phase 9 Test Plan & System Integration 尚未启动开发或测试执行，当前仅作为下一阶段状态入口。
+
+## DEC-104 批准Phase 9 Test Plan & System Integration完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-26
+
+### 决定
+
+- 项目负责人批准 Phase 9 Test Plan & System Integration 最终 QA 审查完成；
+- 9-A System Integration Test Plan 已完成并获得批准；
+- 9-B Full System Integration Testing 已完成并获得批准；
+- 9-C Final QA Review & Phase 9 Approval 已完成并获得批准；
+- 最终测试结果为 Pass with Known Issues；
+- Blocker / Critical / Major / Minor Bug 均为 0；
+- Known Issues 共 2 项，分别为 Node Engine Warning 与 External Integration Test Skip，均接受为非阻塞；
+- Phase 8 业务闭环 Master Data → Procurement → Production → Inspection → Inbound → Inventory → Cross-border → Sales → Outbound → Statistics 已通过系统集成测试；
+- Database、API 与 Permission 均保持 Approved，未发现未解决漂移；
+- Phase 9 Test Plan & System Integration 状态更新为 Completed / Approved；
+- Current Phase 切换为 Phase 10；
+- Current Task 切换为 Phase 10 Release & Acceptance；
+- Phase 10 状态为 Waiting / Not Started。
+
+### 影响
+
+本决定只同步 Phase 9 最终 QA 审查、完成批准状态与 Phase 10 当前状态，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Phase 10 Release & Acceptance 尚未执行发布、数据初始化、验收、上线或交付动作；后续发布环境、数据初始化、上线检查、用户验收、培训、上线观察和正式交付必须在 Phase 10 获批任务中进行。
