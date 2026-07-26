@@ -51,6 +51,17 @@ function purchaseCommand(payload: Record<string, unknown>): WorkflowCommand {
   };
 }
 
+function inspectionCommand(payload: Record<string, unknown>): WorkflowCommand {
+  return {
+    action: "create",
+    apiId: "INS-003",
+    mutation: true,
+    payload,
+    query: new URLSearchParams(),
+    resource: "inspection",
+  };
+}
+
 describe("Frozen workflow API contracts", () => {
   it("registers all in-scope APIs and excludes only INB-005 other inbound", () => {
     expect(WORKFLOW_API_IDS).toHaveLength(75);
@@ -196,6 +207,58 @@ describe("Frozen workflow API contracts", () => {
       action: "PUR-003",
       actorUserId: USER_ID,
       resourceType: "purchase",
+    });
+  });
+
+  it("validates inspection source boundary and writes inspection audit", async () => {
+    const repository: WorkflowRepository = {
+      execute: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "draft" }),
+    };
+    const audit = new InMemoryAuditWriter();
+    const service = new WorkflowService(repository, audit);
+    const item = {
+      inspectedQuantity: 1,
+      inspectionResult: "qualified",
+      qualifiedQuantity: 1,
+      sourceItemId: DOCUMENT_ID,
+      skuId: DOCUMENT_ID,
+      unqualifiedQuantity: 0,
+    };
+    await expect(
+      service.execute(
+        inspectionCommand({
+          inspectionDate: "2026-08-20",
+          inspectionWarehouseId: DOCUMENT_ID,
+          inspectorId: USER_ID,
+          items: [item],
+          productionOrderId: DOCUMENT_ID,
+          purchaseOrderId: DOCUMENT_ID,
+          sourceType: "production",
+        }),
+        "inspection.order.create",
+        authentication(["inspection.order.create"]),
+        context,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
+    await service.execute(
+      inspectionCommand({
+        inspectionDate: "2026-08-20",
+        inspectionWarehouseId: DOCUMENT_ID,
+        inspectorId: USER_ID,
+        items: [item],
+        purchaseOrderId: DOCUMENT_ID,
+        sourceType: "purchase",
+      }),
+      "inspection.order.create",
+      authentication(["inspection.order.create"]),
+      context,
+    );
+    expect(repository.execute).toHaveBeenCalledTimes(1);
+    expect(audit.events).toHaveLength(1);
+    expect(audit.events[0]).toMatchObject({
+      action: "INS-003",
+      actorUserId: USER_ID,
+      resourceType: "inspection",
     });
   });
 });

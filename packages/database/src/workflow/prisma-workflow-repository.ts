@@ -689,60 +689,169 @@ async function createCompletion(client: DynamicClient, command: WorkflowCommand,
   });
 }
 
-async function createInspection(client: DynamicClient, payload: WorkflowPayload, actor: string) {
-  const sourceType = text(payload, "sourceType");
+function requireInspectionSourceType(sourceType: string | null): "purchase" | "production" {
+  if (sourceType !== "purchase" && sourceType !== "production") {
+    throw new ValidationError("验收来源类型必须是 purchase 或 production", [
+      { field: "sourceType", message: "来源类型无效" },
+    ]);
+  }
+  return sourceType;
+}
+
+function validateInspectionResult(value: string | null): string {
+  if (!value || !["qualified", "unqualified", "pending"].includes(value)) {
+    throw new ValidationError("验收结果无效", [
+      { field: "inspectionResult", message: "不属于正式验收结果" },
+    ]);
+  }
+  return value;
+}
+
+function availableInspectionQuantity(
+  sourceType: "purchase" | "production",
+  sourceItem: JsonRecord,
+): number {
+  const total =
+    sourceType === "purchase"
+      ? Number(sourceItem.quantity)
+      : Number(sourceItem.completed_quantity ?? 0);
+  return total - Number(sourceItem.inspected_quantity ?? 0);
+}
+
+async function loadInspectionSource(
+  client: DynamicClient,
+  payload: WorkflowPayload,
+): Promise<{
+  source: JsonRecord;
+  sourceId: string;
+  sourceItemsById: Map<string, JsonRecord>;
+  sourceType: "purchase" | "production";
+}> {
+  const sourceType = requireInspectionSourceType(text(payload, "sourceType"));
+  const hasPurchaseId = typeof payload.purchaseOrderId === "string";
+  const hasProductionId = typeof payload.productionOrderId === "string";
+  if (
+    (sourceType === "purchase" && (!hasPurchaseId || hasProductionId)) ||
+    (sourceType === "production" && (!hasProductionId || hasPurchaseId))
+  ) {
+    throw new ValidationError("验收单必须且只能关联一种来源");
+  }
   const sourceModel = sourceType === "purchase" ? "purchase_orders" : "production_orders";
-  const sourceId = text(
+  const sourceId = requiredText(
     payload,
     sourceType === "purchase" ? "purchaseOrderId" : "productionOrderId",
   );
-  const source = await client[sourceModel]!.findFirst({ where: { id: sourceId } });
+  const relation = sourceType === "purchase" ? "purchase_order_items" : "production_order_items";
+  const source = await client[sourceModel]!.findFirst({
+    include: { [relation]: true },
+    where: { id: sourceId },
+  });
   if (!source) throw new ValidationError("验收来源不存在");
-  const sourceItems = items(payload);
-  const snapshots = await skuSnapshots(client, sourceItems);
+  const allowedSourceStates =
+    sourceType === "purchase"
+      ? ["approved"]
+      : ["approved", "in_production", "partially_completed", "completed"];
+  if (!allowedSourceStates.includes(String(source.status))) {
+    throw new ConflictError("当前来源单据状态不允许创建验收");
+  }
+  return {
+    source,
+    sourceId,
+    sourceItemsById: new Map(
+      ((source[relation] as JsonRecord[]) ?? []).map((item) => [String(item.id), item]),
+    ),
+    sourceType,
+  };
+}
+
+function buildInspectionDetailRows(
+  sourceType: "purchase" | "production",
+  sourceItemsById: Map<string, JsonRecord>,
+  sourceItems: JsonRecord[],
+  actor: string,
+): {
+  detailRows: JsonRecord[];
+  inspected: number;
+  qualified: number;
+  unqualified: number;
+} {
   let inspected = 0;
   let qualified = 0;
   let unqualified = 0;
+  const seenSourceItems = new Set<string>();
   const detailRows = sourceItems.map((item, index) => {
-    const inspectedQuantity = decimal(item.inspectedQuantity, "inspectedQuantity");
+    const sourceItemId = requiredText(item, "sourceItemId");
+    if (seenSourceItems.has(sourceItemId)) {
+      throw new ValidationError("同一验收单不得重复引用同一来源明细");
+    }
+    seenSourceItems.add(sourceItemId);
+    const sourceItem = sourceItemsById.get(sourceItemId);
+    if (!sourceItem || sourceItem.sku_id !== item.skuId) {
+      throw new ValidationError("验收明细与来源单据不一致");
+    }
+    const inspectedQuantity = positiveDecimal(item.inspectedQuantity, "inspectedQuantity");
     const qualifiedQuantity = decimal(item.qualifiedQuantity, "qualifiedQuantity");
     const unqualifiedQuantity = decimal(item.unqualifiedQuantity, "unqualifiedQuantity");
     if (inspectedQuantity !== qualifiedQuantity + unqualifiedQuantity) {
       throw new ValidationError("验收数量必须等于合格数量与不合格数量之和");
     }
+    if (inspectedQuantity > availableInspectionQuantity(sourceType, sourceItem)) {
+      throw new ValidationError("验收数量超过来源可验收数量");
+    }
+    const inspectionResult = validateInspectionResult(text(item, "inspectionResult"));
     inspected += inspectedQuantity;
     qualified += qualifiedQuantity;
     unqualified += unqualifiedQuantity;
     return {
-      ...commonItem(
-        { ...item, quantity: inspectedQuantity },
-        snapshots.get(String(item.skuId))!,
-        index + 1,
-        actor,
-      ),
+      created_by: actor,
       defect_category: text(item, "defectCategory", true),
       defect_description: text(item, "defectDescription", true),
       disposition_method: text(item, "dispositionMethod", true),
       inspected_quantity: inspectedQuantity,
-      inspection_result: text(item, "inspectionResult"),
+      inspection_result: inspectionResult,
+      line_no: index + 1,
       pending_quantity: 0,
       qualified_quantity: qualifiedQuantity,
-      source_item_id: text(item, "sourceItemId"),
+      quantity: inspectedQuantity,
+      remark: text(item, "remark", true),
+      sku_code_snapshot: sourceItem.sku_code_snapshot,
+      sku_id: sourceItem.sku_id,
+      sku_name_snapshot: sourceItem.sku_name_snapshot,
+      source_item_id: sourceItem.id,
+      specification_snapshot: sourceItem.specification_snapshot,
       unqualified_quantity: unqualifiedQuantity,
+      updated_by: actor,
     };
   });
+  return { detailRows, inspected, qualified, unqualified };
+}
+
+function overallInspectionResult(qualified: number, unqualified: number): string {
+  return unqualified === 0 ? "qualified" : qualified === 0 ? "unqualified" : "pending";
+}
+
+async function createInspection(client: DynamicClient, payload: WorkflowPayload, actor: string) {
+  const { sourceId, sourceItemsById, sourceType } = await loadInspectionSource(client, payload);
+  await activeWarehouse(client, requiredText(payload, "inspectionWarehouseId"));
+  const sourceItems = items(payload);
+  const { detailRows, inspected, qualified, unqualified } = buildInspectionDetailRows(
+    sourceType,
+    sourceItemsById,
+    sourceItems,
+    actor,
+  );
+  const inspectionDate = date(payload, "inspectionDate");
   return client.inspection_orders!.create({
     data: {
       approval_status: "not_required",
       created_by: actor,
-      document_date: date(payload, "inspectionDate"),
+      document_date: inspectionDate,
       document_no: documentNo("INS"),
-      inspection_date: date(payload, "inspectionDate"),
+      inspection_date: inspectionDate,
       inspection_order_items: { create: detailRows },
-      inspection_result:
-        unqualified === 0 ? "qualified" : qualified === 0 ? "unqualified" : "partially_qualified",
-      inspection_warehouse_id: text(payload, "inspectionWarehouseId"),
-      inspector_id: text(payload, "inspectorId"),
+      inspection_result: overallInspectionResult(qualified, unqualified),
+      inspection_warehouse_id: requiredText(payload, "inspectionWarehouseId"),
+      inspector_id: requiredText(payload, "inspectorId"),
       production_order_id: sourceType === "production" ? sourceId : null,
       purchase_order_id: sourceType === "purchase" ? sourceId : null,
       remark: text(payload, "remark", true),
@@ -936,6 +1045,14 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
     }[command.action];
     if (!state || !state.from.includes(String(current.status)))
       throw new ConflictError("当前验收单状态不允许此操作");
+    if (["revoke", "void"].includes(command.action)) {
+      const inboundCount = await client.inbound_orders!.count({
+        where: { inspection_order_id: current.id },
+      });
+      if (inboundCount > 0) {
+        throw new ConflictError("验收单已有入库下游，不允许撤销或作废");
+      }
+    }
     const inspection = await client.inspection_orders!.findFirst({
       include: { inspection_order_items: true },
       where: { id: current.id },
@@ -961,14 +1078,33 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
           });
         }
       }
-      return transaction[model]!.update({
+      const updated = await transaction[model]!.update({
         data: {
+          ...(command.action === "confirm" ? { approved_at: new Date(), approved_by: actor } : {}),
+          ...(command.action === "revoke" || command.action === "void"
+            ? { cancel_reason: text(command.payload, "reason", true) }
+            : {}),
+          ...(command.action === "submit" ? { submitted_at: new Date(), submitted_by: actor } : {}),
           status: state.to,
           updated_by: actor,
           version_no: Number(current.version_no) + 1,
         },
         where: { id: current.id },
       });
+      await transaction.document_status_histories!.create({
+        data: {
+          change_reason: text(command.payload, "reason", true),
+          changed_at: new Date(),
+          changed_by: actor,
+          from_status: current.status,
+          object_id: current.id,
+          object_no_snapshot: current.document_no,
+          object_type: command.resource,
+          remark: text(command.payload, "comment", true),
+          to_status: state.to,
+        },
+      });
+      return updated;
     });
   }
   if (command.resource === "inbound" && command.action === "confirm") {
@@ -1204,6 +1340,65 @@ async function updateDocument(
             version_no: versionNo + 1,
           },
           include: { production_order_items: true },
+          where: { id: current.id },
+        }),
+      );
+    });
+  } else if (command.resource === "inspection" && command.payload.items !== undefined) {
+    const currentSourceType = requireInspectionSourceType(String(current.source_type));
+    const payloadWithSource: WorkflowPayload = {
+      ...command.payload,
+      sourceType: currentSourceType,
+      ...(currentSourceType === "purchase"
+        ? { purchaseOrderId: current.purchase_order_id }
+        : { productionOrderId: current.production_order_id }),
+    };
+    const { sourceItemsById, sourceType } = await loadInspectionSource(client, payloadWithSource);
+    if (command.payload.inspectionWarehouseId !== undefined) {
+      await activeWarehouse(client, requiredText(command.payload, "inspectionWarehouseId"));
+    }
+    const sourceItems = items(command.payload);
+    const { detailRows, inspected, qualified, unqualified } = buildInspectionDetailRows(
+      sourceType,
+      sourceItemsById,
+      sourceItems,
+      actor,
+    );
+    const inspectionDate =
+      command.payload.inspectionDate !== undefined ? date(command.payload, "inspectionDate") : null;
+    return client.$transaction(async (transaction) => {
+      await transaction.inspection_order_items!.deleteMany({
+        where: { inspection_order_id: current.id },
+      });
+      return record(
+        await transaction.inspection_orders!.update({
+          data: {
+            ...(command.payload.inspectionDate !== undefined
+              ? { document_date: inspectionDate, inspection_date: inspectionDate }
+              : {}),
+            ...(command.payload.inspectionWarehouseId !== undefined
+              ? { inspection_warehouse_id: requiredText(command.payload, "inspectionWarehouseId") }
+              : {}),
+            ...(command.payload.inspectorId !== undefined
+              ? { inspector_id: requiredText(command.payload, "inspectorId") }
+              : {}),
+            ...(command.payload.remark !== undefined
+              ? { remark: text(command.payload, "remark", true) }
+              : {}),
+            ...(command.payload.unqualifiedDisposition !== undefined
+              ? {
+                  unqualified_disposition: text(command.payload, "unqualifiedDisposition", true),
+                }
+              : {}),
+            inspection_order_items: { create: detailRows },
+            inspection_result: overallInspectionResult(qualified, unqualified),
+            total_inspected_quantity: inspected,
+            total_qualified_quantity: qualified,
+            total_unqualified_quantity: unqualified,
+            updated_by: actor,
+            version_no: versionNo + 1,
+          },
+          include: { inspection_order_items: true },
           where: { id: current.id },
         }),
       );

@@ -772,4 +772,334 @@ describe("Prisma workflow repository", () => {
       code: "CONFLICT_REQUEST",
     });
   });
+
+  it("creates purchase source inspection with source quantity validation without touching inventory", async () => {
+    const purchaseOrderItemId = "77777777-7777-4777-8777-777777777777";
+    const create = vi.fn().mockResolvedValue({
+      id: "88888888-8888-4888-8888-888888888888",
+      inspection_order_items: [{ inspected_quantity: 4 }],
+      inspection_result: "pending",
+      status: "draft",
+      total_inspected_quantity: 4,
+    });
+    const client = {
+      inspection_orders: { create },
+      purchase_orders: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: ORDER_ID,
+          purchase_order_items: [
+            {
+              id: purchaseOrderItemId,
+              inspected_quantity: 1,
+              quantity: 10,
+              sku_code_snapshot: "SKU-001",
+              sku_id: SKU_ID,
+              sku_name_snapshot: "小提琴 SKU",
+              specification_snapshot: "4/4",
+            },
+          ],
+          status: "approved",
+        }),
+      },
+      warehouses: { findFirst: vi.fn().mockResolvedValue({ id: WAREHOUSE_ID }) },
+    };
+    const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "create",
+          apiId: "INS-003",
+          mutation: true,
+          payload: {
+            inspectionDate: "2026-08-20",
+            inspectionWarehouseId: WAREHOUSE_ID,
+            inspectorId: USER_ID,
+            items: [
+              {
+                inspectedQuantity: 4,
+                inspectionResult: "unqualified",
+                qualifiedQuantity: 3,
+                sourceItemId: purchaseOrderItemId,
+                skuId: SKU_ID,
+                unqualifiedQuantity: 1,
+              },
+            ],
+            purchaseOrderId: ORDER_ID,
+            sourceType: "purchase",
+          },
+          query: new URLSearchParams(),
+          resource: "inspection",
+        },
+        actor,
+      ),
+    ).resolves.toMatchObject({
+      inspectionResult: "pending",
+      status: "draft",
+      totalInspectedQuantity: 4,
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          inspection_order_items: expect.objectContaining({
+            create: [
+              expect.objectContaining({
+                inspected_quantity: 4,
+                pending_quantity: 0,
+                qualified_quantity: 3,
+                source_item_id: purchaseOrderItemId,
+                unqualified_quantity: 1,
+              }),
+            ],
+          }),
+          purchase_order_id: ORDER_ID,
+          source_type: "purchase",
+        }),
+      }),
+    );
+    expect(
+      (client as { inventories?: unknown; inventory_transactions?: unknown }).inventories,
+    ).toBeUndefined();
+    expect(
+      (client as { inventories?: unknown; inventory_transactions?: unknown })
+        .inventory_transactions,
+    ).toBeUndefined();
+  });
+
+  it("creates production source inspection from completed quantity", async () => {
+    const productionOrderItemId = "77777777-7777-4777-8777-777777777777";
+    const client = {
+      inspection_orders: {
+        create: vi.fn().mockResolvedValue({
+          id: "88888888-8888-4888-8888-888888888888",
+          status: "draft",
+          total_qualified_quantity: 2,
+        }),
+      },
+      production_orders: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: ORDER_ID,
+          production_order_items: [
+            {
+              completed_quantity: 5,
+              id: productionOrderItemId,
+              inspected_quantity: 1,
+              sku_code_snapshot: "SKU-001",
+              sku_id: SKU_ID,
+              sku_name_snapshot: "小提琴 SKU",
+              specification_snapshot: "4/4",
+            },
+          ],
+          status: "in_production",
+        }),
+      },
+      warehouses: { findFirst: vi.fn().mockResolvedValue({ id: WAREHOUSE_ID }) },
+    };
+    const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "create",
+          apiId: "INS-003",
+          mutation: true,
+          payload: {
+            inspectionDate: "2026-08-20",
+            inspectionWarehouseId: WAREHOUSE_ID,
+            inspectorId: USER_ID,
+            items: [
+              {
+                inspectedQuantity: 2,
+                inspectionResult: "qualified",
+                qualifiedQuantity: 2,
+                sourceItemId: productionOrderItemId,
+                skuId: SKU_ID,
+                unqualifiedQuantity: 0,
+              },
+            ],
+            productionOrderId: ORDER_ID,
+            sourceType: "production",
+          },
+          query: new URLSearchParams(),
+          resource: "inspection",
+        },
+        actor,
+      ),
+    ).resolves.toMatchObject({ status: "draft", totalQualifiedQuantity: 2 });
+  });
+
+  it("rejects inspection double source and unbalanced quantity", async () => {
+    const repository = new PrismaWorkflowRepository({} as unknown as PrismaClient);
+    const basePayload = {
+      inspectionDate: "2026-08-20",
+      inspectionWarehouseId: WAREHOUSE_ID,
+      inspectorId: USER_ID,
+      items: [
+        {
+          inspectedQuantity: 3,
+          inspectionResult: "pending",
+          qualifiedQuantity: 1,
+          sourceItemId: "77777777-7777-4777-8777-777777777777",
+          skuId: SKU_ID,
+          unqualifiedQuantity: 1,
+        },
+      ],
+      productionOrderId: ORDER_ID,
+      purchaseOrderId: ORDER_ID,
+      sourceType: "production",
+    };
+
+    await expect(
+      repository.execute(
+        {
+          action: "create",
+          apiId: "INS-003",
+          mutation: true,
+          payload: basePayload,
+          query: new URLSearchParams(),
+          resource: "inspection",
+        },
+        actor,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
+  });
+
+  it("submits confirms and revokes inspection while updating source cumulative facts only", async () => {
+    const inspectionId = "88888888-8888-4888-8888-888888888888";
+    const sourceItemId = "77777777-7777-4777-8777-777777777777";
+    const historyCreate = vi.fn().mockResolvedValue({});
+    const updateInspection = vi
+      .fn()
+      .mockResolvedValueOnce({ id: inspectionId, status: "pending_confirmation" })
+      .mockResolvedValueOnce({ id: inspectionId, status: "confirmed" })
+      .mockResolvedValueOnce({ id: inspectionId, status: "revoked" });
+    const sourceUpdate = vi.fn().mockResolvedValue({});
+    const findFirst = vi
+      .fn()
+      .mockResolvedValueOnce({
+        document_no: "INS-001",
+        id: inspectionId,
+        status: "draft",
+        version_no: 1,
+      })
+      .mockResolvedValueOnce({
+        id: inspectionId,
+        inspection_order_items: [],
+      })
+      .mockResolvedValueOnce({
+        document_no: "INS-001",
+        id: inspectionId,
+        source_type: "purchase",
+        status: "pending_confirmation",
+        version_no: 2,
+      })
+      .mockResolvedValueOnce({
+        id: inspectionId,
+        inspection_order_items: [
+          {
+            inspected_quantity: 4,
+            qualified_quantity: 3,
+            source_item_id: sourceItemId,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        document_no: "INS-001",
+        id: inspectionId,
+        source_type: "purchase",
+        status: "confirmed",
+        version_no: 3,
+      })
+      .mockResolvedValueOnce({
+        id: inspectionId,
+        inspection_order_items: [
+          {
+            inspected_quantity: 4,
+            qualified_quantity: 3,
+            source_item_id: sourceItemId,
+          },
+        ],
+      });
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      document_status_histories: { create: historyCreate },
+      inbound_orders: { count: vi.fn().mockResolvedValue(0) },
+      inspection_orders: { findFirst, update: updateInspection },
+      purchase_order_items: { update: sourceUpdate },
+    };
+    const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "submit",
+          apiId: "INS-005",
+          entityId: inspectionId,
+          mutation: true,
+          payload: { versionNo: 1 },
+          query: new URLSearchParams(),
+          resource: "inspection",
+        },
+        actor,
+      ),
+    ).resolves.toMatchObject({ status: "pending_confirmation" });
+
+    await expect(
+      repository.execute(
+        {
+          action: "confirm",
+          apiId: "INS-006",
+          entityId: inspectionId,
+          mutation: true,
+          payload: { versionNo: 2 },
+          query: new URLSearchParams(),
+          resource: "inspection",
+        },
+        actor,
+      ),
+    ).resolves.toMatchObject({ status: "confirmed" });
+
+    await expect(
+      repository.execute(
+        {
+          action: "revoke",
+          apiId: "INS-007",
+          entityId: inspectionId,
+          mutation: true,
+          payload: { reason: "录入错误", versionNo: 3 },
+          query: new URLSearchParams(),
+          resource: "inspection",
+        },
+        actor,
+      ),
+    ).resolves.toMatchObject({ status: "revoked" });
+
+    expect(sourceUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          inspected_quantity: { increment: 4 },
+          qualified_quantity: { increment: 3 },
+        }),
+        where: { id: sourceItemId },
+      }),
+    );
+    expect(sourceUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          inspected_quantity: { increment: -4 },
+          qualified_quantity: { increment: -3 },
+        }),
+        where: { id: sourceItemId },
+      }),
+    );
+    expect(historyCreate).toHaveBeenCalledTimes(3);
+    expect(
+      (client as { inventories?: unknown; inventory_transactions?: unknown }).inventories,
+    ).toBeUndefined();
+    expect(
+      (client as { inventories?: unknown; inventory_transactions?: unknown })
+        .inventory_transactions,
+    ).toBeUndefined();
+  });
 });
