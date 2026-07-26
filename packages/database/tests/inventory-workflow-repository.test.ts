@@ -9,6 +9,7 @@ const ITEM_ID = "33333333-3333-4333-8333-333333333333";
 const SKU_ID = "44444444-4444-4444-8444-444444444444";
 const SOURCE_WAREHOUSE_ID = "55555555-5555-4555-8555-555555555555";
 const TRANSIT_WAREHOUSE_ID = "66666666-6666-4666-8666-666666666666";
+const OVERSEAS_WAREHOUSE_ID = "88888888-8888-4888-8888-888888888888";
 const actor: AuthenticatedUser = {
   dataScopes: ["all"],
   permissionCodes: ["transfer.order.ship"],
@@ -1062,5 +1063,276 @@ describe("inventory transaction repository", () => {
       context,
     );
     expect(inventoryUpdate).not.toHaveBeenCalled();
+  });
+
+  it("creates cross-border shipment only after validating warehouse roles and without touching inventory", async () => {
+    const shipmentCreate = vi.fn().mockResolvedValue({
+      cross_border_shipment_items: [{ id: ITEM_ID }],
+      id: DOCUMENT_ID,
+      shipment_status: "draft",
+      status: "draft",
+    });
+    const client = {
+      cross_border_shipments: { create: shipmentCreate },
+      skus: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: SKU_ID,
+            sku_code: "SKU-001",
+            sku_name: "小提琴 SKU",
+            specification: "4/4",
+          },
+        ]),
+      },
+      warehouses: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({ id: SOURCE_WAREHOUSE_ID, warehouse_type: "company" })
+          .mockResolvedValueOnce({ id: TRANSIT_WAREHOUSE_ID, warehouse_type: "transit" })
+          .mockResolvedValueOnce({ id: OVERSEAS_WAREHOUSE_ID, warehouse_type: "overseas" }),
+      },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "create",
+          apiId: "CBR-003",
+          mutation: true,
+          payload: {
+            carrierName: "承运商",
+            departureDate: "2026-07-26",
+            destinationCountry: "US",
+            destinationWarehouseId: OVERSEAS_WAREHOUSE_ID,
+            documentDate: "2026-07-26",
+            estimatedArrivalDate: "2026-08-26",
+            items: [{ batchNo: "B-001", quantity: 3, skuId: SKU_ID, unitCost: 10 }],
+            shipmentBatchNo: "CB-001",
+            sourceWarehouseId: SOURCE_WAREHOUSE_ID,
+            trackingNo: "TRACK-001",
+            transitWarehouseId: TRANSIT_WAREHOUSE_ID,
+            transportMethod: "sea",
+          },
+          query: new URLSearchParams(),
+          resource: "cross-border",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "draft" });
+
+    expect(shipmentCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          cross_border_shipment_items: expect.objectContaining({ create: [expect.any(Object)] }),
+          destination_warehouse_id: OVERSEAS_WAREHOUSE_ID,
+          source_warehouse_id: SOURCE_WAREHOUSE_ID,
+          transit_warehouse_id: TRANSIT_WAREHOUSE_ID,
+        }),
+      }),
+    );
+    expect((client as { inventory_transactions?: unknown }).inventory_transactions).toBeUndefined();
+  });
+
+  it("dispatches cross-border shipment by moving stock from source to transit with ledger rows", async () => {
+    const transactionCreate = vi.fn().mockResolvedValue({});
+    const shipmentUpdate = vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "shipped" });
+    const document = {
+      cross_border_shipment_items: [
+        {
+          batch_no: "B-001",
+          id: ITEM_ID,
+          quantity: 3,
+          sku_id: SKU_ID,
+          unit_cost: 10,
+        },
+      ],
+      destination_warehouse_id: OVERSEAS_WAREHOUSE_ID,
+      document_no: "CBR-001",
+      id: DOCUMENT_ID,
+      shipment_status: "approved",
+      source_warehouse_id: SOURCE_WAREHOUSE_ID,
+      status: "approved",
+      transit_warehouse_id: TRANSIT_WAREHOUSE_ID,
+      version_no: 1,
+    };
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      cross_border_shipment_items: { update: vi.fn().mockResolvedValue({}) },
+      cross_border_shipments: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce(document)
+          .mockResolvedValueOnce({
+            ...document,
+            shipment_status: "shipped",
+            status: "shipped",
+          }),
+        update: shipmentUpdate,
+      },
+      document_status_histories: { create: vi.fn().mockResolvedValue({}) },
+      inventories: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({ available_quantity: 10, on_hand_quantity: 10 })
+          .mockResolvedValueOnce({ available_quantity: 5, on_hand_quantity: 5 }),
+        upsert: vi.fn().mockResolvedValue({}),
+      },
+      inventory_transactions: { create: transactionCreate },
+      warehouses: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({ id: SOURCE_WAREHOUSE_ID, warehouse_type: "company" })
+          .mockResolvedValueOnce({ id: TRANSIT_WAREHOUSE_ID, warehouse_type: "transit" })
+          .mockResolvedValueOnce({ id: OVERSEAS_WAREHOUSE_ID, warehouse_type: "overseas" }),
+      },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "dispatch",
+          apiId: "CBR-012",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: { versionNo: 1 },
+          query: new URLSearchParams(),
+          resource: "cross-border",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "shipped" });
+
+    expect(transactionCreate).toHaveBeenCalledTimes(2);
+    expect(transactionCreate.mock.calls.map((call) => call[0].data)).toEqual([
+      expect.objectContaining({
+        direction: "out",
+        quantity: 3,
+        source_document_type: "cross-border",
+        warehouse_id: SOURCE_WAREHOUSE_ID,
+      }),
+      expect.objectContaining({
+        direction: "in",
+        quantity: 3,
+        source_document_type: "cross-border",
+        warehouse_id: TRANSIT_WAREHOUSE_ID,
+      }),
+    ]);
+    expect(shipmentUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ shipment_status: "shipped", status: "shipped" }),
+      }),
+    );
+    expect(client.cross_border_shipment_items.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ shipped_quantity: 3 }),
+        where: { id: ITEM_ID },
+      }),
+    );
+  });
+
+  it("executes overseas inventory import by moving transit stock into overseas warehouse", async () => {
+    const importTaskId = "99999999-9999-4999-8999-999999999999";
+    const importItemId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const matchId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const shipmentItem = {
+      batch_no: "B-001",
+      cross_border_shipments: {
+        id: DOCUMENT_ID,
+        transit_warehouse_id: TRANSIT_WAREHOUSE_ID,
+      },
+      id: ITEM_ID,
+      quantity: 3,
+      received_quantity: 0,
+      shipped_quantity: 3,
+      sku_id: SKU_ID,
+      unit_cost: 10,
+    };
+    const task = {
+      id: importTaskId,
+      import_task_items: [
+        {
+          id: importItemId,
+          execution_status: "pending",
+          raw_data: { crossBorderShipmentItemId: ITEM_ID, quantity: 3, skuId: SKU_ID },
+          validation_status: "valid",
+        },
+      ],
+      status: "pending_confirmation",
+      warehouse_id: OVERSEAS_WAREHOUSE_ID,
+    };
+    const transactionCreate = vi.fn().mockResolvedValue({});
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      cross_border_shipment_items: {
+        findFirst: vi.fn().mockResolvedValue(shipmentItem),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      import_task_items: {
+        findMany: vi.fn().mockResolvedValue([{ execution_status: "succeeded" }]),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      import_tasks: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce(task)
+          .mockResolvedValueOnce({ ...task, status: "succeeded" }),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      inventories: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({ available_quantity: 5, on_hand_quantity: 5 })
+          .mockResolvedValueOnce({ available_quantity: 1, on_hand_quantity: 1 }),
+        upsert: vi.fn().mockResolvedValue({}),
+      },
+      inventory_transactions: { create: transactionCreate },
+      shipment_import_matches: {
+        findFirst: vi.fn().mockResolvedValue({
+          cross_border_shipment_item_id: ITEM_ID,
+          id: matchId,
+          received_quantity: 3,
+        }),
+        update: vi.fn().mockResolvedValue({}),
+      },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "execute-import",
+          apiId: "IMP-011",
+          entityId: importTaskId,
+          mutation: true,
+          payload: {},
+          query: new URLSearchParams(),
+          resource: "overseas-import",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "succeeded" });
+
+    expect(transactionCreate).toHaveBeenCalledTimes(2);
+    expect(transactionCreate.mock.calls.map((call) => call[0].data)).toEqual([
+      expect.objectContaining({
+        direction: "out",
+        quantity: 3,
+        source_document_type: "overseas_import",
+        warehouse_id: TRANSIT_WAREHOUSE_ID,
+      }),
+      expect.objectContaining({
+        direction: "in",
+        quantity: 3,
+        source_document_type: "overseas_import",
+        warehouse_id: OVERSEAS_WAREHOUSE_ID,
+      }),
+    ]);
   });
 });

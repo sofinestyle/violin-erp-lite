@@ -30,11 +30,11 @@ function authentication(permissionCodes: string[]): AuthenticationContext {
 }
 
 describe("Task 7.5-C Frozen API coverage", () => {
-  it("registers every formal INV/TRF/STC/DMG/OUT/SRT/CBR API exactly once", () => {
-    expect(INVENTORY_WORKFLOW_API_IDS).toHaveLength(123);
-    expect(new Set(INVENTORY_WORKFLOW_API_IDS).size).toBe(123);
-    expect(INVENTORY_WORKFLOW_IMPLEMENTED_API_IDS).toHaveLength(123);
-    expect(new Set(INVENTORY_WORKFLOW_IMPLEMENTED_API_IDS).size).toBe(123);
+  it("registers every formal INV/TRF/STC/DMG/OUT/SRT/CBR/IMP API exactly once", () => {
+    expect(INVENTORY_WORKFLOW_API_IDS).toHaveLength(138);
+    expect(new Set(INVENTORY_WORKFLOW_API_IDS).size).toBe(138);
+    expect(INVENTORY_WORKFLOW_IMPLEMENTED_API_IDS).toHaveLength(138);
+    expect(new Set(INVENTORY_WORKFLOW_IMPLEMENTED_API_IDS).size).toBe(138);
     expect([...INVENTORY_WORKFLOW_IMPLEMENTED_API_IDS].sort()).toEqual(
       [...INVENTORY_WORKFLOW_API_IDS].sort(),
     );
@@ -75,6 +75,8 @@ describe("Task 7.5-C Frozen API coverage", () => {
         "CBR-012",
         "cross-border.shipment.dispatch",
       ],
+      ["POST", ["import-jobs"], "IMP-001", "import.task.create"],
+      ["POST", ["import-jobs", DOCUMENT_ID, "execute"], "IMP-011", "import.task.execute"],
     ] as const;
     for (const [method, segments, apiId, permission] of cases) {
       expect(

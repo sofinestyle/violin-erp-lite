@@ -13,6 +13,7 @@ export const INVENTORY_WORKFLOW_API_IDS = [
   ...Array.from({ length: 17 }, (_, index) => `OUT-${String(index + 1).padStart(3, "0")}`),
   ...Array.from({ length: 13 }, (_, index) => `SRT-${String(index + 1).padStart(3, "0")}`),
   ...Array.from({ length: 22 }, (_, index) => `CBR-${String(index + 1).padStart(3, "0")}`),
+  ...Array.from({ length: 15 }, (_, index) => `IMP-${String(index + 1).padStart(3, "0")}`),
 ] as const;
 
 export type InventoryWorkflowApiId = (typeof INVENTORY_WORKFLOW_API_IDS)[number];
@@ -634,6 +635,125 @@ const endpoints: readonly Endpoint[] = [
     "source-trace",
     p("cross-border.source-trace.read"),
   ),
+  endpoint(
+    "IMP-001",
+    "POST",
+    /^import-jobs$/,
+    "overseas-import",
+    "create-import-task",
+    p("import.task.create"),
+    true,
+  ),
+  endpoint("IMP-002", "GET", /^import-jobs$/, "overseas-import", "list", p("import.task.read")),
+  endpoint(
+    "IMP-003",
+    "GET",
+    /^import-jobs\/([^/]+)$/,
+    "overseas-import",
+    "detail",
+    p("import.task.read"),
+  ),
+  endpoint(
+    "IMP-004",
+    "GET",
+    /^import-jobs\/([^/]+)\/status$/,
+    "overseas-import",
+    "status",
+    p("import.task.read"),
+  ),
+  endpoint(
+    "IMP-005",
+    "POST",
+    /^import-jobs\/([^/]+)\/cancel$/,
+    "overseas-import",
+    "cancel-import",
+    p("import.task.cancel"),
+    true,
+  ),
+  endpoint(
+    "IMP-006",
+    "GET",
+    /^import-templates\/overseas_inventory$/,
+    "overseas-import",
+    "template",
+    p("import.template.read"),
+  ),
+  endpoint(
+    "IMP-007",
+    "GET",
+    /^import-templates\/overseas_inventory\/versions$/,
+    "overseas-import",
+    "template-versions",
+    p("import.template.read"),
+  ),
+  endpoint(
+    "IMP-008",
+    "POST",
+    /^import-templates\/overseas_inventory\/validate$/,
+    "overseas-import",
+    "template-validate",
+    p("import.template.validate"),
+  ),
+  endpoint(
+    "IMP-009",
+    "POST",
+    /^import-jobs\/([^/]+)\/validate$/,
+    "overseas-import",
+    "validate-import",
+    p("import.task.validate"),
+    true,
+  ),
+  endpoint(
+    "IMP-010",
+    "GET",
+    /^import-jobs\/([^/]+)\/validation-results$/,
+    "overseas-import",
+    "validation-results",
+    p("import.task.read"),
+  ),
+  endpoint(
+    "IMP-011",
+    "POST",
+    /^import-jobs\/([^/]+)\/execute$/,
+    "overseas-import",
+    "execute-import",
+    p("import.task.execute"),
+    true,
+  ),
+  endpoint(
+    "IMP-012",
+    "POST",
+    /^import-jobs\/([^/]+)\/retry-failed-items$/,
+    "overseas-import",
+    "retry-failed-items",
+    p("import.task.execute"),
+    true,
+  ),
+  endpoint(
+    "IMP-013",
+    "GET",
+    /^import-jobs\/([^/]+)\/results$/,
+    "overseas-import",
+    "results",
+    p("import.task.read"),
+  ),
+  endpoint(
+    "IMP-014",
+    "GET",
+    /^import-history$/,
+    "overseas-import",
+    "import-history",
+    p("import.task.read"),
+  ),
+  endpoint(
+    "IMP-015",
+    "POST",
+    /^import-history\/export$/,
+    "overseas-import",
+    "export",
+    p("import.history.export"),
+    true,
+  ),
 ];
 
 export const INVENTORY_WORKFLOW_IMPLEMENTED_API_IDS = Object.freeze(
@@ -781,6 +901,17 @@ export function validateInventoryWorkflowCommand(command: InventoryWorkflowComma
         throw new ValidationError("transportMethod 必须是长度不超过 50 的字符串");
       }
     }
+  }
+  if (command.action === "create-import-task") {
+    required(command.payload, ["importType", "templateVersion", "fileName"]);
+    const hasWarehouse = Boolean(command.payload.warehouseId);
+    const hasStore = Boolean(command.payload.storeId);
+    if (hasWarehouse === hasStore) {
+      throw new ValidationError("warehouseId 与 storeId 必须恰有一个非空");
+    }
+  }
+  if (command.action === "template-validate") {
+    required(command.payload, ["templateVersion"]);
   }
   if (Array.isArray(command.payload.items) && command.payload.items.length === 0) {
     throw new ValidationError("明细不能为空", [{ field: "items", message: "至少需要一条明细" }]);

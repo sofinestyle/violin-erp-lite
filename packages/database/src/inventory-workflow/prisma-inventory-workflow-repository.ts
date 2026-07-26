@@ -8,7 +8,7 @@ import {
   type InventoryWorkflowPayload,
   type InventoryWorkflowRepository,
 } from "@violin-erp/api";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { getPrismaClient } from "../client.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 
@@ -68,6 +68,10 @@ function stringValue(payload: Readonly<Record<string, unknown>>, key: string, nu
   return value.trim();
 }
 
+function optionalString(payload: Readonly<Record<string, unknown>>, key: string): string | null {
+  return stringValue(payload, key, true);
+}
+
 function dateValue(payload: Readonly<Record<string, unknown>>, key: string): Date {
   const value = stringValue(payload, key);
   const parsed = new Date(`${value}T00:00:00.000Z`);
@@ -91,6 +95,33 @@ function documentNo(prefix: string): string {
   return `${prefix}-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${randomUUID()
     .slice(0, 8)
     .toUpperCase()}`;
+}
+
+function sha256Hex(value: unknown): string {
+  if (typeof value === "string" && /^[a-f0-9]{64}$/u.test(value)) return value;
+  const source =
+    typeof value === "string"
+      ? value
+      : value === undefined || value === null
+        ? randomUUID()
+        : JSON.stringify(value);
+  return createHash("sha256").update(source).digest("hex");
+}
+
+function rawRecord(value: unknown): JsonRecord {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new ValidationError("导入行数据无效");
+  }
+  return value as JsonRecord;
+}
+
+function importRows(payload: InventoryWorkflowPayload): JsonRecord[] {
+  const rows = Array.isArray(payload.items)
+    ? payload.items
+    : Array.isArray(payload.rows)
+      ? payload.rows
+      : [];
+  return rows.map(rawRecord);
 }
 
 const MODEL: Partial<Record<InventoryWorkflowCommand["resource"], string>> = {
@@ -178,6 +209,44 @@ function ensureStoreAccess(actor: AuthenticatedUser, storeId: unknown): void {
   const storeIds = (actor.storeScopes ?? []).map((scope) => scope.targetId);
   if (actor.dataScopes.includes("store") && storeIds.includes(String(storeId))) return;
   throw new ForbiddenError("无权访问该店铺数据");
+}
+
+async function requireActiveWarehouse(
+  client: DynamicClient,
+  actor: AuthenticatedUser,
+  warehouseId: string,
+  options: Readonly<{ field: string; type?: string }> = { field: "warehouseId" },
+): Promise<JsonRecord> {
+  ensureWarehouseAccess(actor, warehouseId);
+  const warehouse = await client.warehouses!.findFirst({
+    where: { id: warehouseId, is_active: true },
+  });
+  if (!warehouse) {
+    throw new ValidationError("仓库不存在或已停用", [
+      { field: options.field, message: "仓库不存在或已停用" },
+    ]);
+  }
+  if (options.type && String(warehouse.warehouse_type) !== options.type) {
+    throw new ValidationError("仓库类型不合法", [
+      { field: options.field, message: `仓库类型必须为 ${options.type}` },
+    ]);
+  }
+  return warehouse;
+}
+
+async function requireActiveStore(
+  client: DynamicClient,
+  actor: AuthenticatedUser,
+  storeId: string,
+): Promise<JsonRecord> {
+  ensureStoreAccess(actor, storeId);
+  const store = await client.stores!.findFirst({ where: { id: storeId, is_active: true } });
+  if (!store) {
+    throw new ValidationError("店铺不存在或已停用", [
+      { field: "storeId", message: "店铺不存在或已停用" },
+    ]);
+  }
+  return store;
 }
 
 function ensureOutboundAccess(actor: AuthenticatedUser, document: JsonRecord): void {
@@ -386,6 +455,21 @@ async function createDocument(
     );
   }
   if (command.resource === "cross-border") {
+    const sourceWarehouseId = String(stringValue(payload, "sourceWarehouseId"));
+    const transitWarehouseId = String(stringValue(payload, "transitWarehouseId"));
+    const destinationWarehouseId = String(stringValue(payload, "destinationWarehouseId"));
+    if (new Set([sourceWarehouseId, transitWarehouseId, destinationWarehouseId]).size !== 3) {
+      throw new ValidationError("跨境发货的来源仓、在途仓和海外仓必须互不相同");
+    }
+    await requireActiveWarehouse(client, actor, sourceWarehouseId, { field: "sourceWarehouseId" });
+    await requireActiveWarehouse(client, actor, transitWarehouseId, {
+      field: "transitWarehouseId",
+      type: "transit",
+    });
+    await requireActiveWarehouse(client, actor, destinationWarehouseId, {
+      field: "destinationWarehouseId",
+      type: "overseas",
+    });
     return record(
       await client.cross_border_shipments!.create({
         data: {
@@ -393,15 +477,15 @@ async function createDocument(
           carrier_name: stringValue(payload, "carrierName"),
           departure_date: dateValue(payload, "departureDate"),
           destination_country: stringValue(payload, "destinationCountry"),
-          destination_warehouse_id: stringValue(payload, "destinationWarehouseId"),
+          destination_warehouse_id: destinationWarehouseId,
           estimated_arrival_date: dateValue(payload, "estimatedArrivalDate"),
           production_order_id: stringValue(payload, "productionOrderId", true),
           shipment_batch_no: stringValue(payload, "shipmentBatchNo"),
           shipment_status: "draft",
-          source_warehouse_id: stringValue(payload, "sourceWarehouseId"),
+          source_warehouse_id: sourceWarehouseId,
           total_quantity: totalQuantity,
           tracking_no: stringValue(payload, "trackingNo"),
-          transit_warehouse_id: stringValue(payload, "transitWarehouseId"),
+          transit_warehouse_id: transitWarehouseId,
           transport_method: stringValue(payload, "transportMethod"),
           cross_border_shipment_items: {
             create: commonRows.map((row, index) => {
@@ -1033,6 +1117,13 @@ async function action(
   ) {
     return record(document);
   }
+  if (
+    command.resource === "cross-border" &&
+    command.action === "dispatch" &&
+    (document.status === "shipped" || document.shipment_status === "shipped")
+  ) {
+    return record(document);
+  }
   const allowedStates = ACTION_FROM[command.action];
   if (allowedStates && !allowedStates.includes(String(document.status))) {
     throw new ConflictError(`当前状态不允许执行 ${command.action}`);
@@ -1075,6 +1166,17 @@ async function action(
         source,
       );
     } else if (command.resource === "cross-border" && command.action === "dispatch") {
+      await requireActiveWarehouse(transaction, actor, String(document.source_warehouse_id), {
+        field: "sourceWarehouseId",
+      });
+      await requireActiveWarehouse(transaction, actor, String(document.transit_warehouse_id), {
+        field: "transitWarehouseId",
+        type: "transit",
+      });
+      await requireActiveWarehouse(transaction, actor, String(document.destination_warehouse_id), {
+        field: "destinationWarehouseId",
+        type: "overseas",
+      });
       await applyInventoryMovements(
         transaction,
         [
@@ -1083,6 +1185,15 @@ async function action(
         ],
         source,
       );
+      for (const row of rows) {
+        await transaction.cross_border_shipment_items!.update({
+          data: {
+            shipped_quantity: Number(row.quantity),
+            updated_by: actor.userId,
+          },
+          where: { id: row.id },
+        });
+      }
     } else if (command.resource === "outbound" && command.action === "confirm") {
       await applyOutboundConfirmation(transaction, document, rows, actor, command);
     } else if (command.resource === "damage" && command.action === "confirm-outbound") {
@@ -1156,7 +1267,7 @@ async function action(
         ? { outbound_completed_at: now }
         : {}),
       ...(command.resource === "cross-border" && command.action === "dispatch"
-        ? { shipment_status: "dispatched" }
+        ? { shipment_status: "shipped", status: "shipped" }
         : {}),
     };
     await transaction[model]!.update({ data, where: { id: document.id } });
@@ -1179,6 +1290,423 @@ async function action(
     where: { id: command.entityId },
   });
   return record(updated!);
+}
+
+async function createImportTask(
+  client: DynamicClient,
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+): Promise<JsonRecord> {
+  const payload = command.payload;
+  const importType = stringValue(payload, "importType");
+  const warehouseId = optionalString(payload, "warehouseId");
+  const storeId = optionalString(payload, "storeId");
+  if ((warehouseId === null) === (storeId === null)) {
+    throw new ValidationError("warehouseId 与 storeId 必须恰有一个非空");
+  }
+  if (importType === "overseas_inventory") {
+    if (!warehouseId) throw new ValidationError("海外库存导入必须指定海外仓");
+    await requireActiveWarehouse(client, actor, warehouseId, {
+      field: "warehouseId",
+      type: "overseas",
+    });
+  } else if (warehouseId) {
+    await requireActiveWarehouse(client, actor, warehouseId, { field: "warehouseId" });
+  }
+  if (storeId) await requireActiveStore(client, actor, storeId);
+
+  const checksum = sha256Hex(payload.fileChecksum ?? payload.fileContent ?? payload.rows);
+  const duplicate = await client.import_tasks!.findFirst({
+    where: {
+      file_checksum: checksum,
+      import_type: importType,
+      ...(warehouseId ? { warehouse_id: warehouseId } : { store_id: storeId }),
+    },
+  });
+  if (duplicate) throw new ConflictError("重复文件、导入类型和目标范围冲突");
+
+  const rows = importRows(payload);
+  return record(
+    await client.import_tasks!.create({
+      data: {
+        completed_at: null,
+        created_by: actor.userId,
+        error_summary: null,
+        failed_rows: 0,
+        file_checksum: checksum,
+        file_name: stringValue(payload, "fileName"),
+        file_reference:
+          optionalString(payload, "fileReference") ?? `import://${importType}/${checksum}`,
+        import_task_items: {
+          create: rows.map((row, index) => ({
+            created_by: actor.userId,
+            error_code: null,
+            error_message: null,
+            execution_status: "pending",
+            matched_sku_id: typeof row.skuId === "string" ? row.skuId : null,
+            matched_warehouse_id: warehouseId,
+            processed_at: null,
+            raw_data: row,
+            result_document_id: null,
+            result_document_type: null,
+            row_no: index + 1,
+            updated_by: actor.userId,
+            validation_status: "pending",
+          })),
+        },
+        import_type: importType,
+        started_at: null,
+        status: "pending_validation",
+        store_id: storeId,
+        success_rows: 0,
+        task_no: documentNo("IMP"),
+        total_rows: rows.length,
+        updated_by: actor.userId,
+        warehouse_id: warehouseId,
+        warning_rows: 0,
+      },
+      include: { import_task_items: { orderBy: { row_no: "asc" } } },
+    }),
+  );
+}
+
+function importRowQuantity(raw: JsonRecord): number {
+  return decimal(raw.receivedQuantity ?? raw.quantity, "quantity", false);
+}
+
+function importRowShipmentId(raw: JsonRecord): string {
+  return (
+    optionalString(raw, "crossBorderShipmentId") ??
+    optionalString(raw, "shipmentId") ??
+    optionalString(raw, "crossBorderShipmentItemId") ??
+    ""
+  );
+}
+
+function importRowShipmentItemId(raw: JsonRecord): string {
+  return (
+    optionalString(raw, "crossBorderShipmentItemId") ?? optionalString(raw, "shipmentItemId") ?? ""
+  );
+}
+
+async function validateSingleImportItem(
+  client: DynamicClient,
+  task: JsonRecord,
+  item: JsonRecord,
+  actor: AuthenticatedUser,
+): Promise<"invalid" | "valid"> {
+  const raw = rawRecord(item.raw_data);
+  const skuId = stringValue(raw, "skuId");
+  const quantity = importRowQuantity(raw);
+  const shipmentItemId = importRowShipmentItemId(raw);
+  const shipmentId = importRowShipmentId(raw);
+  const sku = await client.skus!.findFirst({ where: { id: skuId, is_active: true } });
+  if (!sku) throw new ValidationError("SKU 不存在或已停用");
+  const targetWarehouseId = String(task.warehouse_id);
+  await requireActiveWarehouse(client, actor, targetWarehouseId, {
+    field: "warehouseId",
+    type: "overseas",
+  });
+  const shipmentItem = await client.cross_border_shipment_items!.findFirst({
+    include: { cross_border_shipments: true },
+    where: {
+      id: shipmentItemId,
+      ...(shipmentId ? { cross_border_shipment_id: shipmentId } : {}),
+    },
+  });
+  if (!shipmentItem) throw new ValidationError("跨境发货明细不存在");
+  if (String(shipmentItem.sku_id) !== skuId) throw new ValidationError("导入 SKU 与发货明细不一致");
+  if (
+    typeof raw.batchNo === "string" &&
+    raw.batchNo.trim() &&
+    String(shipmentItem.batch_no) !== raw.batchNo.trim()
+  ) {
+    throw new ValidationError("导入批次与发货明细不一致");
+  }
+  const shipment = shipmentItem.cross_border_shipments as JsonRecord | undefined;
+  if (!shipment) throw new ValidationError("跨境发货单不存在");
+  if (String(shipment.destination_warehouse_id) !== targetWarehouseId) {
+    throw new ValidationError("导入目标海外仓与跨境发货目的仓不一致");
+  }
+  const transitInventory = await client.inventories!.findFirst({
+    where: {
+      sku_id: skuId,
+      warehouse_id: shipment.transit_warehouse_id,
+    },
+  });
+  if (
+    !transitInventory ||
+    Number(transitInventory.available_quantity ?? 0) < quantity ||
+    Number(transitInventory.on_hand_quantity ?? 0) < quantity
+  ) {
+    throw new ConflictError("在途库存不足");
+  }
+  const shipped = Number(shipmentItem.shipped_quantity ?? shipmentItem.quantity ?? 0);
+  const difference = Math.max(0, shipped - quantity);
+  await client.shipment_import_matches!.upsert({
+    create: {
+      created_by: actor.userId,
+      cross_border_shipment_id: shipmentItem.cross_border_shipment_id,
+      cross_border_shipment_item_id: shipmentItem.id,
+      difference_quantity: difference,
+      import_task_id: task.id,
+      import_task_item_id: item.id,
+      match_status: difference === 0 ? "matched" : "partially_matched",
+      matched_at: new Date(),
+      matched_by: actor.userId,
+      matched_quantity: quantity,
+      received_quantity: quantity,
+      remark: typeof raw.remark === "string" ? raw.remark : null,
+      updated_by: actor.userId,
+    },
+    update: {
+      difference_quantity: difference,
+      match_status: difference === 0 ? "matched" : "partially_matched",
+      matched_at: new Date(),
+      matched_by: actor.userId,
+      matched_quantity: quantity,
+      received_quantity: quantity,
+      updated_by: actor.userId,
+    },
+    where: {
+      cross_border_shipment_item_id_import_task_item_id: {
+        cross_border_shipment_item_id: shipmentItem.id,
+        import_task_item_id: item.id,
+      },
+    },
+  });
+  await client.import_task_items!.update({
+    data: {
+      error_code: null,
+      error_message: null,
+      matched_sku_id: skuId,
+      matched_warehouse_id: targetWarehouseId,
+      updated_by: actor.userId,
+      validation_status: "valid",
+    },
+    where: { id: item.id },
+  });
+  return "valid";
+}
+
+async function validateImportTask(
+  client: DynamicClient,
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+): Promise<JsonRecord> {
+  if (!command.entityId) throw new NotFoundError();
+  const task = await client.import_tasks!.findFirst({
+    include: { import_task_items: { orderBy: { row_no: "asc" } } },
+    where: { id: command.entityId },
+  });
+  if (!task) throw new NotFoundError();
+  if (
+    !["pending_validation", "validation_failed", "pending_confirmation"].includes(
+      String(task.status),
+    )
+  ) {
+    throw new ConflictError("当前导入任务状态不允许校验");
+  }
+  const items = ((task.import_task_items as JsonRecord[]) ?? []) as JsonRecord[];
+  if (items.length === 0) throw new ValidationError("导入任务没有可校验明细");
+  let failedRows = 0;
+  for (const item of items) {
+    try {
+      await validateSingleImportItem(client, task, item, actor);
+    } catch (error) {
+      failedRows += 1;
+      const message = error instanceof Error ? error.message : "行校验失败";
+      await client.import_task_items!.update({
+        data: {
+          error_code: "VALIDATION_IMPORT_ROW_INVALID",
+          error_message: message,
+          execution_status: "skipped",
+          updated_by: actor.userId,
+          validation_status: "invalid",
+        },
+        where: { id: item.id },
+      });
+    }
+  }
+  const status = failedRows > 0 ? "validation_failed" : "pending_confirmation";
+  return record(
+    await client.import_tasks!.update({
+      data: {
+        error_summary: failedRows > 0 ? `${failedRows} 行校验失败` : null,
+        failed_rows: failedRows,
+        status,
+        success_rows: 0,
+        total_rows: items.length,
+        updated_by: actor.userId,
+        warning_rows: 0,
+      },
+      where: { id: task.id },
+    }),
+  );
+}
+
+async function executeImportTask(
+  client: DynamicClient,
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+  retryOnly: boolean,
+): Promise<JsonRecord> {
+  if (!command.entityId) throw new NotFoundError();
+  const task = await client.import_tasks!.findFirst({
+    include: { import_task_items: { orderBy: { row_no: "asc" } } },
+    where: { id: command.entityId },
+  });
+  if (!task) throw new NotFoundError();
+  if (task.status === "succeeded") return record(task);
+  const allowed = retryOnly ? ["partially_succeeded", "failed"] : ["pending_confirmation"];
+  if (!allowed.includes(String(task.status))) throw new ConflictError("当前导入任务状态不允许执行");
+  const allItems = ((task.import_task_items as JsonRecord[]) ?? []) as JsonRecord[];
+  const executableItems = allItems.filter(
+    (item) =>
+      ["valid", "warning"].includes(String(item.validation_status)) &&
+      (retryOnly
+        ? String(item.execution_status) === "failed"
+        : String(item.execution_status) === "pending"),
+  );
+  if (executableItems.length === 0) throw new ValidationError("没有可执行导入明细");
+  await client.$transaction(async (transaction) => {
+    await transaction.import_tasks!.update({
+      data: { started_at: new Date(), status: "importing", updated_by: actor.userId },
+      where: { id: task.id },
+    });
+    for (const item of executableItems) {
+      const match = await transaction.shipment_import_matches!.findFirst({
+        where: { import_task_item_id: item.id },
+      });
+      if (!match) throw new ValidationError("导入明细未完成来源匹配");
+      const shipmentItem = await transaction.cross_border_shipment_items!.findFirst({
+        include: { cross_border_shipments: true },
+        where: { id: match.cross_border_shipment_item_id },
+      });
+      if (!shipmentItem) throw new ValidationError("跨境发货明细不存在");
+      const shipment = shipmentItem.cross_border_shipments as JsonRecord | undefined;
+      if (!shipment) throw new ValidationError("跨境发货单不存在");
+      const quantity = Number(match.received_quantity);
+      await applyInventoryMovements(
+        transaction,
+        [
+          {
+            batchNo: typeof shipmentItem.batch_no === "string" ? shipmentItem.batch_no : null,
+            delta: -quantity,
+            itemId: String(item.id),
+            skuId: String(shipmentItem.sku_id),
+            unitCost: shipmentItem.unit_cost === null ? null : Number(shipmentItem.unit_cost ?? 0),
+            warehouseId: String(shipment.transit_warehouse_id),
+          },
+          {
+            batchNo: typeof shipmentItem.batch_no === "string" ? shipmentItem.batch_no : null,
+            delta: quantity,
+            itemId: String(item.id),
+            skuId: String(shipmentItem.sku_id),
+            unitCost: shipmentItem.unit_cost === null ? null : Number(shipmentItem.unit_cost ?? 0),
+            warehouseId: String(task.warehouse_id),
+          },
+        ],
+        {
+          actorId: actor.userId,
+          documentId: String(task.id),
+          documentType: "overseas_import",
+          ...(typeof command.payload.remark === "string" ? { remark: command.payload.remark } : {}),
+        },
+      );
+      const receivedAfter = Number(shipmentItem.received_quantity ?? 0) + quantity;
+      const shippedQuantity = Number(shipmentItem.shipped_quantity ?? shipmentItem.quantity ?? 0);
+      await transaction.cross_border_shipment_items!.update({
+        data: {
+          difference_quantity: Math.max(0, shippedQuantity - receivedAfter),
+          received_quantity: receivedAfter,
+          updated_by: actor.userId,
+        },
+        where: { id: shipmentItem.id },
+      });
+      await transaction.shipment_import_matches!.update({
+        data: {
+          match_status:
+            Math.max(0, shippedQuantity - receivedAfter) === 0 ? "matched" : "partially_matched",
+          matched_at: new Date(),
+          matched_by: actor.userId,
+          updated_by: actor.userId,
+        },
+        where: { id: match.id },
+      });
+      await transaction.import_task_items!.update({
+        data: {
+          error_code: null,
+          error_message: null,
+          execution_status: "succeeded",
+          processed_at: new Date(),
+          result_document_id: task.id,
+          result_document_type: "overseas_import",
+          updated_by: actor.userId,
+        },
+        where: { id: item.id },
+      });
+    }
+    const finalItems = await transaction.import_task_items!.findMany({
+      where: { import_task_id: task.id },
+    });
+    const successRows = finalItems.filter((item) => item.execution_status === "succeeded").length;
+    const failedRows = finalItems.filter((item) =>
+      ["failed", "skipped"].includes(String(item.execution_status)),
+    ).length;
+    const finalStatus =
+      successRows === finalItems.length
+        ? "succeeded"
+        : successRows > 0
+          ? "partially_succeeded"
+          : "failed";
+    await transaction.import_tasks!.update({
+      data: {
+        completed_at: new Date(),
+        error_summary: failedRows > 0 ? `${failedRows} 行未成功执行` : null,
+        failed_rows: failedRows,
+        status: finalStatus,
+        success_rows: successRows,
+        total_rows: finalItems.length,
+        updated_by: actor.userId,
+      },
+      where: { id: task.id },
+    });
+  });
+  return record(
+    (await client.import_tasks!.findFirst({
+      include: { import_task_items: { orderBy: { row_no: "asc" } } },
+      where: { id: command.entityId },
+    }))!,
+  );
+}
+
+async function cancelImportTask(
+  client: DynamicClient,
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+): Promise<JsonRecord> {
+  if (!command.entityId) throw new NotFoundError();
+  const task = await client.import_tasks!.findFirst({ where: { id: command.entityId } });
+  if (!task) throw new NotFoundError();
+  if (
+    !["pending_validation", "validation_failed", "pending_confirmation"].includes(
+      String(task.status),
+    )
+  ) {
+    throw new ConflictError("当前导入任务状态不允许取消");
+  }
+  return record(
+    await client.import_tasks!.update({
+      data: {
+        completed_at: new Date(),
+        error_summary: typeof command.payload.reason === "string" ? command.payload.reason : null,
+        status: "cancelled",
+        updated_by: actor.userId,
+      },
+      where: { id: task.id },
+    }),
+  );
 }
 
 async function specialRead(
@@ -1258,6 +1786,56 @@ async function specialRead(
       where: { import_task_id: command.entityId },
     });
     return { items: rows.map(record) };
+  }
+  if (command.action === "status" && command.resource === "overseas-import") {
+    const task = await client.import_tasks!.findFirst({ where: { id: command.entityId } });
+    if (!task) throw new NotFoundError();
+    return {
+      completedAt: normalize(task.completed_at),
+      failedRows: task.failed_rows,
+      id: task.id,
+      startedAt: normalize(task.started_at),
+      status: task.status,
+      successRows: task.success_rows,
+      taskNo: task.task_no,
+      totalRows: task.total_rows,
+      warningRows: task.warning_rows,
+    };
+  }
+  if (
+    ["validation-results", "results"].includes(command.action) &&
+    command.resource === "overseas-import"
+  ) {
+    const task = await client.import_tasks!.findFirst({ where: { id: command.entityId } });
+    if (!task) throw new NotFoundError();
+    const rows = await client.import_task_items!.findMany({
+      orderBy: { row_no: "asc" },
+      where: { import_task_id: command.entityId },
+    });
+    return { items: rows.map(record), task: record(task) };
+  }
+  if (command.action === "import-history" && command.resource === "overseas-import") {
+    const rows = await client.import_tasks!.findMany({
+      orderBy: { created_at: "desc" },
+      where: listWhere(command, actor),
+    });
+    return { items: rows.map(record) };
+  }
+  if (command.action === "template" && command.resource === "overseas-import") {
+    return {
+      importType: "overseas_inventory",
+      requiredColumns: ["skuId", "quantity", "crossBorderShipmentId", "crossBorderShipmentItemId"],
+      templateVersion: "v1",
+    };
+  }
+  if (command.action === "template-versions" && command.resource === "overseas-import") {
+    return { items: [{ importType: "overseas_inventory", status: "active", version: "v1" }] };
+  }
+  if (command.action === "template-validate" && command.resource === "overseas-import") {
+    return {
+      compatible: command.payload.templateVersion === "v1",
+      importType: "overseas_inventory",
+    };
   }
   if (command.action === "source-trace") {
     const inventory = await client.inventories!.findFirst({
@@ -1367,10 +1945,25 @@ export class PrismaInventoryWorkflowRepository implements InventoryWorkflowRepos
     if (special) return special;
     if (command.action === "list") return list(client, command, actor);
     if (command.action === "detail") return detail(client, command, actor);
+    if (command.resource === "overseas-import" && command.action === "create-import-task") {
+      return createImportTask(client, command, actor);
+    }
     if (command.action === "create" || command.action.startsWith("create-")) {
       return createDocument(client, command, actor);
     }
     if (command.action === "update") return updateDocument(client, command, actor);
+    if (command.resource === "overseas-import" && command.action === "validate-import") {
+      return validateImportTask(client, command, actor);
+    }
+    if (command.resource === "overseas-import" && command.action === "execute-import") {
+      return executeImportTask(client, command, actor, false);
+    }
+    if (command.resource === "overseas-import" && command.action === "retry-failed-items") {
+      return executeImportTask(client, command, actor, true);
+    }
+    if (command.resource === "overseas-import" && command.action === "cancel-import") {
+      return cancelImportTask(client, command, actor);
+    }
     if (
       command.resource === "inventory-alert" &&
       ["view", "handle", "close"].includes(command.action)
