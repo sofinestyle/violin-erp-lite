@@ -11,6 +11,36 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.34] - 2026-07-26
+
+### Changed
+
+- Module 4 Cross-border Business 更新为 `Completed / Approved`
+- Current Task 保持为 `Phase 8 下一业务模块准备`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 与 `README.md` 同步 Module 4 验收状态
+- 新增 DEC-101，记录 Module 4 Cross-border Business 最终验收批准
+
+### Added
+
+- 新增 `TASK_8_D3_CROSS_BORDER_FINAL_REVIEW.md`
+- 记录 Cross-border Shipment、Overseas Inventory Import、Platform / Store View、Replenishment Suggestion 已完成
+- 记录跨境业务基础闭环已形成：国内库存 → 跨境发货 → 在途库存 → 海外库存导入 → 海外仓 → 平台 / 店铺查询 → 补货建议
+- 记录库存唯一事实来源仍为 `inventories` 与 `inventory_transactions`
+
+### Verified
+
+- Module 4 Cross-border Business 最终验收通过
+- Database SSOT、Prisma Schema 与 Migration 未变化
+- API Master Specification 未变化
+- Permission Code 未变化
+- `pnpm status:check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改业务代码、Database Schema、Migration、API Contract、Permission 或业务规则
+
 ## [0.11.33] - 2026-07-26
 
 ### Changed

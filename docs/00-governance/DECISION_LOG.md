@@ -2515,3 +2515,31 @@ Approved
 ### 影响
 
 本决定只同步 Module 3 Inventory Management 最终验收与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Module 3 后续如需新增字段、接口、权限、附件类型、统计快照、复杂 BI、外部平台同步、缓存事实、库存预警扩展、盘点、调拨、报损、销售退货或跨境业务接入，必须先经过对应 DCR、API Change Request、Permission 评估或独立获批任务。Phase 8 下一步继续保持下一业务模块准备。
+
+## DEC-101 批准Module 4 Cross-border Business完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-26
+
+### 决定
+
+- 项目负责人批准 Module 4 Cross-border Business 最终验收完成；
+- Cross-border Shipment 跨境发货已完成并获得批准；
+- Overseas Inventory Import 海外库存导入已完成并获得批准；
+- Platform / Store View 平台 / 店铺视图已完成并获得批准；
+- Replenishment Suggestion 补货建议已完成并获得批准；
+- 跨境业务基础闭环已形成：国内库存 → 跨境发货 → 在途库存 → 海外库存导入 → 海外仓 → 平台 / 店铺查询 → 补货建议；
+- 库存唯一事实来源继续保持为 `inventories` 与 `inventory_transactions`；
+- Cross-border Shipment、Import Task、Platform View 与 Replenishment Suggestion 均不得成为库存事实来源；
+- Module 4 Cross-border Business 状态更新为 Completed / Approved；
+- Current Task 保持为 Phase 8 下一业务模块准备；
+- Current Task Status 为 Waiting / Not Started。
+
+### 影响
+
+本决定只同步 Module 4 Cross-border Business 最终验收与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Module 4 后续如需新增字段、接口、权限、附件类型、平台订单对象、外部平台 API 同步、海外库存快照、正式补货计划、补货审批流、自动补货、AI 预测、报关清关或费用核算，必须先经过对应 DCR、API Change Request、Permission 评估或独立获批任务。Phase 8 下一步继续保持下一业务模块准备。

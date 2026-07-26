@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已由项目负责人正式启动，当前状态为 In Progress；Module 1 Master Data Center、Module 2 Procurement & Production 与 Module 3 Inventory Management 均已完成最终验收并获得批准，当前任务切换为 Phase 8 下一业务模块准备。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已由项目负责人正式启动，当前状态为 In Progress；Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management 与 Module 4 Cross-border Business 均已完成最终验收并获得批准，当前任务切换为 Phase 8 下一业务模块准备。
 
 ## 3. 固定十阶段开发路线
 
@@ -309,9 +309,10 @@ Task 8.1 至 Task 8.5 是原 Phase 7 已完成成果的编号迁移，不删除�
 11. 8-B4-D Inbound Development 入库开发：Completed / Approved；
 12. 8-B5 Module 2 Final Review & Documentation Sync Module 2 最终验收与状态同步：Completed / Approved；
 13. 8-C3 Module 3 Inventory Management Final Review & Documentation Sync 库存管理最终验收与状态同步：Completed / Approved；
-14. Phase 8 下一业务模块准备 Next Business Module Preparation：Waiting / Not Started；
+14. 8-D3 Cross-border Final Review & Documentation Sync 跨境业务最终验收与状态同步：Completed / Approved；
+15. Phase 8 下一业务模块准备 Next Business Module Preparation：Waiting / Not Started；
 
-Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中心、Module 2 采购生产基础闭环与 Module 3 库存管理基础闭环，下一步进入 Phase 8 下一业务模块准备。
+Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中心、Module 2 采购生产基础闭环、Module 3 库存管理基础闭环与 Module 4 跨境业务基础闭环，下一步进入 Phase 8 下一业务模块准备。
 
 ### Phase 9：测试方案与系统集成（Test Plan & System Integration）
 

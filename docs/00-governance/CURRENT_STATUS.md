@@ -43,6 +43,8 @@ related_phase: Phase 8
 - Module 2 Procurement & Production：Completed / Approved
 - 8-C3 Module 3 Inventory Management Final Review & Documentation Sync：Completed / Approved
 - Module 3 Inventory Management：Completed / Approved
+- 8-D3 Cross-border Final Review & Documentation Sync：Completed / Approved
+- Module 4 Cross-border Business：Completed / Approved
 - Phase 8 下一业务模块准备：Waiting / Not Started
 - Phase 8：In Progress
 
