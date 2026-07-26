@@ -159,4 +159,36 @@ describe("Task 7.5-C Frozen API coverage", () => {
     expect(audit.events).toHaveLength(1);
     expect(audit.events[0]).toMatchObject({ action: "CBR-012", actorUserId: USER_ID });
   });
+
+  it("records outbound confirmation audit through OUT-012", async () => {
+    const repository: InventoryWorkflowRepository = {
+      execute: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "completed" }),
+    };
+    const audit = new InMemoryAuditWriter();
+    const service = new InventoryWorkflowService(repository, audit);
+    const command: InventoryWorkflowCommand = {
+      action: "confirm",
+      apiId: "OUT-012",
+      entityId: DOCUMENT_ID,
+      mutation: true,
+      payload: { versionNo: 1 },
+      query: new URLSearchParams(),
+      resource: "outbound",
+    };
+
+    await service.execute(
+      command,
+      "outbound.order.confirm",
+      authentication(["outbound.order.confirm"]),
+      context,
+    );
+
+    expect(repository.execute).toHaveBeenCalledWith(command, expect.any(Object), context);
+    expect(audit.events[0]).toMatchObject({
+      action: "OUT-012",
+      moduleCode: "outbound",
+      resourceType: "outbound",
+      result: "success",
+    });
+  });
 });

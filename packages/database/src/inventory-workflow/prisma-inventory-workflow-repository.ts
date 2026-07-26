@@ -1,5 +1,6 @@
 import {
   ConflictError,
+  ForbiddenError,
   NotFoundError,
   ValidationError,
   type AuthenticatedUser,
@@ -162,6 +163,26 @@ function warehouseScope(
   }
   if (actor.dataScopes.includes("self_created")) return { created_by: actor.userId };
   return { id: { in: [] } };
+}
+
+function ensureWarehouseAccess(actor: AuthenticatedUser, warehouseId: string): void {
+  if (actor.dataScopes.includes("all")) return;
+  const warehouseIds = (actor.warehouseScopes ?? []).map((scope) => scope.targetId);
+  if (actor.dataScopes.includes("warehouse") && warehouseIds.includes(warehouseId)) return;
+  throw new ForbiddenError("无权访问该仓库数据");
+}
+
+function ensureStoreAccess(actor: AuthenticatedUser, storeId: unknown): void {
+  if (storeId === null || storeId === undefined || storeId === "") return;
+  if (actor.dataScopes.includes("all")) return;
+  const storeIds = (actor.storeScopes ?? []).map((scope) => scope.targetId);
+  if (actor.dataScopes.includes("store") && storeIds.includes(String(storeId))) return;
+  throw new ForbiddenError("无权访问该店铺数据");
+}
+
+function ensureOutboundAccess(actor: AuthenticatedUser, document: JsonRecord): void {
+  ensureWarehouseAccess(actor, String(document.warehouse_id));
+  ensureStoreAccess(actor, document.store_id);
 }
 
 function listWhere(command: InventoryWorkflowCommand, actor: AuthenticatedUser): JsonRecord {
@@ -403,6 +424,13 @@ async function createDocument(
     );
   }
   if (command.resource === "outbound") {
+    const warehouseId = String(stringValue(payload, "warehouseId"));
+    ensureWarehouseAccess(actor, warehouseId);
+    ensureStoreAccess(actor, payload.storeId);
+    const warehouse = await client.warehouses!.findFirst({
+      where: { id: warehouseId, is_active: true },
+    });
+    if (!warehouse) throw new ValidationError("仓库不存在或已停用");
     return record(
       await client.outbound_orders!.create({
         data: {
@@ -415,7 +443,7 @@ async function createDocument(
           recipient_country: stringValue(payload, "recipientCountry", true),
           store_id: stringValue(payload, "storeId", true),
           total_quantity: totalQuantity,
-          warehouse_id: stringValue(payload, "warehouseId"),
+          warehouse_id: warehouseId,
           outbound_order_items: {
             create: commonRows.map((row, index) => {
               const unitCost = decimal(rows[index]!.unitCost, "unitCost");
@@ -650,6 +678,139 @@ export async function applyInventoryMovements(
   }
 }
 
+async function applyOutboundConfirmation(
+  client: DynamicClient,
+  document: JsonRecord,
+  rows: readonly JsonRecord[],
+  actor: AuthenticatedUser,
+  command: InventoryWorkflowCommand,
+): Promise<void> {
+  for (const row of rows) {
+    const quantity = Number(row.quantity);
+    const inventory = await client.inventories!.findFirst({
+      where: { sku_id: row.sku_id, warehouse_id: document.warehouse_id },
+    });
+    if (
+      !inventory ||
+      Number(inventory.available_quantity ?? 0) < quantity ||
+      Number(inventory.on_hand_quantity ?? 0) < quantity
+    ) {
+      throw new ConflictError("可用库存不足");
+    }
+    const updatedCount = await client.inventories!.updateMany({
+      data: {
+        available_quantity: { decrement: quantity },
+        last_transaction_at: new Date(),
+        on_hand_quantity: { decrement: quantity },
+        updated_by: actor.userId,
+      },
+      where: {
+        available_quantity: { gte: quantity },
+        id: inventory.id,
+        on_hand_quantity: { gte: quantity },
+      },
+    });
+    if (updatedCount.count !== 1) throw new ConflictError("可用库存不足");
+    const updated = await client.inventories!.findFirst({ where: { id: inventory.id } });
+    await client.inventory_transactions!.create({
+      data: {
+        amount: row.line_cost,
+        batch_no: row.batch_no,
+        direction: "out",
+        operator_id: actor.userId,
+        quantity,
+        quantity_after: updated?.on_hand_quantity ?? Number(inventory.on_hand_quantity) - quantity,
+        quantity_before: inventory.on_hand_quantity,
+        remark: typeof command.payload.remark === "string" ? command.payload.remark : null,
+        sku_id: row.sku_id,
+        source_document_id: document.id,
+        source_document_item_id: row.id,
+        source_document_type: "outbound_order",
+        transaction_at: new Date(),
+        transaction_no: documentNo("ITX-O"),
+        transaction_type: document.outbound_type,
+        unit_cost: row.unit_cost,
+        warehouse_id: document.warehouse_id,
+      },
+    });
+  }
+}
+
+async function applyOutboundReverse(
+  client: DynamicClient,
+  document: JsonRecord,
+  rows: readonly JsonRecord[],
+  actor: AuthenticatedUser,
+  command: InventoryWorkflowCommand,
+): Promise<void> {
+  const originalTransactions = await client.inventory_transactions!.findMany({
+    where: {
+      OR: [
+        { source_document_id: document.id, source_document_type: "outbound_order" },
+        { source_document_id: document.id, source_document_type: "outbound" },
+      ],
+    },
+  });
+  const transactionByItem = new Map(
+    originalTransactions.map((item) => [String(item.source_document_item_id), item]),
+  );
+  for (const row of rows) {
+    const quantity = Number(row.quantity);
+    const current = await client.inventories!.findFirst({
+      where: { sku_id: row.sku_id, warehouse_id: document.warehouse_id },
+    });
+    const before = Number(current?.on_hand_quantity ?? 0);
+    const updated = await client.inventories!.upsert({
+      create: {
+        available_quantity: quantity,
+        created_by: actor.userId,
+        last_transaction_at: new Date(),
+        on_hand_quantity: quantity,
+        pending_quantity: 0,
+        reserved_quantity: 0,
+        sku_id: row.sku_id,
+        updated_by: actor.userId,
+        warehouse_id: document.warehouse_id,
+      },
+      update: {
+        available_quantity: { increment: quantity },
+        last_transaction_at: new Date(),
+        on_hand_quantity: { increment: quantity },
+        updated_by: actor.userId,
+      },
+      where: {
+        sku_id_warehouse_id: {
+          sku_id: row.sku_id,
+          warehouse_id: document.warehouse_id,
+        },
+      },
+    });
+    const original = transactionByItem.get(String(row.id));
+    await client.inventory_transactions!.create({
+      data: {
+        amount: -Number(row.line_cost ?? 0),
+        batch_no: row.batch_no,
+        direction: "in",
+        operator_id: actor.userId,
+        quantity,
+        quantity_after: updated.on_hand_quantity,
+        quantity_before: before,
+        related_transaction_id: original?.id,
+        remark: typeof command.payload.reason === "string" ? command.payload.reason : null,
+        sku_id: row.sku_id,
+        source_document_id: document.id,
+        source_document_item_id: row.id,
+        source_document_type: "outbound_order",
+        transaction_at: new Date(),
+        transaction_no: documentNo("ITX-OR"),
+        transaction_type: `${String(document.outbound_type)}_reversal`,
+        unit_cost: row.unit_cost,
+        warehouse_id: document.warehouse_id,
+      },
+    });
+  }
+}
+
 function itemMovements(rows: JsonRecord[], warehouseId: string, sign: 1 | -1): Movement[] {
   return rows.map((row) => ({
     batchNo: typeof row.batch_no === "string" ? row.batch_no : null,
@@ -664,6 +825,7 @@ function itemMovements(rows: JsonRecord[], warehouseId: string, sign: 1 | -1): M
 const ACTION_STATE: Readonly<Record<string, { approval?: string; status: string }>> = {
   approve: { approval: "approved", status: "approved" },
   cancel: { status: "cancelled" },
+  confirm: { status: "completed" },
   complete: { status: "completed" },
   dispatch: { status: "dispatched" },
   execute: { status: "executed" },
@@ -683,6 +845,7 @@ const ACTION_STATE: Readonly<Record<string, { approval?: string; status: string 
 const ACTION_FROM: Readonly<Record<string, readonly string[]>> = {
   approve: ["pending_approval"],
   cancel: ["draft", "rejected", "approved"],
+  confirm: ["approved"],
   complete: ["in_progress"],
   dispatch: ["approved"],
   execute: ["approved"],
@@ -712,6 +875,21 @@ async function action(
     where: { id: command.entityId },
   });
   if (!document) throw new NotFoundError();
+  if (command.resource === "outbound") ensureOutboundAccess(actor, document);
+  if (
+    command.resource === "outbound" &&
+    command.action === "confirm" &&
+    document.status === "completed"
+  ) {
+    return record(document);
+  }
+  if (
+    command.resource === "outbound" &&
+    command.action === "reverse" &&
+    document.status === "reversed"
+  ) {
+    return record(document);
+  }
   const allowedStates = ACTION_FROM[command.action];
   if (allowedStates && !allowedStates.includes(String(document.status))) {
     throw new ConflictError(`当前状态不允许执行 ${command.action}`);
@@ -777,21 +955,16 @@ async function action(
         ],
         source,
       );
-    } else if (
-      (command.resource === "outbound" && command.action === "confirm") ||
-      (command.resource === "damage" && command.action === "confirm-outbound")
-    ) {
+    } else if (command.resource === "outbound" && command.action === "confirm") {
+      await applyOutboundConfirmation(transaction, document, rows, actor, command);
+    } else if (command.resource === "damage" && command.action === "confirm-outbound") {
       await applyInventoryMovements(
         transaction,
         itemMovements(rows, String(document.warehouse_id), -1),
         source,
       );
     } else if (command.resource === "outbound" && command.action === "reverse") {
-      await applyInventoryMovements(
-        transaction,
-        itemMovements(rows, String(document.warehouse_id), 1),
-        source,
-      );
+      await applyOutboundReverse(transaction, document, rows, actor, command);
     } else if (command.resource === "sales-return" && command.action === "confirm-inbound") {
       await applyInventoryMovements(
         transaction,
