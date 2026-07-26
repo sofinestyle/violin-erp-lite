@@ -62,6 +62,17 @@ function inspectionCommand(payload: Record<string, unknown>): WorkflowCommand {
   };
 }
 
+function inboundCommand(payload: Record<string, unknown>): WorkflowCommand {
+  return {
+    action: "create-purchase",
+    apiId: "INB-003",
+    mutation: true,
+    payload,
+    query: new URLSearchParams(),
+    resource: "inbound",
+  };
+}
+
 describe("Frozen workflow API contracts", () => {
   it("registers all in-scope APIs and excludes only INB-005 other inbound", () => {
     expect(WORKFLOW_API_IDS).toHaveLength(75);
@@ -259,6 +270,82 @@ describe("Frozen workflow API contracts", () => {
       action: "INS-003",
       actorUserId: USER_ID,
       resourceType: "inspection",
+    });
+  });
+
+  it("validates inbound creation payload and writes inbound audit", async () => {
+    const repository: WorkflowRepository = {
+      execute: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "draft" }),
+    };
+    const audit = new InMemoryAuditWriter();
+    const service = new WorkflowService(repository, audit);
+    await expect(
+      service.execute(
+        inboundCommand({
+          documentDate: "2026-08-21",
+          inspectionOrderId: DOCUMENT_ID,
+          items: [],
+          purchaseOrderId: DOCUMENT_ID,
+          warehouseId: DOCUMENT_ID,
+        }),
+        "inbound.order.create-purchase",
+        authentication(["inbound.order.create-purchase"]),
+        context,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
+    await expect(
+      service.execute(
+        inboundCommand({
+          documentDate: "2026-08-21",
+          inspectionOrderId: DOCUMENT_ID,
+          items: [
+            {
+              batchNo: "B-001",
+              inboundOrderItemId: DOCUMENT_ID,
+              inspectionOrderItemId: DOCUMENT_ID,
+              inventoryCondition: "available",
+              purchaseOrderItemId: DOCUMENT_ID,
+              quantity: 1,
+              skuId: DOCUMENT_ID,
+              unitCost: 100,
+            },
+          ],
+          purchaseOrderId: DOCUMENT_ID,
+          warehouseId: DOCUMENT_ID,
+        }),
+        "inbound.order.create-purchase",
+        authentication([]),
+        context,
+      ),
+    ).rejects.toMatchObject({ code: "PERMISSION_FORBIDDEN" });
+    await service.execute(
+      inboundCommand({
+        documentDate: "2026-08-21",
+        inspectionOrderId: DOCUMENT_ID,
+        items: [
+          {
+            batchNo: "B-001",
+            inspectionOrderItemId: DOCUMENT_ID,
+            inventoryCondition: "available",
+            purchaseOrderItemId: DOCUMENT_ID,
+            quantity: 1,
+            skuId: DOCUMENT_ID,
+            unitCost: 100,
+          },
+        ],
+        purchaseOrderId: DOCUMENT_ID,
+        warehouseId: DOCUMENT_ID,
+      }),
+      "inbound.order.create-purchase",
+      authentication(["inbound.order.create-purchase"]),
+      context,
+    );
+    expect(repository.execute).toHaveBeenCalledTimes(1);
+    expect(audit.events).toHaveLength(1);
+    expect(audit.events[0]).toMatchObject({
+      action: "INB-003",
+      actorUserId: USER_ID,
+      resourceType: "inbound",
     });
   });
 });

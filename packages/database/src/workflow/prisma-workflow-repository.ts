@@ -177,8 +177,11 @@ function listWhere(command: WorkflowCommand, actor: AuthenticatedUser): JsonReco
     "supplierId",
     "manufacturerId",
     "warehouseId",
+    "inboundType",
     "sourceType",
     "sourceDocumentType",
+    "sourceDocumentId",
+    "inspectionOrderId",
     "inspectionWarehouseId",
   ];
   for (const key of allowed) {
@@ -872,9 +875,13 @@ async function createInbound(client: DynamicClient, command: WorkflowCommand, ac
   const purchase = command.action === "create-purchase";
   const sourceModel = purchase ? "purchase_orders" : "production_orders";
   const sourceField = purchase ? "purchaseOrderId" : "productionOrderId";
+  const sourceItemRelation = purchase ? "purchase_order_items" : "production_order_items";
+  const sourceItemField = purchase ? "purchaseOrderItemId" : "productionOrderItemId";
   const source = await client[sourceModel]!.findFirst({
+    include: { [sourceItemRelation]: true },
     where: { id: text(command.payload, sourceField) },
   });
+  await activeWarehouse(client, requiredText(command.payload, "warehouseId"));
   const inspection = await client.inspection_orders!.findFirst({
     include: { inspection_order_items: true },
     where: {
@@ -884,19 +891,51 @@ async function createInbound(client: DynamicClient, command: WorkflowCommand, ac
     },
   });
   if (!source || !inspection) throw new ValidationError("正式入库必须关联已确认且来源一致的验收单");
+  if (purchase && source.status !== "approved") {
+    throw new ConflictError("仅已审核采购单允许创建入库单");
+  }
+  if (
+    !purchase &&
+    !["approved", "in_production", "partially_completed", "completed"].includes(
+      String(source.status),
+    )
+  ) {
+    throw new ConflictError("当前生产任务状态不允许创建入库单");
+  }
+  if (purchase && inspection.purchase_order_id !== source.id) {
+    throw new ValidationError("采购入库来源与验收单来源不一致");
+  }
+  if (!purchase && inspection.production_order_id !== source.id) {
+    throw new ValidationError("生产入库来源与验收单来源不一致");
+  }
   const qualified = new Map(
     (inspection.inspection_order_items as JsonRecord[]).map((item) => [String(item.id), item]),
+  );
+  const sourceItemMap = new Map(
+    ((source[sourceItemRelation] as JsonRecord[]) ?? []).map((item) => [String(item.id), item]),
   );
   const sourceItems = items(command.payload);
   const snapshots = await skuSnapshots(client, sourceItems);
   let total = 0;
   const detailRows = sourceItems.map((item, index) => {
     const inspectionItem = qualified.get(String(item.inspectionOrderItemId));
-    const quantity = decimal(item.quantity, "quantity");
+    const sourceItemId = text(item, sourceItemField);
+    const sourceItem = sourceItemMap.get(String(sourceItemId));
+    const quantity = positiveDecimal(item.quantity, "quantity");
+    const sourceQualified = Number(sourceItem?.qualified_quantity ?? 0);
+    const sourceInbound = Number(sourceItem?.inbound_quantity ?? 0);
+    const sourceAvailable = Math.max(0, sourceQualified - sourceInbound);
+    const inspectionAvailable = Math.min(
+      Number(inspectionItem?.qualified_quantity ?? 0),
+      sourceAvailable,
+    );
     if (
       !inspectionItem ||
+      !sourceItem ||
+      inspectionItem.source_item_id !== sourceItem.id ||
       inspectionItem.sku_id !== item.skuId ||
-      quantity > Number(inspectionItem.qualified_quantity)
+      sourceItem.sku_id !== item.skuId ||
+      quantity > inspectionAvailable
     ) {
       throw new ValidationError("入库明细超过已确认验收合格数量");
     }
@@ -911,10 +950,7 @@ async function createInbound(client: DynamicClient, command: WorkflowCommand, ac
       production_date: item.productionDate
         ? new Date(`${String(item.productionDate)}T00:00:00.000Z`)
         : null,
-      source_document_item_id: text(
-        item,
-        purchase ? "purchaseOrderItemId" : "productionOrderItemId",
-      ),
+      source_document_item_id: sourceItem.id,
       unit_cost: unitCost,
     };
   });
@@ -1451,7 +1487,9 @@ async function confirmInbound(
   payload: WorkflowPayload,
   actor: string,
 ) {
-  if (inbound.status !== "approved") throw new ConflictError("仅已审批入库单可确认入库");
+  if (!["approved", "partially_completed"].includes(String(inbound.status))) {
+    throw new ConflictError("仅已审批或部分入库单可确认入库");
+  }
   if (Number(payload.versionNo) !== Number(inbound.version_no))
     throw new ConflictError("入库单版本已变化");
   const inboundWithItems = await client.inbound_orders!.findFirst({
@@ -1459,14 +1497,103 @@ async function confirmInbound(
     where: { id: inbound.id },
   });
   const rows = (inboundWithItems?.inbound_order_items as JsonRecord[]) ?? [];
+  if (rows.length === 0) throw new ValidationError("入库单明细不能为空");
+  await activeWarehouse(client, String(inbound.warehouse_id));
+  const inspection = await client.inspection_orders!.findFirst({
+    include: { inspection_order_items: true },
+    where: { id: inbound.inspection_order_id, status: "confirmed" },
+  });
+  if (!inspection) throw new ConflictError("入库来源验收单已失效或未确认");
+  const inspectionItems = new Map(
+    ((inspection.inspection_order_items as JsonRecord[]) ?? []).map((item) => [
+      String(item.id),
+      item,
+    ]),
+  );
+  const sourceItemModel =
+    inbound.source_document_type === "purchase_order"
+      ? "purchase_order_items"
+      : "production_order_items";
+  const sourceItems = await client[sourceItemModel]!.findMany({
+    where: { id: { in: rows.map((item) => item.source_document_item_id) } },
+  });
+  const sourceItemMap = new Map(sourceItems.map((item) => [String(item.id), item]));
+  const existingTransactions = await client.inventory_transactions!.findMany({
+    where: { source_document_id: inbound.id, source_document_type: "inbound_order" },
+  });
+  const alreadyConfirmedByInboundItem = new Map<string, number>();
+  for (const transaction of existingTransactions) {
+    const key = String(transaction.source_document_item_id);
+    const direction = transaction.direction === "out" ? -1 : 1;
+    alreadyConfirmedByInboundItem.set(
+      key,
+      (alreadyConfirmedByInboundItem.get(key) ?? 0) + direction * Number(transaction.quantity),
+    );
+  }
+  const rowById = new Map(rows.map((row) => [String(row.id), row]));
+  const requestedItems =
+    Array.isArray(payload.items) && payload.items.length > 0 ? items(payload) : null;
+  const quantityByInboundItem = new Map<string, number>();
+  if (requestedItems) {
+    for (const item of requestedItems) {
+      const inboundOrderItemId = requiredText(item, "inboundOrderItemId");
+      const row = rowById.get(inboundOrderItemId);
+      if (!row) throw new ValidationError("确认入库明细不属于当前入库单");
+      const quantity = positiveDecimal(item.quantity, "quantity");
+      const remaining =
+        Number(row.quantity) - (alreadyConfirmedByInboundItem.get(inboundOrderItemId) ?? 0);
+      if (quantity > remaining) throw new ValidationError("确认入库数量超过入库单剩余数量");
+      quantityByInboundItem.set(inboundOrderItemId, quantity);
+    }
+  } else {
+    for (const row of rows) {
+      const remaining =
+        Number(row.quantity) - (alreadyConfirmedByInboundItem.get(String(row.id)) ?? 0);
+      if (remaining > 0) quantityByInboundItem.set(String(row.id), remaining);
+    }
+  }
+  if (quantityByInboundItem.size === 0) throw new ConflictError("入库单已无可确认数量");
+  const sourceRemaining = new Map(
+    sourceItems.map((item) => [
+      String(item.id),
+      Math.max(0, Number(item.qualified_quantity ?? 0) - Number(item.inbound_quantity ?? 0)),
+    ]),
+  );
+  for (const row of rows) {
+    const quantity = quantityByInboundItem.get(String(row.id)) ?? 0;
+    if (quantity <= 0) continue;
+    const inspectionItem = inspectionItems.get(String(row.inspection_order_item_id));
+    const sourceItem = sourceItemMap.get(String(row.source_document_item_id));
+    const remaining = sourceRemaining.get(String(row.source_document_item_id)) ?? 0;
+    if (
+      !inspectionItem ||
+      !sourceItem ||
+      inspectionItem.source_item_id !== row.source_document_item_id ||
+      inspectionItem.sku_id !== row.sku_id ||
+      sourceItem.sku_id !== row.sku_id ||
+      quantity > Number(row.quantity) ||
+      quantity > Number(inspectionItem.qualified_quantity) ||
+      quantity > remaining
+    ) {
+      throw new ValidationError("确认入库数量超过可入库合格数量");
+    }
+    sourceRemaining.set(String(row.source_document_item_id), remaining - quantity);
+  }
+  const willComplete = rows.every((row) => {
+    const already = alreadyConfirmedByInboundItem.get(String(row.id)) ?? 0;
+    const current = quantityByInboundItem.get(String(row.id)) ?? 0;
+    return already + current >= Number(row.quantity);
+  });
   return client.$transaction(async (transaction) => {
     for (const item of rows) {
+      const quantity = quantityByInboundItem.get(String(item.id)) ?? 0;
+      if (quantity <= 0) continue;
       const inventory = await transaction.inventories!.upsert({
         create: {
-          available_quantity: item.quantity,
+          available_quantity: quantity,
           created_by: actor,
           last_transaction_at: new Date(),
-          on_hand_quantity: item.quantity,
+          on_hand_quantity: quantity,
           pending_quantity: 0,
           reserved_quantity: 0,
           sku_id: item.sku_id,
@@ -1482,10 +1609,9 @@ async function confirmInbound(
         where: { sku_id_warehouse_id: { sku_id: item.sku_id, warehouse_id: inbound.warehouse_id } },
       });
       const after = Number(inventory.on_hand_quantity);
-      const quantity = Number(item.quantity);
       await transaction.inventory_transactions!.create({
         data: {
-          amount: item.line_cost,
+          amount: Number(item.unit_cost) * quantity,
           batch_no: item.batch_no,
           direction: "in",
           operator_id: actor,
@@ -1503,10 +1629,6 @@ async function confirmInbound(
           warehouse_id: inbound.warehouse_id,
         },
       });
-      const sourceItemModel =
-        inbound.source_document_type === "purchase_order"
-          ? "purchase_order_items"
-          : "production_order_items";
       await transaction[sourceItemModel]!.update({
         data: {
           inbound_quantity: { increment: quantity },
@@ -1515,15 +1637,30 @@ async function confirmInbound(
         where: { id: item.source_document_item_id },
       });
     }
-    return transaction.inbound_orders!.update({
+    const nextStatus = willComplete ? "completed" : "partially_completed";
+    const updated = await transaction.inbound_orders!.update({
       data: {
-        inbound_completed_at: new Date(),
-        status: "completed",
+        ...(willComplete ? { inbound_completed_at: new Date() } : {}),
+        status: nextStatus,
         updated_by: actor,
         version_no: Number(inbound.version_no) + 1,
       },
       where: { id: inbound.id },
     });
+    await transaction.document_status_histories!.create({
+      data: {
+        change_reason: text(payload, "reason", true),
+        changed_at: new Date(),
+        changed_by: actor,
+        from_status: inbound.status,
+        object_id: inbound.id,
+        object_no_snapshot: inbound.document_no,
+        object_type: "inbound",
+        remark: text(payload, "confirmationComment", true),
+        to_status: nextStatus,
+      },
+    });
+    return updated;
   });
 }
 

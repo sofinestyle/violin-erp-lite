@@ -90,6 +90,7 @@ describe("Attachment registries", () => {
     expect(categories.size).toBe(10);
     expect(categories.defaultSensitive("payment_voucher")).toBe(true);
     expect(categories.isEvidence("inspection_evidence")).toBe(true);
+    expect(categories.allowObjectType("inbound_evidence", "inbound_order")).toBe(true);
     expect(categories.allowObjectType("inspection_evidence", "inspection_order")).toBe(true);
     expect(categories.allowObjectType("inspection_evidence", "purchase_order")).toBe(false);
     expect(categories.allowObjectType("general_business_document", "product")).toBe(true);
@@ -146,6 +147,11 @@ describe("Attachment validator", () => {
       snapshot("purchase_order"),
       snapshot("production_order"),
       snapshot("inspection_order", {
+        protectionActivated: true,
+        state: "submitted",
+        warehouseIds: ["warehouse-1"],
+      }),
+      snapshot("inbound_order", {
         protectionActivated: true,
         state: "submitted",
         warehouseIds: ["warehouse-1"],
@@ -287,6 +293,24 @@ describe("Attachment validator", () => {
         operation: "unlink",
       }),
     ).rejects.toBeInstanceOf(AttachmentProtectedError);
+
+    await expect(
+      validator.validate({
+        access: access(["attachment.file.read", "inbound.order.read"], {
+          dataScopes: ["warehouse"],
+          userId: "different-user",
+          warehouseIds: ["warehouse-1"],
+        }),
+        attachmentCategory: "inbound_evidence",
+        objectId: OBJECT_ID,
+        objectType: "inbound_order",
+        operation: "read",
+      }),
+    ).resolves.toMatchObject({
+      category: "inbound_evidence",
+      objectType: "inbound_order",
+      protected: true,
+    });
   });
 
   it("keeps import_task external writes read-only", async () => {
