@@ -60,12 +60,23 @@ describe("inventory transaction repository", () => {
   });
 
   it("updates balance and writes immutable ledger rows together", async () => {
-    const upsert = vi.fn().mockResolvedValue({});
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
     const create = vi.fn().mockResolvedValue({});
     const client = {
       inventories: {
-        findFirst: vi.fn().mockResolvedValue({ on_hand_quantity: 10 }),
-        upsert,
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({
+            available_quantity: 10,
+            id: "inventory-1",
+            on_hand_quantity: 10,
+          })
+          .mockResolvedValueOnce({
+            available_quantity: 7,
+            id: "inventory-1",
+            on_hand_quantity: 7,
+          }),
+        updateMany,
       },
       inventory_transactions: { create },
     };
@@ -86,9 +97,16 @@ describe("inventory transaction repository", () => {
         documentType: "outbound",
       },
     );
-    expect(upsert).toHaveBeenCalledWith(
+    expect(updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        update: expect.objectContaining({ on_hand_quantity: { increment: -3 } }),
+        data: expect.objectContaining({
+          available_quantity: { decrement: 3 },
+          on_hand_quantity: { decrement: 3 },
+        }),
+        where: expect.objectContaining({
+          available_quantity: { gte: 3 },
+          on_hand_quantity: { gte: 3 },
+        }),
       }),
     );
     expect(create).toHaveBeenCalledWith(
@@ -172,7 +190,7 @@ describe("inventory transaction repository", () => {
       });
     const inventoryUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
     const transactionCreate = vi.fn().mockResolvedValue({});
-    const orderUpdate = vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "completed" });
+    const orderUpdate = vi.fn().mockResolvedValue({ count: 1 });
     const historyCreate = vi.fn().mockResolvedValue({});
     const document = {
       document_no: "OUT-001",
@@ -209,7 +227,7 @@ describe("inventory transaction repository", () => {
             ...document,
             status: "completed",
           }),
-        update: orderUpdate,
+        updateMany: orderUpdate,
       },
     };
     const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
@@ -260,7 +278,7 @@ describe("inventory transaction repository", () => {
     expect(orderUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: "completed" }),
-        where: { id: DOCUMENT_ID },
+        where: { id: DOCUMENT_ID, status: "approved", version_no: 2 },
       }),
     );
     expect(historyCreate).toHaveBeenCalledWith(
@@ -306,7 +324,7 @@ describe("inventory transaction repository", () => {
           version_no: 1,
           warehouse_id: SOURCE_WAREHOUSE_ID,
         }),
-        update: vi.fn(),
+        updateMany: vi.fn(),
       },
     };
     const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
@@ -328,7 +346,7 @@ describe("inventory transaction repository", () => {
     ).rejects.toMatchObject({ code: "CONFLICT_REQUEST" });
     expect(client.inventories.updateMany).not.toHaveBeenCalled();
     expect(client.inventory_transactions.create).not.toHaveBeenCalled();
-    expect(client.outbound_orders.update).not.toHaveBeenCalled();
+    expect(client.outbound_orders.updateMany).not.toHaveBeenCalled();
   });
 
   it("does not deduct inventory twice when outbound confirmation is repeated", async () => {
@@ -366,7 +384,7 @@ describe("inventory transaction repository", () => {
   it("reverses completed outbound with a related reverse ledger row", async () => {
     const inventoryUpsert = vi.fn().mockResolvedValue({ id: "inventory-1", on_hand_quantity: 10 });
     const transactionCreate = vi.fn().mockResolvedValue({});
-    const orderUpdate = vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "reversed" });
+    const orderUpdate = vi.fn().mockResolvedValue({ count: 1 });
     const document = {
       document_no: "OUT-001",
       id: DOCUMENT_ID,
@@ -410,7 +428,7 @@ describe("inventory transaction repository", () => {
             ...document,
             status: "reversed",
           }),
-        update: orderUpdate,
+        updateMany: orderUpdate,
       },
     };
     const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
@@ -492,7 +510,7 @@ describe("inventory transaction repository", () => {
           version_no: 1,
           warehouse_id: SOURCE_WAREHOUSE_ID,
         }),
-        update: orderUpdate,
+        updateMany: orderUpdate,
       },
     };
     const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
@@ -594,10 +612,10 @@ describe("inventory transaction repository", () => {
   });
 
   it("submits and approves inventory adjustments with status history", async () => {
-    const update = vi
+    const updateMany = vi
       .fn()
-      .mockResolvedValueOnce({ id: DOCUMENT_ID, status: "pending_approval" })
-      .mockResolvedValueOnce({ id: DOCUMENT_ID, status: "approved" });
+      .mockResolvedValueOnce({ count: 1 })
+      .mockResolvedValueOnce({ count: 1 });
     const historyCreate = vi.fn().mockResolvedValue({});
     const findFirst = vi
       .fn()
@@ -623,7 +641,7 @@ describe("inventory transaction repository", () => {
       $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
         callback(client),
       document_status_histories: { create: historyCreate },
-      inventory_adjustments: { findFirst, update },
+      inventory_adjustments: { findFirst, updateMany },
     };
     const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
 
@@ -658,13 +676,13 @@ describe("inventory transaction repository", () => {
       ),
     ).resolves.toMatchObject({ status: "approved" });
 
-    expect(update).toHaveBeenNthCalledWith(
+    expect(updateMany).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         data: expect.objectContaining({ status: "pending_approval" }),
       }),
     );
-    expect(update).toHaveBeenNthCalledWith(
+    expect(updateMany).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         data: expect.objectContaining({ status: "approved" }),
@@ -688,7 +706,7 @@ describe("inventory transaction repository", () => {
       });
     const inventoryUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
     const transactionCreate = vi.fn().mockResolvedValue({});
-    const adjustmentUpdate = vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "completed" });
+    const adjustmentUpdate = vi.fn().mockResolvedValue({ count: 1 });
     const historyCreate = vi.fn().mockResolvedValue({});
     const document = {
       adjustment_reason: "盘点差异",
@@ -723,7 +741,7 @@ describe("inventory transaction repository", () => {
           .fn()
           .mockResolvedValueOnce(document)
           .mockResolvedValueOnce({ ...document, status: "completed" }),
-        update: adjustmentUpdate,
+        updateMany: adjustmentUpdate,
       },
       inventory_transactions: { create: transactionCreate },
     };
@@ -818,7 +836,7 @@ describe("inventory transaction repository", () => {
           version_no: 1,
           warehouse_id: SOURCE_WAREHOUSE_ID,
         }),
-        update: vi.fn(),
+        updateMany: vi.fn(),
       },
       inventory_transactions: { create: vi.fn() },
     };
@@ -841,7 +859,7 @@ describe("inventory transaction repository", () => {
     ).rejects.toMatchObject({ code: "CONFLICT_REQUEST" });
     expect(client.inventories.updateMany).not.toHaveBeenCalled();
     expect(client.inventory_transactions.create).not.toHaveBeenCalled();
-    expect(client.inventory_adjustments.update).not.toHaveBeenCalled();
+    expect(client.inventory_adjustments.updateMany).not.toHaveBeenCalled();
   });
 
   it("does not execute an inventory adjustment twice", async () => {
@@ -914,7 +932,7 @@ describe("inventory transaction repository", () => {
           version_no: 1,
           warehouse_id: SOURCE_WAREHOUSE_ID,
         }),
-        update: adjustmentUpdate,
+        updateMany: adjustmentUpdate,
       },
       inventory_transactions: { create: vi.fn().mockRejectedValue(new Error("ledger failed")) },
     };
@@ -967,7 +985,16 @@ describe("inventory transaction repository", () => {
   it("ships transfer stock source-to-transit with paired ledger entries", async () => {
     const inventoryFind = vi
       .fn()
-      .mockResolvedValueOnce({ on_hand_quantity: 10 })
+      .mockResolvedValueOnce({
+        available_quantity: 10,
+        id: "source-inventory",
+        on_hand_quantity: 10,
+      })
+      .mockResolvedValueOnce({
+        available_quantity: 6,
+        id: "source-inventory",
+        on_hand_quantity: 6,
+      })
       .mockResolvedValueOnce({ on_hand_quantity: 0 });
     const transactionCreate = vi.fn().mockResolvedValue({});
     const updated = {
@@ -998,12 +1025,13 @@ describe("inventory transaction repository", () => {
       document_status_histories: { create: vi.fn().mockResolvedValue({}) },
       inventories: {
         findFirst: inventoryFind,
-        upsert: vi.fn().mockResolvedValue({}),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        upsert: vi.fn().mockResolvedValue({ on_hand_quantity: 4 }),
       },
       inventory_transactions: { create: transactionCreate },
       transfer_orders: {
         findFirst: vi.fn().mockResolvedValueOnce(document).mockResolvedValueOnce(updated),
-        update: vi.fn().mockResolvedValue(updated),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
     };
     const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
@@ -1048,7 +1076,7 @@ describe("inventory transaction repository", () => {
             ...document,
             status: "completed",
           }),
-        update: vi.fn().mockResolvedValue({}),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
     };
     const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
@@ -1140,7 +1168,7 @@ describe("inventory transaction repository", () => {
 
   it("dispatches cross-border shipment by moving stock from source to transit with ledger rows", async () => {
     const transactionCreate = vi.fn().mockResolvedValue({});
-    const shipmentUpdate = vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "shipped" });
+    const shipmentUpdate = vi.fn().mockResolvedValue({ count: 1 });
     const document = {
       cross_border_shipment_items: [
         {
@@ -1173,15 +1201,25 @@ describe("inventory transaction repository", () => {
             shipment_status: "shipped",
             status: "shipped",
           }),
-        update: shipmentUpdate,
+        updateMany: shipmentUpdate,
       },
       document_status_histories: { create: vi.fn().mockResolvedValue({}) },
       inventories: {
         findFirst: vi
           .fn()
-          .mockResolvedValueOnce({ available_quantity: 10, on_hand_quantity: 10 })
+          .mockResolvedValueOnce({
+            available_quantity: 10,
+            id: "source-inventory",
+            on_hand_quantity: 10,
+          })
+          .mockResolvedValueOnce({
+            available_quantity: 7,
+            id: "source-inventory",
+            on_hand_quantity: 7,
+          })
           .mockResolvedValueOnce({ available_quantity: 5, on_hand_quantity: 5 }),
-        upsert: vi.fn().mockResolvedValue({}),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        upsert: vi.fn().mockResolvedValue({ on_hand_quantity: 8 }),
       },
       inventory_transactions: { create: transactionCreate },
       warehouses: {
@@ -1275,6 +1313,7 @@ describe("inventory transaction repository", () => {
       cross_border_shipment_items: {
         findFirst: vi.fn().mockResolvedValue(shipmentItem),
         update: vi.fn().mockResolvedValue({}),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
       import_task_items: {
         findMany: vi.fn().mockResolvedValue([{ execution_status: "succeeded" }]),
@@ -1286,13 +1325,24 @@ describe("inventory transaction repository", () => {
           .mockResolvedValueOnce(task)
           .mockResolvedValueOnce({ ...task, status: "succeeded" }),
         update: vi.fn().mockResolvedValue({}),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
       inventories: {
         findFirst: vi
           .fn()
-          .mockResolvedValueOnce({ available_quantity: 5, on_hand_quantity: 5 })
+          .mockResolvedValueOnce({
+            available_quantity: 5,
+            id: "transit-inventory",
+            on_hand_quantity: 5,
+          })
+          .mockResolvedValueOnce({
+            available_quantity: 2,
+            id: "transit-inventory",
+            on_hand_quantity: 2,
+          })
           .mockResolvedValueOnce({ available_quantity: 1, on_hand_quantity: 1 }),
-        upsert: vi.fn().mockResolvedValue({}),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        upsert: vi.fn().mockResolvedValue({ on_hand_quantity: 4 }),
       },
       inventory_transactions: { create: transactionCreate },
       shipment_import_matches: {
@@ -1809,7 +1859,7 @@ describe("inventory transaction repository", () => {
   it("confirms sales return inbound by increasing inventory and writing ledger rows", async () => {
     const inventoryUpsert = vi.fn().mockResolvedValue({ id: "inventory-1", on_hand_quantity: 8 });
     const transactionCreate = vi.fn().mockResolvedValue({});
-    const returnUpdate = vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "completed" });
+    const returnUpdate = vi.fn().mockResolvedValue({ count: 1 });
     const document = {
       document_no: "SRT-001",
       id: DOCUMENT_ID,
@@ -1842,7 +1892,7 @@ describe("inventory transaction repository", () => {
           .fn()
           .mockResolvedValueOnce(document)
           .mockResolvedValueOnce({ ...document, status: "completed" }),
-        update: returnUpdate,
+        updateMany: returnUpdate,
       },
     };
     const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
@@ -1882,5 +1932,312 @@ describe("inventory transaction repository", () => {
         }),
       }),
     );
+  });
+
+  it("prevents concurrent stock movements from overselling the same SKU", async () => {
+    let stock = 5;
+    const ledger: unknown[] = [];
+    const client = {
+      inventories: {
+        findFirst: vi.fn(async () => ({
+          available_quantity: stock,
+          id: "inventory-concurrent",
+          on_hand_quantity: stock,
+        })),
+        updateMany: vi.fn(async (args: { data: { on_hand_quantity: { decrement: number } } }) => {
+          const quantity = args.data.on_hand_quantity.decrement;
+          if (stock < quantity) return { count: 0 };
+          stock -= quantity;
+          return { count: 1 };
+        }),
+      },
+      inventory_transactions: {
+        create: vi.fn(async (entry: unknown) => {
+          ledger.push(entry);
+          return {};
+        }),
+      },
+    };
+
+    const movement = (documentId: string) =>
+      applyInventoryMovements(
+        client as never,
+        [
+          {
+            delta: -4,
+            itemId: ITEM_ID,
+            skuId: SKU_ID,
+            warehouseId: SOURCE_WAREHOUSE_ID,
+          },
+        ],
+        { actorId: USER_ID, documentId, documentType: "outbound" },
+      );
+    const results = await Promise.allSettled([movement(DOCUMENT_ID), movement(PLATFORM_ID)]);
+
+    expect(results.filter(({ status }) => status === "fulfilled")).toHaveLength(1);
+    expect(results.filter(({ status }) => status === "rejected")).toHaveLength(1);
+    expect(stock).toBe(1);
+    expect(ledger).toHaveLength(1);
+  });
+
+  it("rolls back a cross-border dispatch when the transit inventory write fails", async () => {
+    const document = {
+      cross_border_shipment_items: [
+        {
+          batch_no: "B-001",
+          id: ITEM_ID,
+          quantity: 3,
+          sku_id: SKU_ID,
+          unit_cost: 10,
+        },
+      ],
+      destination_warehouse_id: OVERSEAS_WAREHOUSE_ID,
+      document_no: "CBR-ROLLBACK",
+      id: DOCUMENT_ID,
+      shipment_status: "approved",
+      source_warehouse_id: SOURCE_WAREHOUSE_ID,
+      status: "approved",
+      transit_warehouse_id: TRANSIT_WAREHOUSE_ID,
+      version_no: 1,
+    };
+    const balances = new Map([
+      [SOURCE_WAREHOUSE_ID, 10],
+      [TRANSIT_WAREHOUSE_ID, 0],
+    ]);
+    const ledger: unknown[] = [];
+    const shipmentUpdate = vi.fn();
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) => {
+        const balanceSnapshot = new Map(balances);
+        const ledgerLength = ledger.length;
+        try {
+          return await callback(client);
+        } catch (error) {
+          balances.clear();
+          for (const [warehouseId, quantity] of balanceSnapshot) {
+            balances.set(warehouseId, quantity);
+          }
+          ledger.splice(ledgerLength);
+          throw error;
+        }
+      },
+      cross_border_shipment_items: { update: vi.fn() },
+      cross_border_shipments: {
+        findFirst: vi.fn().mockResolvedValue(document),
+        updateMany: shipmentUpdate,
+      },
+      document_status_histories: { create: vi.fn() },
+      inventories: {
+        findFirst: vi.fn(async (args: { where: { id?: string; warehouse_id?: string } }) => {
+          const warehouseId =
+            args.where.id === "source-inventory"
+              ? SOURCE_WAREHOUSE_ID
+              : String(args.where.warehouse_id);
+          const quantity = balances.get(warehouseId) ?? 0;
+          return {
+            available_quantity: quantity,
+            id: warehouseId === SOURCE_WAREHOUSE_ID ? "source-inventory" : "transit-inventory",
+            on_hand_quantity: quantity,
+          };
+        }),
+        updateMany: vi.fn(async (args: { data: { on_hand_quantity: { decrement: number } } }) => {
+          const quantity = args.data.on_hand_quantity.decrement;
+          const current = balances.get(SOURCE_WAREHOUSE_ID) ?? 0;
+          if (current < quantity) return { count: 0 };
+          balances.set(SOURCE_WAREHOUSE_ID, current - quantity);
+          return { count: 1 };
+        }),
+        upsert: vi.fn().mockRejectedValue(new Error("transit inventory write failed")),
+      },
+      inventory_transactions: {
+        create: vi.fn(async (entry: unknown) => {
+          ledger.push(entry);
+          return {};
+        }),
+      },
+      warehouses: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({ id: SOURCE_WAREHOUSE_ID, warehouse_type: "company" })
+          .mockResolvedValueOnce({ id: TRANSIT_WAREHOUSE_ID, warehouse_type: "transit" })
+          .mockResolvedValueOnce({ id: OVERSEAS_WAREHOUSE_ID, warehouse_type: "overseas" }),
+      },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "dispatch",
+          apiId: "CBR-012",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: { versionNo: 1 },
+          query: new URLSearchParams(),
+          resource: "cross-border",
+        },
+        actor,
+        context,
+      ),
+    ).rejects.toThrow("transit inventory write failed");
+    expect(balances.get(SOURCE_WAREHOUSE_ID)).toBe(10);
+    expect(balances.get(TRANSIT_WAREHOUSE_ID)).toBe(0);
+    expect(ledger).toHaveLength(0);
+    expect(shipmentUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a competing document transition and rolls its inventory changes back", async () => {
+    let stock = 10;
+    let status = "approved";
+    let versionNo = 1;
+    const ledger: unknown[] = [];
+    let transactionQueue = Promise.resolve();
+    const document = () => ({
+      document_no: "OUT-CONCURRENT",
+      id: DOCUMENT_ID,
+      outbound_order_items: [
+        {
+          id: ITEM_ID,
+          line_cost: 30,
+          quantity: 3,
+          sku_id: SKU_ID,
+          unit_cost: 10,
+        },
+      ],
+      outbound_type: "other",
+      status,
+      version_no: versionNo,
+      warehouse_id: SOURCE_WAREHOUSE_ID,
+    });
+    const client = {
+      $transaction: <T>(callback: (transaction: unknown) => Promise<T>) => {
+        const run = transactionQueue.then(async () => {
+          const stockSnapshot = stock;
+          const statusSnapshot = status;
+          const versionSnapshot = versionNo;
+          const ledgerLength = ledger.length;
+          try {
+            return await callback(client);
+          } catch (error) {
+            stock = stockSnapshot;
+            status = statusSnapshot;
+            versionNo = versionSnapshot;
+            ledger.splice(ledgerLength);
+            throw error;
+          }
+        });
+        transactionQueue = run.then(
+          () => undefined,
+          () => undefined,
+        );
+        return run;
+      },
+      document_status_histories: { create: vi.fn().mockResolvedValue({}) },
+      inventories: {
+        findFirst: vi.fn(async () => ({
+          available_quantity: stock,
+          id: "inventory-concurrent-document",
+          on_hand_quantity: stock,
+        })),
+        updateMany: vi.fn(async (args: { data: { on_hand_quantity: { decrement: number } } }) => {
+          const quantity = args.data.on_hand_quantity.decrement;
+          if (stock < quantity) return { count: 0 };
+          stock -= quantity;
+          return { count: 1 };
+        }),
+      },
+      inventory_transactions: {
+        create: vi.fn(async (entry: unknown) => {
+          ledger.push(entry);
+          return {};
+        }),
+      },
+      outbound_orders: {
+        findFirst: vi.fn(async () => ({ ...document() })),
+        updateMany: vi.fn(
+          async (args: {
+            data: { status: string; version_no: { increment: number } };
+            where: { status: string; version_no: number };
+          }) => {
+            if (status !== args.where.status || versionNo !== args.where.version_no) {
+              return { count: 0 };
+            }
+            status = args.data.status;
+            versionNo += args.data.version_no.increment;
+            return { count: 1 };
+          },
+        ),
+      },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+    const command: InventoryWorkflowCommand = {
+      action: "confirm",
+      apiId: "OUT-012",
+      entityId: DOCUMENT_ID,
+      mutation: true,
+      payload: { versionNo: 1 },
+      query: new URLSearchParams(),
+      resource: "outbound",
+    };
+
+    const results = await Promise.allSettled([
+      repository.execute(command, actor, context),
+      repository.execute(command, actor, context),
+    ]);
+
+    expect(results.filter(({ status: resultStatus }) => resultStatus === "fulfilled")).toHaveLength(
+      1,
+    );
+    expect(results.filter(({ status: resultStatus }) => resultStatus === "rejected")).toHaveLength(
+      1,
+    );
+    expect(stock).toBe(7);
+    expect(status).toBe("completed");
+    expect(versionNo).toBe(2);
+    expect(ledger).toHaveLength(1);
+  });
+
+  it("claims an overseas import before applying any inventory movement", async () => {
+    const inventoryFind = vi.fn();
+    const transactionCreate = vi.fn();
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      import_tasks: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: DOCUMENT_ID,
+          import_task_items: [
+            {
+              execution_status: "pending",
+              id: ITEM_ID,
+              validation_status: "valid",
+            },
+          ],
+          status: "pending_confirmation",
+        }),
+        updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      inventories: { findFirst: inventoryFind },
+      inventory_transactions: { create: transactionCreate },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "execute-import",
+          apiId: "IMP-011",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: {},
+          query: new URLSearchParams(),
+          resource: "overseas-import",
+        },
+        actor,
+        context,
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT_REQUEST" });
+    expect(inventoryFind).not.toHaveBeenCalled();
+    expect(transactionCreate).not.toHaveBeenCalled();
   });
 });

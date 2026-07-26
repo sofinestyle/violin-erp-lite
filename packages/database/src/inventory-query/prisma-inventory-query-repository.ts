@@ -188,20 +188,34 @@ export class PrismaInventoryQueryRepository implements InventoryQueryRepository 
   async #inventoryAmount(rows: readonly InventoryBalanceRecord[]): Promise<string | undefined> {
     const delegate = this.#client.inventory_transactions as unknown as DynamicDelegate | undefined;
     if (!delegate) return undefined;
+    if (rows.length === 0) return "0.0000";
+    const latestRows = await delegate.findMany({
+      distinct: ["sku_id", "warehouse_id"],
+      orderBy: [
+        { sku_id: "asc" },
+        { warehouse_id: "asc" },
+        { transaction_at: "desc" },
+        { created_at: "desc" },
+      ],
+      where: {
+        OR: rows.map((row) => ({
+          sku_id: row.sku.id,
+          warehouse_id: row.warehouse.id,
+        })),
+        unit_cost: { not: null },
+      },
+    });
+    const unitCostByInventory = new Map(
+      latestRows.map((row) => [
+        `${String(row.sku_id)}:${String(row.warehouse_id)}`,
+        Number(row.unit_cost),
+      ]),
+    );
     let amount = 0;
     for (const row of rows) {
-      const latest = await delegate.findMany({
-        orderBy: [{ transaction_at: "desc" }, { created_at: "desc" }],
-        take: 1,
-        where: {
-          sku_id: row.sku.id,
-          unit_cost: { not: null },
-          warehouse_id: row.warehouse.id,
-        },
-      });
-      const unitCost = latest[0]?.unit_cost;
-      if (unitCost === null || unitCost === undefined) continue;
-      amount += Number(row.onHandQuantity) * Number(unitCost);
+      const unitCost = unitCostByInventory.get(`${row.sku.id}:${row.warehouse.id}`);
+      if (unitCost === undefined) continue;
+      amount += Number(row.onHandQuantity) * unitCost;
     }
     return amount.toFixed(4);
   }

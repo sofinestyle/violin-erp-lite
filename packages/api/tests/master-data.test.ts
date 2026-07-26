@@ -118,6 +118,29 @@ describe("Master Data API contracts", () => {
     );
   });
 
+  it("treats script and SQL metacharacters as data and rejects oversized names", () => {
+    const updatedAt = "2026-07-23T00:00:00.000Z";
+    expect(
+      validateMasterDataInput(
+        "skus",
+        { skuName: `<script>alert("xss")</script>'; DROP TABLE skus; --`, updatedAt },
+        "update",
+      ),
+    ).toMatchObject({
+      data: { skuName: `<script>alert("xss")</script>'; DROP TABLE skus; --` },
+    });
+
+    for (const [resource, field] of [
+      ["skus", "skuName"],
+      ["suppliers", "supplierName"],
+      ["stores", "storeName"],
+    ] as const) {
+      expect(() =>
+        validateMasterDataInput(resource, { [field]: "超".repeat(301), updatedAt }, "update"),
+      ).toThrowError(expect.objectContaining({ details: [expect.objectContaining({ field })] }));
+    }
+  });
+
   it("enforces permission, repository flow and required audit", async () => {
     const writer = new InMemoryAuditWriter();
     const store = repository();

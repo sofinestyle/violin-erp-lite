@@ -9,6 +9,8 @@ import {
   IdempotencyReplayError,
   IdempotencyResponseSanitizer,
   IdempotencyScopeResolver,
+  InMemoryAuditWriter,
+  InventoryWorkflowService,
   loadIdempotencyConfiguration,
   requireIdempotencyKey,
   type IdempotencyClaimInput,
@@ -19,6 +21,9 @@ import {
   type IdempotencyRepository,
   type IdempotencyStatus,
   type IdempotencyTerminalInput,
+  type AuthenticationContext,
+  type InventoryWorkflowCommand,
+  type InventoryWorkflowRepository,
 } from "../src/index";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -321,5 +326,111 @@ describe("idempotency response safety and replay", () => {
     await expect(adapter.execute(unresolved)).rejects.toBeInstanceOf(IdempotencyReplayError);
     expect(unresolved.reconciliation.reconcileExpiredProcessing).toHaveBeenCalledOnce();
     expect(operation).not.toHaveBeenCalled();
+  });
+});
+
+describe("inventory workflow persistent idempotency", () => {
+  it("executes a high-risk inventory mutation once and replays its stable result", async () => {
+    const repository: InventoryWorkflowRepository = {
+      execute: vi.fn().mockResolvedValue({ id: randomUUID(), status: "completed" }),
+    };
+    const service = new InventoryWorkflowService(
+      repository,
+      new InMemoryAuditWriter(),
+      new IdempotencyAdapter(new MemoryRepository(), configuration()),
+    );
+    const authentication: AuthenticationContext = {
+      user: {
+        dataScopes: ["all"],
+        permissionCodes: ["outbound.order.confirm"],
+        roleCodes: ["administrator"],
+        userId: USER_ID,
+        username: "admin",
+      },
+    };
+    const entityId = randomUUID();
+    const inventoryCommand: InventoryWorkflowCommand = {
+      action: "confirm",
+      apiId: "OUT-012",
+      entityId,
+      mutation: true,
+      payload: { versionNo: 1 },
+      query: new URLSearchParams(),
+      resource: "outbound",
+    };
+    const firstTraceId = randomUUID();
+    const secondTraceId = randomUUID();
+
+    const first = await service.executeIdempotent(
+      inventoryCommand,
+      "outbound.order.confirm",
+      "same-inventory-command",
+      authentication,
+      {
+        requestId: firstTraceId,
+        timestamp: "2026-07-26T00:00:00.000Z",
+      },
+    );
+    const replay = await service.executeIdempotent(
+      inventoryCommand,
+      "outbound.order.confirm",
+      "same-inventory-command",
+      authentication,
+      {
+        requestId: secondTraceId,
+        timestamp: "2026-07-26T00:00:01.000Z",
+      },
+    );
+
+    expect(repository.execute).toHaveBeenCalledTimes(1);
+    expect(first).toEqual(replay);
+    expect(first).toMatchObject({ httpStatus: 200, requestTraceId: firstTraceId });
+  });
+
+  it("rejects reuse of an inventory idempotency key for a different request", async () => {
+    const repository: InventoryWorkflowRepository = {
+      execute: vi.fn().mockResolvedValue({ id: randomUUID(), status: "completed" }),
+    };
+    const service = new InventoryWorkflowService(
+      repository,
+      new InMemoryAuditWriter(),
+      new IdempotencyAdapter(new MemoryRepository(), configuration()),
+    );
+    const authentication: AuthenticationContext = {
+      user: {
+        dataScopes: ["all"],
+        permissionCodes: ["inventory.adjustment.execute"],
+        roleCodes: ["administrator"],
+        userId: USER_ID,
+        username: "admin",
+      },
+    };
+    const base: InventoryWorkflowCommand = {
+      action: "execute",
+      apiId: "INV-024",
+      entityId: randomUUID(),
+      mutation: true,
+      payload: { versionNo: 1 },
+      query: new URLSearchParams(),
+      resource: "inventory-adjustment",
+    };
+
+    await service.executeIdempotent(
+      base,
+      "inventory.adjustment.execute",
+      "reused-key",
+      authentication,
+      { requestId: randomUUID(), timestamp: "2026-07-26T00:00:00.000Z" },
+    );
+    await expect(
+      service.executeIdempotent(
+        { ...base, payload: { versionNo: 2 } },
+        "inventory.adjustment.execute",
+        "reused-key",
+        authentication,
+        { requestId: randomUUID(), timestamp: "2026-07-26T00:00:01.000Z" },
+      ),
+    ).rejects.toMatchObject({ code: "SECURITY_REPLAY_DETECTED" });
+    expect(repository.execute).toHaveBeenCalledTimes(1);
   });
 });

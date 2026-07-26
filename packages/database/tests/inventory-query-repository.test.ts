@@ -124,10 +124,14 @@ describe("PrismaInventoryQueryRepository", () => {
         },
       }),
     ]);
-    const transactionFindMany = vi
-      .fn()
-      .mockResolvedValueOnce([{ unit_cost: "100.0000" }])
-      .mockResolvedValueOnce([{ unit_cost: "50.0000" }]);
+    const transactionFindMany = vi.fn().mockResolvedValueOnce([
+      { sku_id: SKU_ID, unit_cost: "100.0000", warehouse_id: WAREHOUSE_ID },
+      {
+        sku_id: "88888888-8888-4888-8888-888888888888",
+        unit_cost: "50.0000",
+        warehouse_id: WAREHOUSE_ID,
+      },
+    ]);
     const repository = new PrismaInventoryQueryRepository({
       inventories: { findMany },
       inventory_transactions: { findMany: transactionFindMany },
@@ -158,6 +162,50 @@ describe("PrismaInventoryQueryRepository", () => {
         where: { AND: [{ warehouse_id: { in: [WAREHOUSE_ID] } }] },
       }),
     );
-    expect(transactionFindMany).toHaveBeenCalledTimes(2);
+    expect(transactionFindMany).toHaveBeenCalledTimes(1);
+    expect(transactionFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        distinct: ["sku_id", "warehouse_id"],
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            { sku_id: SKU_ID, warehouse_id: WAREHOUSE_ID },
+            {
+              sku_id: "88888888-8888-4888-8888-888888888888",
+              warehouse_id: WAREHOUSE_ID,
+            },
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it("keeps inventory amount lookup constant for 5,000 inventory rows", async () => {
+    const rows = Array.from({ length: 5_000 }, (_, index) =>
+      row({
+        id: `inventory-${index}`,
+        sku_id: `sku-${index}`,
+        skus: {
+          id: `sku-${index}`,
+          sku_code: `SKU-${index}`,
+          sku_name: `SKU ${index}`,
+        },
+      }),
+    );
+    const transactionFindMany = vi.fn().mockResolvedValue([]);
+    const repository = new PrismaInventoryQueryRepository({
+      inventories: { findMany: vi.fn().mockResolvedValue(rows) },
+      inventory_transactions: { findMany: transactionFindMany },
+    } as never);
+
+    await expect(
+      repository.summary(
+        { page: 1, pageSize: 100 },
+        {
+          actorUserId: "11111111-1111-4111-8111-111111111111",
+          requestTraceId: "66666666-6666-4666-8666-666666666666",
+        },
+      ),
+    ).resolves.toMatchObject({ inventoryAmount: "0.0000", inventoryCount: 5_000 });
+    expect(transactionFindMany).toHaveBeenCalledTimes(1);
   });
 });

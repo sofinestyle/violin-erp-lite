@@ -2,7 +2,13 @@ import { recordAuditEvent, type AuditWriter } from "../audit/audit.js";
 import type { AuthenticatedUser, AuthenticationContext } from "../auth/authentication.js";
 import { requirePermission } from "../authorization/authorization.js";
 import type { PermissionCode } from "../authorization/permissions.js";
-import { AppError, ValidationError } from "../errors/app-error.js";
+import { AppError, normalizeError, ValidationError } from "../errors/app-error.js";
+import type { IdempotencyAdapter } from "../idempotency/idempotency.js";
+import type {
+  IdempotencyJson,
+  IdempotencyReconciliationStrategy,
+  IdempotencySafeResponse,
+} from "../idempotency/types.js";
 import type { RequestContext } from "../request-context/request-context.js";
 
 export const INVENTORY_WORKFLOW_API_IDS = [
@@ -49,6 +55,39 @@ export type InventoryWorkflowRepository = Readonly<{
     context: RequestContext,
   ) => Promise<unknown>;
 }>;
+
+function idempotencyJson(value: unknown): IdempotencyJson {
+  return JSON.parse(JSON.stringify(value)) as IdempotencyJson;
+}
+
+function idempotencySuccessEnvelope(result: unknown, context: RequestContext): IdempotencyJson {
+  return idempotencyJson({
+    data: result,
+    meta: {},
+    requestId: context.requestId,
+    success: true,
+    timestamp: context.timestamp,
+  });
+}
+
+function idempotencyErrorEnvelope(error: AppError, context: RequestContext): IdempotencyJson {
+  return idempotencyJson({
+    error: {
+      code: error.code,
+      details: error.expose ? error.details : [],
+      message: error.expose ? error.message : "系统异常，请稍后重试",
+    },
+    requestId: context.requestId,
+    success: false,
+    timestamp: context.timestamp,
+  });
+}
+
+function resultId(result: unknown): string | undefined {
+  if (!result || typeof result !== "object" || Array.isArray(result)) return undefined;
+  const id = (result as Readonly<Record<string, unknown>>).id;
+  return typeof id === "string" ? id : undefined;
+}
 
 type Endpoint = Readonly<{
   action: string;
@@ -922,6 +961,7 @@ export class InventoryWorkflowService {
   constructor(
     private readonly repository: InventoryWorkflowRepository,
     private readonly audit: AuditWriter,
+    private readonly idempotency?: IdempotencyAdapter,
   ) {}
 
   async execute(
@@ -949,5 +989,88 @@ export class InventoryWorkflowService {
       });
     }
     return result;
+  }
+
+  async executeIdempotent(
+    command: InventoryWorkflowCommand,
+    permission: PermissionCode,
+    idempotencyKey: string,
+    authentication: AuthenticationContext,
+    context: RequestContext,
+  ): Promise<IdempotencySafeResponse> {
+    if (!command.mutation) {
+      throw new TypeError("Idempotent inventory workflow execution requires a mutation command");
+    }
+    if (!this.idempotency) {
+      throw new TypeError("Persistent idempotency is not configured");
+    }
+    const authorize = () => {
+      requirePermission(authentication, permission);
+      validateInventoryWorkflowCommand(command);
+    };
+    const reconciliation: IdempotencyReconciliationStrategy = {
+      reconcileExpiredProcessing: async () => ({ outcome: "unresolved" }),
+    };
+    const responseStatus = command.action.startsWith("create") ? 201 : 200;
+
+    return this.idempotency.execute({
+      authorize,
+      operation: async () => {
+        try {
+          const result = await this.execute(command, permission, authentication, context);
+          const resourceId = resultId(result) ?? command.entityId;
+          return {
+            outcome: "completed",
+            response: {
+              body: idempotencySuccessEnvelope(result, context),
+              httpStatus: responseStatus,
+              requestTraceId: context.requestId,
+              ...(resourceId ? { resourceId, resourceType: command.resource } : {}),
+            },
+          };
+        } catch (error) {
+          const appError = normalizeError(error);
+          return {
+            outcome: "failed",
+            response: {
+              body: idempotencyErrorEnvelope(appError, context),
+              httpStatus: appError.httpStatus,
+              requestTraceId: context.requestId,
+            },
+          };
+        }
+      },
+      rawKey: idempotencyKey,
+      reconciliation,
+      request: {
+        action: command.apiId,
+        authenticationScope: {
+          dataScopes: [...authentication.user.dataScopes].sort(),
+          storeIds: [...(authentication.user.storeScopes ?? [])]
+            .map(({ targetId }) => targetId)
+            .sort(),
+          userId: authentication.user.userId,
+          warehouseIds: [...(authentication.user.warehouseScopes ?? [])]
+            .map(({ targetId }) => targetId)
+            .sort(),
+        },
+        body: command.payload,
+        method: command.action === "update" ? "PATCH" : "POST",
+        path: {
+          action: command.action,
+          entityId: command.entityId,
+          resource: command.resource,
+        },
+        query: Object.fromEntries(command.query.entries()),
+        ...(typeof command.payload.storeId === "string"
+          ? { storeId: command.payload.storeId }
+          : {}),
+        ...(typeof command.payload.warehouseId === "string"
+          ? { warehouseId: command.payload.warehouseId }
+          : {}),
+      },
+      requestTraceId: context.requestId,
+      scope: { apiId: command.apiId, userId: authentication.user.userId },
+    });
   }
 }

@@ -49,6 +49,7 @@ import {
 import {
   createAttachmentService,
   createCurrentUserResolver,
+  createPersistentIdempotencyAdapter,
   PrismaAuthRepository,
   PrismaAuditWriter,
   PrismaInventoryQueryRepository,
@@ -482,8 +483,25 @@ async function dispatchInventoryWorkflow(
     request.method === "GET"
       ? candidate
       : matchInventoryWorkflowEndpoint(request.method, segments, query, payload)!;
-  if (matched.command.mutation) requireIdempotencyKey(request);
-  const result = await services().inventoryWorkflow.execute(
+  if (matched.command.mutation) {
+    const endpoint = new InventoryWorkflowService(
+      new PrismaInventoryWorkflowRepository(),
+      new PrismaAuditWriter(),
+      createPersistentIdempotencyAdapter(),
+    );
+    return idempotencyResponse(
+      await endpoint.executeIdempotent(
+        matched.command,
+        matched.permission,
+        requirePersistentIdempotencyKey(request),
+        authentication,
+        context,
+      ),
+      context,
+    );
+  }
+  const endpoint = services().inventoryWorkflow;
+  const result = await endpoint.execute(
     matched.command,
     matched.permission,
     authentication,

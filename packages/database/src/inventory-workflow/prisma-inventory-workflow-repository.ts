@@ -1033,34 +1033,65 @@ export async function applyInventoryMovements(
     const current = await client.inventories!.findFirst({
       where: { sku_id: movement.skuId, warehouse_id: movement.warehouseId },
     });
-    const before = Number(current?.on_hand_quantity ?? 0);
-    const after = before + movement.delta;
-    if (after < 0) throw new ConflictError("可用库存不足");
-    await client.inventories!.upsert({
-      create: {
-        available_quantity: after,
-        created_by: source.actorId,
-        last_transaction_at: new Date(),
-        on_hand_quantity: after,
-        pending_quantity: 0,
-        reserved_quantity: 0,
-        sku_id: movement.skuId,
-        updated_by: source.actorId,
-        warehouse_id: movement.warehouseId,
-      },
-      update: {
-        available_quantity: { increment: movement.delta },
-        last_transaction_at: new Date(),
-        on_hand_quantity: { increment: movement.delta },
-        updated_by: source.actorId,
-      },
-      where: {
-        sku_id_warehouse_id: {
+    let before: number;
+    let after: number;
+    if (movement.delta < 0) {
+      const quantity = Math.abs(movement.delta);
+      if (
+        !current ||
+        Number(current.available_quantity ?? 0) < quantity ||
+        Number(current.on_hand_quantity ?? 0) < quantity
+      ) {
+        throw new ConflictError("可用库存不足");
+      }
+      const updatedCount = await client.inventories!.updateMany({
+        data: {
+          available_quantity: { decrement: quantity },
+          last_transaction_at: new Date(),
+          on_hand_quantity: { decrement: quantity },
+          updated_by: source.actorId,
+        },
+        where: {
+          available_quantity: { gte: quantity },
+          id: current.id,
+          on_hand_quantity: { gte: quantity },
+        },
+      });
+      if (updatedCount.count !== 1) throw new ConflictError("可用库存不足");
+      const updated = await client.inventories!.findFirst({ where: { id: current.id } });
+      after = Number(updated?.on_hand_quantity ?? Number(current.on_hand_quantity) - quantity);
+      before = after + quantity;
+    } else {
+      const updated = await client.inventories!.upsert({
+        create: {
+          available_quantity: movement.delta,
+          created_by: source.actorId,
+          last_transaction_at: new Date(),
+          on_hand_quantity: movement.delta,
+          pending_quantity: 0,
+          reserved_quantity: 0,
           sku_id: movement.skuId,
+          updated_by: source.actorId,
           warehouse_id: movement.warehouseId,
         },
-      },
-    });
+        update: {
+          available_quantity: { increment: movement.delta },
+          last_transaction_at: new Date(),
+          on_hand_quantity: { increment: movement.delta },
+          updated_by: source.actorId,
+        },
+        where: {
+          sku_id_warehouse_id: {
+            sku_id: movement.skuId,
+            warehouse_id: movement.warehouseId,
+          },
+        },
+      });
+      after = Number(
+        updated.on_hand_quantity ?? Number(current?.on_hand_quantity ?? 0) + movement.delta,
+      );
+      before = after - movement.delta;
+    }
     await client.inventory_transactions!.create({
       data: {
         amount:
@@ -1588,7 +1619,17 @@ async function action(
         ? { shipment_status: "shipped", status: "shipped" }
         : {}),
     };
-    await transaction[model]!.update({ data, where: { id: document.id } });
+    const transitioned = await transaction[model]!.updateMany({
+      data,
+      where: {
+        id: document.id,
+        status: document.status,
+        version_no: document.version_no,
+      },
+    });
+    if (transitioned.count !== 1) {
+      throw new ConflictError("数据版本或状态已变化，请刷新后重试");
+    }
     await transaction.document_status_histories!.create({
       data: {
         change_reason: typeof command.payload.reason === "string" ? command.payload.reason : null,
@@ -1888,10 +1929,11 @@ async function executeImportTask(
   );
   if (executableItems.length === 0) throw new ValidationError("没有可执行导入明细");
   await client.$transaction(async (transaction) => {
-    await transaction.import_tasks!.update({
+    const claimed = await transaction.import_tasks!.updateMany({
       data: { started_at: new Date(), status: "importing", updated_by: actor.userId },
-      where: { id: task.id },
+      where: { id: task.id, status: { in: allowed } },
     });
+    if (claimed.count !== 1) throw new ConflictError("导入任务已由其他请求处理");
     for (const item of executableItems) {
       const match = await transaction.shipment_import_matches!.findFirst({
         where: { import_task_item_id: item.id },
