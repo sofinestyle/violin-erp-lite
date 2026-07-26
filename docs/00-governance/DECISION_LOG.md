@@ -2633,3 +2633,33 @@ Approved
 ### 影响
 
 本决定只同步 Phase 9 最终 QA 审查、完成批准状态与 Phase 10 当前状态，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Phase 10 Release & Acceptance 尚未执行发布、数据初始化、验收、上线或交付动作；后续发布环境、数据初始化、上线检查、用户验收、培训、上线观察和正式交付必须在 Phase 10 获批任务中进行。
+
+## DEC-105 批准Phase 10 Release & Acceptance完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-26
+
+### 决定
+
+- 项目负责人批准 Phase 10 Release & Acceptance 完成；
+- 10-A Release Preparation & Deployment Plan 已完成并获得批准；
+- 10-B User Acceptance Test & Production Readiness 已完成并获得批准；
+- 10-C Final Release Approval 已完成并获得批准；
+- Phase 8 Application Development 已完成并冻结；
+- Phase 9 Test Plan & System Integration 已完成并获得批准；
+- 最终测试结果为 Pass with Known Issues；
+- Blocker / Critical / Major / Minor Bug 均为 0；
+- Known Issues 均接受为 Accepted / Non-blocking；
+- Application、Database、Storage、Backup 与 Permission 均确认 Ready；
+- Database、API 与 Permission 均保持 Approved，未发现未批准变更；
+- Phase 10 Release & Acceptance 状态更新为 Completed / Approved；
+- Violin ERP Lite Project Status 更新为 Completed / Approved。
+
+### 影响
+
+本决定只同步 Phase 10 最终发布批准、项目完成状态与治理文档，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。项目开发阶段已关闭；后续如需生产实际部署、运维变更、业务扩展、外部平台接入、新功能或既有功能变更，必须通过独立获批任务、正式 Change Request、DCR、API Change Request 或 Permission 评估执行。

@@ -18,15 +18,15 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 ## 当前项目状态
 
 - Current Phase：Phase 10
-- Phase Status：Waiting / Not Started
+- Phase Status：Completed / Approved
 - Current Task：Phase 10 Release & Acceptance
-- Current Task Status：Waiting / Not Started
+- Current Task Status：Completed / Approved
 
 完整当前状态以 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md) 为唯一入口。
 
 ## 十阶段开发路线
 
-十个阶段的数量、名称和顺序已经冻结。Phase 7 Platform Foundation 已完成 Task 7.1 至 Task 7.9、Final Audit、Alignment Confirmation 与 Freeze，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已完成 Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 最终验收并冻结，状态为 Completed / Approved / Frozen。Phase 9 Test Plan & System Integration 已完成最终 QA 审查并获得批准，状态为 Completed / Approved。当前 Phase 为 Phase 10 Release & Acceptance，状态为 Waiting / Not Started。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
+十个阶段的数量、名称和顺序已经冻结。Phase 7 Platform Foundation 已完成 Task 7.1 至 Task 7.9、Final Audit、Alignment Confirmation 与 Freeze，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已完成 Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 最终验收并冻结，状态为 Completed / Approved / Frozen。Phase 9 Test Plan & System Integration 已完成最终 QA 审查并获得批准，状态为 Completed / Approved。Phase 10 Release & Acceptance 已完成发布准备、UAT 生产就绪评估与最终发布批准，状态为 Completed / Approved。Violin ERP Lite 项目状态为 Completed / Approved。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
 
 ## 仓库用途
 

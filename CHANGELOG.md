@@ -11,6 +11,38 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.38] - 2026-07-26
+
+### Changed
+
+- Phase 10 Release & Acceptance 更新为 `Completed / Approved`
+- Project Status 更新为 `Completed / Approved`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 与 `README.md` 同步最终发布批准与项目完成状态
+- 新增 DEC-105，记录 Phase 10 Release & Acceptance 完成批准
+
+### Added
+
+- 新增 `TASK_10_C_FINAL_RELEASE_APPROVAL.md`
+- 记录 Phase 8、Phase 9、Phase 10-A 与 Phase 10-B 均已完成并获得批准
+- 记录最终业务链路 Master Data → Procurement → Production → Inspection → Inbound → Inventory → Cross-border → Sales → Outbound → Statistics 已通过
+- 记录最终测试结果为 `Pass with Known Issues`，Known Issues 均为 Accepted / Non-blocking
+- 记录 Application、Database、Storage、Backup 与 Permission 均为 Ready
+
+### Verified
+
+- Database Status：Approved
+- API Status：Approved
+- Permission Status：Approved
+- Blocker / Critical / Major / Minor Bug 均为 0
+- `pnpm status:check` 通过
+- `pnpm check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步最终发布批准与治理状态文档
+- 未修改业务代码、Database Schema、Migration、API Contract、Permission 或业务规则
+
 ## [0.11.37] - 2026-07-26
 
 ### Changed

@@ -18,9 +18,9 @@ related_phase: All Phases
 ## 2. 当前项目进度
 
 - Current Phase：Phase 10
-- Phase Status：Waiting / Not Started
+- Phase Status：Completed / Approved
 - Current Task：Phase 10 Release & Acceptance
-- Current Task Status：Waiting / Not Started
+- Current Task Status：Completed / Approved
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件负责定义固定阶段路线、Task 边界、进入条件和完成条件。
 
@@ -79,7 +79,7 @@ related_phase: All Phases
 - Task 7.9 Platform Final Consistency Review：Completed / Approved
 - Phase 8：Completed / Approved / Frozen
 - Phase 9：Completed / Approved
-- Phase 10：Waiting / Not Started
+- Phase 10：Completed / Approved
 - API Change Request 001：Completed / Approved
 - API Coverage Completion 002：Completed / Approved
 - API Coverage Completion 003：Completed / Approved
@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已完成 Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 最终验收并冻结，状态为 Completed / Approved / Frozen。Phase 9 Test Plan & System Integration 已完成最终 QA 审查，状态为 Completed / Approved。当前 Phase 切换为 Phase 10 Release & Acceptance，状态为 Waiting / Not Started。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已完成 Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 最终验收并冻结，状态为 Completed / Approved / Frozen。Phase 9 Test Plan & System Integration 已完成最终 QA 审查，状态为 Completed / Approved。Phase 10 Release & Acceptance 已完成发布准备、UAT 生产就绪评估与最终发布批准，状态为 Completed / Approved。Violin ERP Lite 项目状态为 Completed / Approved。
 
 ## 3. 固定十阶段开发路线
 
@@ -340,7 +340,7 @@ Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中�
 
 ### Phase 10：发布与验收（Release & Acceptance）
 
-- 状态：Waiting / Not Started
+- 状态：Completed / Approved
 - 目标：完成项目验收、数据初始化、上线发布和正式交付。
 - 主要输出：
   - 验收清单；
@@ -358,7 +358,7 @@ Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中�
 
 #### Phase 10 当前任务
 
-1. Phase 10 Release & Acceptance 发布与验收：Waiting / Not Started；
+1. Phase 10 Release & Acceptance 发布与验收：Completed / Approved；
 
 ## 4. 开发阶段冻结规则
 
