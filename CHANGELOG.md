@@ -11,6 +11,38 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.36] - 2026-07-26
+
+### Changed
+
+- Phase 8 Application Development 更新为 `Completed / Approved / Frozen`
+- Current Phase 切换为 `Phase 9`
+- Phase 9 Test Plan & System Integration 状态为 `Waiting / Not Started`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 与 `README.md` 同步 Phase 8 冻结与 Phase 9 当前状态
+- 新增 DEC-103，记录 Phase 8 Application Development 完成并冻结
+
+### Added
+
+- 新增 `PHASE_8_FINAL_REVIEW_AND_FREEZE.md`
+- 记录 Module 1 Master Data、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 均已完成最终验收
+- 记录 Phase 8 业务链路：Master Data → Procurement → Production → Inspection → Inbound → Inventory → Cross-border → Sales → Outbound → Statistics
+- 记录 Phase 8 Database、API、Permission 与 Platform Capability 最终一致性审查结果
+
+### Verified
+
+- Phase 8 Application Development 最终审查通过
+- Database SSOT、Prisma Schema 与 Migration 未变化
+- API Master Specification 未变化
+- Permission Code 未变化
+- `pnpm status:check` 通过
+- `pnpm check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改业务代码、Database Schema、Migration、API Contract、Permission 或业务规则
+
 ## [0.11.35] - 2026-07-26
 
 ### Changed

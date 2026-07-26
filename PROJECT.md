@@ -44,9 +44,9 @@ Violin ERP Lite 用于管理公司乐器产品，当前以小提琴及配件为�
 
 ## 项目进度
 
-- Current Phase：Phase 8
-- Phase Status：In Progress
-- Current Task：Phase 8 下一业务模块准备
+- Current Phase：Phase 9
+- Phase Status：Waiting / Not Started
+- Current Task：Phase 9 Test Plan & System Integration
 - Current Task Status：Waiting / Not Started
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件只提供项目总览，阶段路线和 Task 边界以 `ROADMAP.md` 为准。
@@ -109,7 +109,7 @@ Violin ERP Lite 用于管理公司乐器产品，当前以小提琴及配件为�
 - Task 7.7 Cache & Event Infrastructure：Completed / Approved
 - Task 7.8 Audit, Trace & Observability：Completed / Approved
 - Task 7.9 Platform Final Consistency Review：Completed / Approved
-- Phase 8 Application Development：In Progress
+- Phase 8 Application Development：Completed / Approved / Frozen
 - Module 1 Master Data Center：Completed / Approved
 - Module 2 Procurement & Production：Completed / Approved
 - Module 3 Inventory Management：Completed / Approved
@@ -131,7 +131,7 @@ Violin ERP Lite 用于管理公司乐器产品，当前以小提琴及配件为�
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 为 Completed / Approved / Frozen，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen；Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入。Phase Renumbering Change Request 001 已正式批准，项目采用十阶段路线；原 Phase 7 / Task 7.x 成果已迁移为 Phase 8 / Task 8.x。Phase 7 Platform Foundation 已完成 Task 7.1 至 Task 7.9、最终审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已正式启动，状态为 In Progress；Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 均已完成最终验收并获得批准，当前任务保持为 Phase 8 下一业务模块准备；Phase 9 至 Phase 10 保持 Waiting / Not Started。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 为 Completed / Approved / Frozen，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen；Task 6.1 至 Task 6.3 均为后续技术阶段的正式产品输入。Phase Renumbering Change Request 001 已正式批准，项目采用十阶段路线；原 Phase 7 / Task 7.x 成果已迁移为 Phase 8 / Task 8.x。Phase 7 Platform Foundation 已完成 Task 7.1 至 Task 7.9、最终审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已完成 Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 最终验收并冻结，状态为 Completed / Approved / Frozen。当前 Phase 切换为 Phase 9 Test Plan & System Integration，状态为 Waiting / Not Started；Phase 10 保持 Waiting / Not Started。
 
 ## 固定十阶段开发路线
 
@@ -146,7 +146,7 @@ Violin ERP Lite 采用以下固定十阶段开发路线，详细阶段目标、�
 | Phase 5 | 接口设计 | API Design | Completed / Approved / Frozen |
 | Phase 6 | 功能详细设计 | Functional Specification | Completed / Approved / Frozen |
 | Phase 7 | 平台基础 | Platform Foundation | Completed / Approved / Frozen |
-| Phase 8 | 应用开发 | Application Development | In Progress |
+| Phase 8 | 应用开发 | Application Development | Completed / Approved / Frozen |
 | Phase 9 | 测试方案与系统集成 | Test Plan & System Integration | Waiting / Not Started |
 | Phase 10 | 发布与验收 | Release & Acceptance | Waiting / Not Started |
 

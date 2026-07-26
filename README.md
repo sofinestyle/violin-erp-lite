@@ -17,16 +17,16 @@ Violin ERP Lite 是面向企业内部使用的轻量级 ERP，用于管理以小
 
 ## 当前项目状态
 
-- Current Phase：Phase 8
-- Phase Status：In Progress
-- Current Task：Phase 8 下一业务模块准备
+- Current Phase：Phase 9
+- Phase Status：Waiting / Not Started
+- Current Task：Phase 9 Test Plan & System Integration
 - Current Task Status：Waiting / Not Started
 
 完整当前状态以 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md) 为唯一入口。
 
 ## 十阶段开发路线
 
-十个阶段的数量、名称和顺序已经冻结。Phase 7 Platform Foundation 已完成 Task 7.1 至 Task 7.9、Final Audit、Alignment Confirmation 与 Freeze，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已正式启动，Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 均已完成最终验收并获得批准，当前任务为 Phase 8 下一业务模块准备；Phase 9 Test Plan & System Integration 和 Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
+十个阶段的数量、名称和顺序已经冻结。Phase 7 Platform Foundation 已完成 Task 7.1 至 Task 7.9、Final Audit、Alignment Confirmation 与 Freeze，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已完成 Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 最终验收并冻结，状态为 Completed / Approved / Frozen。当前 Phase 为 Phase 9 Test Plan & System Integration，状态为 Waiting / Not Started；Phase 10 Release & Acceptance 尚未启动。阶段路线、状态及 Task 边界参见 [`ROADMAP.md`](ROADMAP.md)。
 
 ## 仓库用途
 
@@ -185,7 +185,7 @@ pnpm dev:miniapp
 - [Task 7.1 Platform Baseline & Existing Capability Audit（Completed / Approved）](docs/phases/phase-07/TASK_7_1_PLATFORM_BASELINE_AND_EXISTING_CAPABILITY_AUDIT.md)
 - [Task 7.4 Attachment Framework（Completed / Approved）](docs/phases/phase-07/TASK_7_4_ATTACHMENT_FRAMEWORK.md)
 - [Task 7.5 Idempotency & Concurrency Control（Completed / Approved）](docs/phases/phase-07/TASK_7_5_IDEMPOTENCY_AND_CONCURRENCY_CONTROL.md)
-- [Phase 8 Application Development（In Progress）](docs/phases/phase-08/PHASE_8_APPLICATION_DEVELOPMENT.md)
+- [Phase 8 Application Development（Completed / Approved / Frozen）](docs/phases/phase-08/PHASE_8_APPLICATION_DEVELOPMENT.md)
 - [Task 8.1 开发基线与工程初始化（Completed / Approved）](docs/phases/phase-08/TASK_8_1_DEVELOPMENT_BASELINE.md)
 - [Task 8.6 系统集成与开发收口（Waiting / Not Started）](docs/phases/phase-08/TASK_8_6_SYSTEM_INTEGRATION_AND_DEVELOPMENT_CLOSURE.md)
 - [Phase 9 Test Plan & System Integration（Waiting / Not Started）](docs/phases/phase-09/PHASE_9_TEST_PLAN_AND_SYSTEM_INTEGRATION.md)

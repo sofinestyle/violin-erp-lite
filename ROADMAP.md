@@ -17,9 +17,9 @@ related_phase: All Phases
 
 ## 2. 当前项目进度
 
-- Current Phase：Phase 8
-- Phase Status：In Progress
-- Current Task：Phase 8 下一业务模块准备
+- Current Phase：Phase 9
+- Phase Status：Waiting / Not Started
+- Current Task：Phase 9 Test Plan & System Integration
 - Current Task Status：Waiting / Not Started
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件负责定义固定阶段路线、Task 边界、进入条件和完成条件。
@@ -77,7 +77,7 @@ related_phase: All Phases
 - Task 7.7 Cache & Event Infrastructure：Completed / Approved
 - Task 7.8 Audit, Trace & Observability：Completed / Approved
 - Task 7.9 Platform Final Consistency Review：Completed / Approved
-- Phase 8：In Progress
+- Phase 8：Completed / Approved / Frozen
 - Phase 9：Waiting / Not Started
 - Phase 10：Waiting / Not Started
 - API Change Request 001：Completed / Approved
@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已由项目负责人正式启动，当前状态为 In Progress；Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 均已完成最终验收并获得批准，当前任务保持为 Phase 8 下一业务模块准备。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已完成 Module 1 Master Data Center、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 最终验收并冻结，状态为 Completed / Approved / Frozen。当前 Phase 切换为 Phase 9 Test Plan & System Integration，状态为 Waiting / Not Started。
 
 ## 3. 固定十阶段开发路线
 
@@ -272,7 +272,7 @@ Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每�
 
 ### Phase 8：应用开发（Application Development）
 
-- 状态：In Progress
+- 状态：Completed / Approved / Frozen
 - 目标：依据 Approved/Frozen 规格与 Phase 7 平台基线完成双端应用、API、数据访问和业务模块开发。
 - 主要输出：
   - 原 Phase 7 已完成开发成果及历史 Task 的完整保留；
@@ -290,7 +290,7 @@ Final Consistency Review 是 Phase Exit Gate，不作为普通业务 Task。每�
 4. Task 8.4 双端应用壳层与公共能力：Completed / Approved；
 5. Task 8.5 核心业务功能实现：Completed / Approved；
 6. Task 8.6 系统集成与开发收口：Waiting / Not Started；
-7. Phase 8 Final Consistency Review：Waiting / Not Started。
+7. Phase 8 Final Consistency Review：Completed / Approved / Frozen。
 
 Task 8.1 至 Task 8.5 是原 Phase 7 已完成成果的编号迁移，不删除、不重做。Task 8.6 的既有执行记录完整保留；其内部 Batch 状态不进入正式状态治理文件。
 
@@ -311,9 +311,10 @@ Task 8.1 至 Task 8.5 是原 Phase 7 已完成成果的编号迁移，不删除�
 13. 8-C3 Module 3 Inventory Management Final Review & Documentation Sync 库存管理最终验收与状态同步：Completed / Approved；
 14. 8-D3 Cross-border Final Review & Documentation Sync 跨境业务最终验收与状态同步：Completed / Approved；
 15. 8-E4 Sales Final Review & Documentation Sync 销售管理最终验收与状态同步：Completed / Approved；
-16. Phase 8 下一业务模块准备 Next Business Module Preparation：Waiting / Not Started；
+16. Phase 8 下一业务模块准备 Next Business Module Preparation：Completed / Approved / Frozen；
+17. Phase 8 Overall Final Review & Application Freeze 全阶段最终审查与冻结：Completed / Approved / Frozen；
 
-Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中心、Module 2 采购生产基础闭环、Module 3 库存管理基础闭环、Module 4 跨境业务基础闭环与 Module 5 销售管理受限 MVP，下一步继续保持 Phase 8 下一业务模块准备。
+Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中心、Module 2 采购生产基础闭环、Module 3 库存管理基础闭环、Module 4 跨境业务基础闭环与 Module 5 销售管理受限 MVP，并已完成全阶段最终审查与冻结。
 
 ### Phase 9：测试方案与系统集成（Test Plan & System Integration）
 
@@ -329,6 +330,10 @@ Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中�
   - 用户测试及验收前准备。
 - 进入条件：Phase 8 已完成并经项目负责人确认，且项目负责人正式启动 Phase 9。
 - 完成条件：测试与系统集成完成，问题闭环，结果满足发布与验收准备条件并由项目负责人确认。
+
+#### Phase 9 当前任务
+
+1. Phase 9 Test Plan & System Integration 测试方案与系统集成：Waiting / Not Started；
 
 ### Phase 10：发布与验收（Release & Acceptance）
 

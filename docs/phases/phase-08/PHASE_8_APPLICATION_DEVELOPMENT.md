@@ -2,10 +2,10 @@
 document_name: Phase 8 Application Development
 project: Violin ERP Lite
 version: 1.0
-status: Waiting / Not Started
+status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-24
-updated_date: 2026-07-24
+updated_date: 2026-07-26
 related_phase: Phase 8
 ---
 
@@ -15,7 +15,7 @@ related_phase: Phase 8
 
 Phase 8 承接原 Phase 7“开发规范与 Codex 执行”的全部成果、Task 和 Git 历史，在 Phase 7 Platform Foundation 完成后继续应用开发、业务集成和开发收口。
 
-当前状态为 Waiting / Not Started。历史已完成成果不因阶段插入而删除、回退或重做。
+当前状态为 Completed / Approved / Frozen。历史已完成成果不因阶段插入而删除、回退或重做。
 
 ## 2. 历史 Task 映射
 
@@ -26,8 +26,8 @@ Phase 8 承接原 Phase 7“开发规范与 Codex 执行”的全部成果、Tas
 | Task 7.3 | Task 8.3 | 数据持久化与后端公共基础 | Completed / Approved |
 | Task 7.4 | Task 8.4 | 双端应用壳层与公共能力 | Completed / Approved |
 | Task 7.5 | Task 8.5 | 核心业务功能实现 | Completed / Approved |
-| Task 7.6 | Task 8.6 | 系统集成与开发收口 | Waiting / Not Started |
-| Phase 7 Final Consistency Review | Phase 8 Final Consistency Review | Phase Exit Gate | Waiting / Not Started |
+| Task 7.6 | Task 8.6 | 系统集成与开发收口 | Completed / Approved / Frozen |
+| Phase 7 Final Consistency Review | Phase 8 Final Consistency Review | Phase Exit Gate | Completed / Approved / Frozen |
 
 原 Task 7.2 至 Task 7.5 在仓库中没有独立 Task 文件，因此没有可移动文件。其正式完成事实由 ROADMAP、PROJECT、DECISION_LOG、CHANGELOG、实现提交和 GitHub 技术验收记录继续追溯。
 
@@ -38,14 +38,13 @@ Phase 8 承接原 Phase 7“开发规范与 Codex 执行”的全部成果、Tas
 
 文件内历史执行基准、Commit SHA、日期、API/Database 版本及验证数量保持原事实。迁移后的当前状态以本文件、CURRENT_STATUS 和 Task 8.6 最新迁移结论为准。
 
-## 4. 暂停边界
+## 4. 冻结边界
 
-- Phase 8 不在 Phase 7 完成前启动；
-- Task 8.6 不恢复为 In Progress；
-- Batch 8.6-C1 的状态只在 Task 8.6 与 `CHANGELOG.md` 中维护；
-- Batch 状态只记录在 Task 8.6 和 CHANGELOG；
-- DCR-004 与 API CR-004 保持 `Proposed / Pending Approval`；
-- Database v2.1、API v1.3 与 335 个正式 API 保持不变。
+- Phase 8 已完成并冻结；
+- Phase 8 不再新增业务模块或平行能力；
+- Phase 8 后续如需调整业务对象、数据库、API、权限或业务规则，必须通过正式 CR；
+- Phase 8 业务实现不得绕过库存事实、审计事实、API Contract 或 Permission Spec；
+- Database Logical Design、API Master Specification 与 ROLE_PERMISSION_SPEC 的正式状态继续由对应 SSOT 决定。
 
 ## 5. 进入条件
 
@@ -56,4 +55,4 @@ Phase 8 承接原 Phase 7“开发规范与 Codex 执行”的全部成果、Tas
 
 ## 6. 当前结论
 
-Phase 8 Application Development 为 Waiting / Not Started。Task 8.1 至 Task 8.5 的历史 Completed / Approved 事实继续有效；Task 8.6 与其内部 Batch 8.6-C1 不执行。
+Phase 8 Application Development 为 Completed / Approved / Frozen。Module 1 Master Data、Module 2 Procurement & Production、Module 3 Inventory Management、Module 4 Cross-border Business 与 Module 5 Sales Management 均已完成最终验收并获得批准。当前 Phase 已切换为 Phase 9 Test Plan & System Integration，状态为 Waiting / Not Started。
