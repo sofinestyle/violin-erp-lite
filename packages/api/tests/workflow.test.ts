@@ -91,7 +91,7 @@ describe("Frozen workflow API contracts", () => {
         command({
           documentDate: "2026-07-23",
           expectedCompletionDate: "2026-08-23",
-          items: [{ skuId: DOCUMENT_ID }],
+          items: [{ plannedQuantity: 1, processingUnitPrice: 100, skuId: DOCUMENT_ID }],
           manufacturerId: DOCUMENT_ID,
           plannedStartDate: "2026-07-24",
           purchaseOrderId: DOCUMENT_ID,
@@ -115,7 +115,21 @@ describe("Frozen workflow API contracts", () => {
         command({
           documentDate: "2026-07-23",
           expectedCompletionDate: "2026-08-23",
-          items: [{ skuId: DOCUMENT_ID }],
+          items: [],
+          manufacturerId: DOCUMENT_ID,
+          plannedStartDate: "2026-07-24",
+        }),
+        "production.order.create",
+        authentication(["production.order.create"]),
+        context,
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
+    await expect(
+      service.execute(
+        command({
+          documentDate: "2026-07-23",
+          expectedCompletionDate: "2026-08-23",
+          items: [{ plannedQuantity: 1, processingUnitPrice: 100, skuId: DOCUMENT_ID }],
           manufacturerId: DOCUMENT_ID,
           plannedStartDate: "2026-07-24",
         }),
@@ -128,7 +142,7 @@ describe("Frozen workflow API contracts", () => {
       command({
         documentDate: "2026-07-23",
         expectedCompletionDate: "2026-08-23",
-        items: [{ skuId: DOCUMENT_ID }],
+        items: [{ plannedQuantity: 1, processingUnitPrice: 100, skuId: DOCUMENT_ID }],
         manufacturerId: DOCUMENT_ID,
         plannedStartDate: "2026-07-24",
       }),
@@ -137,7 +151,11 @@ describe("Frozen workflow API contracts", () => {
       context,
     );
     expect(audit.events).toHaveLength(1);
-    expect(audit.events[0]).toMatchObject({ action: "PRO-003", actorUserId: USER_ID });
+    expect(audit.events[0]).toMatchObject({
+      action: "PRO-003",
+      actorUserId: USER_ID,
+      resourceType: "production",
+    });
   });
 
   it("validates purchase order creation payload and writes purchase audit", async () => {

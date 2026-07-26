@@ -261,6 +261,25 @@ async function activeSupplier(client: DynamicClient, supplierId: string): Promis
   return supplier;
 }
 
+async function activeManufacturer(
+  client: DynamicClient,
+  manufacturerId: string,
+): Promise<JsonRecord> {
+  const manufacturer = await client.manufacturers!.findFirst({
+    where: { id: manufacturerId, is_active: true },
+  });
+  if (!manufacturer) throw new ValidationError("生产厂家不存在或已停用");
+  return manufacturer;
+}
+
+async function activeWarehouse(client: DynamicClient, warehouseId: string): Promise<JsonRecord> {
+  const warehouse = await client.warehouses!.findFirst({
+    where: { id: warehouseId, is_active: true },
+  });
+  if (!warehouse) throw new ValidationError("目标仓库不存在或已停用");
+  return warehouse;
+}
+
 function commonItem(
   source: JsonRecord,
   snapshot: JsonRecord,
@@ -391,49 +410,81 @@ async function purchaseDetailRows(
   return { detailRows, quantityTotal, subtotal, taxTotal };
 }
 
-async function createProduction(client: DynamicClient, payload: WorkflowPayload, actor: string) {
-  if ("purchaseOrderId" in payload) throw new ValidationError("生产单不得引用采购单");
-  const sourceItems = items(payload);
-  const [manufacturer, snapshots] = await Promise.all([
-    client.manufacturers!.findFirst({
-      where: { id: text(payload, "manufacturerId"), is_active: true },
-    }),
-    skuSnapshots(client, sourceItems),
-  ]);
-  if (!manufacturer) throw new ValidationError("生产厂家不存在或已停用");
+async function productionDetailRows(
+  client: DynamicClient,
+  sourceItems: JsonRecord[],
+  actor: string,
+): Promise<{
+  detailRows: JsonRecord[];
+  quantityTotal: number;
+  total: number;
+}> {
+  const snapshots = await skuSnapshots(client, sourceItems);
   let total = 0;
   let quantityTotal = 0;
   const detailRows = sourceItems.map((item, index) => {
-    const quantity = decimal(item.plannedQuantity, "plannedQuantity");
+    const quantity = positiveDecimal(item.plannedQuantity, "plannedQuantity");
     const price = decimal(item.processingUnitPrice, "processingUnitPrice");
+    const lineAmount = quantity * price;
     quantityTotal += quantity;
-    total += quantity * price;
+    total += lineAmount;
     return {
       ...commonItem({ ...item, quantity }, snapshots.get(String(item.skuId))!, index + 1, actor),
       completed_quantity: 0,
       inbound_quantity: 0,
       inspected_quantity: 0,
-      line_amount: quantity * price,
+      line_amount: lineAmount,
       planned_quantity: quantity,
       processing_unit_price: price,
       qualified_quantity: 0,
       shipped_quantity: 0,
     };
   });
+  return { detailRows, quantityTotal, total };
+}
+
+function validateProductionDates(
+  documentDate: Date,
+  plannedStartDate: Date,
+  expectedCompletionDate: Date,
+): void {
+  if (plannedStartDate < documentDate) {
+    throw new ValidationError("计划开始日不得早于单据日期", [
+      { field: "plannedStartDate", message: "日期范围无效" },
+    ]);
+  }
+  if (expectedCompletionDate < plannedStartDate) {
+    throw new ValidationError("预计完成日不得早于计划开始日", [
+      { field: "expectedCompletionDate", message: "日期范围无效" },
+    ]);
+  }
+}
+
+async function createProduction(client: DynamicClient, payload: WorkflowPayload, actor: string) {
+  if ("purchaseOrderId" in payload) throw new ValidationError("生产单不得引用采购单");
+  const sourceItems = items(payload);
+  const documentDate = date(payload, "documentDate");
+  const plannedStartDate = date(payload, "plannedStartDate");
+  const expectedCompletionDate = date(payload, "expectedCompletionDate");
+  validateProductionDates(documentDate, plannedStartDate, expectedCompletionDate);
+  const [manufacturer, { detailRows, quantityTotal, total }] = await Promise.all([
+    activeManufacturer(client, requiredText(payload, "manufacturerId")),
+    productionDetailRows(client, sourceItems, actor),
+  ]);
   return client.production_orders!.create({
     data: {
       approval_status: "not_submitted",
       completion_percentage: 0,
       created_by: actor,
       currency_code: text(payload, "currencyCode", true) ?? "CNY",
-      document_date: date(payload, "documentDate"),
+      document_date: documentDate,
       document_no: documentNo("PRO"),
-      expected_completion_date: date(payload, "expectedCompletionDate"),
+      expected_completion_date: expectedCompletionDate,
       manufacturer_code_snapshot: manufacturer.manufacturer_code,
       manufacturer_id: manufacturer.id,
       manufacturer_name_snapshot: manufacturer.manufacturer_name,
       paid_amount: 0,
-      planned_start_date: date(payload, "plannedStartDate"),
+      planned_start_date: plannedStartDate,
       production_order_items: { create: detailRows },
       remark: text(payload, "remark", true),
       status: "draft",
@@ -456,7 +507,7 @@ async function createPayment(client: DynamicClient, command: WorkflowCommand, ac
   if (!order) throw new NotFoundError();
   const amount = decimal(command.payload.paymentAmount, "paymentAmount");
   if (order.status !== "approved") {
-    throw new ConflictError("仅已审核采购订单允许登记付款");
+    throw new ConflictError("仅已审核订单允许登记付款");
   }
   if (amount <= 0 || amount > Number(order.unpaid_amount)) {
     throw new ValidationError("付款金额必须大于 0 且不得超过未付金额");
@@ -497,26 +548,75 @@ async function createPayment(client: DynamicClient, command: WorkflowCommand, ac
 }
 
 async function createProgress(client: DynamicClient, command: WorkflowCommand, actor: string) {
-  const order = await client.production_orders!.findFirst({ where: { id: command.parentId } });
+  const order = await client.production_orders!.findFirst({
+    include: { production_order_items: true },
+    where: { id: command.parentId },
+  });
   if (
     !order ||
     !["approved", "in_production", "partially_completed"].includes(String(order.status))
   ) {
     throw new ConflictError("当前生产单状态不允许登记进度");
   }
+  const progressStage = requiredText(command.payload, "progressStage");
+  const allowedStages = new Set([
+    "pending_production",
+    "scheduled",
+    "in_production",
+    "partially_completed",
+    "fully_completed",
+    "paused",
+    "overdue",
+    "terminated",
+  ]);
+  if (!allowedStages.has(String(progressStage))) {
+    throw new ValidationError("生产进度阶段无效", [
+      { field: "progressStage", message: "不属于正式生产进度状态" },
+    ]);
+  }
+  const progressPercentage = decimal(command.payload.progressPercentage, "progressPercentage");
+  if (progressPercentage > 100) {
+    throw new ValidationError("生产进度比例必须在 0 到 100 之间", [
+      { field: "progressPercentage", message: "比例超过上限" },
+    ]);
+  }
+  const progressDate = date(command.payload, "progressDate");
+  const estimatedCompletionDate =
+    command.payload.estimatedCompletionDate !== undefined
+      ? date(command.payload, "estimatedCompletionDate")
+      : null;
+  if (estimatedCompletionDate && estimatedCompletionDate < progressDate) {
+    throw new ValidationError("预计完成日不得早于进度日期", [
+      { field: "estimatedCompletionDate", message: "日期范围无效" },
+    ]);
+  }
+  const plannedTotal = (order.production_order_items as JsonRecord[]).reduce(
+    (sum, item) => sum + Number(item.planned_quantity),
+    0,
+  );
+  const previous = await client.production_progress_records!.findMany({
+    orderBy: { created_at: "desc" },
+    take: 1,
+    where: { production_order_id: order.id },
+  });
+  const completedQuantity = decimal(command.payload.completedQuantity, "completedQuantity");
+  const previousCompleted = previous.length ? Number(previous[0]!.completed_quantity) : 0;
+  if (completedQuantity < previousCompleted || completedQuantity > plannedTotal) {
+    throw new ValidationError("进度完成数量必须不小于前次记录且不超过计划总量", [
+      { field: "completedQuantity", message: "完成数量无效" },
+    ]);
+  }
   return client.production_progress_records!.create({
     data: {
       attachment_required: command.payload.attachmentRequired === true,
-      completed_quantity: decimal(command.payload.completedQuantity, "completedQuantity"),
+      completed_quantity: completedQuantity,
       created_by: actor,
-      estimated_completion_date: command.payload.estimatedCompletionDate
-        ? date(command.payload, "estimatedCompletionDate")
-        : null,
+      estimated_completion_date: estimatedCompletionDate,
       production_order_id: order.id,
-      progress_date: date(command.payload, "progressDate"),
+      progress_date: progressDate,
       progress_description: text(command.payload, "progressDescription"),
-      progress_percentage: decimal(command.payload.progressPercentage, "progressPercentage"),
-      progress_stage: text(command.payload, "progressStage"),
+      progress_percentage: progressPercentage,
+      progress_stage: progressStage,
       reported_by_name: text(command.payload, "reportedByName", true),
       updated_by: actor,
     },
@@ -537,20 +637,24 @@ async function createCompletion(client: DynamicClient, command: WorkflowCommand,
   if (Number(command.payload.productionOrderVersionNo) !== Number(order.version_no)) {
     throw new ConflictError("生产单版本已变化");
   }
+  await activeWarehouse(client, requiredText(command.payload, "warehouseId"));
   const sourceItems = items(command.payload);
+  const seenOrderItems = new Set<string>();
   const orderItems = new Map(
     (order.production_order_items as JsonRecord[]).map((item) => [String(item.id), item]),
   );
   let total = 0;
   const detailRows = sourceItems.map((item, index) => {
+    const productionOrderItemId = String(item.productionOrderItemId);
+    if (seenOrderItems.has(productionOrderItemId)) {
+      throw new ValidationError("同一完工记录不得重复引用同一生产明细");
+    }
+    seenOrderItems.add(productionOrderItemId);
     const source = orderItems.get(String(item.productionOrderItemId));
     if (!source || source.sku_id !== item.skuId)
       throw new ValidationError("完工明细与生产单不一致");
-    const completed = decimal(item.completedQuantity, "completedQuantity");
-    if (
-      completed <= 0 ||
-      completed > Number(source.planned_quantity) - Number(source.completed_quantity)
-    ) {
+    const completed = positiveDecimal(item.completedQuantity, "completedQuantity");
+    if (completed > Number(source.planned_quantity) - Number(source.completed_quantity)) {
       throw new ValidationError("完工数量超过生产单剩余可完工数量");
     }
     total += completed;
@@ -579,7 +683,7 @@ async function createCompletion(client: DynamicClient, command: WorkflowCommand,
       remark: text(command.payload, "remark", true),
       total_completed_quantity: total,
       updated_by: actor,
-      warehouse_id: text(command.payload, "warehouseId"),
+      warehouse_id: requiredText(command.payload, "warehouseId"),
     },
     include: { production_completion_record_items: true },
   });
@@ -765,8 +869,14 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
     const completionItems = (completion?.production_completion_record_items as JsonRecord[]) ?? [];
     return client.$transaction(async (transaction) => {
       const direction = command.action === "revoke" ? -1 : command.action === "confirm" ? 1 : 0;
+      const orderItemAdjustments = new Map<string, number>();
       for (const item of completionItems) {
         if (direction !== 0) {
+          orderItemAdjustments.set(
+            String(item.production_order_item_id),
+            (orderItemAdjustments.get(String(item.production_order_item_id)) ?? 0) +
+              direction * Number(item.completed_quantity),
+          );
           await transaction.production_order_items!.update({
             data: {
               completed_quantity: {
@@ -777,6 +887,39 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
             where: { id: item.production_order_item_id },
           });
         }
+      }
+      if (direction !== 0 && completion?.production_order_id) {
+        const order = await transaction.production_orders!.findFirst({
+          include: { production_order_items: true },
+          where: { id: completion.production_order_id },
+        });
+        const orderItems = ((order?.production_order_items as JsonRecord[]) ?? []).map((item) => {
+          const adjustment = orderItemAdjustments.get(String(item.id)) ?? 0;
+          return {
+            completed: Number(item.completed_quantity) + adjustment,
+            planned: Number(item.planned_quantity),
+          };
+        });
+        const plannedTotal = orderItems.reduce((sum, item) => sum + item.planned, 0);
+        const completedTotal = orderItems.reduce((sum, item) => sum + item.completed, 0);
+        const completionPercentage =
+          plannedTotal > 0 ? Math.min(100, (completedTotal / plannedTotal) * 100) : 0;
+        const status =
+          completedTotal >= plannedTotal && plannedTotal > 0
+            ? "completed"
+            : completedTotal > 0
+              ? "partially_completed"
+              : "in_production";
+        await transaction.production_orders!.update({
+          data: {
+            ...(status === "completed" ? { actual_completion_date: new Date() } : {}),
+            completion_percentage: completionPercentage,
+            status,
+            updated_by: actor,
+            version_no: Number(order?.version_no ?? 0) + 1,
+          },
+          where: { id: completion.production_order_id },
+        });
       }
       return transaction[model]!.update({
         data: { completion_status: state[1], updated_by: actor },
@@ -976,6 +1119,91 @@ async function updateDocument(
             version_no: versionNo + 1,
           },
           include: { purchase_order_items: true },
+          where: { id: current.id },
+        }),
+      );
+    });
+  } else if (command.resource === "production" && command.payload.items !== undefined) {
+    if ("purchaseOrderId" in command.payload) throw new ValidationError("生产单不得引用采购单");
+    const sourceItems = items(command.payload);
+    const existingItems = await client.production_order_items!.findMany({
+      where: { production_order_id: current.id },
+    });
+    if (
+      existingItems.some(
+        (item) =>
+          Number(item.completed_quantity) > 0 ||
+          Number(item.inspected_quantity) > 0 ||
+          Number(item.qualified_quantity) > 0 ||
+          Number(item.inbound_quantity) > 0 ||
+          Number(item.shipped_quantity) > 0,
+      )
+    ) {
+      throw new ConflictError("生产明细已有下游累计事实，不允许整体替换");
+    }
+    const { detailRows, quantityTotal, total } = await productionDetailRows(
+      client,
+      sourceItems,
+      actor,
+    );
+    const manufacturer =
+      command.payload.manufacturerId !== undefined
+        ? await activeManufacturer(client, requiredText(command.payload, "manufacturerId"))
+        : current;
+    const documentDate =
+      command.payload.documentDate !== undefined ? date(command.payload, "documentDate") : null;
+    const plannedStartDate =
+      command.payload.plannedStartDate !== undefined
+        ? date(command.payload, "plannedStartDate")
+        : null;
+    const expectedCompletionDate =
+      command.payload.expectedCompletionDate !== undefined
+        ? date(command.payload, "expectedCompletionDate")
+        : null;
+    validateProductionDates(
+      documentDate ?? (current.document_date as Date),
+      plannedStartDate ?? (current.planned_start_date as Date),
+      expectedCompletionDate ?? (current.expected_completion_date as Date),
+    );
+    if (total < Number(current.paid_amount ?? 0)) {
+      throw new ConflictError("生产任务金额不得低于已付款金额");
+    }
+    return client.$transaction(async (transaction) => {
+      await transaction.production_order_items!.deleteMany({
+        where: { production_order_id: current.id },
+      });
+      return record(
+        await transaction.production_orders!.update({
+          data: {
+            ...(command.payload.currencyCode !== undefined
+              ? { currency_code: text(command.payload, "currencyCode", true) ?? "CNY" }
+              : {}),
+            ...(command.payload.documentDate !== undefined ? { document_date: documentDate } : {}),
+            ...(command.payload.expectedCompletionDate !== undefined
+              ? { expected_completion_date: expectedCompletionDate }
+              : {}),
+            ...(command.payload.manufacturerId !== undefined
+              ? {
+                  manufacturer_code_snapshot: manufacturer.manufacturer_code,
+                  manufacturer_id: manufacturer.id,
+                  manufacturer_name_snapshot: manufacturer.manufacturer_name,
+                }
+              : {}),
+            ...(command.payload.plannedStartDate !== undefined
+              ? { planned_start_date: plannedStartDate }
+              : {}),
+            ...(command.payload.remark !== undefined
+              ? { remark: text(command.payload, "remark", true) }
+              : {}),
+            production_order_items: { create: detailRows },
+            subtotal_amount: total,
+            total_amount: total,
+            total_quantity: quantityTotal,
+            unpaid_amount: total - Number(current.paid_amount ?? 0),
+            updated_by: actor,
+            version_no: versionNo + 1,
+          },
+          include: { production_order_items: true },
           where: { id: current.id },
         }),
       );

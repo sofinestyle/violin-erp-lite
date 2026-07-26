@@ -5,6 +5,9 @@ import type { PrismaClient } from "../src/generated/prisma/client";
 
 const ORDER_ID = "11111111-1111-4111-8111-111111111111";
 const USER_ID = "22222222-2222-4222-8222-222222222222";
+const MANUFACTURER_ID = "33333333-3333-4333-8333-333333333333";
+const SKU_ID = "55555555-5555-4555-8555-555555555555";
+const WAREHOUSE_ID = "66666666-6666-4666-8666-666666666666";
 const actor: AuthenticatedUser = {
   dataScopes: ["all"],
   permissionCodes: ["purchase.payment.create"],
@@ -14,6 +17,441 @@ const actor: AuthenticatedUser = {
 };
 
 describe("Prisma workflow repository", () => {
+  it("creates production order with manufacturer and sku validation without touching purchase or inventory", async () => {
+    const create = vi.fn().mockResolvedValue({
+      id: ORDER_ID,
+      production_order_items: [{ planned_quantity: 2 }],
+      status: "draft",
+      total_amount: 200,
+    });
+    const client = {
+      manufacturers: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: MANUFACTURER_ID,
+          manufacturer_code: "MFR-001",
+          manufacturer_name: "生产厂家",
+        }),
+      },
+      production_orders: { create },
+      skus: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: SKU_ID,
+            sku_code: "SKU-001",
+            sku_name: "小提琴 SKU",
+            specification: "4/4",
+          },
+        ]),
+      },
+    };
+    const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
+    const command: WorkflowCommand = {
+      action: "create",
+      apiId: "PRO-003",
+      mutation: true,
+      payload: {
+        documentDate: "2026-07-23",
+        expectedCompletionDate: "2026-08-23",
+        items: [
+          {
+            plannedQuantity: 2,
+            processingUnitPrice: 100,
+            skuId: SKU_ID,
+          },
+        ],
+        manufacturerId: MANUFACTURER_ID,
+        plannedStartDate: "2026-07-24",
+      },
+      query: new URLSearchParams(),
+      resource: "production",
+    };
+
+    await expect(repository.execute(command, actor)).resolves.toMatchObject({
+      status: "draft",
+      totalAmount: 200,
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          production_order_items: expect.objectContaining({
+            create: [
+              expect.objectContaining({
+                completed_quantity: 0,
+                inbound_quantity: 0,
+                line_amount: 200,
+                planned_quantity: 2,
+                processing_unit_price: 100,
+              }),
+            ],
+          }),
+          status: "draft",
+          total_amount: 200,
+        }),
+      }),
+    );
+    expect(
+      (client as { inventories?: unknown; purchase_orders?: unknown }).inventories,
+    ).toBeUndefined();
+    expect(
+      (client as { inventories?: unknown; purchase_orders?: unknown }).purchase_orders,
+    ).toBeUndefined();
+  });
+
+  it("replaces production order items only while draft and preserves paid amount balance", async () => {
+    const deleteMany = vi.fn().mockResolvedValue({ count: 1 });
+    const update = vi.fn().mockResolvedValue({
+      id: ORDER_ID,
+      production_order_items: [{ planned_quantity: 3 }],
+      status: "draft",
+      total_amount: 300,
+      unpaid_amount: 250,
+      version_no: 2,
+    });
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      production_order_items: {
+        deleteMany,
+        findMany: vi.fn().mockResolvedValue([
+          {
+            completed_quantity: 0,
+            inbound_quantity: 0,
+            inspected_quantity: 0,
+            qualified_quantity: 0,
+            shipped_quantity: 0,
+          },
+        ]),
+      },
+      production_orders: {
+        findFirst: vi.fn().mockResolvedValue({
+          document_date: new Date("2026-07-23T00:00:00.000Z"),
+          expected_completion_date: new Date("2026-08-23T00:00:00.000Z"),
+          id: ORDER_ID,
+          paid_amount: 50,
+          planned_start_date: new Date("2026-07-24T00:00:00.000Z"),
+          status: "draft",
+          version_no: 1,
+        }),
+        update,
+      },
+      skus: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: SKU_ID,
+            sku_code: "SKU-001",
+            sku_name: "小提琴 SKU",
+            specification: "4/4",
+          },
+        ]),
+      },
+    };
+    const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
+    const command: WorkflowCommand = {
+      action: "update",
+      apiId: "PRO-004",
+      entityId: ORDER_ID,
+      mutation: true,
+      payload: {
+        items: [{ plannedQuantity: 3, processingUnitPrice: 100, skuId: SKU_ID }],
+        versionNo: 1,
+      },
+      query: new URLSearchParams(),
+      resource: "production",
+    };
+
+    await expect(repository.execute(command, actor)).resolves.toMatchObject({
+      totalAmount: 300,
+      unpaidAmount: 250,
+      versionNo: 2,
+    });
+    expect(deleteMany).toHaveBeenCalledWith({ where: { production_order_id: ORDER_ID } });
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          production_order_items: expect.any(Object),
+          total_amount: 300,
+          unpaid_amount: 250,
+          version_no: 2,
+        }),
+      }),
+    );
+  });
+
+  it("records production submit and start transitions with version checks", async () => {
+    const historyCreate = vi.fn().mockResolvedValue({});
+    const update = vi
+      .fn()
+      .mockResolvedValueOnce({ id: ORDER_ID, status: "pending_approval" })
+      .mockResolvedValueOnce({ id: ORDER_ID, status: "in_production" });
+    const findFirst = vi
+      .fn()
+      .mockResolvedValueOnce({
+        created_by: USER_ID,
+        document_no: "PRO-001",
+        id: ORDER_ID,
+        status: "draft",
+        version_no: 1,
+      })
+      .mockResolvedValueOnce({
+        created_by: "99999999-9999-4999-8999-999999999999",
+        document_no: "PRO-001",
+        id: ORDER_ID,
+        status: "approved",
+        version_no: 2,
+      });
+    const client = {
+      document_status_histories: { create: historyCreate },
+      production_orders: { findFirst, update },
+    };
+    const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "submit",
+          apiId: "PRO-005",
+          entityId: ORDER_ID,
+          mutation: true,
+          payload: { versionNo: 1 },
+          query: new URLSearchParams(),
+          resource: "production",
+        },
+        actor,
+      ),
+    ).resolves.toMatchObject({ status: "pending_approval" });
+
+    await expect(
+      repository.execute(
+        {
+          action: "start",
+          apiId: "PRO-010",
+          entityId: ORDER_ID,
+          mutation: true,
+          payload: { versionNo: 2 },
+          query: new URLSearchParams(),
+          resource: "production",
+        },
+        actor,
+      ),
+    ).resolves.toMatchObject({ status: "in_production" });
+
+    expect(historyCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          object_type: "production",
+          to_status: "pending_approval",
+        }),
+      }),
+    );
+    expect(historyCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          object_type: "production",
+          to_status: "in_production",
+        }),
+      }),
+    );
+  });
+
+  it("creates production progress with formal stage and quantity constraints", async () => {
+    const create = vi.fn().mockResolvedValue({
+      completed_quantity: 4,
+      id: "77777777-7777-4777-8777-777777777777",
+      progress_stage: "in_production",
+    });
+    const client = {
+      production_orders: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: ORDER_ID,
+          production_order_items: [{ planned_quantity: 5 }, { planned_quantity: 5 }],
+          status: "in_production",
+        }),
+      },
+      production_progress_records: {
+        create,
+        findMany: vi.fn().mockResolvedValue([{ completed_quantity: 2 }]),
+      },
+    };
+    const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
+    const command: WorkflowCommand = {
+      action: "create",
+      apiId: "PRO-020",
+      mutation: true,
+      parentId: ORDER_ID,
+      payload: {
+        completedQuantity: 4,
+        estimatedCompletionDate: "2026-08-20",
+        progressDate: "2026-08-01",
+        progressDescription: "生产进行中",
+        progressPercentage: 40,
+        progressStage: "in_production",
+      },
+      query: new URLSearchParams(),
+      resource: "production-progress",
+    };
+
+    await expect(repository.execute(command, actor)).resolves.toMatchObject({
+      completedQuantity: 4,
+      progressStage: "in_production",
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          completed_quantity: 4,
+          production_order_id: ORDER_ID,
+          progress_percentage: 40,
+        }),
+      }),
+    );
+  });
+
+  it("confirms production completion without touching inventory", async () => {
+    const completionId = "77777777-7777-4777-8777-777777777777";
+    const productionOrderItemId = "88888888-8888-4888-8888-888888888888";
+    const completionCreate = vi.fn().mockResolvedValue({
+      completion_status: "Draft",
+      id: completionId,
+      production_completion_record_items: [{ completed_quantity: 3 }],
+      total_completed_quantity: 3,
+    });
+    const completionUpdate = vi.fn().mockResolvedValue({
+      completion_status: "Confirmed",
+      id: completionId,
+    });
+    const orderItemUpdate = vi.fn().mockResolvedValue({});
+    const orderUpdate = vi.fn().mockResolvedValue({
+      completion_percentage: 30,
+      id: ORDER_ID,
+      status: "partially_completed",
+    });
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      production_completion_records: {
+        create: completionCreate,
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({
+            completion_status: "Draft",
+            id: completionId,
+          })
+          .mockResolvedValueOnce({
+            id: completionId,
+            production_completion_record_items: [
+              {
+                completed_quantity: 3,
+                production_order_item_id: productionOrderItemId,
+              },
+            ],
+            production_order_id: ORDER_ID,
+          }),
+        update: completionUpdate,
+      },
+      production_order_items: { update: orderItemUpdate },
+      production_orders: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({
+            id: ORDER_ID,
+            production_order_items: [
+              {
+                completed_quantity: 0,
+                id: productionOrderItemId,
+                planned_quantity: 10,
+                sku_code_snapshot: "SKU-001",
+                sku_id: SKU_ID,
+                sku_name_snapshot: "小提琴 SKU",
+                specification_snapshot: "4/4",
+              },
+            ],
+            status: "in_production",
+            version_no: 1,
+          })
+          .mockResolvedValueOnce({
+            id: ORDER_ID,
+            production_order_items: [
+              {
+                completed_quantity: 0,
+                id: productionOrderItemId,
+                planned_quantity: 10,
+              },
+            ],
+            version_no: 1,
+          }),
+        update: orderUpdate,
+      },
+      warehouses: {
+        findFirst: vi.fn().mockResolvedValue({ id: WAREHOUSE_ID }),
+      },
+    };
+    const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "create",
+          apiId: "PRO-026",
+          mutation: true,
+          parentId: ORDER_ID,
+          payload: {
+            completionBatchNo: "BATCH-001",
+            completionDate: "2026-08-10",
+            items: [
+              {
+                completedQuantity: 3,
+                productionOrderItemId,
+                skuId: SKU_ID,
+              },
+            ],
+            productionOrderVersionNo: 1,
+            warehouseId: WAREHOUSE_ID,
+          },
+          query: new URLSearchParams(),
+          resource: "production-completion",
+        },
+        actor,
+      ),
+    ).resolves.toMatchObject({ completionStatus: "Draft" });
+
+    await expect(
+      repository.execute(
+        {
+          action: "confirm",
+          apiId: "PRO-027",
+          entityId: completionId,
+          mutation: true,
+          payload: {},
+          query: new URLSearchParams(),
+          resource: "production-completion",
+        },
+        actor,
+      ),
+    ).resolves.toMatchObject({ completionStatus: "Confirmed" });
+
+    expect(orderItemUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          completed_quantity: { increment: 3 },
+        }),
+      }),
+    );
+    expect(orderUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          completion_percentage: 30,
+          status: "partially_completed",
+        }),
+      }),
+    );
+    expect(
+      (client as { inventories?: unknown; inventory_transactions?: unknown }).inventories,
+    ).toBeUndefined();
+    expect(
+      (client as { inventories?: unknown; inventory_transactions?: unknown })
+        .inventory_transactions,
+    ).toBeUndefined();
+  });
+
   it("creates purchase order with supplier and sku validation without touching inventory", async () => {
     const create = vi.fn().mockResolvedValue({
       id: ORDER_ID,

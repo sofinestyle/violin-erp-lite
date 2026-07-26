@@ -144,6 +144,7 @@ describe("Attachment validator", () => {
   const objects = new AttachmentObjectRegistry(
     new MemoryObjectReader([
       snapshot("purchase_order"),
+      snapshot("production_order"),
       snapshot("inspection_order", {
         protectionActivated: true,
         state: "submitted",
@@ -168,6 +169,20 @@ describe("Attachment validator", () => {
       category: "general_business_document",
       defaultSensitive: false,
       objectType: "purchase_order",
+      protected: false,
+    });
+    await expect(
+      validator.validate({
+        access: access(["attachment.file.link", "production.order.update"]),
+        attachmentCategory: "general_business_document",
+        objectId: OBJECT_ID,
+        objectType: "production_order",
+        operation: "link",
+      }),
+    ).resolves.toMatchObject({
+      category: "general_business_document",
+      defaultSensitive: false,
+      objectType: "production_order",
       protected: false,
     });
   });
