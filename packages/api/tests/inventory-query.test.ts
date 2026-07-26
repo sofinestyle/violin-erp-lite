@@ -84,6 +84,13 @@ function repository(
           .reduce((sum, item) => sum + Number(item.reservedQuantity), 0)
           .toFixed(4),
         skuCount: new Set(rows.map((item) => item.sku.id)).size,
+        statusCounts: {
+          normalStockCount: rows.filter((item) => item.inventoryStatus === "available").length,
+          pendingStockCount: rows.filter((item) => item.inventoryStatus === "pending").length,
+          unavailableStockCount: rows.filter((item) => item.inventoryStatus === "unavailable")
+            .length,
+          zeroStockCount: rows.filter((item) => item.inventoryStatus === "zero").length,
+        },
         warehouse: rows[0]!.warehouse,
         warehouseCount: 1,
       };
@@ -105,7 +112,33 @@ function repository(
         totalPages: 1,
       };
     }),
-    summary: vi.fn(),
+    summary: vi.fn(async () => {
+      return {
+        availableQuantity: records
+          .reduce((sum, item) => sum + Number(item.availableQuantity), 0)
+          .toFixed(4),
+        inventoryAmount: "1200.0000",
+        inventoryCount: records.length,
+        onHandQuantity: records
+          .reduce((sum, item) => sum + Number(item.onHandQuantity), 0)
+          .toFixed(4),
+        pendingQuantity: records
+          .reduce((sum, item) => sum + Number(item.pendingQuantity), 0)
+          .toFixed(4),
+        reservedQuantity: records
+          .reduce((sum, item) => sum + Number(item.reservedQuantity), 0)
+          .toFixed(4),
+        skuCount: new Set(records.map((item) => item.sku.id)).size,
+        statusCounts: {
+          normalStockCount: records.filter((item) => item.inventoryStatus === "available").length,
+          pendingStockCount: records.filter((item) => item.inventoryStatus === "pending").length,
+          unavailableStockCount: records.filter((item) => item.inventoryStatus === "unavailable")
+            .length,
+          zeroStockCount: records.filter((item) => item.inventoryStatus === "zero").length,
+        },
+        warehouseCount: new Set(records.map((item) => item.warehouse.id)).size,
+      };
+    }),
     summaryBySku: vi.fn(async (skuId: string) => {
       const rows = records.filter((item) => item.sku.id === skuId);
       if (rows.length === 0) return null;
@@ -123,6 +156,13 @@ function repository(
           .toFixed(4),
         sku: rows[0]!.sku,
         skuCount: 1,
+        statusCounts: {
+          normalStockCount: rows.filter((item) => item.inventoryStatus === "available").length,
+          pendingStockCount: rows.filter((item) => item.inventoryStatus === "pending").length,
+          unavailableStockCount: rows.filter((item) => item.inventoryStatus === "unavailable")
+            .length,
+          zeroStockCount: rows.filter((item) => item.inventoryStatus === "zero").length,
+        },
         warehouseCount: new Set(rows.map((item) => item.warehouse.id)).size,
         warehouses: rows,
       };
@@ -190,6 +230,73 @@ describe("Inventory Query module", () => {
       availableQuantity: "7.0000",
       sku: { skuCode: "SKU-001" },
       warehouseCount: 1,
+    });
+  });
+
+  it("returns dashboard statistics and hides inventory amount without field permissions", async () => {
+    const store = repository();
+    const service = new InventoryQueryService(store);
+
+    await expect(
+      service.summary(parseInventoryListQuery(new URLSearchParams()), authentication(), context),
+    ).resolves.toMatchObject({
+      inventoryCount: 1,
+      onHandQuantity: "10.0000",
+      statusCounts: { normalStockCount: 1 },
+    });
+    await expect(
+      service.summary(parseInventoryListQuery(new URLSearchParams()), authentication(), context),
+    ).resolves.not.toHaveProperty("inventoryAmount");
+    await expect(
+      service.summary(
+        parseInventoryListQuery(new URLSearchParams()),
+        authentication([
+          "inventory.stock.read",
+          "master.sku.read",
+          "master.warehouse.read",
+          "field.amount.read",
+          "field.cost.read",
+        ]),
+        context,
+      ),
+    ).resolves.toMatchObject({ inventoryAmount: "1200.0000" });
+    expect(store.summary).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ allowedWarehouseIds: [WAREHOUSE_ID] }),
+    );
+  });
+
+  it("returns inventory status statistics from authorized inventories", async () => {
+    const service = new InventoryQueryService(
+      repository([
+        inventory(),
+        inventory({
+          availableQuantity: "0.0000",
+          id: "77777777-7777-4777-8777-777777777777",
+          inventoryStatus: "pending",
+          onHandQuantity: "5.0000",
+          pendingQuantity: "5.0000",
+          reservedQuantity: "0.0000",
+        }),
+        inventory({
+          availableQuantity: "0.0000",
+          id: "88888888-8888-4888-8888-888888888888",
+          inventoryStatus: "zero",
+          onHandQuantity: "0.0000",
+          pendingQuantity: "0.0000",
+          reservedQuantity: "0.0000",
+        }),
+      ]),
+    );
+
+    await expect(
+      service.summary(parseInventoryListQuery(new URLSearchParams()), authentication(), context),
+    ).resolves.toMatchObject({
+      statusCounts: {
+        normalStockCount: 1,
+        pendingStockCount: 1,
+        zeroStockCount: 1,
+      },
     });
   });
 

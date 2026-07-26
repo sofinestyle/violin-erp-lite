@@ -68,9 +68,18 @@ export type InventoryListResult = Readonly<{
 export type InventorySummary = InventoryQuantitySnapshot &
   Readonly<{
     inventoryCount: number;
+    inventoryAmount?: string;
+    statusCounts: InventoryStatusCounts;
     skuCount: number;
     warehouseCount: number;
   }>;
+
+export type InventoryStatusCounts = Readonly<{
+  normalStockCount: number;
+  pendingStockCount: number;
+  unavailableStockCount: number;
+  zeroStockCount: number;
+}>;
 
 export type SkuInventorySummary = InventorySummary &
   Readonly<{
@@ -219,9 +228,34 @@ function summarize(records: readonly InventoryBalanceRecord[]): InventorySummary
   return Object.freeze({
     ...quantities,
     inventoryCount: records.length,
+    statusCounts: statusCounts(records),
     skuCount: new Set(records.map((item) => item.sku.id)).size,
     warehouseCount: new Set(records.map((item) => item.warehouse.id)).size,
   });
+}
+
+function statusCounts(records: readonly InventoryBalanceRecord[]): InventoryStatusCounts {
+  return records.reduce<InventoryStatusCounts>(
+    (counts, record) => {
+      const status = deriveInventoryStatus(record);
+      if (status === "available") {
+        return { ...counts, normalStockCount: counts.normalStockCount + 1 };
+      }
+      if (status === "pending") {
+        return { ...counts, pendingStockCount: counts.pendingStockCount + 1 };
+      }
+      if (status === "zero") {
+        return { ...counts, zeroStockCount: counts.zeroStockCount + 1 };
+      }
+      return { ...counts, unavailableStockCount: counts.unavailableStockCount + 1 };
+    },
+    {
+      normalStockCount: 0,
+      pendingStockCount: 0,
+      unavailableStockCount: 0,
+      zeroStockCount: 0,
+    },
+  );
 }
 
 function scopedAccess(user: AuthenticatedUser, context: RequestContext): InventoryAccessScope {
@@ -232,6 +266,23 @@ function scopedAccess(user: AuthenticatedUser, context: RequestContext): Invento
       ? {}
       : { allowedWarehouseIds: (user.warehouseScopes ?? []).map((scope) => scope.targetId) }),
   };
+}
+
+function canReadInventoryAmount(user: AuthenticatedUser): boolean {
+  return (
+    user.permissionCodes.includes("field.amount.read") &&
+    user.permissionCodes.includes("field.cost.read")
+  );
+}
+
+function redactInventoryAmount<T extends InventorySummary>(
+  summary: T,
+  user: AuthenticatedUser,
+): T | Omit<T, "inventoryAmount"> {
+  if (canReadInventoryAmount(user)) return summary;
+  return Object.fromEntries(
+    Object.entries(summary).filter(([key]) => key !== "inventoryAmount"),
+  ) as Omit<T, "inventoryAmount">;
 }
 
 export class InventoryQueryService {
@@ -258,9 +309,16 @@ export class InventoryQueryService {
     query: InventoryListQuery,
     authentication: AuthenticationContext,
     context: RequestContext,
-  ): Promise<InventorySummary> {
-    const list = await this.list({ ...query, page: 1, pageSize: 100 }, authentication, context);
-    return summarize(list.items);
+  ): Promise<InventorySummary | Omit<InventorySummary, "inventoryAmount">> {
+    const { user } = requireAllPermissions(authentication, [
+      "inventory.stock.read",
+      "master.sku.read",
+      "master.warehouse.read",
+    ]);
+    return redactInventoryAmount(
+      await this.#repository.summary(query, scopedAccess(user, context)),
+      user,
+    );
   }
 
   async detail(
@@ -285,7 +343,7 @@ export class InventoryQueryService {
     query: InventoryListQuery,
     authentication: AuthenticationContext,
     context: RequestContext,
-  ): Promise<SkuInventorySummary> {
+  ): Promise<SkuInventorySummary | Omit<SkuInventorySummary, "inventoryAmount">> {
     if (!UUID_PATTERN.test(skuId)) throw validationIssue("skuId", "skuId 必须是 UUID");
     const { user } = requireAllPermissions(authentication, [
       "inventory.stock.read",
@@ -295,7 +353,10 @@ export class InventoryQueryService {
     const result = await this.#repository.summaryBySku(skuId, query, scopedAccess(user, context));
     if (!result) throw new NotFoundError("SKU 库存不存在或不可访问");
     const warehouses = result.warehouses.map(normalizeRecord);
-    return Object.freeze({ ...result, ...summarize(warehouses), warehouses, sku: result.sku });
+    return redactInventoryAmount(
+      Object.freeze({ ...result, ...summarize(warehouses), warehouses, sku: result.sku }),
+      user,
+    );
   }
 
   async byWarehouse(
@@ -303,7 +364,7 @@ export class InventoryQueryService {
     query: InventoryListQuery,
     authentication: AuthenticationContext,
     context: RequestContext,
-  ): Promise<WarehouseInventorySummary> {
+  ): Promise<WarehouseInventorySummary | Omit<WarehouseInventorySummary, "inventoryAmount">> {
     if (!UUID_PATTERN.test(warehouseId))
       throw validationIssue("warehouseId", "warehouseId 必须是 UUID");
     const { user } = requireAllPermissions(authentication, [
@@ -318,7 +379,7 @@ export class InventoryQueryService {
     );
     if (!result) throw new NotFoundError("仓库库存不存在或不可访问");
     assertAvailableQuantityBalance(result);
-    return Object.freeze(result);
+    return redactInventoryAmount(Object.freeze(result), user);
   }
 
   async manufacturerWarehouses(

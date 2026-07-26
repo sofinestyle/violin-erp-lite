@@ -19,7 +19,8 @@ type DynamicDelegate = {
   findMany(args: JsonRecord): Promise<JsonRecord[]>;
 };
 
-type InventoryClient = Pick<PrismaClient, "inventories">;
+type InventoryClient = Pick<PrismaClient, "inventories"> &
+  Partial<Pick<PrismaClient, "inventory_transactions">>;
 
 function quantity(value: unknown): string {
   if (value && typeof value === "object" && "toString" in value) return value.toString();
@@ -69,10 +70,46 @@ function sumQuantities(rows: readonly InventoryBalanceRecord[]): InventoryQuanti
   };
 }
 
-function summary(rows: readonly InventoryBalanceRecord[]): InventorySummary {
+function derivedStatus(record: InventoryBalanceRecord): string {
+  if (Number(record.pendingQuantity) > 0) return "pending";
+  if (Number(record.onHandQuantity) === 0) return "zero";
+  if (Number(record.availableQuantity) > 0) return "available";
+  return "unavailable";
+}
+
+function statusCounts(rows: readonly InventoryBalanceRecord[]): InventorySummary["statusCounts"] {
+  return rows.reduce<InventorySummary["statusCounts"]>(
+    (counts, item) => {
+      const status = derivedStatus(item);
+      if (status === "available") {
+        return { ...counts, normalStockCount: counts.normalStockCount + 1 };
+      }
+      if (status === "pending") {
+        return { ...counts, pendingStockCount: counts.pendingStockCount + 1 };
+      }
+      if (status === "zero") {
+        return { ...counts, zeroStockCount: counts.zeroStockCount + 1 };
+      }
+      return { ...counts, unavailableStockCount: counts.unavailableStockCount + 1 };
+    },
+    {
+      normalStockCount: 0,
+      pendingStockCount: 0,
+      unavailableStockCount: 0,
+      zeroStockCount: 0,
+    },
+  );
+}
+
+function summary(
+  rows: readonly InventoryBalanceRecord[],
+  inventoryAmount?: string,
+): InventorySummary {
   return {
     ...sumQuantities(rows),
     inventoryCount: rows.length,
+    ...(inventoryAmount === undefined ? {} : { inventoryAmount }),
+    statusCounts: statusCounts(rows),
     skuCount: new Set(rows.map((item) => item.sku.id)).size,
     warehouseCount: new Set(rows.map((item) => item.warehouse.id)).size,
   };
@@ -107,13 +144,6 @@ function toInventoryRecord(row: JsonRecord): InventoryBalanceRecord {
   };
 }
 
-function derivedStatus(record: InventoryBalanceRecord): string {
-  if (Number(record.pendingQuantity) > 0) return "pending";
-  if (Number(record.onHandQuantity) === 0) return "zero";
-  if (Number(record.availableQuantity) > 0) return "available";
-  return "unavailable";
-}
-
 function inventoryWhere(query: InventoryListQuery, access: InventoryAccessScope): JsonRecord {
   const clauses: JsonRecord[] = [];
   if (access.allowedWarehouseIds !== undefined) {
@@ -137,10 +167,10 @@ export class PrismaInventoryQueryRepository implements InventoryQueryRepository 
     this.#client = client;
   }
 
-  async list(
+  async #records(
     query: InventoryListQuery,
     access: InventoryAccessScope,
-  ): Promise<InventoryListResult> {
+  ): Promise<readonly InventoryBalanceRecord[]> {
     const delegate = this.#client.inventories as unknown as DynamicDelegate;
     const rows = (
       await delegate.findMany({
@@ -152,9 +182,35 @@ export class PrismaInventoryQueryRepository implements InventoryQueryRepository 
         where: inventoryWhere(query, access),
       })
     ).map(toInventoryRecord);
-    const filtered = query.status
-      ? rows.filter((item) => derivedStatus(item) === query.status)
-      : rows;
+    return query.status ? rows.filter((item) => derivedStatus(item) === query.status) : rows;
+  }
+
+  async #inventoryAmount(rows: readonly InventoryBalanceRecord[]): Promise<string | undefined> {
+    const delegate = this.#client.inventory_transactions as unknown as DynamicDelegate | undefined;
+    if (!delegate) return undefined;
+    let amount = 0;
+    for (const row of rows) {
+      const latest = await delegate.findMany({
+        orderBy: [{ transaction_at: "desc" }, { created_at: "desc" }],
+        take: 1,
+        where: {
+          sku_id: row.sku.id,
+          unit_cost: { not: null },
+          warehouse_id: row.warehouse.id,
+        },
+      });
+      const unitCost = latest[0]?.unit_cost;
+      if (unitCost === null || unitCost === undefined) continue;
+      amount += Number(row.onHandQuantity) * Number(unitCost);
+    }
+    return amount.toFixed(4);
+  }
+
+  async list(
+    query: InventoryListQuery,
+    access: InventoryAccessScope,
+  ): Promise<InventoryListResult> {
+    const filtered = await this.#records(query, access);
     const items = pageRows(filtered, query);
     return {
       items,
@@ -169,8 +225,8 @@ export class PrismaInventoryQueryRepository implements InventoryQueryRepository 
     query: InventoryListQuery,
     access: InventoryAccessScope,
   ): Promise<InventorySummary> {
-    const result = await this.list({ ...query, page: 1, pageSize: 100 }, access);
-    return summary(result.items);
+    const rows = await this.#records({ ...query, page: 1, pageSize: 100 }, access);
+    return summary(rows, await this.#inventoryAmount(rows));
   }
 
   async detail(id: string, access: InventoryAccessScope): Promise<InventoryBalanceRecord | null> {
@@ -193,12 +249,12 @@ export class PrismaInventoryQueryRepository implements InventoryQueryRepository 
     query: InventoryListQuery,
     access: InventoryAccessScope,
   ): Promise<SkuInventorySummary | null> {
-    const result = await this.list({ ...query, page: 1, pageSize: 100, skuId }, access);
-    if (result.items.length === 0) return null;
+    const rows = await this.#records({ ...query, page: 1, pageSize: 100, skuId }, access);
+    if (rows.length === 0) return null;
     return {
-      ...summary(result.items),
-      sku: result.items[0]!.sku,
-      warehouses: result.items,
+      ...summary(rows, await this.#inventoryAmount(rows)),
+      sku: rows[0]!.sku,
+      warehouses: rows,
     };
   }
 
@@ -207,12 +263,12 @@ export class PrismaInventoryQueryRepository implements InventoryQueryRepository 
     query: InventoryListQuery,
     access: InventoryAccessScope,
   ): Promise<WarehouseInventorySummary | null> {
-    const result = await this.list({ ...query, page: 1, pageSize: 100, warehouseId }, access);
-    if (result.items.length === 0) return null;
+    const rows = await this.#records({ ...query, page: 1, pageSize: 100, warehouseId }, access);
+    if (rows.length === 0) return null;
     return {
-      ...summary(result.items),
-      skuCount: new Set(result.items.map((item) => item.sku.id)).size,
-      warehouse: result.items[0]!.warehouse,
+      ...summary(rows, await this.#inventoryAmount(rows)),
+      skuCount: new Set(rows.map((item) => item.sku.id)).size,
+      warehouse: rows[0]!.warehouse,
     };
   }
 }
