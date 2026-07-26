@@ -7,9 +7,12 @@ const USER_ID = "11111111-1111-4111-8111-111111111111";
 const DOCUMENT_ID = "22222222-2222-4222-8222-222222222222";
 const ITEM_ID = "33333333-3333-4333-8333-333333333333";
 const SKU_ID = "44444444-4444-4444-8444-444444444444";
+const SECOND_SKU_ID = "44444444-4444-4444-8444-444444444445";
 const SOURCE_WAREHOUSE_ID = "55555555-5555-4555-8555-555555555555";
 const TRANSIT_WAREHOUSE_ID = "66666666-6666-4666-8666-666666666666";
 const OVERSEAS_WAREHOUSE_ID = "88888888-8888-4888-8888-888888888888";
+const PLATFORM_ID = "99999999-9999-4999-8999-999999999991";
+const STORE_ID = "99999999-9999-4999-8999-999999999992";
 const actor: AuthenticatedUser = {
   dataScopes: ["all"],
   permissionCodes: ["transfer.order.ship"],
@@ -1334,5 +1337,263 @@ describe("inventory transaction repository", () => {
         warehouse_id: OVERSEAS_WAREHOUSE_ID,
       }),
     ]);
+  });
+
+  it("serves overseas platform and store inventory view with warehouse scope", async () => {
+    const importTaskId = "99999999-9999-4999-8999-999999999999";
+    const inventoryRow = {
+      available_quantity: 4,
+      id: "inventory-overseas-1",
+      on_hand_quantity: 5,
+      pending_quantity: 0,
+      reserved_quantity: 1,
+      sku_id: SKU_ID,
+      updated_at: new Date("2026-07-26T00:00:00.000Z"),
+      warehouse_id: OVERSEAS_WAREHOUSE_ID,
+    };
+    const storesFindMany = vi.fn().mockResolvedValue([{ id: STORE_ID, platform_id: PLATFORM_ID }]);
+    const importTasksFindMany = vi
+      .fn()
+      .mockResolvedValueOnce([{ id: importTaskId }])
+      .mockResolvedValueOnce([
+        {
+          id: importTaskId,
+          stores: {
+            ecommerce_platforms: { id: PLATFORM_ID, platform_name: "Amazon" },
+            id: STORE_ID,
+            store_name: "US Store",
+          },
+          task_no: "IMP-001",
+        },
+      ]);
+    const transactionFindMany = vi
+      .fn()
+      .mockResolvedValueOnce([
+        {
+          direction: "in",
+          source_document_id: importTaskId,
+          source_document_type: "overseas_import",
+          sku_id: SKU_ID,
+          warehouse_id: OVERSEAS_WAREHOUSE_ID,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          direction: "in",
+          source_document_id: importTaskId,
+          source_document_type: "overseas_import",
+          transaction_at: new Date("2026-07-26T00:00:00.000Z"),
+          sku_id: SKU_ID,
+          warehouse_id: OVERSEAS_WAREHOUSE_ID,
+        },
+      ]);
+    const inventoryFindMany = vi
+      .fn()
+      .mockResolvedValueOnce([inventoryRow])
+      .mockResolvedValueOnce([
+        {
+          available_quantity: 2,
+          sku_id: SKU_ID,
+          warehouse_id: TRANSIT_WAREHOUSE_ID,
+        },
+      ]);
+    const count = vi.fn().mockResolvedValue(1);
+    const client = {
+      import_tasks: { findMany: importTasksFindMany },
+      inventories: { count, findMany: inventoryFindMany },
+      inventory_transactions: { findMany: transactionFindMany },
+      stores: { findMany: storesFindMany },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    const result = await repository.execute(
+      {
+        action: "list",
+        apiId: "CBR-017",
+        mutation: false,
+        payload: {},
+        query: new URLSearchParams([
+          ["platformId", PLATFORM_ID],
+          ["storeId", STORE_ID],
+          ["skuId", SKU_ID],
+          ["warehouseId", OVERSEAS_WAREHOUSE_ID],
+        ]),
+        resource: "overseas-inventory",
+      },
+      {
+        ...actor,
+        dataScopes: ["warehouse", "store"],
+        permissionCodes: ["cross-border.overseas-inventory.read"],
+        storeScopes: [{ accessLevel: "read", targetId: STORE_ID }],
+        warehouseScopes: [{ accessLevel: "read", targetId: OVERSEAS_WAREHOUSE_ID }],
+      },
+      context,
+    );
+
+    expect(result).toMatchObject({
+      items: [
+        expect.objectContaining({
+          availableQuantity: 4,
+          currentQuantity: 5,
+          platformId: PLATFORM_ID,
+          platformName: "Amazon",
+          sourceImportTaskId: importTaskId,
+          sourceImportTaskNo: "IMP-001",
+          storeId: STORE_ID,
+          storeName: "US Store",
+          transitQuantity: 2,
+        }),
+      ],
+      total: 1,
+    });
+    expect(inventoryFindMany.mock.calls[0]?.[0]).toMatchObject({
+      where: {
+        AND: [
+          {
+            AND: [
+              { warehouses: { id: { in: [OVERSEAS_WAREHOUSE_ID] } } },
+              { warehouse_id: OVERSEAS_WAREHOUSE_ID },
+              { sku_id: SKU_ID },
+              { warehouses: { warehouse_type: "overseas" } },
+            ],
+          },
+          { OR: [{ sku_id: SKU_ID, warehouse_id: OVERSEAS_WAREHOUSE_ID }] },
+        ],
+      },
+    });
+  });
+
+  it("returns traceable overseas inventory source chain", async () => {
+    const importTaskId = "99999999-9999-4999-8999-999999999999";
+    const importItemId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const matchId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    const client = {
+      cross_border_shipment_items: { findMany: vi.fn().mockResolvedValue([{ id: ITEM_ID }]) },
+      cross_border_shipments: { findMany: vi.fn().mockResolvedValue([{ id: DOCUMENT_ID }]) },
+      import_task_items: { findMany: vi.fn().mockResolvedValue([{ id: importItemId }]) },
+      import_tasks: { findMany: vi.fn().mockResolvedValue([{ id: importTaskId }]) },
+      inventories: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: "inventory-overseas-1",
+          sku_id: SKU_ID,
+          warehouse_id: OVERSEAS_WAREHOUSE_ID,
+        }),
+      },
+      inventory_transactions: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            direction: "in",
+            id: "txn-1",
+            source_document_id: importTaskId,
+            source_document_type: "overseas_import",
+            sku_id: SKU_ID,
+            warehouse_id: OVERSEAS_WAREHOUSE_ID,
+          },
+        ]),
+      },
+      shipment_import_matches: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            cross_border_shipment_id: DOCUMENT_ID,
+            cross_border_shipment_item_id: ITEM_ID,
+            id: matchId,
+            import_task_id: importTaskId,
+            import_task_item_id: importItemId,
+          },
+        ]),
+      },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "source-trace",
+          apiId: "CBR-022",
+          entityId: "inventory-overseas-1",
+          mutation: false,
+          payload: {},
+          query: new URLSearchParams(),
+          resource: "overseas-inventory",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({
+      crossBorderShipmentItems: [{ id: ITEM_ID }],
+      crossBorderShipments: [{ id: DOCUMENT_ID }],
+      importTaskItems: [{ id: importItemId }],
+      importTasks: [{ id: importTaskId }],
+      shipmentImportMatches: [{ id: matchId }],
+      transactions: [{ id: "txn-1" }],
+    });
+  });
+
+  it("calculates read-only replenishment suggestions without inventory mutation", async () => {
+    const inventoryFindMany = vi
+      .fn()
+      .mockResolvedValueOnce([
+        {
+          available_quantity: 0,
+          id: "inventory-zero",
+          on_hand_quantity: 0,
+          pending_quantity: 0,
+          reserved_quantity: 0,
+          sku_id: SKU_ID,
+          warehouse_id: OVERSEAS_WAREHOUSE_ID,
+        },
+        {
+          available_quantity: 3,
+          id: "inventory-low",
+          on_hand_quantity: 3,
+          pending_quantity: 0,
+          reserved_quantity: 0,
+          sku_id: SECOND_SKU_ID,
+          warehouse_id: OVERSEAS_WAREHOUSE_ID,
+        },
+      ])
+      .mockResolvedValueOnce([{ available_quantity: 1, sku_id: SECOND_SKU_ID }]);
+    const client = {
+      inventories: { findMany: inventoryFindMany },
+      inventory_transactions: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    const result = await repository.execute(
+      {
+        action: "summary",
+        apiId: "CBR-016",
+        mutation: false,
+        payload: {},
+        query: new URLSearchParams([
+          ["view", "replenishment"],
+          ["lowStockThreshold", "5"],
+        ]),
+        resource: "overseas-inventory",
+      },
+      actor,
+      context,
+    );
+
+    expect(result).toMatchObject({
+      items: expect.arrayContaining([
+        expect.objectContaining({ readOnly: true, suggestionType: "zero_stock" }),
+        expect.objectContaining({
+          coverageQuantity: 4,
+          readOnly: true,
+          suggestionType: "low_stock",
+          suggestedQuantity: 1,
+        }),
+      ]),
+      readOnly: true,
+      totalCandidates: 2,
+    });
+    expect(client.inventories as { create?: unknown; update?: unknown; upsert?: unknown }).toEqual(
+      expect.not.objectContaining({
+        create: expect.anything(),
+        update: expect.anything(),
+        upsert: expect.anything(),
+      }),
+    );
   });
 });

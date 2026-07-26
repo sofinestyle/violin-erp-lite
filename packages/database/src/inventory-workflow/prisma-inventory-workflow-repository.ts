@@ -149,6 +149,13 @@ const ITEM_RELATION: Partial<Record<InventoryWorkflowCommand["resource"], string
   transfer: "transfer_order_items",
 };
 
+const OVERSEAS_OPERATION_FILTERS = [
+  "importTaskId",
+  "importBatch",
+  "platformId",
+  "storeId",
+] as const;
+
 function page(command: InventoryWorkflowCommand) {
   const page = Number(command.query.get("page") ?? 1);
   const pageSize = Number(command.query.get("pageSize") ?? 20);
@@ -274,6 +281,7 @@ function listWhere(command: InventoryWorkflowCommand, actor: AuthenticatedUser):
   ];
   for (const key of allowed) {
     const value = command.query.get(key);
+    if (command.resource === "overseas-inventory" && key === "storeId") continue;
     if (value) clauses.push({ [toSnake(key)]: value });
   }
   const keyword = command.query.get("keyword") ?? command.query.get("documentNo");
@@ -300,6 +308,293 @@ function listWhere(command: InventoryWorkflowCommand, actor: AuthenticatedUser):
   }
   if (command.resource === "overseas-import") clauses.push({ import_type: "overseas_inventory" });
   return { AND: clauses };
+}
+
+function numberQuery(command: InventoryWorkflowCommand, key: string, fallback: number): number {
+  const value = command.query.get(key);
+  if (!value) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new ValidationError(`${key} 参数无效`);
+  }
+  return parsed;
+}
+
+function unique(values: Iterable<unknown>): string[] {
+  return [...new Set([...values].filter((value) => value).map(String))];
+}
+
+function pairKey(row: Readonly<{ sku_id?: unknown; warehouse_id?: unknown }>): string {
+  return `${String(row.sku_id)}::${String(row.warehouse_id)}`;
+}
+
+function hasOverseasOperationFilter(command: InventoryWorkflowCommand): boolean {
+  return OVERSEAS_OPERATION_FILTERS.some((key) => Boolean(command.query.get(key)));
+}
+
+function baseOverseasInventoryWhere(
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+): JsonRecord {
+  const clauses: JsonRecord[] = [warehouseScope(actor, "overseas-inventory")];
+  const warehouseId = command.query.get("warehouseId");
+  const skuId = command.query.get("skuId");
+  if (warehouseId) clauses.push({ warehouse_id: warehouseId });
+  if (skuId) clauses.push({ sku_id: skuId });
+  clauses.push({ warehouses: { warehouse_type: "overseas" } });
+  return { AND: clauses };
+}
+
+async function storeIdsForPlatform(
+  client: DynamicClient,
+  platformId: string,
+  actor: AuthenticatedUser,
+): Promise<string[]> {
+  const actorStoreIds = (actor.storeScopes ?? []).map((scope) => scope.targetId);
+  const stores = await client.stores!.findMany({
+    where: {
+      is_active: true,
+      platform_id: platformId,
+      ...(actor.dataScopes.includes("store") && !actor.dataScopes.includes("all")
+        ? { id: { in: actorStoreIds } }
+        : {}),
+    },
+  });
+  return stores.map((store) => String(store.id));
+}
+
+async function overseasImportTaskIdsForFilters(
+  client: DynamicClient,
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+): Promise<string[] | null> {
+  if (!hasOverseasOperationFilter(command)) return null;
+  const importTaskId = command.query.get("importTaskId");
+  const importBatch = command.query.get("importBatch") ?? command.query.get("taskNo");
+  const platformId = command.query.get("platformId");
+  const storeId = command.query.get("storeId");
+  const where: JsonRecord = { import_type: "overseas_inventory" };
+
+  if (importTaskId) where.id = importTaskId;
+  if (importBatch) where.task_no = { contains: importBatch, mode: "insensitive" };
+
+  if (storeId) {
+    ensureStoreAccess(actor, storeId);
+    where.store_id = storeId;
+  }
+
+  if (platformId) {
+    const platformStoreIds = await storeIdsForPlatform(client, platformId, actor);
+    if (platformStoreIds.length === 0) return [];
+    if (storeId && !platformStoreIds.includes(storeId)) return [];
+    if (!storeId) where.store_id = { in: platformStoreIds };
+  }
+
+  const tasks = await client.import_tasks!.findMany({ where });
+  return tasks.map((task) => String(task.id));
+}
+
+async function overseasInventoryWhere(
+  client: DynamicClient,
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+): Promise<JsonRecord> {
+  const where = baseOverseasInventoryWhere(command, actor);
+  const taskIds = await overseasImportTaskIdsForFilters(client, command, actor);
+  if (taskIds === null) return where;
+  if (taskIds.length === 0) return { AND: [where, { id: { in: [] } }] };
+  const transactions = await client.inventory_transactions!.findMany({
+    where: {
+      direction: "in",
+      source_document_id: { in: taskIds },
+      source_document_type: "overseas_import",
+    },
+  });
+  const pairs = new Map<string, JsonRecord>();
+  for (const transaction of transactions) {
+    pairs.set(pairKey(transaction), {
+      sku_id: transaction.sku_id,
+      warehouse_id: transaction.warehouse_id,
+    });
+  }
+  if (pairs.size === 0) return { AND: [where, { id: { in: [] } }] };
+  return { AND: [where, { OR: [...pairs.values()] }] };
+}
+
+async function transitQuantityBySku(
+  client: DynamicClient,
+  skuIds: readonly string[],
+): Promise<Map<string, number>> {
+  if (skuIds.length === 0) return new Map();
+  const rows = await client.inventories!.findMany({
+    where: {
+      sku_id: { in: skuIds },
+      warehouses: { warehouse_type: "transit" },
+    },
+  });
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    totals.set(
+      String(row.sku_id),
+      (totals.get(String(row.sku_id)) ?? 0) + Number(row.available_quantity ?? 0),
+    );
+  }
+  return totals;
+}
+
+async function overseasImportContextByInventory(
+  client: DynamicClient,
+  rows: readonly JsonRecord[],
+): Promise<Map<string, JsonRecord>> {
+  if (rows.length === 0) return new Map();
+  const transactions = await client.inventory_transactions!.findMany({
+    orderBy: { transaction_at: "desc" },
+    where: {
+      direction: "in",
+      OR: rows.map((row) => ({ sku_id: row.sku_id, warehouse_id: row.warehouse_id })),
+      source_document_type: "overseas_import",
+    },
+  });
+  const latestByPair = new Map<string, JsonRecord>();
+  for (const transaction of transactions) {
+    const key = pairKey(transaction);
+    if (!latestByPair.has(key)) latestByPair.set(key, transaction);
+  }
+  const taskIds = unique(
+    [...latestByPair.values()].map((transaction) => transaction.source_document_id),
+  );
+  if (taskIds.length === 0) return new Map();
+  const tasks = await client.import_tasks!.findMany({
+    include: { stores: { include: { ecommerce_platforms: true } }, warehouses: true },
+    where: { id: { in: taskIds } },
+  });
+  const taskById = new Map(tasks.map((task) => [String(task.id), task]));
+  const context = new Map<string, JsonRecord>();
+  for (const [key, transaction] of latestByPair.entries()) {
+    const task = taskById.get(String(transaction.source_document_id));
+    context.set(key, {
+      latestImportTransaction: transaction,
+      sourceImportTask: task ?? null,
+    });
+  }
+  return context;
+}
+
+async function enrichOverseasInventoryRows(
+  client: DynamicClient,
+  rows: readonly JsonRecord[],
+): Promise<JsonRecord[]> {
+  const transitBySku = await transitQuantityBySku(client, unique(rows.map((row) => row.sku_id)));
+  const contextByPair = await overseasImportContextByInventory(client, rows);
+  return rows.map((row) => {
+    const context = contextByPair.get(pairKey(row));
+    const task = context?.sourceImportTask as JsonRecord | null | undefined;
+    const store = task?.stores as JsonRecord | null | undefined;
+    const platform = store?.ecommerce_platforms as JsonRecord | null | undefined;
+    const normalized = record(row);
+    return {
+      ...normalized,
+      availableQuantity: Number(row.available_quantity ?? 0),
+      currentQuantity: Number(row.on_hand_quantity ?? 0),
+      platform: platform ? record(platform) : null,
+      platformId: platform?.id ?? null,
+      platformName: platform?.platform_name ?? null,
+      sourceImportTask: task ? record(task) : null,
+      sourceImportTaskId: task?.id ?? null,
+      sourceImportTaskNo: task?.task_no ?? null,
+      store: store ? record(store) : null,
+      storeId: store?.id ?? null,
+      storeName: store?.store_name ?? null,
+      transitQuantity: transitBySku.get(String(row.sku_id)) ?? 0,
+    };
+  });
+}
+
+async function overseasInventoryList(
+  client: DynamicClient,
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+): Promise<JsonRecord> {
+  const pagination = page(command);
+  const where = await overseasInventoryWhere(client, command, actor);
+  const [rows, total] = await Promise.all([
+    client.inventories!.findMany({
+      include: { skus: true, warehouses: true },
+      orderBy: { updated_at: "desc" },
+      skip: (pagination.page - 1) * pagination.pageSize,
+      take: pagination.pageSize,
+      where,
+    }),
+    client.inventories!.count({ where }),
+  ]);
+  return {
+    items: await enrichOverseasInventoryRows(client, rows),
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    total,
+    totalPages: Math.ceil(total / pagination.pageSize),
+  };
+}
+
+async function overseasInventorySummary(
+  client: DynamicClient,
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+): Promise<JsonRecord> {
+  const where = await overseasInventoryWhere(client, command, actor);
+  const rows = await client.inventories!.findMany({
+    include: { skus: true, warehouses: true },
+    where,
+  });
+  const items = await enrichOverseasInventoryRows(client, rows);
+  return {
+    availableQuantity: rows.reduce((sum, row) => sum + Number(row.available_quantity), 0),
+    inventoryCount: rows.length,
+    items,
+    onHandQuantity: rows.reduce((sum, row) => sum + Number(row.on_hand_quantity), 0),
+    pendingQuantity: rows.reduce((sum, row) => sum + Number(row.pending_quantity), 0),
+    reservedQuantity: rows.reduce((sum, row) => sum + Number(row.reserved_quantity), 0),
+    transitQuantity: items.reduce((sum, row) => sum + Number(row.transitQuantity ?? 0), 0),
+  };
+}
+
+async function replenishmentSuggestion(
+  client: DynamicClient,
+  command: InventoryWorkflowCommand,
+  actor: AuthenticatedUser,
+): Promise<JsonRecord> {
+  const threshold = numberQuery(command, "lowStockThreshold", 10);
+  const summary = await overseasInventorySummary(client, command, actor);
+  const rows = (summary.items as JsonRecord[]) ?? [];
+  const includeNormal = command.query.get("includeNormal") === "true";
+  const items = rows
+    .map((row) => {
+      const availableQuantity = Number(row.availableQuantity ?? 0);
+      const transitQuantity = Number(row.transitQuantity ?? 0);
+      const coverageQuantity = availableQuantity + transitQuantity;
+      const suggestionType =
+        availableQuantity === 0
+          ? "zero_stock"
+          : coverageQuantity <= threshold
+            ? "low_stock"
+            : "normal";
+      return {
+        ...row,
+        coverageQuantity,
+        readOnly: true,
+        suggestedQuantity: Math.max(0, threshold - coverageQuantity),
+        suggestionType,
+      };
+    })
+    .filter((row) => includeNormal || row.suggestionType !== "normal");
+  return {
+    items,
+    lowStockCount: items.filter((row) => row.suggestionType === "low_stock").length,
+    readOnly: true,
+    threshold,
+    totalCandidates: items.length,
+    zeroStockCount: items.filter((row) => row.suggestionType === "zero_stock").length,
+  };
 }
 
 async function list(
@@ -1715,6 +2010,12 @@ async function specialRead(
   actor: AuthenticatedUser,
 ): Promise<JsonRecord | null> {
   if (command.action === "summary") {
+    if (command.resource === "overseas-inventory") {
+      if (command.query.get("view") === "replenishment") {
+        return replenishmentSuggestion(client, command, actor);
+      }
+      return overseasInventorySummary(client, command, actor);
+    }
     const where = listWhere(command, actor);
     const rows = await client.inventories!.findMany({ where });
     return {
@@ -1839,14 +2140,75 @@ async function specialRead(
   }
   if (command.action === "source-trace") {
     const inventory = await client.inventories!.findFirst({
-      where: { id: command.entityId, ...warehouseScope(actor, "overseas-inventory") },
+      where: {
+        AND: [
+          { id: command.entityId },
+          warehouseScope(actor, "overseas-inventory"),
+          { warehouses: { warehouse_type: "overseas" } },
+        ],
+      },
     });
     if (!inventory) throw new NotFoundError();
     const rows = await client.inventory_transactions!.findMany({
       orderBy: { transaction_at: "asc" },
       where: { sku_id: inventory.sku_id, warehouse_id: inventory.warehouse_id },
     });
-    return { inventory: record(inventory), transactions: rows.map(record) };
+    const importTaskIds = unique(
+      rows
+        .filter((row) => row.source_document_type === "overseas_import")
+        .map((row) => row.source_document_id),
+    );
+    const importTasks =
+      importTaskIds.length > 0
+        ? await client.import_tasks!.findMany({
+            include: { stores: { include: { ecommerce_platforms: true } }, warehouses: true },
+            where: { id: { in: importTaskIds } },
+          })
+        : [];
+    const importTaskItems =
+      importTaskIds.length > 0
+        ? await client.import_task_items!.findMany({
+            orderBy: { row_no: "asc" },
+            where: { import_task_id: { in: importTaskIds } },
+          })
+        : [];
+    const importTaskItemIds = unique(importTaskItems.map((item) => item.id));
+    const matches =
+      importTaskIds.length > 0
+        ? await client.shipment_import_matches!.findMany({
+            where: {
+              OR: [
+                { import_task_id: { in: importTaskIds } },
+                ...(importTaskItemIds.length > 0
+                  ? [{ import_task_item_id: { in: importTaskItemIds } }]
+                  : []),
+              ],
+            },
+          })
+        : [];
+    const shipmentIds = unique(matches.map((match) => match.cross_border_shipment_id));
+    const shipmentItemIds = unique(matches.map((match) => match.cross_border_shipment_item_id));
+    const shipments =
+      shipmentIds.length > 0
+        ? await client.cross_border_shipments!.findMany({
+            where: { id: { in: shipmentIds } },
+          })
+        : [];
+    const shipmentItems =
+      shipmentItemIds.length > 0
+        ? await client.cross_border_shipment_items!.findMany({
+            where: { id: { in: shipmentItemIds } },
+          })
+        : [];
+    return {
+      crossBorderShipmentItems: shipmentItems.map(record),
+      crossBorderShipments: shipments.map(record),
+      importTaskItems: importTaskItems.map(record),
+      importTasks: importTasks.map(record),
+      inventory: record(inventory),
+      shipmentImportMatches: matches.map(record),
+      transactions: rows.map(record),
+    };
   }
   return null;
 }
@@ -1943,6 +2305,9 @@ export class PrismaInventoryWorkflowRepository implements InventoryWorkflowRepos
     }
     const special = await specialRead(client, command, actor);
     if (special) return special;
+    if (command.resource === "overseas-inventory" && command.action === "list") {
+      return overseasInventoryList(client, command, actor);
+    }
     if (command.action === "list") return list(client, command, actor);
     if (command.action === "detail") return detail(client, command, actor);
     if (command.resource === "overseas-import" && command.action === "create-import-task") {

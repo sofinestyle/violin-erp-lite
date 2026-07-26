@@ -75,6 +75,19 @@ describe("Task 7.5-C Frozen API coverage", () => {
         "CBR-012",
         "cross-border.shipment.dispatch",
       ],
+      [
+        "GET",
+        ["overseas-inventories", "summary"],
+        "CBR-016",
+        "cross-border.overseas-inventory.read",
+      ],
+      ["GET", ["overseas-inventories"], "CBR-017", "cross-border.overseas-inventory.read"],
+      [
+        "GET",
+        ["overseas-inventories", DOCUMENT_ID, "source-trace"],
+        "CBR-022",
+        "cross-border.source-trace.read",
+      ],
       ["POST", ["import-jobs"], "IMP-001", "import.task.create"],
       ["POST", ["import-jobs", DOCUMENT_ID, "execute"], "IMP-011", "import.task.execute"],
     ] as const;
