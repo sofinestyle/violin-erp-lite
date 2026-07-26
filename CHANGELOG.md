@@ -11,6 +11,37 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.35] - 2026-07-26
+
+### Changed
+
+- Module 5 Sales Management 更新为 `Completed / Approved`
+- Current Task 保持为 `Phase 8 下一业务模块准备`
+- `CURRENT_STATUS.md`、`ROADMAP.md`、`PROJECT.md` 与 `README.md` 同步 Module 5 验收状态
+- 新增 DEC-102，记录 Module 5 Sales Management 最终验收批准
+
+### Added
+
+- 新增 `TASK_8_E4_SALES_FINAL_REVIEW.md`
+- 记录 Sales Outbound Integration、Sales Return、Platform / Store Sales View、Sales Statistics 已完成
+- 记录销售业务闭环已形成：销售来源 → Outbound Order → 确认出库 → Inventory Transaction → 销售统计
+- 记录销售退货闭环已形成：销售退货 → 退货处理 → 退货入库确认 → Inventory Transaction
+- 记录库存唯一事实来源仍为 `inventories` 与 `inventory_transactions`
+
+### Verified
+
+- Module 5 Sales Management 最终验收通过
+- Database SSOT、Prisma Schema 与 Migration 未变化
+- API Master Specification 未变化
+- Permission Code 未变化
+- `pnpm status:check` 通过
+- `git diff --check` 通过
+
+### Scope
+
+- 本次仅同步治理与状态文档
+- 未修改业务代码、Database Schema、Migration、API Contract、Permission 或业务规则
+
 ## [0.11.34] - 2026-07-26
 
 ### Changed

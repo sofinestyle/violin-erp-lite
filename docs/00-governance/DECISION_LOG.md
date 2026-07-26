@@ -2543,3 +2543,32 @@ Approved
 ### 影响
 
 本决定只同步 Module 4 Cross-border Business 最终验收与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Module 4 后续如需新增字段、接口、权限、附件类型、平台订单对象、外部平台 API 同步、海外库存快照、正式补货计划、补货审批流、自动补货、AI 预测、报关清关或费用核算，必须先经过对应 DCR、API Change Request、Permission 评估或独立获批任务。Phase 8 下一步继续保持下一业务模块准备。
+
+## DEC-102 批准Module 5 Sales Management完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-26
+
+### 决定
+
+- 项目负责人批准 Module 5 Sales Management 最终验收完成；
+- Sales Outbound Integration 销售出库集成已完成并获得批准；
+- Sales Return 销售退货已完成并获得批准；
+- Platform / Store Sales View 平台 / 店铺销售视图已完成并获得批准；
+- Sales Statistics 销售统计已完成并获得批准；
+- 销售业务闭环已形成：销售来源 → Outbound Order → 确认出库 → Inventory Transaction → 销售统计；
+- 销售退货闭环已形成：销售退货 → 退货处理 → 退货入库确认 → Inventory Transaction；
+- 库存唯一事实来源继续保持为 `inventories` 与 `inventory_transactions`；
+- 销售来源、平台视图、店铺视图与销售统计均不得成为库存事实来源；
+- Module 5 Sales Management 状态更新为 Completed / Approved；
+- Current Task 保持为 Phase 8 下一业务模块准备；
+- Current Task Status 为 Waiting / Not Started。
+
+### 影响
+
+本决定只同步 Module 5 Sales Management 最终验收与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Module 5 后续如需新增字段、接口、权限、附件类型、完整销售订单中心、平台订单对象、客户主数据、外部平台 API 同步、高级利润分析、售后完整闭环、销售统计快照、AI 预测或高级 BI，必须先经过对应 DCR、API Change Request、Permission 评估或独立获批任务。Phase 8 下一步继续保持下一业务模块准备。
