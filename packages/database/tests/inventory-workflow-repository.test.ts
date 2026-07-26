@@ -511,6 +511,429 @@ describe("inventory transaction repository", () => {
     expect(orderUpdate).not.toHaveBeenCalled();
   });
 
+  it("creates inventory adjustment without touching inventory balances or ledger rows", async () => {
+    const adjustmentCreate = vi.fn().mockResolvedValue({
+      id: DOCUMENT_ID,
+      inventory_adjustment_items: [{ id: ITEM_ID }],
+      status: "draft",
+    });
+    const client = {
+      inventory_adjustments: { create: adjustmentCreate },
+      inventories: {
+        findFirst: vi.fn().mockResolvedValue({
+          available_quantity: 8,
+          id: "inventory-1",
+          on_hand_quantity: 10,
+        }),
+      },
+      skus: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: SKU_ID,
+            sku_code: "SKU-001",
+            sku_name: "小提琴 SKU",
+            specification: "4/4",
+          },
+        ]),
+      },
+      warehouses: { findFirst: vi.fn().mockResolvedValue({ id: SOURCE_WAREHOUSE_ID }) },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "create",
+          apiId: "INV-015",
+          mutation: true,
+          payload: {
+            adjustmentReason: "盘点差异",
+            adjustmentType: "stock_count_difference",
+            documentDate: "2026-07-26",
+            items: [
+              {
+                adjustmentDirection: "decrease",
+                adjustmentQuantity: 3,
+                skuId: SKU_ID,
+                unitCost: 10,
+              },
+            ],
+            warehouseId: SOURCE_WAREHOUSE_ID,
+          },
+          query: new URLSearchParams(),
+          resource: "inventory-adjustment",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "draft" });
+
+    expect(adjustmentCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          inventory_adjustment_items: {
+            create: [
+              expect.objectContaining({
+                adjustment_direction: "decrease",
+                adjustment_quantity: 3,
+                quantity_after: 7,
+                quantity_before: 10,
+              }),
+            ],
+          },
+          total_decrease_quantity: 3,
+          warehouse_id: SOURCE_WAREHOUSE_ID,
+        }),
+      }),
+    );
+    expect((client as { inventory_transactions?: unknown }).inventory_transactions).toBeUndefined();
+  });
+
+  it("submits and approves inventory adjustments with status history", async () => {
+    const update = vi
+      .fn()
+      .mockResolvedValueOnce({ id: DOCUMENT_ID, status: "pending_approval" })
+      .mockResolvedValueOnce({ id: DOCUMENT_ID, status: "approved" });
+    const historyCreate = vi.fn().mockResolvedValue({});
+    const findFirst = vi
+      .fn()
+      .mockResolvedValueOnce({
+        document_no: "ADJ-001",
+        id: DOCUMENT_ID,
+        inventory_adjustment_items: [],
+        status: "draft",
+        version_no: 1,
+        warehouse_id: SOURCE_WAREHOUSE_ID,
+      })
+      .mockResolvedValueOnce({ id: DOCUMENT_ID, status: "pending_approval" })
+      .mockResolvedValueOnce({
+        document_no: "ADJ-001",
+        id: DOCUMENT_ID,
+        inventory_adjustment_items: [],
+        status: "pending_approval",
+        version_no: 2,
+        warehouse_id: SOURCE_WAREHOUSE_ID,
+      })
+      .mockResolvedValueOnce({ id: DOCUMENT_ID, status: "approved" });
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      document_status_histories: { create: historyCreate },
+      inventory_adjustments: { findFirst, update },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "submit",
+          apiId: "INV-017",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: { versionNo: 1 },
+          query: new URLSearchParams(),
+          resource: "inventory-adjustment",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "pending_approval" });
+    await expect(
+      repository.execute(
+        {
+          action: "approve",
+          apiId: "INV-019",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: { versionNo: 2 },
+          query: new URLSearchParams(),
+          resource: "inventory-adjustment",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "approved" });
+
+    expect(update).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "pending_approval" }),
+      }),
+    );
+    expect(update).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "approved" }),
+      }),
+    );
+    expect(historyCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it("executes inventory adjustment by atomically changing inventory and writing ledger rows", async () => {
+    const inventoryFind = vi
+      .fn()
+      .mockResolvedValueOnce({
+        available_quantity: 10,
+        id: "inventory-1",
+        on_hand_quantity: 10,
+      })
+      .mockResolvedValueOnce({
+        available_quantity: 7,
+        id: "inventory-1",
+        on_hand_quantity: 7,
+      });
+    const inventoryUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const transactionCreate = vi.fn().mockResolvedValue({});
+    const adjustmentUpdate = vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "completed" });
+    const historyCreate = vi.fn().mockResolvedValue({});
+    const document = {
+      adjustment_reason: "盘点差异",
+      adjustment_type: "stock_count_difference",
+      document_no: "ADJ-001",
+      id: DOCUMENT_ID,
+      inventory_adjustment_items: [
+        {
+          adjustment_direction: "decrease",
+          adjustment_quantity: 3,
+          amount: 30,
+          batch_no: "B-001",
+          id: ITEM_ID,
+          sku_id: SKU_ID,
+          unit_cost: 10,
+        },
+      ],
+      status: "approved",
+      version_no: 2,
+      warehouse_id: SOURCE_WAREHOUSE_ID,
+    };
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      document_status_histories: { create: historyCreate },
+      inventories: {
+        findFirst: inventoryFind,
+        updateMany: inventoryUpdateMany,
+      },
+      inventory_adjustments: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce(document)
+          .mockResolvedValueOnce({ ...document, status: "completed" }),
+        update: adjustmentUpdate,
+      },
+      inventory_transactions: { create: transactionCreate },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "execute",
+          apiId: "INV-024",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: { versionNo: 2 },
+          query: new URLSearchParams(),
+          resource: "inventory-adjustment",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "completed" });
+
+    expect(inventoryUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          available_quantity: { decrement: 3 },
+          on_hand_quantity: { decrement: 3 },
+        }),
+        where: expect.objectContaining({
+          available_quantity: { gte: 3 },
+          id: "inventory-1",
+          on_hand_quantity: { gte: 3 },
+        }),
+      }),
+    );
+    expect(transactionCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          direction: "out",
+          quantity: 3,
+          quantity_after: 7,
+          quantity_before: 10,
+          source_document_id: DOCUMENT_ID,
+          source_document_item_id: ITEM_ID,
+          source_document_type: "inventory_adjustment",
+          transaction_type: "stock_count_difference",
+        }),
+      }),
+    );
+    expect(adjustmentUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ adjusted_at: expect.any(Date), status: "completed" }),
+      }),
+    );
+    expect(historyCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          from_status: "approved",
+          object_type: "inventory-adjustment",
+          to_status: "completed",
+        }),
+      }),
+    );
+  });
+
+  it("prevents inventory adjustment execution from creating negative stock", async () => {
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      document_status_histories: { create: vi.fn() },
+      inventories: {
+        findFirst: vi.fn().mockResolvedValue({
+          available_quantity: 1,
+          id: "inventory-1",
+          on_hand_quantity: 1,
+        }),
+        updateMany: vi.fn(),
+      },
+      inventory_adjustments: {
+        findFirst: vi.fn().mockResolvedValue({
+          document_no: "ADJ-001",
+          id: DOCUMENT_ID,
+          inventory_adjustment_items: [
+            {
+              adjustment_direction: "decrease",
+              adjustment_quantity: 3,
+              id: ITEM_ID,
+              sku_id: SKU_ID,
+              unit_cost: 10,
+            },
+          ],
+          status: "approved",
+          version_no: 1,
+          warehouse_id: SOURCE_WAREHOUSE_ID,
+        }),
+        update: vi.fn(),
+      },
+      inventory_transactions: { create: vi.fn() },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "execute",
+          apiId: "INV-024",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: { versionNo: 1 },
+          query: new URLSearchParams(),
+          resource: "inventory-adjustment",
+        },
+        actor,
+        context,
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT_REQUEST" });
+    expect(client.inventories.updateMany).not.toHaveBeenCalled();
+    expect(client.inventory_transactions.create).not.toHaveBeenCalled();
+    expect(client.inventory_adjustments.update).not.toHaveBeenCalled();
+  });
+
+  it("does not execute an inventory adjustment twice", async () => {
+    const client = {
+      inventory_adjustments: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: DOCUMENT_ID,
+          status: "completed",
+          version_no: 3,
+          warehouse_id: SOURCE_WAREHOUSE_ID,
+        }),
+      },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "execute",
+          apiId: "INV-024",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: { versionNo: 3 },
+          query: new URLSearchParams(),
+          resource: "inventory-adjustment",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "completed" });
+    expect((client as { inventories?: unknown }).inventories).toBeUndefined();
+    expect((client as { inventory_transactions?: unknown }).inventory_transactions).toBeUndefined();
+  });
+
+  it("keeps adjustment status unchanged when adjustment ledger writing fails", async () => {
+    const adjustmentUpdate = vi.fn();
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      document_status_histories: { create: vi.fn() },
+      inventories: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({
+            available_quantity: 10,
+            id: "inventory-1",
+            on_hand_quantity: 10,
+          })
+          .mockResolvedValueOnce({
+            available_quantity: 7,
+            id: "inventory-1",
+            on_hand_quantity: 7,
+          }),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+      },
+      inventory_adjustments: {
+        findFirst: vi.fn().mockResolvedValue({
+          document_no: "ADJ-001",
+          id: DOCUMENT_ID,
+          inventory_adjustment_items: [
+            {
+              adjustment_direction: "decrease",
+              adjustment_quantity: 3,
+              id: ITEM_ID,
+              sku_id: SKU_ID,
+              unit_cost: 10,
+            },
+          ],
+          status: "approved",
+          version_no: 1,
+          warehouse_id: SOURCE_WAREHOUSE_ID,
+        }),
+        update: adjustmentUpdate,
+      },
+      inventory_transactions: { create: vi.fn().mockRejectedValue(new Error("ledger failed")) },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "execute",
+          apiId: "INV-024",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: { versionNo: 1 },
+          query: new URLSearchParams(),
+          resource: "inventory-adjustment",
+        },
+        actor,
+        context,
+      ),
+    ).rejects.toThrow("ledger failed");
+    expect(adjustmentUpdate).not.toHaveBeenCalled();
+  });
+
   it("rejects any movement that would create negative stock", async () => {
     const client = {
       inventories: {

@@ -191,4 +191,39 @@ describe("Task 7.5-C Frozen API coverage", () => {
       result: "success",
     });
   });
+
+  it("records inventory adjustment execution audit through INV-024", async () => {
+    const repository: InventoryWorkflowRepository = {
+      execute: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "completed" }),
+    };
+    const audit = new InMemoryAuditWriter();
+    const service = new InventoryWorkflowService(repository, audit);
+    const command: InventoryWorkflowCommand = {
+      action: "execute",
+      apiId: "INV-024",
+      entityId: DOCUMENT_ID,
+      mutation: true,
+      payload: { versionNo: 1 },
+      query: new URLSearchParams(),
+      resource: "inventory-adjustment",
+    };
+
+    await expect(
+      service.execute(command, "inventory.adjustment.execute", authentication([]), context),
+    ).rejects.toMatchObject({ code: "PERMISSION_FORBIDDEN" });
+    await service.execute(
+      command,
+      "inventory.adjustment.execute",
+      authentication(["inventory.adjustment.execute"]),
+      context,
+    );
+
+    expect(repository.execute).toHaveBeenCalledWith(command, expect.any(Object), context);
+    expect(audit.events[0]).toMatchObject({
+      action: "INV-024",
+      moduleCode: "inventory-adjustment",
+      resourceType: "inventory-adjustment",
+      result: "success",
+    });
+  });
 });

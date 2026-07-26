@@ -508,7 +508,12 @@ async function createDocument(
   if (command.resource === "inventory-adjustment") {
     let increase = 0;
     let decrease = 0;
-    const warehouseId = stringValue(payload, "warehouseId");
+    const warehouseId = String(stringValue(payload, "warehouseId"));
+    ensureWarehouseAccess(actor, warehouseId);
+    const warehouse = await client.warehouses!.findFirst({
+      where: { id: warehouseId, is_active: true },
+    });
+    if (!warehouse) throw new ValidationError("仓库不存在或已停用");
     const itemRows: JsonRecord[] = [];
     for (const [index, row] of rows.entries()) {
       const direction = stringValue(row, "adjustmentDirection");
@@ -520,8 +525,11 @@ async function createDocument(
         where: { sku_id: row.skuId, warehouse_id: warehouseId },
       });
       const before = Number(inventory?.on_hand_quantity ?? 0);
+      const availableBefore = Number(inventory?.available_quantity ?? 0);
       const after = direction === "increase" ? before + quantity : before - quantity;
-      if (after < 0) throw new ConflictError("库存不足，不能创建该调整单");
+      if (direction === "decrease" && (after < 0 || availableBefore < quantity)) {
+        throw new ConflictError("可用库存不足，不能创建该调整单");
+      }
       if (direction === "increase") increase += quantity;
       else decrease += quantity;
       const unitCost = decimal(row.unitCost, "unitCost");
@@ -811,6 +819,131 @@ async function applyOutboundReverse(
   }
 }
 
+async function applyAdjustmentExecution(
+  client: DynamicClient,
+  document: JsonRecord,
+  rows: readonly JsonRecord[],
+  actor: AuthenticatedUser,
+  command: InventoryWorkflowCommand,
+): Promise<void> {
+  const warehouseId = String(document.warehouse_id);
+  for (const row of rows) {
+    const direction = String(row.adjustment_direction);
+    if (direction !== "increase" && direction !== "decrease") {
+      throw new ValidationError("adjustmentDirection 只允许 increase 或 decrease");
+    }
+    const quantity = Number(row.adjustment_quantity);
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw new ValidationError("调整数量必须大于 0");
+    }
+    const inventory = await client.inventories!.findFirst({
+      where: { sku_id: row.sku_id, warehouse_id: warehouseId },
+    });
+    const before = Number(inventory?.on_hand_quantity ?? 0);
+    const unitCost = row.unit_cost === null ? null : Number(row.unit_cost ?? 0);
+    const remark =
+      typeof command.payload.reason === "string"
+        ? command.payload.reason
+        : typeof document.adjustment_reason === "string"
+          ? document.adjustment_reason
+          : null;
+
+    if (direction === "increase") {
+      const updated = await client.inventories!.upsert({
+        create: {
+          available_quantity: quantity,
+          created_by: actor.userId,
+          last_transaction_at: new Date(),
+          on_hand_quantity: quantity,
+          pending_quantity: 0,
+          reserved_quantity: 0,
+          sku_id: row.sku_id,
+          updated_by: actor.userId,
+          warehouse_id: warehouseId,
+        },
+        update: {
+          available_quantity: { increment: quantity },
+          last_transaction_at: new Date(),
+          on_hand_quantity: { increment: quantity },
+          updated_by: actor.userId,
+        },
+        where: {
+          sku_id_warehouse_id: {
+            sku_id: row.sku_id,
+            warehouse_id: warehouseId,
+          },
+        },
+      });
+      await client.inventory_transactions!.create({
+        data: {
+          amount: row.amount ?? (unitCost === null ? null : quantity * unitCost),
+          batch_no: row.batch_no,
+          direction: "in",
+          operator_id: actor.userId,
+          quantity,
+          quantity_after: updated.on_hand_quantity ?? before + quantity,
+          quantity_before: before,
+          remark,
+          sku_id: row.sku_id,
+          source_document_id: document.id,
+          source_document_item_id: row.id,
+          source_document_type: "inventory_adjustment",
+          transaction_at: new Date(),
+          transaction_no: documentNo("ITX-A"),
+          transaction_type: document.adjustment_type ?? "inventory_adjustment",
+          unit_cost: unitCost,
+          warehouse_id: warehouseId,
+        },
+      });
+      continue;
+    }
+
+    if (
+      !inventory ||
+      Number(inventory.available_quantity ?? 0) < quantity ||
+      Number(inventory.on_hand_quantity ?? 0) < quantity
+    ) {
+      throw new ConflictError("可用库存不足");
+    }
+    const updatedCount = await client.inventories!.updateMany({
+      data: {
+        available_quantity: { decrement: quantity },
+        last_transaction_at: new Date(),
+        on_hand_quantity: { decrement: quantity },
+        updated_by: actor.userId,
+      },
+      where: {
+        available_quantity: { gte: quantity },
+        id: inventory.id,
+        on_hand_quantity: { gte: quantity },
+      },
+    });
+    if (updatedCount.count !== 1) throw new ConflictError("可用库存不足");
+    const updated = await client.inventories!.findFirst({ where: { id: inventory.id } });
+    await client.inventory_transactions!.create({
+      data: {
+        amount: row.amount ?? (unitCost === null ? null : quantity * unitCost),
+        batch_no: row.batch_no,
+        direction: "out",
+        operator_id: actor.userId,
+        quantity,
+        quantity_after: updated?.on_hand_quantity ?? before - quantity,
+        quantity_before: before,
+        remark,
+        sku_id: row.sku_id,
+        source_document_id: document.id,
+        source_document_item_id: row.id,
+        source_document_type: "inventory_adjustment",
+        transaction_at: new Date(),
+        transaction_no: documentNo("ITX-A"),
+        transaction_type: document.adjustment_type ?? "inventory_adjustment",
+        unit_cost: unitCost,
+        warehouse_id: warehouseId,
+      },
+    });
+  }
+}
+
 function itemMovements(rows: JsonRecord[], warehouseId: string, sign: 1 | -1): Movement[] {
   return rows.map((row) => ({
     batchNo: typeof row.batch_no === "string" ? row.batch_no : null,
@@ -828,7 +961,7 @@ const ACTION_STATE: Readonly<Record<string, { approval?: string; status: string 
   confirm: { status: "completed" },
   complete: { status: "completed" },
   dispatch: { status: "dispatched" },
-  execute: { status: "executed" },
+  execute: { status: "completed" },
   "confirm-inbound": { status: "completed" },
   "confirm-outbound": { status: "completed" },
   receive: { status: "completed" },
@@ -876,6 +1009,16 @@ async function action(
   });
   if (!document) throw new NotFoundError();
   if (command.resource === "outbound") ensureOutboundAccess(actor, document);
+  if (command.resource === "inventory-adjustment") {
+    ensureWarehouseAccess(actor, String(document.warehouse_id));
+  }
+  if (
+    command.resource === "inventory-adjustment" &&
+    command.action === "execute" &&
+    document.status === "completed"
+  ) {
+    return record(document);
+  }
   if (
     command.resource === "outbound" &&
     command.action === "confirm" &&
@@ -912,22 +1055,7 @@ async function action(
 
   await client.$transaction(async (transaction) => {
     if (command.resource === "inventory-adjustment" && command.action === "execute") {
-      const warehouseId = String(document.warehouse_id);
-      await applyInventoryMovements(
-        transaction,
-        rows.map((row) => ({
-          batchNo: typeof row.batch_no === "string" ? row.batch_no : null,
-          delta:
-            String(row.adjustment_direction) === "increase"
-              ? Number(row.adjustment_quantity)
-              : -Number(row.adjustment_quantity),
-          itemId: String(row.id),
-          skuId: String(row.sku_id),
-          unitCost: Number(row.unit_cost),
-          warehouseId,
-        })),
-        source,
-      );
+      await applyAdjustmentExecution(transaction, document, rows, actor, command);
     } else if (command.resource === "transfer" && command.action === "ship") {
       await applyInventoryMovements(
         transaction,
