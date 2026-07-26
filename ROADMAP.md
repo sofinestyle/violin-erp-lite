@@ -19,7 +19,7 @@ related_phase: All Phases
 
 - Current Phase：Phase 8
 - Phase Status：In Progress
-- Current Task：8-B3-B Procurement & Production Impact Review
+- Current Task：Phase 8 下一业务模块准备
 - Current Task Status：Waiting / Not Started
 
 当前状态唯一入口为 [`CURRENT_STATUS.md`](docs/00-governance/CURRENT_STATUS.md)。本文件负责定义固定阶段路线、Task 边界、进入条件和完成条件。
@@ -99,7 +99,7 @@ related_phase: All Phases
 - 数据库命名规范：Completed / Approved
 - 数据库冻结：Completed / Approved / Frozen
 
-Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已由项目负责人正式启动，当前状态为 In Progress。
+Phase 1 已正式关闭，Phase 2 已完成并获得批准。Phase 3 Database Design 及 Task 3.1 至 Task 3.5.7 已完成并获得批准；当前 Database Logical Design v2.5 为 Completed / Approved / Pending Migration，v2.5 已完成 Task 7.7 Event Infrastructure 物理同步与 Mapping Audit，v2.3 仍为最近已完成业务领域物理 Migration 与 Mapping Audit 的冻结基线。Phase 4 页面设计及 Task 4.1 至 Task 4.10 均为 Completed / Approved。当前 API Master Specification v1.5 已冻结，正式接口总数为 335。Phase 6 功能详细设计及 Final Consistency Review 已完成验收并获得批准，Phase 6 状态为 Completed / Approved / Frozen。Phase Renumbering Change Request 001 已获得批准，固定路线调整为十阶段；Phase 7 Platform Foundation 已完成最终一致性审计、Alignment Confirmation 与冻结，状态为 Completed / Approved / Frozen。Phase 8 Application Development 已由项目负责人正式启动，当前状态为 In Progress；Module 1 Master Data Center 与 Module 2 Procurement & Production 均已完成最终验收并获得批准，当前任务切换为 Phase 8 下一业务模块准备。
 
 ## 3. 固定十阶段开发路线
 
@@ -301,9 +301,16 @@ Task 8.1 至 Task 8.5 是原 Phase 7 已完成成果的编号迁移，不删除�
 3. 8-B2-2 Master Data Development - Core 核心基础资料开发：Completed / Approved；
 4. 8-B2-3 Master Data Extended Development 扩展基础资料开发：Completed / Approved；
 5. 8-B3-A Master Data Final Review & Documentation Sync 基础资料中心最终验收与状态同步：Completed / Approved；
-6. 8-B3-B Procurement & Production Impact Review 采购与生产影响评估：Waiting / Not Started；
+6. 8-B3-B Procurement & Production Impact Review 采购与生产影响评估：Completed / Approved；
+7. 8-B4-A Procurement & Production Implementation Design 采购与生产实施设计：Completed / Approved；
+8. 8-B4-B Procurement Development Implementation - Purchase Order 采购订单开发：Completed / Approved；
+9. 8-B4-B Batch 2 Production Order Development 生产任务开发：Completed / Approved；
+10. 8-B4-C Inspection Quality Acceptance Development 质量验收开发：Completed / Approved；
+11. 8-B4-D Inbound Development 入库开发：Completed / Approved；
+12. 8-B5 Module 2 Final Review & Documentation Sync Module 2 最终验收与状态同步：Completed / Approved；
+13. Phase 8 下一业务模块准备 Next Business Module Preparation：Waiting / Not Started；
 
-Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中心，下一步进入采购与生产基础闭环影响评估。
+Phase 8 当前新增业务应用开发任务已完成 Module 1 基础资料中心与 Module 2 采购生产基础闭环，下一步进入 Phase 8 下一业务模块准备。
 
 ### Phase 9：测试方案与系统集成（Test Plan & System Integration）
 

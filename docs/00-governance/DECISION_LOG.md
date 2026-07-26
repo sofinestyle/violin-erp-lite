@@ -2457,3 +2457,32 @@ Approved
 ### 影响
 
 本决定只同步 Module 1 基础资料中心最终验收与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Module 1 后续如需新增字段、接口、权限、附件类型、外部平台同步、库存联动或业务流程扩展，必须先经过对应 DCR、API Change Request、Permission 评估或独立获批任务。Phase 8 下一步进入采购与生产基础闭环影响评估。
+
+## DEC-099 批准Module 2 Procurement & Production完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-26
+
+### 决定
+
+- 项目负责人批准 Module 2 Procurement & Production 最终验收完成；
+- Purchase Order 采购订单已完成并获得批准；
+- Production Order 生产任务已完成并获得批准；
+- Inspection Quality Acceptance 质量验收已完成并获得批准；
+- Inbound 入库已完成并获得批准；
+- 采购闭环已形成：采购订单 → 质量验收 → 入库；
+- 生产闭环已形成：生产任务 → 生产进度 → 分批完工 → 质量验收 → 入库；
+- 库存唯一事实来源继续保持为 `inventories` 与 `inventory_transactions`；
+- 采购、生产与验收均不直接修改库存，只有 Inbound Confirm 确认入库修改库存并追加库存流水；
+- Module 2 Procurement & Production 状态更新为 Completed / Approved；
+- Current Task 切换为 Phase 8 下一业务模块准备；
+- Current Task Status 为 Waiting / Not Started。
+
+### 影响
+
+本决定只同步 Module 2 Procurement & Production 最终验收与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Module 2 后续如需新增字段、接口、权限、附件类型、外部平台同步、审批流、采购退货、其他入库、出库、库存调整或跨境业务接入，必须先经过对应 DCR、API Change Request、Permission 评估或独立获批任务。Phase 8 下一步进入下一业务模块准备。
