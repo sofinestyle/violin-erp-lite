@@ -2486,3 +2486,32 @@ Approved
 ### 影响
 
 本决定只同步 Module 2 Procurement & Production 最终验收与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Module 2 后续如需新增字段、接口、权限、附件类型、外部平台同步、审批流、采购退货、其他入库、出库、库存调整或跨境业务接入，必须先经过对应 DCR、API Change Request、Permission 评估或独立获批任务。Phase 8 下一步进入下一业务模块准备。
+
+## DEC-100 批准Module 3 Inventory Management完成
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-07-26
+
+### 决定
+
+- 项目负责人批准 Module 3 Inventory Management 最终验收完成；
+- Inventory Query 库存查询已完成并获得批准；
+- Inventory Transaction 库存流水查询已完成并获得批准；
+- Outbound 出库已完成并获得批准；
+- Inventory Adjustment 库存调整已完成并获得批准；
+- Inventory Statistics 库存统计已完成并获得批准；
+- 库存闭环已形成：Inbound → Inventory → Outbound → Adjustment → Statistics；
+- 库存唯一事实来源继续保持为 `inventories` 与 `inventory_transactions`；
+- Purchase、Production、Inspection、Event、Job、Cache 均不得成为库存事实来源；
+- Module 3 Inventory Management 状态更新为 Completed / Approved；
+- Current Task 保持为 Phase 8 下一业务模块准备；
+- Current Task Status 为 Waiting / Not Started。
+
+### 影响
+
+本决定只同步 Module 3 Inventory Management 最终验收与当前任务指向，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。Module 3 后续如需新增字段、接口、权限、附件类型、统计快照、复杂 BI、外部平台同步、缓存事实、库存预警扩展、盘点、调拨、报损、销售退货或跨境业务接入，必须先经过对应 DCR、API Change Request、Permission 评估或独立获批任务。Phase 8 下一步继续保持下一业务模块准备。
