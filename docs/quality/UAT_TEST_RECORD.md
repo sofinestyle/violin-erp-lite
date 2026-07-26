@@ -32,6 +32,9 @@ violin_erp_lite
 ## 4. 已发现问题
 
 - UAT-001
+- UAT-002
+- UAT-003
+- UAT-004
 
 ## 5. 已测试模块
 
