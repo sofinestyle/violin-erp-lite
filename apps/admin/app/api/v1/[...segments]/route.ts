@@ -13,6 +13,7 @@ import {
   extractBearerToken,
   HttpWechatIdentityAdapter,
   InventoryQueryService,
+  InventoryTransactionService,
   InventoryWorkflowService,
   JwtService,
   loadJwtConfiguration,
@@ -27,6 +28,7 @@ import {
   parseCreateAttachmentLink,
   parseDeleteAttachment,
   parseInventoryListQuery,
+  parseInventoryTransactionListQuery,
   parseMasterDataListQuery,
   parseLoginRequest,
   parseRefreshRequest,
@@ -50,6 +52,7 @@ import {
   PrismaAuthRepository,
   PrismaAuditWriter,
   PrismaInventoryQueryRepository,
+  PrismaInventoryTransactionRepository,
   PrismaInventoryWorkflowRepository,
   PrismaMasterDataRepository,
   PrismaSecurityRepository,
@@ -112,6 +115,9 @@ function services() {
   const audit = new PrismaAuditWriter();
   return {
     inventoryQuery: new InventoryQueryService(new PrismaInventoryQueryRepository()),
+    inventoryTransaction: new InventoryTransactionService(
+      new PrismaInventoryTransactionRepository(),
+    ),
     masterData: new MasterDataService(new PrismaMasterDataRepository(), audit),
     inventoryWorkflow: new InventoryWorkflowService(new PrismaInventoryWorkflowRepository(), audit),
     security: new SecurityManagementService(new PrismaSecurityRepository(), audit),
@@ -596,6 +602,44 @@ async function dispatchInventoryQuery(
   return null;
 }
 
+async function dispatchInventoryTransaction(
+  request: Request,
+  context: RequestContext,
+  authentication: AuthenticationContext,
+  segments: string[],
+): Promise<Response | null> {
+  if (request.method !== "GET") return null;
+  if (segments[0] !== "inventory-transactions") return null;
+
+  const endpoint = services().inventoryTransaction;
+  const url = new URL(request.url);
+
+  if (segments.length === 1) {
+    const result = await endpoint.list(
+      parseInventoryTransactionListQuery(url.searchParams),
+      authentication,
+      context,
+    );
+    return createSuccessResponse(result.items, context, {
+      meta: {
+        page: result.page,
+        pageSize: result.pageSize,
+        total: result.total,
+        totalPages: result.totalPages,
+      },
+    });
+  }
+
+  if (segments.length === 2) {
+    return createSuccessResponse(
+      await endpoint.detail(assertUuid(segments[1]), authentication, context),
+      context,
+    );
+  }
+
+  return null;
+}
+
 async function dispatchMasterData(
   request: Request,
   context: RequestContext,
@@ -902,6 +946,13 @@ const handler = createRouteHandler(async (request, context) => {
           segments,
         );
         if (inventoryQuery) return inventoryQuery;
+        const inventoryTransaction = await dispatchInventoryTransaction(
+          request,
+          context,
+          authentication,
+          segments,
+        );
+        if (inventoryTransaction) return inventoryTransaction;
         const inventoryWorkflow = await dispatchInventoryWorkflow(
           request,
           context,

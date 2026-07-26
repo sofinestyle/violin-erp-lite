@@ -25,6 +25,7 @@ export * from "./observability/metrics.js";
 export * from "./master-data/master-data.js";
 export * from "./inventory-workflow/inventory-workflow.js";
 export * from "./inventory-query/inventory-query.js";
+export * from "./inventory-transaction/inventory-transaction.js";
 export * from "./idempotency/configuration.js";
 export * from "./idempotency/hashing.js";
 export * from "./idempotency/idempotency.js";
