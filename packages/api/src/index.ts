@@ -37,6 +37,7 @@ export * from "./request-context/request-context.js";
 export * from "./response/api-response.js";
 export * from "./route-handler/health-check.js";
 export * from "./route-handler/route-handler.js";
+export * from "./sales/sales-management.js";
 export * from "./security/security-management.js";
 export * from "./storage/local-object-storage.js";
 export * from "./storage/object-storage.js";

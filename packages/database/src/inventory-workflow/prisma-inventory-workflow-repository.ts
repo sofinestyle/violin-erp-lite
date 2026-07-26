@@ -942,16 +942,39 @@ async function createDocument(
     );
   }
   if (command.resource === "sales-return") {
+    const outboundOrderId = stringValue(payload, "outboundOrderId");
+    const storeId = stringValue(payload, "storeId");
+    ensureStoreAccess(actor, storeId);
+    const outboundOrder = await client.outbound_orders!.findFirst({
+      where: { id: outboundOrderId, store_id: storeId },
+    });
+    if (!outboundOrder) throw new ValidationError("原销售出库不存在或店铺不匹配");
     const outboundItemIds = rows.map((row) => stringValue(row, "outboundOrderItemId"));
     const outboundRows = await client.outbound_order_items!.findMany({
-      where: { id: { in: outboundItemIds } },
+      where: { id: { in: outboundItemIds }, outbound_order_id: outboundOrderId },
     });
     const outboundMap = new Map(outboundRows.map((row) => [String(row.id), row]));
     if (outboundMap.size !== new Set(outboundItemIds).size) {
-      throw new ValidationError("退货明细必须引用有效出库明细");
+      throw new ValidationError("退货明细必须引用同一原销售出库的有效明细");
+    }
+    const existingReturnRows = await client.sales_return_items!.findMany({
+      where: { outbound_order_item_id: { in: outboundItemIds } },
+    });
+    const returnedByItem = new Map<string, number>();
+    for (const item of existingReturnRows) {
+      const key = String(item.outbound_order_item_id);
+      returnedByItem.set(key, (returnedByItem.get(key) ?? 0) + Number(item.returned_quantity ?? 0));
     }
     const itemRows = rows.map((row, index) => {
+      const source = outboundMap.get(String(row.outboundOrderItemId))!;
+      if (String(source.sku_id) !== String(row.skuId)) {
+        throw new ValidationError("退货 SKU 必须与原出库明细一致");
+      }
       const returned = decimal(row.returnedQuantity, "returnedQuantity", false);
+      const alreadyReturned = returnedByItem.get(String(row.outboundOrderItemId)) ?? 0;
+      if (alreadyReturned + returned > Number(source.quantity)) {
+        throw new ConflictError("退货数量不能超过原出库数量");
+      }
       const dispositionTotal =
         decimal(row.sellableQuantity, "sellableQuantity") +
         decimal(row.pendingQuantity, "pendingQuantity") +
@@ -974,11 +997,11 @@ async function createDocument(
         data: {
           ...baseDocument({ ...payload, documentDate: payload.returnDate }, actorId, "SRT"),
           external_return_no: stringValue(payload, "externalReturnNo", true),
-          outbound_order_id: stringValue(payload, "outboundOrderId"),
+          outbound_order_id: outboundOrderId,
           return_date: dateValue(payload, "returnDate"),
           return_reason: stringValue(payload, "returnReason"),
           return_warehouse_id: stringValue(payload, "returnWarehouseId"),
-          store_id: stringValue(payload, "storeId"),
+          store_id: storeId,
           total_quantity: itemRows.reduce((sum, row) => sum + Number(row.quantity), 0),
           sales_return_items: { create: itemRows },
         },

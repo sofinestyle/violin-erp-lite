@@ -1596,4 +1596,291 @@ describe("inventory transaction repository", () => {
       }),
     );
   });
+
+  it("creates domestic sales outbound with source fields without touching inventory", async () => {
+    const create = vi.fn().mockResolvedValue({
+      id: DOCUMENT_ID,
+      outbound_order_items: [{ id: ITEM_ID }],
+      outbound_type: "domestic_sales",
+      status: "draft",
+      total_quantity: 2,
+    });
+    const client = {
+      outbound_orders: { create },
+      skus: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: SKU_ID,
+            sku_code: "SKU-001",
+            sku_name: "小提琴 SKU",
+            specification: "4/4",
+          },
+        ]),
+      },
+      warehouses: { findFirst: vi.fn().mockResolvedValue({ id: SOURCE_WAREHOUSE_ID }) },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "create-domestic-sales",
+          apiId: "OUT-003",
+          mutation: true,
+          payload: {
+            customerName: "张三",
+            documentDate: "2026-07-26",
+            externalOrderNo: "TM-001",
+            items: [
+              {
+                batchNo: "B-001",
+                externalOrderItemNo: "LINE-001",
+                externalSkuCode: "EXT-SKU",
+                quantity: 2,
+                skuId: SKU_ID,
+                unitCost: 10,
+              },
+            ],
+            platformId: PLATFORM_ID,
+            storeId: STORE_ID,
+            warehouseId: SOURCE_WAREHOUSE_ID,
+          },
+          query: new URLSearchParams(),
+          resource: "outbound",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ outboundType: "domestic_sales", status: "draft" });
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          customer_name: "张三",
+          external_order_no: "TM-001",
+          outbound_type: "domestic_sales",
+          platform_id: PLATFORM_ID,
+          store_id: STORE_ID,
+          outbound_order_items: {
+            create: [
+              expect.objectContaining({
+                external_order_item_no: "LINE-001",
+                external_sku_code: "EXT-SKU",
+              }),
+            ],
+          },
+        }),
+      }),
+    );
+    expect((client as { inventories?: unknown }).inventories).toBeUndefined();
+    expect((client as { inventory_transactions?: unknown }).inventory_transactions).toBeUndefined();
+  });
+
+  it("creates sales return linked to original outbound and prevents over-return", async () => {
+    const create = vi.fn().mockResolvedValue({
+      id: DOCUMENT_ID,
+      sales_return_items: [{ id: ITEM_ID }],
+      status: "draft",
+      total_quantity: 1,
+    });
+    const baseClient = {
+      outbound_order_items: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: ITEM_ID,
+            outbound_order_id: DOCUMENT_ID,
+            quantity: 2,
+            sku_id: SKU_ID,
+          },
+        ]),
+      },
+      outbound_orders: {
+        findFirst: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, store_id: STORE_ID }),
+      },
+      sales_return_items: { findMany: vi.fn().mockResolvedValue([]) },
+      sales_returns: { create },
+      skus: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: SKU_ID,
+            sku_code: "SKU-001",
+            sku_name: "小提琴 SKU",
+            specification: "4/4",
+          },
+        ]),
+      },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(baseClient as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "create",
+          apiId: "SRT-003",
+          mutation: true,
+          payload: {
+            externalReturnNo: "RT-001",
+            items: [
+              {
+                damagedQuantity: 0,
+                dispositionMethod: "return_to_stock",
+                inventoryCondition: "sellable",
+                outboundOrderItemId: ITEM_ID,
+                pendingQuantity: 0,
+                returnedQuantity: 1,
+                sellableQuantity: 1,
+                skuId: SKU_ID,
+              },
+            ],
+            outboundOrderId: DOCUMENT_ID,
+            returnDate: "2026-07-26",
+            returnReason: "客户退货",
+            returnWarehouseId: SOURCE_WAREHOUSE_ID,
+            storeId: STORE_ID,
+          },
+          query: new URLSearchParams(),
+          resource: "sales-return",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "draft", totalQuantity: 1 });
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          outbound_order_id: DOCUMENT_ID,
+          sales_return_items: {
+            create: [
+              expect.objectContaining({
+                outbound_order_item_id: ITEM_ID,
+                returned_quantity: 1,
+                sellable_quantity: 1,
+              }),
+            ],
+          },
+          store_id: STORE_ID,
+        }),
+      }),
+    );
+
+    const overReturnRepository = new PrismaInventoryWorkflowRepository({
+      ...baseClient,
+      sales_return_items: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue([{ outbound_order_item_id: ITEM_ID, returned_quantity: 2 }]),
+      },
+    } as unknown as PrismaClient);
+    await expect(
+      overReturnRepository.execute(
+        {
+          action: "create",
+          apiId: "SRT-003",
+          mutation: true,
+          payload: {
+            items: [
+              {
+                damagedQuantity: 0,
+                dispositionMethod: "return_to_stock",
+                inventoryCondition: "sellable",
+                outboundOrderItemId: ITEM_ID,
+                pendingQuantity: 0,
+                returnedQuantity: 1,
+                sellableQuantity: 1,
+                skuId: SKU_ID,
+              },
+            ],
+            outboundOrderId: DOCUMENT_ID,
+            returnDate: "2026-07-26",
+            returnReason: "客户退货",
+            returnWarehouseId: SOURCE_WAREHOUSE_ID,
+            storeId: STORE_ID,
+          },
+          query: new URLSearchParams(),
+          resource: "sales-return",
+        },
+        actor,
+        context,
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT_REQUEST" });
+  });
+
+  it("confirms sales return inbound by increasing inventory and writing ledger rows", async () => {
+    const inventoryUpsert = vi.fn().mockResolvedValue({ id: "inventory-1", on_hand_quantity: 8 });
+    const transactionCreate = vi.fn().mockResolvedValue({});
+    const returnUpdate = vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "completed" });
+    const document = {
+      document_no: "SRT-001",
+      id: DOCUMENT_ID,
+      return_warehouse_id: SOURCE_WAREHOUSE_ID,
+      sales_return_items: [
+        {
+          batch_no: "B-001",
+          id: ITEM_ID,
+          quantity: 1,
+          returned_quantity: 1,
+          sku_id: SKU_ID,
+          unit_cost: 10,
+        },
+      ],
+      status: "approved",
+      store_id: STORE_ID,
+      version_no: 2,
+    };
+    const client = {
+      $transaction: async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback(client),
+      document_status_histories: { create: vi.fn().mockResolvedValue({}) },
+      inventories: {
+        findFirst: vi.fn().mockResolvedValue({ id: "inventory-1", on_hand_quantity: 7 }),
+        upsert: inventoryUpsert,
+      },
+      inventory_transactions: { create: transactionCreate },
+      sales_returns: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce(document)
+          .mockResolvedValueOnce({ ...document, status: "completed" }),
+        update: returnUpdate,
+      },
+    };
+    const repository = new PrismaInventoryWorkflowRepository(client as unknown as PrismaClient);
+
+    await expect(
+      repository.execute(
+        {
+          action: "confirm-inbound",
+          apiId: "SRT-010",
+          entityId: DOCUMENT_ID,
+          mutation: true,
+          payload: { versionNo: 2 },
+          query: new URLSearchParams(),
+          resource: "sales-return",
+        },
+        actor,
+        context,
+      ),
+    ).resolves.toMatchObject({ status: "completed" });
+
+    expect(inventoryUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({
+          available_quantity: { increment: 1 },
+          on_hand_quantity: { increment: 1 },
+        }),
+      }),
+    );
+    expect(transactionCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          direction: "in",
+          quantity: 1,
+          source_document_id: DOCUMENT_ID,
+          source_document_item_id: ITEM_ID,
+          source_document_type: "sales-return",
+        }),
+      }),
+    );
+  });
 });
