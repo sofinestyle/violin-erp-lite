@@ -83,11 +83,11 @@ Local UAT
 
 状态：
 
-Fixed / Pending Manual Verification
+Verified / Closed
 
 处理：
 
-左侧菜单栏闪屏已在 Batch 001 修复；本轮重新打开右侧内容区域闪屏问题并完成修复。根因是根级 route loading 使用全屏加载态，路由切换时右侧内容区被整块替换。已改为内容区稳定骨架，等待人工复验。
+项目负责人已完成人工复验，用户编辑弹窗背景、遮罩和层级修复通过。
 
 发现日期：
 
@@ -129,11 +129,11 @@ Local UAT
 
 状态：
 
-Fixed
+Verified / Closed
 
 处理：
 
-已完成代码修复和自动化回归测试，等待人工复验。
+项目负责人已完成人工复验，登录密码显示 / 隐藏交互通过。
 
 发现日期：
 
@@ -175,11 +175,11 @@ Local UAT
 
 状态：
 
-Fixed
+Verified / Closed
 
 处理：
 
-已完成代码修复和自动化回归测试，等待人工复验。
+项目负责人已完成人工复验，Dashboard MVP 首页通过。
 
 发现日期：
 
@@ -221,11 +221,11 @@ Local UAT
 
 状态：
 
-Fixed
+Verified / Closed
 
 处理：
 
-已完成代码修复和自动化回归测试，等待人工复验。
+项目负责人已完成人工复验，Header / Sidebar 稳定，右侧内容区切换无明显白屏或闪屏。
 
 发现日期：
 
@@ -275,11 +275,11 @@ Local UAT
 
 状态：
 
-Fixed
+Verified / Closed
 
 处理：
 
-已完成代码修复和自动化回归测试，等待人工复验。
+项目负责人已完成人工复验，产品新增与字段级校验提示通过。
 
 备注：
 
@@ -388,11 +388,11 @@ Local UAT
 
 状态：
 
-Fixed / Pending Manual Verification
+Verified / Closed
 
 处理：
 
-项目负责人确认当前不需要主题切换；已从全局 Header 完全移除 Light / Theme 按钮，并清理仅为该按钮服务的 ThemeProvider 代码。未新增 Dark Mode，等待人工复验。
+项目负责人已完成人工复验，Header 主题按钮已移除且现有 Light 主题样式正常。
 
 发现日期：
 
@@ -430,11 +430,11 @@ Local UAT
 
 状态：
 
-Fixed
+Verified / Closed
 
 处理：
 
-已补齐帮助与通知的最小可接受交互，等待人工复验。
+项目负责人已完成人工复验，帮助与通知图标交互通过。
 
 发现日期：
 
@@ -481,11 +481,11 @@ Local UAT
 
 状态：
 
-Fixed
+Verified / Closed
 
 处理：
 
-已修复为用户下拉菜单，退出动作仅由“退出登录”触发，等待人工复验。
+项目负责人已完成人工复验，用户菜单与退出交互通过。
 
 发现日期：
 

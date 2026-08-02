@@ -259,12 +259,30 @@ UAT-009 涉及 Frozen 业务规则和 API Create DTO，已按 CR 阻断处理。
 
 ## 7. 待人工复验清单
 
+- UAT-001 至 UAT-008 已由项目负责人人工复验通过；
+- UAT-009 保留为 Blocked by CR，等待项目负责人确认是否启动自动编码 CR。
+
+## 8. Manual Verification Result
+
+复验结果：
+
+Passed
+
+关闭范围：
+
 - UAT-001 用户编辑 Drawer 背景和遮罩可读性；
-- UAT-002 Light 按钮点击反馈；
+- UAT-002 Header 主题按钮移除；
 - UAT-003 帮助和通知面板；
 - UAT-004 用户菜单与退出操作；
 - UAT-005 登录密码显示 / 隐藏；
 - UAT-006 首页 Dashboard 数据、空状态和错误状态；
-- UAT-007 菜单切换是否不再整页闪烁；
-- UAT-008 新增产品合法保存与非法字段提示；
-- UAT-009 项目负责人确认是否启动自动编码 CR。
+- UAT-007 菜单切换无明显白屏或闪屏；
+- UAT-008 新增产品合法保存与非法字段提示。
+
+状态：
+
+Verified / Closed
+
+保留事项：
+
+- UAT-009：Blocked by CR，等待 CR 决策。

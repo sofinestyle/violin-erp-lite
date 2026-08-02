@@ -132,4 +132,30 @@ Local UAT In Progress，等待项目负责人进行人工复验。
 
 当前状态：
 
-UAT-002 与 UAT-007 均为 Fixed / Pending Manual Verification。
+UAT-002 与 UAT-007 已通过项目负责人人工复验。
+
+## 9. Batch 001 Manual Verification
+
+复验范围：
+
+- UAT-001
+- UAT-002
+- UAT-003
+- UAT-004
+- UAT-005
+- UAT-006
+- UAT-007
+- UAT-008
+
+Result：
+
+Passed
+
+关闭结果：
+
+- UAT-001 至 UAT-008：Verified / Closed
+- UAT-009：Blocked by CR
+
+当前状态：
+
+Local UAT In Progress，剩余事项为 UAT-009 CR 阻断项。

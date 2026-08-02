@@ -95,3 +95,32 @@ Commit：
 Commit：
 
 `fix: refine UAT theme and navigation issues`
+
+### Batch 001 Manual Verification
+
+人工复验：
+
+Passed
+
+涉及问题：
+
+- UAT-001
+- UAT-002
+- UAT-003
+- UAT-004
+- UAT-005
+- UAT-006
+- UAT-007
+- UAT-008
+
+状态：
+
+Verified / Closed
+
+保留问题：
+
+- UAT-009：Blocked by CR
+
+Commit：
+
+`docs: close UAT batch 001 verification`
