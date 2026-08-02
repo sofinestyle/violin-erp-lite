@@ -5,7 +5,7 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-26
-updated_date: 2026-07-26
+updated_date: 2026-08-02
 related_phase: Phase 10
 ---
 
@@ -92,6 +92,269 @@ Open
 发现日期：
 
 2026-07-26
+
+### UAT-005
+
+模块：
+
+Authentication / Login
+
+页面：
+
+系统登录页
+
+问题描述：
+
+密码输入框后缺少“显示/隐藏密码”按钮。
+
+期望结果：
+
+用户可以点击图标切换密码明文与隐藏状态，默认仍为隐藏状态。
+
+问题类型：
+
+UI / UX Bug
+
+严重等级：
+
+Minor
+
+影响：
+
+不影响核心业务。影响登录页易用性。
+
+发现阶段：
+
+Local UAT
+
+状态：
+
+Open
+
+处理：
+
+待评估修复
+
+发现日期：
+
+2026-08-02
+
+### UAT-006
+
+模块：
+
+Dashboard / Home
+
+页面：
+
+系统首页
+
+问题描述：
+
+首页目前仍显示占位内容，未呈现正式 Dashboard 功能。
+
+期望结果：
+
+首页应按照已批准页面设计展示正式业务概览、快捷入口或统计信息。
+
+问题类型：
+
+Incomplete Implementation
+
+严重等级：
+
+Major
+
+影响：
+
+首页缺少正式 Dashboard 功能，影响人工验收对系统首页的完整性判断。
+
+发现阶段：
+
+Local UAT
+
+状态：
+
+Open
+
+处理：
+
+待评估修复
+
+发现日期：
+
+2026-08-02
+
+### UAT-007
+
+模块：
+
+App Shell / Navigation
+
+页面：
+
+左侧菜单及内容区域
+
+问题描述：
+
+点击左侧菜单切换页面时出现明显屏闪，视觉效果类似整个页面重新刷新，页面过渡不自然。
+
+期望结果：
+
+菜单切换应保持 App Shell 稳定，仅更新内容区域，不出现明显闪烁。
+
+问题类型：
+
+Frontend Navigation / UX Bug
+
+严重等级：
+
+Major
+
+影响：
+
+影响系统导航体验和页面稳定感。
+
+发现阶段：
+
+Local UAT
+
+状态：
+
+Open
+
+处理：
+
+待评估修复
+
+发现日期：
+
+2026-08-02
+
+### UAT-008
+
+模块：
+
+Master Data / Product
+
+页面：
+
+新增产品
+
+问题描述：
+
+提交新增产品时失败。
+
+错误信息：
+
+请求数据校验失败
+
+Request ID：
+
+9e8e5237-d350-479c-9a3b-35132a5ba947
+
+期望结果：
+
+合法产品数据应能够成功保存；校验失败时应准确显示具体字段和原因。
+
+问题类型：
+
+Business Function Bug / Validation Bug
+
+严重等级：
+
+Critical
+
+影响：
+
+产品是采购、生产、库存等后续业务的基础资料。当前错误会阻塞核心业务验收。
+
+发现阶段：
+
+Local UAT
+
+状态：
+
+Open
+
+处理：
+
+待评估修复
+
+备注：
+
+后续排查时应利用 Request ID 检查服务端日志、请求 DTO、前端字段映射和校验错误响应。
+
+发现日期：
+
+2026-08-02
+
+### UAT-009
+
+模块：
+
+Master Data / Code Generation
+
+涉及对象：
+
+- Product Code
+- SKU Code
+- Category Code
+- Manufacturer Code
+- Supplier Code
+- Warehouse Code
+- Platform Code
+- Store Code
+- 其他能够规则化生成的业务编码
+
+问题描述：
+
+当前基础资料录入要求用户手工填写多个业务编码。
+
+业务期望：
+
+所有能够按照规则生成的编码，应由系统自动生成，避免人工重复、格式不统一及录入错误。
+
+问题类型：
+
+Business Requirement / Usability Improvement
+
+严重等级：
+
+Major
+
+影响：
+
+人工填写业务编码会增加重复、格式不统一和录入错误风险。
+
+发现阶段：
+
+Local UAT
+
+状态：
+
+Open / Impact Analysis Required
+
+处理：
+
+当前仅记录，不直接实现。
+
+处理要求：
+
+后续修复前必须评估：
+
+- 现有业务规则是否已有编码规范
+- 前端是否应隐藏或只读显示编码字段
+- API Create DTO 是否要求编码必填
+- Repository 是否已有编号生成器
+- 唯一性及并发生成安全
+- 是否涉及 Frozen API 或 Database
+
+如涉及 API Contract、Database 或正式业务规则变化，必须先提交相应 CR。
+
+发现日期：
+
+2026-08-02
 
 ### UAT-002
 
