@@ -47,17 +47,18 @@ Fixed，等待人工复验。
 
 根因：
 
-Phase 4 视觉设计仅批准 Light Mode，Header 中的 Light 展示控件没有交互反馈，导致用户误以为主题切换功能损坏。
+Phase 4 视觉设计仅批准 Light Mode。Batch 001 曾为 Light 展示控件补齐反馈；项目负责人在本轮确认系统当前不需要主题切换，因此 Header 中继续保留 Light / Theme 控件会形成误导。
 
 修复：
 
-- 保留 Light-only 边界；
-- 点击 Light 按钮后写入本地 Light 状态并提供无障碍状态提示；
-- 未伪造 Dark Mode。
+- 从全局 Header 完全移除 Light / Theme 按钮；
+- 删除仅为该按钮服务的 ThemeProvider 代码；
+- 不新增 Dark Mode；
+- 不影响现有 Light 主题样式。
 
 状态：
 
-Fixed，等待人工复验。
+Fixed / Pending Manual Verification。
 
 ### UAT-003 帮助与通知图标无响应
 
@@ -132,7 +133,7 @@ Fixed，等待人工复验。
 
 根因：
 
-各页面重复挂载 `AppProviders`、`HealthGate` 和 `AppShell`，路由切换时 App Shell 被整体重建，造成明显闪烁。
+Batch 001 已修复左侧菜单栏和 Header 重复挂载问题。但根级 `app/loading.tsx` 仍使用全屏 `GlobalLoading`，在 Next.js 路由切换时作为 App Shell children 渲染，导致右侧内容区域被整块替换为全屏加载态，形成明显白屏 / 闪屏。
 
 修复：
 
@@ -140,10 +141,12 @@ Fixed，等待人工复验。
 - Workspace 页面仅渲染内容区域；
 - Header 与 Sidebar 在客户端路由切换时保持稳定；
 - 页面标题由路径解析得到。
+- 将 route loading 改为内容区稳定骨架；
+- 保留 App Shell，不再在右侧内容区显示全屏加载页。
 
 状态：
 
-Fixed，等待人工复验。
+Fixed / Pending Manual Verification。
 
 ### UAT-008 新增产品请求校验失败
 
@@ -195,8 +198,8 @@ Blocked by CR。
 - `apps/admin/components/shell/app-shell.tsx`
 - `apps/admin/components/ui/dialog.tsx`
 - `apps/admin/contexts/auth-context.tsx`
-- `apps/admin/contexts/theme-context.tsx`
 - `apps/admin/lib/master-data.ts`
+- `apps/admin/app/loading.tsx`
 - `apps/admin/tests/app-shell.test.tsx`
 - `apps/admin/tests/auth-client.test.ts`
 - `apps/admin/tests/dashboard.test.tsx`
@@ -220,10 +223,11 @@ UAT-009 涉及 Frozen 业务规则和 API Create DTO，已按 CR 阻断处理。
 本批次新增和更新测试覆盖：
 
 - Dialog / Drawer 背景与 App Shell Header 交互基础回归；
-- Light-only 主题反馈；
+- Header 无主题切换误导入口；
 - 帮助 / 通知 / 用户菜单静态可访问性；
 - 登录密码显示 / 隐藏控件；
 - Dashboard MVP 结构；
+- 右侧内容区 route loading 稳定骨架；
 - Master Data 关联字段 options 配置；
 - Product 创建校验详情和 Request ID 展示。
 
@@ -246,6 +250,7 @@ UAT-009 涉及 Frozen 业务规则和 API Create DTO，已按 CR 阻断处理。
 
 - Violin Web：`http://localhost:3100/` 返回 200。
 - Violin API Health：`/api/health` 返回 `application.status = ok`、`database.status = connected`。
+- 连续切换 5 个左侧菜单：Header / Sidebar 保持稳定，右侧内容区非空，未出现全屏“正在加载应用”。
 - AI 视觉设计平台：`http://localhost:3000/` 有服务响应，未停止、未重启、未操作 PM2。
 
 备注：

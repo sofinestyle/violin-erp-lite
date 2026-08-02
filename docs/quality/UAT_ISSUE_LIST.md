@@ -83,11 +83,11 @@ Local UAT
 
 状态：
 
-Fixed
+Fixed / Pending Manual Verification
 
 处理：
 
-已完成代码修复和自动化回归测试，等待人工复验。
+左侧菜单栏闪屏已在 Batch 001 修复；本轮重新打开右侧内容区域闪屏问题并完成修复。根因是根级 route loading 使用全屏加载态，路由切换时右侧内容区被整块替换。已改为内容区稳定骨架，等待人工复验。
 
 发现日期：
 
@@ -388,11 +388,11 @@ Local UAT
 
 状态：
 
-Fixed
+Fixed / Pending Manual Verification
 
 处理：
 
-已按已批准 Light Mode 设计补齐按钮反馈；未伪造 Dark Mode，等待人工复验。
+项目负责人确认当前不需要主题切换；已从全局 Header 完全移除 Light / Theme 按钮，并清理仅为该按钮服务的 ThemeProvider 代码。未新增 Dark Mode，等待人工复验。
 
 发现日期：
 

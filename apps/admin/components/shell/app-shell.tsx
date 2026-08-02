@@ -14,11 +14,10 @@ import {
 import Link from "next/link";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, EmptyState, PageContainer, PageHeader, StatusBadge } from "@/components/common";
+import { Card, EmptyState, PageContainer, PageHeader } from "@/components/common";
 import { useUser } from "@/contexts/user-context";
 import { useOptionalAuth } from "@/contexts/auth-context";
 import { usePermission } from "@/contexts/permission-context";
-import { useTheme } from "@/contexts/theme-context";
 import { getNavigationItem, navigationItems, type NavigationSectionId } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +42,6 @@ export function AppShell({
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const authentication = useOptionalAuth();
-  const { confirmLightMode, notice, theme } = useTheme();
   const { hasPermission } = usePermission();
   const activeItem = getNavigationItem(activeSection);
   const canManageUsers = hasPermission("security.user.read");
@@ -148,19 +146,6 @@ export function AppShell({
           </div>
 
           <div className="ml-auto flex items-center gap-1">
-            <Button
-              variant="secondary"
-              className="relative"
-              aria-label="当前主题 Light Mode"
-              onClick={confirmLightMode}
-            >
-              <StatusBadge tone="info">{theme === "light" ? "Light" : theme}</StatusBadge>
-            </Button>
-            {notice ? (
-              <span className="sr-only" role="status">
-                {notice}
-              </span>
-            ) : null}
             <div className="relative">
               <Button
                 variant="ghost"

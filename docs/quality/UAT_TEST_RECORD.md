@@ -111,3 +111,25 @@ Local UAT In Progress
 当前状态：
 
 Local UAT In Progress，等待项目负责人进行人工复验。
+
+## 8. UAT-002 / UAT-007 复修记录
+
+测试模块：
+
+- 全局 Header
+- 左侧导航
+- 右侧内容区域路由切换
+
+处理结果：
+
+- UAT-002：项目负责人确认不需要主题切换，已移除 Header 主题按钮和专用 ThemeProvider 代码。
+- UAT-007：左侧菜单栏保持稳定；右侧内容区域闪屏根因定位为根级 route loading 使用全屏加载态，已替换为内容区稳定骨架。
+
+自动化回归：
+
+- App Shell 回归测试：通过
+- Dashboard 回归测试：通过
+
+当前状态：
+
+UAT-002 与 UAT-007 均为 Fixed / Pending Manual Verification。

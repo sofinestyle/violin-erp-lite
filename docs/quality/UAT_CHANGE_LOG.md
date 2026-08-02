@@ -70,3 +70,28 @@ xxx
 Commit：
 
 `fix: resolve UAT batch 001 issues`
+
+### Batch 001-A
+
+问题：
+
+- UAT-002
+- UAT-007
+
+修改：
+
+- UAT-002：按项目负责人确认，移除全局 Header 中的 Light / Theme 按钮，并删除仅为该按钮服务的 ThemeProvider 代码。
+- UAT-007：将根级路由 loading 从全屏加载态改为内容区稳定骨架，避免右侧内容区在菜单切换时整块白屏闪烁。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/app-shell.test.tsx apps/admin/tests/dashboard.test.tsx`：通过。
+- 全量 `pnpm check`：通过。
+- 本地 `http://localhost:3100/` 页面冒烟：通过。
+- 连续切换 5 个左侧菜单：通过，Header / Sidebar 稳定，右侧内容区未出现全屏白屏。
+- 本地 `http://localhost:3100/api/health`：通过。
+- AI 视觉设计平台 `http://localhost:3000/` 存活确认：通过，未操作 PM2。
+
+Commit：
+
+`fix: refine UAT theme and navigation issues`
