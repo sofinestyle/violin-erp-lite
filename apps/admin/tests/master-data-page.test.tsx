@@ -1,6 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { MasterDataWorkbench } from "../components/master-data/master-data-workbench";
+import {
+  formatApiError,
+  MasterDataWorkbench,
+} from "../components/master-data/master-data-workbench";
 import { WorkbenchHub } from "../components/master-data/workbench-hub";
 import { PermissionProvider } from "../contexts/permission-context";
 import { MASTER_WORKBENCHES, SECURITY_WORKBENCHES } from "../lib/master-data";
@@ -51,5 +54,44 @@ describe("Master Data PC pages", () => {
       </PermissionProvider>,
     );
     expect(html).not.toContain("新增产品");
+  });
+
+  it("uses approved option endpoints for product relation fields", () => {
+    const product = MASTER_WORKBENCHES.find((definition) => definition.key === "products");
+    expect(product?.fields.find((field) => field.key === "categoryId")).toMatchObject({
+      optionCodeField: "categoryCode",
+      optionNameField: "categoryName",
+      optionResource: "product-categories",
+    });
+    expect(product?.fields.find((field) => field.key === "brandId")).toMatchObject({
+      optionCodeField: "brandCode",
+      optionNameField: "brandName",
+      optionResource: "brands",
+    });
+  });
+
+  it("surfaces API validation field details and request id to operators", () => {
+    expect(
+      formatApiError({
+        error: {
+          code: "VALIDATION_ERROR",
+          details: [{ field: "categoryId", message: "产品分类必须存在且启用" }],
+          message: "请求数据校验失败",
+        },
+        requestId: "9e8e5237-d350-479c-9a3b-35132a5ba947",
+        success: false,
+      }),
+    ).toContain("categoryId：产品分类必须存在且启用");
+    expect(
+      formatApiError({
+        error: {
+          code: "VALIDATION_ERROR",
+          details: [{ field: "categoryId", message: "产品分类必须存在且启用" }],
+          message: "请求数据校验失败",
+        },
+        requestId: "9e8e5237-d350-479c-9a3b-35132a5ba947",
+        success: false,
+      }),
+    ).toContain("9e8e5237-d350-479c-9a3b-35132a5ba947");
   });
 });

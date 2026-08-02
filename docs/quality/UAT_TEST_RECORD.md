@@ -76,3 +76,38 @@ UAT-001 至 UAT-009
 状态：
 
 Local UAT In Progress
+
+## 7. UAT Batch 001 修复记录
+
+修复范围：
+
+- UAT-001 用户编辑弹窗背景透明
+- UAT-002 Light 主题按钮无响应
+- UAT-003 帮助 / 通知图标无响应
+- UAT-004 用户头像点击直接退出
+- UAT-005 登录密码显示 / 隐藏
+- UAT-006 Dashboard 占位内容
+- UAT-007 菜单切换屏闪
+- UAT-008 新增产品请求校验失败
+
+影响评估：
+
+- UAT-009 基础资料编码自动生成已完成影响评估，当前状态为 Blocked by CR。
+
+自动化回归：
+
+- App Shell 回归测试：通过
+- Dashboard 回归测试：通过
+- 登录密码控件回归测试：通过
+- Master Data 关系选择和校验详情回归测试：通过
+- 全量 `pnpm check`：通过
+
+本地冒烟：
+
+- Violin ERP Lite `http://localhost:3100/`：可访问
+- Violin ERP Lite `/api/health`：Healthy，数据库 connected
+- AI 视觉设计平台 `http://localhost:3000/`：服务存活，未操作 PM2
+
+当前状态：
+
+Local UAT In Progress，等待项目负责人进行人工复验。

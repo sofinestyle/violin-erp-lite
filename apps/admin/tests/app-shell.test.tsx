@@ -1,4 +1,5 @@
 import type { PermissionCode } from "@violin-erp/api";
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import GlobalError from "../app/global-error";
@@ -22,18 +23,32 @@ function UserProbe() {
   return <span>{useUser().user?.displayName ?? "empty-user"}</span>;
 }
 
+function ShellTestProviders({ children }: { children: ReactNode }) {
+  return (
+    <ThemeProvider>
+      <PermissionProvider permissions={["security.user.read"]}>
+        <UserProvider>{children}</UserProvider>
+      </PermissionProvider>
+    </ThemeProvider>
+  );
+}
+
 describe("PC application shell", () => {
-  it("renders the Phase 4 navigation and the placeholder shell", () => {
+  it("renders the Phase 4 navigation and responsive header controls", () => {
     const html = renderToStaticMarkup(
-      <UserProvider>
+      <ShellTestProviders>
         <AppShell activeSection="home" />
-      </UserProvider>,
+      </ShellTestProviders>,
     );
 
     expect(navigationItems).toHaveLength(10);
     for (const item of navigationItems) expect(html).toContain(item.label);
     expect(html).toContain("当前仅提供导航与公共状态占位");
-    expect(html).not.toContain("主题切换");
+    expect(html).toContain("当前主题 Light Mode");
+    expect(html).toContain("打开帮助");
+    expect(html).toContain("打开通知");
+    expect(html).toContain("打开用户菜单");
+    expect(html).not.toContain("退出登录</button>");
   });
 
   it("keeps the theme fixed to light and the default user empty", () => {

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import { AppFrame } from "@/components/shell/app-frame";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,9 @@ type RootLayoutProps = Readonly<{
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="zh-CN">
-      <body className="min-w-[1180px] antialiased">{children}</body>
+      <body className="min-w-[1180px] antialiased">
+        <AppFrame>{children}</AppFrame>
+      </body>
     </html>
   );
 }

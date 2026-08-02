@@ -1,7 +1,4 @@
 import { notFound } from "next/navigation";
-import { AppShell } from "@/components/shell/app-shell";
-import { HealthGate } from "@/components/shell/health-gate";
-import { AppProviders } from "@/contexts/app-providers";
 import { isNavigationSection } from "@/lib/navigation";
 import { WorkflowHub } from "@/components/workflow/workflow-hub";
 import {
@@ -36,16 +33,5 @@ export default async function WorkspacePlaceholderPage({ params }: WorkspacePlac
               ? crossBorderViews
               : null;
 
-  return (
-    <AppProviders>
-      <HealthGate>
-        <AppShell
-          activeSection={section}
-          {...(workflowViews ? { description: "严格依据正式 API 与权限的数据工作台。" } : {})}
-        >
-          {workflowViews ? <WorkflowHub views={workflowViews} /> : undefined}
-        </AppShell>
-      </HealthGate>
-    </AppProviders>
-  );
+  return workflowViews ? <WorkflowHub views={workflowViews} /> : null;
 }

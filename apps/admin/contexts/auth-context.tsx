@@ -1,5 +1,6 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
 import {
   createContext,
   type FormEvent,
@@ -25,12 +26,13 @@ type AuthContextValue = Readonly<{
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function LoginPage({
+export function LoginPage({
   onLogin,
 }: {
   onLogin: (username: string, password: string) => Promise<void>;
 }) {
   const [error, setError] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -75,14 +77,24 @@ function LoginPage({
         <label className="mt-5 block text-sm font-medium" htmlFor="password">
           密码
         </label>
-        <input
-          className="mt-2 h-11 w-full rounded-lg border px-3"
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-        />
+        <div className="relative mt-2">
+          <input
+            className="h-11 w-full rounded-lg border px-3 pr-11"
+            id="password"
+            name="password"
+            type={passwordVisible ? "text" : "password"}
+            autoComplete="current-password"
+            required
+          />
+          <button
+            aria-label={passwordVisible ? "隐藏密码" : "显示密码"}
+            className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#1F2937]"
+            type="button"
+            onClick={() => setPasswordVisible((current) => !current)}
+          >
+            {passwordVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
         {error ? <p className="mt-4 text-sm text-[#DC2626]">{error}</p> : null}
         <button
           className="mt-6 h-11 w-full rounded-lg bg-[#2563EB] font-medium text-white disabled:opacity-60"

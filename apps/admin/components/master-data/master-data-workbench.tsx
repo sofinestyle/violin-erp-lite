@@ -20,7 +20,11 @@ import type { WorkbenchDefinition, WorkbenchField } from "@/lib/master-data";
 
 type ApiEnvelope = Readonly<{
   data?: unknown;
-  error?: { code?: string; message?: string };
+  error?: {
+    code?: string;
+    details?: readonly { field?: string; line?: number; message: string }[];
+    message?: string;
+  };
   meta?: { page?: number; pageSize?: number; total?: number; totalPages?: number };
   requestId?: string;
   success?: boolean;
@@ -32,6 +36,20 @@ type RecordItem = Record<string, unknown> & {
   updatedAt?: string;
 };
 
+type RelationOptions = Record<string, readonly RecordItem[]>;
+
+export function formatApiError(envelope: ApiEnvelope): string {
+  const details = envelope.error?.details
+    ?.map((detail) => {
+      const prefix = detail.field ? `${detail.field}：` : "";
+      return `${prefix}${detail.message}`;
+    })
+    .filter(Boolean);
+  const detailMessage = details?.length ? `；${details.join("；")}` : "";
+  const suffix = envelope.requestId ? `（Request ID：${envelope.requestId}）` : "";
+  return `${envelope.error?.message ?? "请求失败"}${detailMessage}${suffix}`;
+}
+
 async function apiRequest(url: string, init: RequestInit = {}): Promise<ApiEnvelope> {
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
@@ -39,8 +57,7 @@ async function apiRequest(url: string, init: RequestInit = {}): Promise<ApiEnvel
   const response = await authenticatedFetch(url, { ...init, headers });
   const envelope = (await response.json()) as ApiEnvelope;
   if (!response.ok || envelope.success !== true) {
-    const suffix = envelope.requestId ? `（Request ID：${envelope.requestId}）` : "";
-    throw new Error(`${envelope.error?.message ?? "请求失败"}${suffix}`);
+    throw new Error(formatApiError(envelope));
   }
   return envelope;
 }
@@ -65,6 +82,12 @@ function displayValue(value: unknown): string {
   return String(value);
 }
 
+function optionLabel(field: WorkbenchField, option: RecordItem): string {
+  const code = field.optionCodeField ? displayValue(option[field.optionCodeField]) : "";
+  const name = field.optionNameField ? displayValue(option[field.optionNameField]) : "";
+  return [code, name].filter((item) => item && item !== "—").join(" / ") || option.id;
+}
+
 type MasterDataWorkbenchProps = Readonly<{
   definition: WorkbenchDefinition;
   group: "master" | "security";
@@ -81,10 +104,17 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [relationOptions, setRelationOptions] = useState<RelationOptions>({});
+  const [relationOptionsError, setRelationOptionsError] = useState<string | null>(null);
+  const [relationOptionsLoading, setRelationOptionsLoading] = useState(false);
   const [selected, setSelected] = useState<RecordItem | null>(null);
   const [saving, setSaving] = useState(false);
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const relationFields = useMemo(
+    () => definition.fields.filter((field) => field.optionResource),
+    [definition.fields],
+  );
   const query = useMemo(() => {
     const params = new URLSearchParams({
       page: String(page),
@@ -117,6 +147,51 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     return () => globalThis.clearTimeout(timer);
   }, [load]);
 
+  useEffect(() => {
+    if (!drawerOpen || relationFields.length === 0) {
+      const timer = globalThis.setTimeout(() => {
+        setRelationOptions({});
+        setRelationOptionsError(null);
+        setRelationOptionsLoading(false);
+      }, 0);
+      return () => globalThis.clearTimeout(timer);
+    }
+    let active = true;
+    const timer = globalThis.setTimeout(() => {
+      setRelationOptionsLoading(true);
+      setRelationOptionsError(null);
+      void Promise.all(
+        relationFields.map(async (field) => {
+          const envelope = await apiRequest(
+            `/api/v1/${field.optionResource}/options?page=1&pageSize=100`,
+          );
+          return [
+            field.key,
+            Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : [],
+          ] as const;
+        }),
+      )
+        .then((entries) => {
+          if (active) setRelationOptions(Object.fromEntries(entries));
+        })
+        .catch((requestError) => {
+          if (active) {
+            setRelationOptions({});
+            setRelationOptionsError(
+              requestError instanceof Error ? requestError.message : "关联选项加载失败",
+            );
+          }
+        })
+        .finally(() => {
+          if (active) setRelationOptionsLoading(false);
+        });
+    }, 0);
+    return () => {
+      active = false;
+      globalThis.clearTimeout(timer);
+    };
+  }, [drawerOpen, relationFields]);
+
   async function openDetail(item: RecordItem) {
     setError(null);
     try {
@@ -130,6 +205,7 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
 
   function openCreate() {
     setSelected(null);
+    setRelationOptionsError(null);
     setDrawerOpen(true);
   }
 
@@ -325,9 +401,12 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
       </Card>
 
       {drawerOpen ? (
-        <div className="fixed inset-0 z-40 bg-foreground/30" role="presentation">
+        <div
+          className="fixed inset-0 z-[55] bg-[#111827]/55 backdrop-blur-[1px]"
+          role="presentation"
+        >
           <aside
-            className="ml-auto flex h-full w-[560px] flex-col bg-background shadow-2xl"
+            className="ml-auto flex h-full w-[560px] flex-col border-l border-[#E5E7EB] bg-white text-[#1F2937] shadow-2xl"
             role="dialog"
             aria-modal="true"
             aria-labelledby="workbench-drawer-title"
@@ -354,6 +433,11 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
               </Button>
             </div>
             <form className="flex min-h-0 flex-1 flex-col" onSubmit={save}>
+              {relationOptionsError ? (
+                <div className="mx-6 mt-4 rounded-lg border border-[#F59E0B]/40 bg-[#FFFBEB] p-3 text-sm text-[#92400E]">
+                  {relationOptionsError}
+                </div>
+              ) : null}
               <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto p-6">
                 {definition.fields
                   .filter(
@@ -385,6 +469,26 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                           defaultChecked={Boolean(selected?.[field.key])}
                           className="size-4"
                         />
+                      ) : field.optionResource ? (
+                        <select
+                          name={field.key}
+                          required={field.required}
+                          disabled={Boolean(
+                            relationOptionsLoading ||
+                            (selected && !hasPermission(definition.updatePermission)),
+                          )}
+                          defaultValue={displayValue(selected?.[field.key] ?? "").replace("—", "")}
+                          className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
+                        >
+                          <option value="">
+                            {relationOptionsLoading ? "正在加载选项…" : `请选择${field.label}`}
+                          </option>
+                          {(relationOptions[field.key] ?? []).map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {optionLabel(field, option)}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           name={field.key}
@@ -400,7 +504,7 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                             selected && !hasPermission(definition.updatePermission),
                           )}
                           defaultValue={displayValue(selected?.[field.key] ?? "").replace("—", "")}
-                          className="h-10 rounded-md border bg-background px-3 text-sm"
+                          className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
                           autoComplete={field.type === "password" ? "new-password" : "off"}
                         />
                       )}

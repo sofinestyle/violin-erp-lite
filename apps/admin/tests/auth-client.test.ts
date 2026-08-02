@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { LoginPage } from "../contexts/auth-context";
 import {
   authenticatedFetch,
   clearCredentials,
@@ -127,5 +130,14 @@ describe("Admin authentication client", () => {
     expect(listener).toHaveBeenCalled();
     await expect(logout()).resolves.toBeUndefined();
     expect(window.sessionStorage.length).toBe(0);
+  });
+
+  it("renders password visibility control without changing form contract", () => {
+    const html = renderToStaticMarkup(createElement(LoginPage, { onLogin: async () => undefined }));
+
+    expect(html).toContain('name="password"');
+    expect(html).toContain('type="password"');
+    expect(html).toContain("显示密码");
+    expect(html).toContain('autoComplete="current-password"');
   });
 });

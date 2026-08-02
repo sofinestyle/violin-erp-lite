@@ -1,13 +1,5 @@
-import { AppShell } from "@/components/shell/app-shell";
-import { HealthGate } from "@/components/shell/health-gate";
-import { AppProviders } from "@/contexts/app-providers";
+import { Dashboard } from "@/components/dashboard/dashboard";
 
 export default function Home() {
-  return (
-    <AppProviders>
-      <HealthGate>
-        <AppShell activeSection="home" />
-      </HealthGate>
-    </AppProviders>
-  );
+  return <Dashboard />;
 }

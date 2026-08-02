@@ -3,6 +3,9 @@ import type { PermissionCode } from "@violin-erp/api";
 export type WorkbenchField = Readonly<{
   key: string;
   label: string;
+  optionCodeField?: string;
+  optionNameField?: string;
+  optionResource?: string;
   required?: boolean;
   type?: "boolean" | "number" | "password" | "text";
 }>;
@@ -26,7 +29,8 @@ const field = (
   label: string,
   required = false,
   type: WorkbenchField["type"] = "text",
-): WorkbenchField => ({ key, label, required, type });
+  options: Pick<WorkbenchField, "optionCodeField" | "optionNameField" | "optionResource"> = {},
+): WorkbenchField => ({ key, label, required, type, ...options });
 
 export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
   {
@@ -39,8 +43,16 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
       field("productCode", "产品编码", true),
       field("productName", "产品名称", true),
       field("productNameEn", "英文名称"),
-      field("categoryId", "产品分类 ID", true),
-      field("brandId", "品牌 ID", true),
+      field("categoryId", "产品分类", true, "text", {
+        optionCodeField: "categoryCode",
+        optionNameField: "categoryName",
+        optionResource: "product-categories",
+      }),
+      field("brandId", "品牌", true, "text", {
+        optionCodeField: "brandCode",
+        optionNameField: "brandName",
+        optionResource: "brands",
+      }),
       field("productType", "产品类型", true),
       field("defaultUnit", "默认单位", true),
       field("description", "产品说明"),
@@ -60,7 +72,11 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     fields: [
       field("skuCode", "SKU 编码", true),
       field("skuName", "SKU 名称", true),
-      field("productId", "所属产品 ID", true),
+      field("productId", "所属产品", true, "text", {
+        optionCodeField: "productCode",
+        optionNameField: "productName",
+        optionResource: "products",
+      }),
       field("size", "尺寸"),
       field("color", "颜色"),
       field("specification", "规格"),
@@ -87,7 +103,11 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     fields: [
       field("categoryCode", "分类编码", true),
       field("categoryName", "分类名称", true),
-      field("parentCategoryId", "上级分类 ID"),
+      field("parentCategoryId", "上级分类", false, "text", {
+        optionCodeField: "categoryCode",
+        optionNameField: "categoryName",
+        optionResource: "product-categories",
+      }),
       field("categoryLevel", "分类层级", true, "number"),
       field("sortOrder", "显示顺序", true, "number"),
       field("description", "说明"),
@@ -200,7 +220,11 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
       field("warehouseName", "仓库名称", true),
       field("warehouseType", "仓库类型", true),
       field("ownerType", "责任主体类型", true),
-      field("manufacturerId", "生产厂家 ID"),
+      field("manufacturerId", "生产厂家", false, "text", {
+        optionCodeField: "manufacturerCode",
+        optionNameField: "manufacturerName",
+        optionResource: "manufacturers",
+      }),
       field("countryCode", "国家代码"),
       field("province", "省份"),
       field("city", "城市"),
@@ -225,7 +249,11 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     fields: [
       field("storeCode", "店铺编码", true),
       field("storeName", "店铺名称", true),
-      field("platformId", "所属平台 ID", true),
+      field("platformId", "所属平台", true, "text", {
+        optionCodeField: "platformCode",
+        optionNameField: "platformName",
+        optionResource: "ecommerce-platforms",
+      }),
       field("externalStoreId", "外部店铺标识"),
       field("countryCode", "国家代码", true),
       field("currencyCode", "业务币种", true),

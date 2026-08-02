@@ -12,11 +12,13 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, EmptyState, PageContainer, PageHeader, StatusBadge } from "@/components/common";
 import { useUser } from "@/contexts/user-context";
 import { useOptionalAuth } from "@/contexts/auth-context";
+import { usePermission } from "@/contexts/permission-context";
+import { useTheme } from "@/contexts/theme-context";
 import { getNavigationItem, navigationItems, type NavigationSectionId } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
@@ -35,13 +37,41 @@ export function AppShell({
 }: AppShellProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [infoPanelOpen, setInfoPanelOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const authentication = useOptionalAuth();
+  const { confirmLightMode, notice, theme } = useTheme();
+  const { hasPermission } = usePermission();
   const activeItem = getNavigationItem(activeSection);
+  const canManageUsers = hasPermission("security.user.read");
 
   function toggleSidebar() {
     setSidebarCollapsed((current) => !current);
   }
+
+  useEffect(() => {
+    function closeUserMenu(event: MouseEvent) {
+      if (!userMenuRef.current?.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setHelpOpen(false);
+        setNotificationsOpen(false);
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", closeUserMenu);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeUserMenu);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-[#F5F7FA]">
@@ -118,25 +148,110 @@ export function AppShell({
           </div>
 
           <div className="ml-auto flex items-center gap-1">
-            <StatusBadge tone="info">Light</StatusBadge>
-            <Button variant="ghost" size="icon" aria-label="帮助占位">
-              <CircleHelp className="size-5" />
-            </Button>
-            <Button variant="ghost" size="icon" aria-label="通知占位">
-              <Bell className="size-5" />
-            </Button>
             <Button
-              variant="ghost"
-              className="ml-1 h-10 gap-2 border-l pl-4"
-              aria-label="退出登录"
-              onClick={() => void authentication?.logout()}
+              variant="secondary"
+              className="relative"
+              aria-label="当前主题 Light Mode"
+              onClick={confirmLightMode}
             >
-              <span className="grid size-7 place-items-center rounded-full bg-[#EFF6FF] text-[#2563EB]">
-                <UserRound className="size-4" />
-              </span>
-              <span>{user?.displayName ?? "当前用户"}</span>
-              <ChevronDown className="size-4" />
+              <StatusBadge tone="info">{theme === "light" ? "Light" : theme}</StatusBadge>
             </Button>
+            {notice ? (
+              <span className="sr-only" role="status">
+                {notice}
+              </span>
+            ) : null}
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="打开帮助"
+                aria-expanded={helpOpen}
+                onClick={() => {
+                  setHelpOpen((current) => !current);
+                  setNotificationsOpen(false);
+                }}
+              >
+                <CircleHelp className="size-5" />
+              </Button>
+              {helpOpen ? (
+                <div className="absolute right-0 top-11 z-40 w-72 rounded-lg border bg-white p-4 text-sm shadow-xl">
+                  <h2 className="font-semibold text-[#1F2937]">帮助与操作说明</h2>
+                  <p className="mt-2 leading-6 text-[#4B5563]">
+                    当前页面操作遵循已批准的业务流程。请通过左侧菜单进入基础资料、采购、生产、库存、跨境或销售相关页面。
+                  </p>
+                  <Button
+                    className="mt-3"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setInfoPanelOpen(true)}
+                  >
+                    打开信息面板
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="打开通知"
+                aria-expanded={notificationsOpen}
+                onClick={() => {
+                  setNotificationsOpen((current) => !current);
+                  setHelpOpen(false);
+                }}
+              >
+                <Bell className="size-5" />
+              </Button>
+              {notificationsOpen ? (
+                <div className="absolute right-0 top-11 z-40 w-72 rounded-lg border bg-white p-4 text-sm shadow-xl">
+                  <h2 className="font-semibold text-[#1F2937]">通知</h2>
+                  <p className="mt-2 rounded-md bg-[#F9FAFB] p-3 text-[#6B7280]">暂无通知</p>
+                </div>
+              ) : null}
+            </div>
+            <div className="relative" ref={userMenuRef}>
+              <Button
+                variant="ghost"
+                className="ml-1 h-10 gap-2 border-l pl-4"
+                aria-label="打开用户菜单"
+                aria-haspopup="menu"
+                aria-expanded={userMenuOpen}
+                onClick={() => setUserMenuOpen((current) => !current)}
+              >
+                <span className="grid size-7 place-items-center rounded-full bg-[#EFF6FF] text-[#2563EB]">
+                  <UserRound className="size-4" />
+                </span>
+                <span>{user?.displayName ?? "当前用户"}</span>
+                <ChevronDown className="size-4" />
+              </Button>
+              {userMenuOpen ? (
+                <div
+                  className="absolute right-0 top-11 z-40 w-48 rounded-lg border bg-white p-2 text-sm shadow-xl"
+                  role="menu"
+                >
+                  {canManageUsers ? (
+                    <Link
+                      className="block rounded-md px-3 py-2 text-[#1F2937] hover:bg-[#F3F4F6]"
+                      href="/workspace/access-control/users"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      用户管理
+                    </Link>
+                  ) : null}
+                  <button
+                    className="block w-full rounded-md px-3 py-2 text-left text-[#DC2626] hover:bg-[#FEF2F2]"
+                    type="button"
+                    role="menuitem"
+                    onClick={() => void authentication?.logout()}
+                  >
+                    退出登录
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </header>
 
