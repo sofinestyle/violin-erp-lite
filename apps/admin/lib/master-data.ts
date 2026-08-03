@@ -1,11 +1,18 @@
 import type { PermissionCode } from "@violin-erp/api";
 
 export type WorkbenchField = Readonly<{
+  defaultValue?: string;
+  group?: string;
+  helpText?: string;
+  hidden?: true;
+  inputMode?: "datalist" | "select" | "textarea";
   key: string;
   label: string;
   optionCodeField?: string;
   optionNameField?: string;
   optionResource?: string;
+  options?: readonly { label: string; value: string }[];
+  placeholder?: string;
   required?: boolean;
   type?: "boolean" | "number" | "password" | "text";
 }>;
@@ -29,8 +36,61 @@ const field = (
   label: string,
   required = false,
   type: WorkbenchField["type"] = "text",
-  options: Pick<WorkbenchField, "optionCodeField" | "optionNameField" | "optionResource"> = {},
+  options: Omit<WorkbenchField, "key" | "label" | "required" | "type"> = {},
 ): WorkbenchField => ({ key, label, required, type, ...options });
+
+export const MASTER_DATA_FIELD_OPTIONS = {
+  categoryPresets: [
+    { label: "提琴", value: "提琴" },
+    { label: "吉他", value: "吉他" },
+    { label: "尤克里里", value: "尤克里里" },
+    { label: "配件", value: "配件" },
+  ],
+  countryCodes: [
+    { label: "中国大陆（CN）", value: "CN" },
+    { label: "美国（US）", value: "US" },
+    { label: "日本（JP）", value: "JP" },
+    { label: "英国（GB）", value: "GB" },
+    { label: "德国（DE）", value: "DE" },
+  ],
+  currencies: [
+    { label: "人民币（CNY）", value: "CNY" },
+    { label: "美元（USD）", value: "USD" },
+    { label: "欧元（EUR）", value: "EUR" },
+    { label: "日元（JPY）", value: "JPY" },
+  ],
+  ownerTypes: [
+    { label: "公司自有", value: "company" },
+    { label: "厂家负责", value: "manufacturer" },
+    { label: "平台 / 店铺", value: "platform" },
+    { label: "第三方服务商", value: "third_party" },
+  ],
+  platformTypes: [
+    { label: "综合电商", value: "marketplace" },
+    { label: "跨境平台", value: "cross_border" },
+    { label: "自营渠道", value: "owned" },
+    { label: "线下渠道", value: "offline" },
+  ],
+  settlementMethods: [
+    { label: "预付", value: "prepaid" },
+    { label: "现结", value: "cash" },
+    { label: "月结", value: "monthly" },
+    { label: "自定义", value: "custom" },
+  ],
+  units: [
+    { label: "件", value: "piece" },
+    { label: "套", value: "set" },
+    { label: "把", value: "unit" },
+    { label: "箱", value: "box" },
+  ],
+  warehouseTypes: [
+    { label: "公司仓", value: "company" },
+    { label: "厂家仓", value: "manufacturer" },
+    { label: "海外仓", value: "overseas" },
+    { label: "在途仓", value: "transit" },
+    { label: "待处理仓", value: "pending" },
+  ],
+} as const;
 
 export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
   {
@@ -40,22 +100,47 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     disablePermission: "master.product.disable",
     enablePermission: "master.product.enable",
     fields: [
-      field("productCode", "产品编码", true),
-      field("productName", "产品名称", true),
-      field("productNameEn", "英文名称"),
+      field("productCode", "产品编码", true, "text", {
+        group: "基础信息",
+        helpText: "暂按 Frozen API 保留手填，自动编码等待 UAT-009 CR。",
+        placeholder: "例如：PRD-VLN-001",
+      }),
+      field("productName", "产品名称", true, "text", {
+        group: "基础信息",
+        placeholder: "例如：入门级实木小提琴",
+      }),
+      field("productNameEn", "英文名称", false, "text", {
+        group: "基础信息",
+        placeholder: "可选，例如：Student Violin",
+      }),
       field("categoryId", "产品分类", true, "text", {
+        group: "业务归类",
         optionCodeField: "categoryCode",
         optionNameField: "categoryName",
         optionResource: "product-categories",
       }),
       field("brandId", "品牌", true, "text", {
+        group: "业务归类",
         optionCodeField: "brandCode",
         optionNameField: "brandName",
         optionResource: "brands",
       }),
-      field("productType", "产品类型", true),
-      field("defaultUnit", "默认单位", true),
-      field("description", "产品说明"),
+      field("productType", "产品类型", true, "text", {
+        defaultValue: "violin",
+        hidden: true,
+        helpText: "底层字段保留，当前页面按默认产品类型提交。",
+      }),
+      field("defaultUnit", "默认单位", true, "text", {
+        group: "业务归类",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.units,
+        placeholder: "请选择默认单位",
+      }),
+      field("description", "产品说明", false, "text", {
+        group: "补充信息",
+        inputMode: "textarea",
+        placeholder: "填写产品定位、材质、适用场景等说明",
+      }),
     ],
     key: "products",
     label: "产品",
@@ -70,23 +155,64 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     disablePermission: "master.sku.disable",
     enablePermission: "master.sku.enable",
     fields: [
-      field("skuCode", "SKU 编码", true),
-      field("skuName", "SKU 名称", true),
+      field("skuCode", "SKU 编码", true, "text", {
+        group: "SKU 基础信息",
+        helpText: "暂按 Frozen API 保留手填，自动编码等待 UAT-009 CR。",
+        placeholder: "例如：SKU-VLN-44-NAT",
+      }),
+      field("skuName", "SKU 名称", true, "text", {
+        group: "SKU 基础信息",
+        helpText: "留空时前端会按产品、尺寸、颜色和规格自动生成。",
+        placeholder: "留空自动生成，例如：入门级小提琴 / 4/4 / 原木色",
+      }),
       field("productId", "所属产品", true, "text", {
+        group: "SKU 基础信息",
         optionCodeField: "productCode",
         optionNameField: "productName",
         optionResource: "products",
       }),
-      field("size", "尺寸"),
-      field("color", "颜色"),
-      field("specification", "规格"),
-      field("material", "材质"),
-      field("unit", "计量单位", true),
-      field("barcode", "条码"),
-      field("defaultPurchasePrice", "默认采购价"),
-      field("defaultProductionPrice", "默认生产价"),
-      field("defaultSalePrice", "默认销售价"),
-      field("safetyStockQuantity", "安全库存数量", true),
+      field("size", "尺寸", false, "text", {
+        group: "规格信息",
+        placeholder: "例如：4/4、3/4、21寸",
+      }),
+      field("color", "颜色", false, "text", {
+        group: "规格信息",
+        placeholder: "例如：原木色、黑色、黄绿色",
+      }),
+      field("specification", "规格", false, "text", {
+        group: "规格信息",
+        placeholder: "例如：学生款套装、单琴",
+      }),
+      field("material", "材质", false, "text", {
+        group: "规格信息",
+        placeholder: "例如：实木、夹板、树脂",
+      }),
+      field("unit", "计量单位", true, "text", {
+        group: "库存与价格",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.units,
+      }),
+      field("barcode", "条码", false, "text", {
+        group: "库存与价格",
+        placeholder: "可选，扫码场景使用",
+      }),
+      field("defaultPurchasePrice", "默认采购价", false, "text", {
+        group: "库存与价格",
+        placeholder: "可选，金额字段受权限控制",
+      }),
+      field("defaultProductionPrice", "默认生产价", false, "text", {
+        group: "库存与价格",
+        placeholder: "可选，金额字段受权限控制",
+      }),
+      field("defaultSalePrice", "默认销售价", false, "text", {
+        group: "库存与价格",
+        placeholder: "可选，金额字段受权限控制",
+      }),
+      field("safetyStockQuantity", "最低安全库存", true, "number", {
+        defaultValue: "0",
+        group: "库存与价格",
+        helpText: "默认 0；后续库存预警按此值判断。",
+      }),
     ],
     key: "skus",
     label: "SKU",
@@ -101,16 +227,38 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     disablePermission: "master.category.disable",
     enablePermission: "master.category.enable",
     fields: [
-      field("categoryCode", "分类编码", true),
-      field("categoryName", "分类名称", true),
+      field("categoryCode", "分类编码", true, "text", {
+        group: "基础信息",
+        helpText: "暂按 Frozen API 保留手填，自动编码等待 UAT-009 CR。",
+        placeholder: "例如：CAT-VLN",
+      }),
+      field("categoryName", "分类名称", true, "text", {
+        group: "基础信息",
+        inputMode: "datalist",
+        options: MASTER_DATA_FIELD_OPTIONS.categoryPresets,
+        placeholder: "可选预设：提琴 / 吉他 / 尤克里里 / 配件，或输入自定义分类",
+      }),
       field("parentCategoryId", "上级分类", false, "text", {
+        group: "层级关系",
         optionCodeField: "categoryCode",
         optionNameField: "categoryName",
         optionResource: "product-categories",
       }),
-      field("categoryLevel", "分类层级", true, "number"),
-      field("sortOrder", "显示顺序", true, "number"),
-      field("description", "说明"),
+      field("categoryLevel", "分类层级", true, "number", {
+        defaultValue: "1",
+        hidden: true,
+        helpText: "根据上级分类自动推导。",
+      }),
+      field("sortOrder", "显示顺序", true, "number", {
+        defaultValue: "0",
+        hidden: true,
+        helpText: "默认 0；排序增强另行评估。",
+      }),
+      field("description", "说明", false, "text", {
+        group: "补充信息",
+        inputMode: "textarea",
+        placeholder: "填写分类适用范围或备注",
+      }),
     ],
     key: "product-categories",
     label: "产品分类",
@@ -125,10 +273,19 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     disablePermission: "master.brand.disable",
     enablePermission: "master.brand.enable",
     fields: [
-      field("brandCode", "品牌编码", true),
-      field("brandName", "品牌名称", true),
-      field("brandNameEn", "英文名称"),
-      field("description", "说明"),
+      field("brandCode", "品牌编码", true, "text", {
+        group: "品牌信息",
+        helpText: "暂按 Frozen API 保留手填，自动编码等待 UAT-009 CR。",
+      }),
+      field("brandName", "品牌名称", true, "text", {
+        group: "品牌信息",
+        placeholder: "优先填写用户识别度最高的品牌名称",
+      }),
+      field("brandNameEn", "英文名称", false, "text", { group: "品牌信息" }),
+      field("description", "说明", false, "text", {
+        group: "补充信息",
+        inputMode: "textarea",
+      }),
     ],
     key: "brands",
     label: "品牌",
@@ -143,12 +300,29 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     disablePermission: "master.platform.disable",
     enablePermission: "master.platform.enable",
     fields: [
-      field("platformCode", "平台编码", true),
-      field("platformName", "平台名称", true),
-      field("platformType", "平台类型", true),
-      field("countryCode", "国家代码"),
-      field("isCrossBorder", "是否跨境平台", true, "boolean"),
-      field("description", "说明"),
+      field("platformCode", "平台编码", true, "text", {
+        group: "平台信息",
+        helpText: "暂按 Frozen API 保留手填，自动编码等待 UAT-009 CR。",
+      }),
+      field("platformName", "平台名称", true, "text", {
+        group: "平台信息",
+        placeholder: "例如：Temu、Amazon、天猫",
+      }),
+      field("platformType", "平台类型", true, "text", {
+        group: "平台信息",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.platformTypes,
+      }),
+      field("countryCode", "国家代码", false, "text", {
+        group: "平台信息",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.countryCodes,
+      }),
+      field("isCrossBorder", "是否跨境平台", true, "boolean", { group: "平台信息" }),
+      field("description", "说明", false, "text", {
+        group: "补充信息",
+        inputMode: "textarea",
+      }),
     ],
     key: "ecommerce-platforms",
     label: "电商平台",
@@ -163,17 +337,27 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     disablePermission: "master.manufacturer.disable",
     enablePermission: "master.manufacturer.enable",
     fields: [
-      field("manufacturerCode", "厂家编码", true),
-      field("manufacturerName", "厂家名称", true),
-      field("shortName", "简称"),
-      field("contactName", "联系人"),
-      field("contactPhone", "联系电话"),
-      field("contactEmail", "联系邮箱"),
-      field("address", "地址"),
-      field("settlementMethod", "结算方式", true),
-      field("paymentTerms", "付款条件"),
-      field("productionCapacityNote", "产能说明"),
-      field("remark", "备注"),
+      field("manufacturerCode", "厂家编码", true, "text", {
+        group: "基础信息",
+        helpText: "暂按 Frozen API 保留手填，自动编码等待 UAT-009 CR。",
+      }),
+      field("manufacturerName", "厂家名称", true, "text", { group: "基础信息" }),
+      field("shortName", "简称", false, "text", { group: "基础信息" }),
+      field("contactName", "联系人", false, "text", { group: "联系方式" }),
+      field("contactPhone", "联系电话", false, "text", { group: "联系方式" }),
+      field("contactEmail", "联系邮箱", false, "text", { group: "联系方式" }),
+      field("address", "地址", false, "text", { group: "联系方式" }),
+      field("settlementMethod", "结算方式", true, "text", {
+        group: "结算信息",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.settlementMethods,
+      }),
+      field("paymentTerms", "付款条件", false, "text", { group: "结算信息" }),
+      field("productionCapacityNote", "产能说明", false, "text", {
+        group: "生产信息",
+        inputMode: "textarea",
+      }),
+      field("remark", "备注", false, "text", { group: "补充信息", inputMode: "textarea" }),
     ],
     key: "manufacturers",
     label: "生产厂家",
@@ -188,20 +372,27 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     disablePermission: "master.supplier.disable",
     enablePermission: "master.supplier.enable",
     fields: [
-      field("supplierCode", "供应商编码", true),
-      field("supplierName", "供应商名称", true),
-      field("shortName", "简称"),
-      field("contactName", "联系人"),
-      field("contactPhone", "联系电话"),
-      field("contactEmail", "联系邮箱"),
-      field("address", "地址"),
-      field("settlementMethod", "结算方式", true),
-      field("paymentTerms", "付款条件"),
-      field("taxIdentifier", "税号"),
-      field("bankName", "开户行"),
-      field("bankAccountName", "账户名称"),
-      field("bankAccountNo", "银行账号"),
-      field("remark", "备注"),
+      field("supplierCode", "供应商编码", true, "text", {
+        group: "基础信息",
+        helpText: "暂按 Frozen API 保留手填，自动编码等待 UAT-009 CR。",
+      }),
+      field("supplierName", "供应商名称", true, "text", { group: "基础信息" }),
+      field("shortName", "简称", false, "text", { group: "基础信息" }),
+      field("contactName", "联系人", false, "text", { group: "联系方式" }),
+      field("contactPhone", "联系电话", false, "text", { group: "联系方式" }),
+      field("contactEmail", "联系邮箱", false, "text", { group: "联系方式" }),
+      field("address", "地址", false, "text", { group: "联系方式" }),
+      field("settlementMethod", "结算方式", true, "text", {
+        group: "结算信息",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.settlementMethods,
+      }),
+      field("paymentTerms", "付款条件", false, "text", { group: "结算信息" }),
+      field("taxIdentifier", "税号", false, "text", { group: "结算信息" }),
+      field("bankName", "开户行", false, "text", { group: "银行信息" }),
+      field("bankAccountName", "账户名称", false, "text", { group: "银行信息" }),
+      field("bankAccountNo", "银行账号", false, "text", { group: "银行信息" }),
+      field("remark", "备注", false, "text", { group: "补充信息", inputMode: "textarea" }),
     ],
     key: "suppliers",
     label: "供应商",
@@ -216,23 +407,45 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     disablePermission: "master.warehouse.disable",
     enablePermission: "master.warehouse.enable",
     fields: [
-      field("warehouseCode", "仓库编码", true),
-      field("warehouseName", "仓库名称", true),
-      field("warehouseType", "仓库类型", true),
-      field("ownerType", "责任主体类型", true),
+      field("warehouseCode", "仓库编码", true, "text", {
+        group: "仓库信息",
+        helpText: "暂按 Frozen API 保留手填，自动编码等待 UAT-009 CR。",
+      }),
+      field("warehouseName", "仓库名称", true, "text", { group: "仓库信息" }),
+      field("warehouseType", "仓库类型", true, "text", {
+        group: "仓库信息",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.warehouseTypes,
+      }),
+      field("ownerType", "责任主体", true, "text", {
+        group: "责任主体",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.ownerTypes,
+      }),
       field("manufacturerId", "生产厂家", false, "text", {
+        group: "责任主体",
         optionCodeField: "manufacturerCode",
         optionNameField: "manufacturerName",
         optionResource: "manufacturers",
       }),
-      field("countryCode", "国家代码"),
-      field("province", "省份"),
-      field("city", "城市"),
-      field("address", "地址"),
-      field("contactName", "联系人"),
-      field("contactPhone", "联系电话"),
-      field("allowsAvailableStock", "允许形成可用库存", true, "boolean"),
-      field("sortOrder", "显示顺序", true, "number"),
+      field("countryCode", "国家代码", false, "text", {
+        group: "地址信息",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.countryCodes,
+      }),
+      field("province", "省份", false, "text", { group: "地址信息" }),
+      field("city", "城市", false, "text", { group: "地址信息" }),
+      field("address", "地址", false, "text", { group: "地址信息" }),
+      field("contactName", "联系人", false, "text", { group: "联系方式" }),
+      field("contactPhone", "联系电话", false, "text", { group: "联系方式" }),
+      field("allowsAvailableStock", "允许形成可用库存", true, "boolean", {
+        group: "库存规则",
+      }),
+      field("sortOrder", "显示顺序", true, "number", {
+        defaultValue: "0",
+        hidden: true,
+        helpText: "默认 0；排序增强另行评估。",
+      }),
     ],
     key: "warehouses",
     label: "仓库",
@@ -247,18 +460,37 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     disablePermission: "master.store.disable",
     enablePermission: "master.store.enable",
     fields: [
-      field("storeCode", "店铺编码", true),
-      field("storeName", "店铺名称", true),
+      field("storeCode", "店铺编码", true, "text", {
+        group: "店铺信息",
+        helpText: "暂按 Frozen API 保留手填，自动编码等待 UAT-009 CR。",
+      }),
+      field("storeName", "店铺名称", true, "text", {
+        group: "店铺信息",
+        placeholder: "例如：Amazon US 官方店",
+      }),
       field("platformId", "所属平台", true, "text", {
+        group: "店铺信息",
         optionCodeField: "platformCode",
         optionNameField: "platformName",
         optionResource: "ecommerce-platforms",
       }),
-      field("externalStoreId", "外部店铺标识"),
-      field("countryCode", "国家代码", true),
-      field("currencyCode", "业务币种", true),
-      field("operatorName", "运营负责人"),
-      field("remark", "备注"),
+      field("externalStoreId", "外部店铺标识", false, "text", {
+        group: "店铺信息",
+        helpText: "当前 API 校验 UUID；如需真实平台店铺 ID，需后续 CR。",
+        placeholder: "可选，需符合当前 API 校验规则",
+      }),
+      field("countryCode", "国家代码", true, "text", {
+        group: "经营信息",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.countryCodes,
+      }),
+      field("currencyCode", "业务币种", true, "text", {
+        group: "经营信息",
+        inputMode: "select",
+        options: MASTER_DATA_FIELD_OPTIONS.currencies,
+      }),
+      field("operatorName", "运营负责人", false, "text", { group: "经营信息" }),
+      field("remark", "备注", false, "text", { group: "补充信息", inputMode: "textarea" }),
     ],
     key: "stores",
     label: "店铺",

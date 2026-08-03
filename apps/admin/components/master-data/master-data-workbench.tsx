@@ -75,6 +75,10 @@ function fieldValue(field: WorkbenchField, value: FormDataEntryValue | null): un
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function fieldDefaultValue(field: WorkbenchField, selected: RecordItem | null): string {
+  return displayValue(selected?.[field.key] ?? field.defaultValue ?? "").replace("—", "");
+}
+
 function displayValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "—";
   if (typeof value === "boolean") return value ? "是" : "否";
@@ -86,6 +90,86 @@ function optionLabel(field: WorkbenchField, option: RecordItem): string {
   const code = field.optionCodeField ? displayValue(option[field.optionCodeField]) : "";
   const name = field.optionNameField ? displayValue(option[field.optionNameField]) : "";
   return [code, name].filter((item) => item && item !== "—").join(" / ") || option.id;
+}
+
+function optionName(field: WorkbenchField, option: RecordItem | undefined): string {
+  if (!option) return "";
+  return field.optionNameField
+    ? displayValue(option[field.optionNameField])
+    : optionLabel(field, option);
+}
+
+function buildSkuName(
+  form: FormData,
+  relationOptions: RelationOptions,
+  fields: readonly WorkbenchField[],
+) {
+  const productField = fields.find((field) => field.key === "productId");
+  const productId = String(form.get("productId") ?? "");
+  const product = productField
+    ? (relationOptions.productId ?? []).find((option) => option.id === productId)
+    : undefined;
+  const parts = [
+    optionName(productField ?? fields[0]!, product),
+    String(form.get("size") ?? "").trim(),
+    String(form.get("color") ?? "").trim(),
+    String(form.get("specification") ?? "").trim(),
+  ].filter(Boolean);
+  return parts.join(" / ");
+}
+
+function derivedFieldValue(
+  definition: WorkbenchDefinition,
+  field: WorkbenchField,
+  form: FormData,
+  selected: RecordItem | null,
+  relationOptions: RelationOptions,
+): unknown {
+  if (definition.key === "product-categories" && field.key === "categoryLevel") {
+    const parentId = String(form.get("parentCategoryId") ?? "");
+    if (!parentId) return 1;
+    const parent = (relationOptions.parentCategoryId ?? []).find(
+      (option) => option.id === parentId,
+    );
+    const parentLevel = Number(parent?.categoryLevel ?? parent?.category_level ?? 1);
+    return Number.isFinite(parentLevel) ? parentLevel + 1 : 2;
+  }
+  if (definition.key === "skus" && field.key === "skuName") {
+    const value = String(form.get("skuName") ?? "").trim();
+    return value || buildSkuName(form, relationOptions, definition.fields) || null;
+  }
+  const rawValue = form.get(field.key);
+  if ((rawValue === null || rawValue === "") && field.defaultValue !== undefined) {
+    return fieldValue(field, field.defaultValue);
+  }
+  return fieldValue(field, rawValue);
+}
+
+function shouldRenderField(selected: RecordItem | null, field: WorkbenchField): boolean {
+  if (field.hidden) return false;
+  return !(
+    selected && ["password", "roleAssignments", "roleCode", "isSystemRole"].includes(field.key)
+  );
+}
+
+function groupedFields(
+  fields: readonly WorkbenchField[],
+): readonly [string, readonly WorkbenchField[]][] {
+  const entries = new Map<string, WorkbenchField[]>();
+  for (const field of fields) {
+    const group = field.group ?? "基础信息";
+    entries.set(group, [...(entries.get(group) ?? []), field]);
+  }
+  return [...entries.entries()];
+}
+
+function fieldColumnClass(field: WorkbenchField): string {
+  return field.inputMode === "textarea" ||
+    field.key.endsWith("description") ||
+    field.key === "remark" ||
+    field.helpText
+    ? "col-span-2 flex flex-col gap-2"
+    : "flex flex-col gap-2";
 }
 
 type MasterDataWorkbenchProps = Readonly<{
@@ -111,6 +195,11 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
   const [saving, setSaving] = useState(false);
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const visibleFields = useMemo(
+    () => definition.fields.filter((field) => shouldRenderField(selected, field)),
+    [definition.fields, selected],
+  );
+  const visibleFieldGroups = useMemo(() => groupedFields(visibleFields), [visibleFields]);
   const relationFields = useMemo(
     () => definition.fields.filter((field) => field.optionResource),
     [definition.fields],
@@ -215,27 +304,64 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     setError(null);
     try {
       const form = new FormData(event.currentTarget);
-      const payload = Object.fromEntries(
-        definition.fields
-          .filter(
-            (field) =>
-              !(
-                selected &&
-                ["password", "roleAssignments", "roleCode", "isSystemRole"].includes(field.key)
-              ),
-          )
-          .map((field) => [field.key, fieldValue(field, form.get(field.key))])
-          .filter(([, value]) => value !== undefined),
-      );
+      const basePayloadEntries = definition.fields
+        .filter(
+          (field) =>
+            !(
+              selected &&
+              ["password", "roleAssignments", "roleCode", "isSystemRole"].includes(field.key)
+            ),
+        )
+        .map(
+          (field) =>
+            [
+              field.key,
+              derivedFieldValue(definition, field, form, selected, relationOptions),
+            ] as const,
+        )
+        .filter(([, value]) => value !== undefined);
+      const payload = Object.fromEntries(basePayloadEntries);
       if (selected?.updatedAt) payload.updatedAt = selected.updatedAt;
       const method = selected ? (group === "security" ? "PUT" : "PATCH") : "POST";
       const url = selected ? `${definition.apiPath}/${selected.id}` : definition.apiPath;
-      await apiRequest(url, {
-        body: JSON.stringify(payload),
-        ...(selected ? {} : { headers: { "Idempotency-Key": crypto.randomUUID() } }),
-        method,
-      });
-      toast.success(`${definition.label}${selected ? "更新" : "创建"}成功`);
+      const batchSkuRows = String(form.get("batchSkuRows") ?? "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+      if (!selected && definition.key === "skus" && batchSkuRows.length > 0) {
+        for (const row of batchSkuRows) {
+          const [skuCode, size, color, specification, material] = row
+            .split(",")
+            .map((value) => value.trim());
+          if (!skuCode) throw new Error("批量 SKU 每行必须以 SKU 编码开头");
+          const batchPayload = {
+            ...payload,
+            color: color || payload.color,
+            material: material || payload.material,
+            size: size || payload.size,
+            skuCode,
+            skuName:
+              String(payload.skuName ?? "").trim() ||
+              [buildSkuName(form, relationOptions, definition.fields), size, color, specification]
+                .filter(Boolean)
+                .join(" / "),
+            specification: specification || payload.specification,
+          };
+          await apiRequest(url, {
+            body: JSON.stringify(batchPayload),
+            headers: { "Idempotency-Key": crypto.randomUUID() },
+            method,
+          });
+        }
+        toast.success(`${batchSkuRows.length} 个 SKU 创建成功`);
+      } else {
+        await apiRequest(url, {
+          body: JSON.stringify(payload),
+          ...(selected ? {} : { headers: { "Idempotency-Key": crypto.randomUUID() } }),
+          method,
+        });
+        toast.success(`${definition.label}${selected ? "更新" : "创建"}成功`);
+      }
       setDrawerOpen(false);
       await load();
     } catch (requestError) {
@@ -271,6 +397,7 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
 
   return (
     <div className="flex flex-col gap-4">
+      {group === "master" ? <MasterDataUxHint definition={definition} /> : null}
       <Card className="p-4">
         <div className="flex flex-wrap items-center gap-3">
           <SearchBar
@@ -438,78 +565,31 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                   {relationOptionsError}
                 </div>
               ) : null}
-              <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto p-6">
-                {definition.fields
-                  .filter(
-                    (field) =>
-                      !(
-                        selected &&
-                        ["password", "roleAssignments", "roleCode", "isSystemRole"].includes(
-                          field.key,
-                        )
-                      ),
-                  )
-                  .map((field) => (
-                    <label
-                      key={field.key}
-                      className={
-                        field.key.endsWith("description") || field.key === "remark"
-                          ? "col-span-2 flex flex-col gap-2"
-                          : "flex flex-col gap-2"
-                      }
-                    >
-                      <span className="text-sm font-medium">
-                        {field.label}
-                        {field.required ? " *" : ""}
-                      </span>
-                      {field.type === "boolean" ? (
-                        <input
-                          name={field.key}
-                          type="checkbox"
-                          defaultChecked={Boolean(selected?.[field.key])}
-                          className="size-4"
-                        />
-                      ) : field.optionResource ? (
-                        <select
-                          name={field.key}
-                          required={field.required}
-                          disabled={Boolean(
-                            relationOptionsLoading ||
-                            (selected && !hasPermission(definition.updatePermission)),
-                          )}
-                          defaultValue={displayValue(selected?.[field.key] ?? "").replace("—", "")}
-                          className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
-                        >
-                          <option value="">
-                            {relationOptionsLoading ? "正在加载选项…" : `请选择${field.label}`}
-                          </option>
-                          {(relationOptions[field.key] ?? []).map((option) => (
-                            <option key={option.id} value={option.id}>
-                              {optionLabel(field, option)}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          name={field.key}
-                          type={
-                            field.type === "password"
-                              ? "password"
-                              : field.type === "number"
-                                ? "number"
-                                : "text"
-                          }
-                          required={field.required}
+              <div className="flex-1 space-y-5 overflow-y-auto p-6">
+                {visibleFieldGroups.map(([groupName, fields]) => (
+                  <section
+                    className="rounded-xl border border-[#E5E7EB] bg-white p-4"
+                    key={groupName}
+                  >
+                    <h3 className="text-sm font-semibold text-[#111827]">{groupName}</h3>
+                    <div className="mt-4 grid grid-cols-2 gap-4">
+                      {fields.map((field) => (
+                        <MasterDataFieldControl
+                          definition={definition}
                           disabled={Boolean(
                             selected && !hasPermission(definition.updatePermission),
                           )}
-                          defaultValue={displayValue(selected?.[field.key] ?? "").replace("—", "")}
-                          className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
-                          autoComplete={field.type === "password" ? "new-password" : "off"}
+                          field={field}
+                          key={field.key}
+                          relationOptions={relationOptions}
+                          relationOptionsLoading={relationOptionsLoading}
+                          selected={selected}
                         />
-                      )}
-                    </label>
-                  ))}
+                      ))}
+                    </div>
+                  </section>
+                ))}
+                {!selected && definition.key === "skus" ? <SkuBatchInput /> : null}
                 {selected && group === "security" ? (
                   <SecurityRelationsPanel
                     definition={definition}
@@ -538,6 +618,167 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
         </div>
       ) : null}
     </div>
+  );
+}
+
+function MasterDataUxHint({ definition }: { definition: WorkbenchDefinition }) {
+  const hints: Record<string, { body: string; title: string }> = {
+    "ecommerce-platforms": {
+      body: "平台与店铺仍使用独立数据对象；本页维护平台，店铺请进入店铺管理并选择所属平台。",
+      title: "平台 → 店铺",
+    },
+    "product-categories": {
+      body: "分类名称支持提琴、吉他、尤克里里、配件等预设，也可输入自定义；层级和排序由页面自动推导。",
+      title: "分类录入更轻量",
+    },
+    products: {
+      body: "产品与 SKU 数据仍保持分离；建议先维护产品，再进入 SKU 管理补充尺寸、颜色、规格等销售/库存最小单元。",
+      title: "产品 → SKU 规格",
+    },
+    skus: {
+      body: "SKU 名称可留空，页面会根据所属产品、尺寸、颜色和规格自动生成；批量新增支持每行录入一个 SKU 编码和规格。",
+      title: "SKU 规格批量录入",
+    },
+    stores: {
+      body: "店铺必须选择所属平台；外部店铺标识当前仍受 Frozen API 校验约束，如需真实平台编号需后续 CR。",
+      title: "平台 → 店铺",
+    },
+  };
+  const hint = hints[definition.key];
+  if (!hint) return null;
+  return (
+    <Card className="border-primary/20 bg-primary-soft p-4">
+      <h2 className="text-sm font-semibold text-[#1D4ED8]">{hint.title}</h2>
+      <p className="mt-1 text-sm text-[#1E3A8A]">{hint.body}</p>
+    </Card>
+  );
+}
+
+function MasterDataFieldControl({
+  definition,
+  disabled,
+  field,
+  relationOptions,
+  relationOptionsLoading,
+  selected,
+}: {
+  definition: WorkbenchDefinition;
+  disabled: boolean;
+  field: WorkbenchField;
+  relationOptions: RelationOptions;
+  relationOptionsLoading: boolean;
+  selected: RecordItem | null;
+}) {
+  const value = fieldDefaultValue(field, selected);
+  const datalistId = `${definition.key}-${field.key}-options`;
+  const required =
+    field.required &&
+    !(definition.key === "skus" && !selected && ["skuCode", "skuName"].includes(field.key));
+  return (
+    <label className={fieldColumnClass(field)}>
+      <span className="text-sm font-medium">
+        {field.label}
+        {required ? " *" : ""}
+      </span>
+      {field.type === "boolean" ? (
+        <span className="flex min-h-10 items-center gap-2 rounded-md border bg-white px-3 text-sm text-[#1F2937]">
+          <input
+            name={field.key}
+            type="checkbox"
+            defaultChecked={selected ? Boolean(selected[field.key]) : field.defaultValue === "true"}
+            disabled={disabled}
+            className="size-4"
+          />
+          {field.label}
+        </span>
+      ) : field.optionResource ? (
+        <select
+          name={field.key}
+          required={required}
+          disabled={Boolean(relationOptionsLoading || disabled)}
+          defaultValue={value}
+          className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
+        >
+          <option value="">
+            {relationOptionsLoading ? "正在加载选项…" : `请选择${field.label}`}
+          </option>
+          {(relationOptions[field.key] ?? []).map((option) => (
+            <option key={option.id} value={option.id}>
+              {optionLabel(field, option)}
+            </option>
+          ))}
+        </select>
+      ) : field.inputMode === "select" && field.options ? (
+        <select
+          name={field.key}
+          required={required}
+          disabled={disabled}
+          defaultValue={value}
+          className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
+        >
+          <option value="">{field.placeholder ?? `请选择${field.label}`}</option>
+          {field.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : field.inputMode === "textarea" ? (
+        <textarea
+          name={field.key}
+          required={required}
+          disabled={disabled}
+          defaultValue={value}
+          placeholder={field.placeholder}
+          className="min-h-24 rounded-md border bg-white p-3 text-sm text-[#1F2937]"
+        />
+      ) : (
+        <>
+          <input
+            name={field.key}
+            type={
+              field.type === "password" ? "password" : field.type === "number" ? "number" : "text"
+            }
+            required={required}
+            disabled={disabled}
+            defaultValue={value}
+            placeholder={field.placeholder}
+            list={field.inputMode === "datalist" ? datalistId : undefined}
+            className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
+            autoComplete={field.type === "password" ? "new-password" : "off"}
+          />
+          {field.inputMode === "datalist" && field.options ? (
+            <datalist id={datalistId}>
+              {field.options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </datalist>
+          ) : null}
+        </>
+      )}
+      {field.helpText ? (
+        <span className="text-xs text-muted-foreground">{field.helpText}</span>
+      ) : null}
+    </label>
+  );
+}
+
+function SkuBatchInput() {
+  return (
+    <section className="rounded-xl border border-dashed border-primary/40 bg-primary-soft p-4">
+      <h3 className="text-sm font-semibold text-[#1D4ED8]">SKU 批量新增</h3>
+      <p className="mt-1 text-xs leading-5 text-[#1E3A8A]">
+        可选。每行一个 SKU，格式：SKU编码,尺寸,颜色,规格,材质。编码仍按 Frozen API
+        手填，自动编码等待 UAT-009 CR。
+      </p>
+      <textarea
+        className="mt-3 min-h-24 w-full rounded-md border bg-white p-3 text-sm text-[#1F2937]"
+        name="batchSkuRows"
+        placeholder={"SKU-VLN-44-NAT,4/4,原木色,单琴,实木\nSKU-VLN-34-NAT,3/4,原木色,单琴,实木"}
+      />
+    </section>
   );
 }
 

@@ -6,7 +6,11 @@ import {
 } from "../components/master-data/master-data-workbench";
 import { WorkbenchHub } from "../components/master-data/workbench-hub";
 import { PermissionProvider } from "../contexts/permission-context";
-import { MASTER_WORKBENCHES, SECURITY_WORKBENCHES } from "../lib/master-data";
+import {
+  MASTER_DATA_FIELD_OPTIONS,
+  MASTER_WORKBENCHES,
+  SECURITY_WORKBENCHES,
+} from "../lib/master-data";
 
 describe("Master Data PC pages", () => {
   it("renders all nine master-data entries and two security entries", () => {
@@ -29,6 +33,8 @@ describe("Master Data PC pages", () => {
     ]) {
       expect(master).toContain(`${label}管理`);
     }
+    expect(master).toContain("产品 / SKU 规格");
+    expect(master).toContain("平台 / 店铺");
     expect(security).toContain("用户管理");
     expect(security).toContain("角色管理");
   });
@@ -68,6 +74,98 @@ describe("Master Data PC pages", () => {
       optionNameField: "brandName",
       optionResource: "brands",
     });
+  });
+
+  it("keeps product type hidden while preserving the frozen field payload", () => {
+    const product = MASTER_WORKBENCHES.find((definition) => definition.key === "products");
+    expect(product?.fields.find((field) => field.key === "productType")).toMatchObject({
+      defaultValue: "violin",
+      hidden: true,
+    });
+    expect(product?.fields.find((field) => field.key === "defaultUnit")).toMatchObject({
+      inputMode: "select",
+      options: MASTER_DATA_FIELD_OPTIONS.units,
+    });
+  });
+
+  it("simplifies category entry with presets, derived level and default sort order", () => {
+    const category = MASTER_WORKBENCHES.find(
+      (definition) => definition.key === "product-categories",
+    );
+    expect(category?.fields.find((field) => field.key === "categoryName")).toMatchObject({
+      inputMode: "datalist",
+      options: MASTER_DATA_FIELD_OPTIONS.categoryPresets,
+    });
+    expect(category?.fields.find((field) => field.key === "categoryLevel")).toMatchObject({
+      defaultValue: "1",
+      hidden: true,
+    });
+    expect(category?.fields.find((field) => field.key === "sortOrder")).toMatchObject({
+      defaultValue: "0",
+      hidden: true,
+    });
+  });
+
+  it("supports SKU usability defaults without implementing automatic code generation", () => {
+    const sku = MASTER_WORKBENCHES.find((definition) => definition.key === "skus");
+    expect(sku?.fields.find((field) => field.key === "skuCode")?.helpText).toContain(
+      "自动编码等待 UAT-009 CR",
+    );
+    expect(sku?.fields.find((field) => field.key === "skuName")?.helpText).toContain(
+      "留空时前端会",
+    );
+    expect(sku?.fields.find((field) => field.key === "unit")).toMatchObject({
+      inputMode: "select",
+      options: MASTER_DATA_FIELD_OPTIONS.units,
+    });
+    expect(sku?.fields.find((field) => field.key === "safetyStockQuantity")).toMatchObject({
+      defaultValue: "0",
+      label: "最低安全库存",
+    });
+  });
+
+  it("uses Chinese dropdowns for settlement, warehouse type and owner responsibility", () => {
+    const manufacturer = MASTER_WORKBENCHES.find(
+      (definition) => definition.key === "manufacturers",
+    );
+    const supplier = MASTER_WORKBENCHES.find((definition) => definition.key === "suppliers");
+    const warehouse = MASTER_WORKBENCHES.find((definition) => definition.key === "warehouses");
+    expect(manufacturer?.fields.find((field) => field.key === "settlementMethod")).toMatchObject({
+      inputMode: "select",
+      options: MASTER_DATA_FIELD_OPTIONS.settlementMethods,
+    });
+    expect(supplier?.fields.find((field) => field.key === "settlementMethod")).toMatchObject({
+      inputMode: "select",
+      options: MASTER_DATA_FIELD_OPTIONS.settlementMethods,
+    });
+    expect(warehouse?.fields.find((field) => field.key === "warehouseType")).toMatchObject({
+      inputMode: "select",
+      options: MASTER_DATA_FIELD_OPTIONS.warehouseTypes,
+    });
+    expect(warehouse?.fields.find((field) => field.key === "ownerType")).toMatchObject({
+      inputMode: "select",
+      label: "责任主体",
+      options: MASTER_DATA_FIELD_OPTIONS.ownerTypes,
+    });
+    expect(warehouse?.fields.find((field) => field.key === "sortOrder")).toMatchObject({
+      defaultValue: "0",
+      hidden: true,
+    });
+  });
+
+  it("renders product and SKU usability hints in master data pages", () => {
+    const productHtml = renderToStaticMarkup(
+      <PermissionProvider permissions={["master.product.create"]}>
+        <MasterDataWorkbench definition={MASTER_WORKBENCHES[0]!} group="master" />
+      </PermissionProvider>,
+    );
+    const skuHtml = renderToStaticMarkup(
+      <PermissionProvider permissions={["master.sku.create"]}>
+        <MasterDataWorkbench definition={MASTER_WORKBENCHES[1]!} group="master" />
+      </PermissionProvider>,
+    );
+    expect(productHtml).toContain("产品 → SKU 规格");
+    expect(skuHtml).toContain("SKU 规格批量录入");
   });
 
   it("surfaces API validation field details and request id to operators", () => {

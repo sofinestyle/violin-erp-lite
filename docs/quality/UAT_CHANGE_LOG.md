@@ -168,3 +168,30 @@ Commit：
 Commit：
 
 `fix: resolve transparent workflow forms`
+
+### Batch 002-B
+
+问题：
+
+- Batch 002 Master Data UX 可用性优化
+- UAT-009 自动编码保持 Blocked by CR
+
+修改：
+
+- 产品分类增加提琴、吉他、尤克里里、配件预设，分类层级和显示顺序由前端默认 / 推导。
+- 产品与 SKU 在入口页合并为“产品 / SKU 规格”业务入口，底层 Product / SKU 数据对象保持分离。
+- SKU 名称支持前端按产品、尺寸、颜色和规格自动生成；SKU 支持批量规格录入，但 SKU 编码仍按 Frozen API 保留手填。
+- 厂家 / 供应商结算方式、仓库类型、责任主体、平台类型、国家代码、业务币种改为中文下拉。
+- 平台与店铺在入口页合并为“平台 / 店铺”业务入口，底层数据库对象保持不变。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过。
+- 全量 `pnpm check`：通过。
+- `pnpm status:check`：通过。
+- `git diff --check`：通过。
+- 本地 `http://localhost:3100/workspace/master-data` 浏览器冒烟：通过，控制台 error / warn 为 0。
+
+Commit：
+
+`fix: improve master data ux`
