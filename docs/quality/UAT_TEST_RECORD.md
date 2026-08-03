@@ -309,3 +309,58 @@ AI 视觉平台：
 当前状态：
 
 Local UAT In Progress，Batch 002-B 等待项目负责人进行人工复验。
+
+## 14. UAT Batch 002-B Automated Verification
+
+复核范围：
+
+- 产品分类；
+- 品牌；
+- 产品 / SKU；
+- 生产厂家；
+- 供应商；
+- 仓库；
+- 平台 / 店铺；
+- 基础资料统一 UX。
+
+运行版本：
+
+- 目标源码 Commit：`fb35f5de13796ae4b0fe67ee355f2bb0d4cf4561`；
+- `http://localhost:3100/api/health`：Healthy；
+- `http://localhost:3000`：AI 视觉设计平台在线，未操作 PM2。
+
+自动化测试：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+自动复核结果：
+
+- 产品分类：Automated Pass / Pending Final Manual Spot Check；
+- 品牌：Automated Pass / Pending Final Manual Spot Check；
+- 厂家：Automated Pass / Pending Final Manual Spot Check；
+- 供应商：Automated Pass / Pending Final Manual Spot Check；
+- 产品 / SKU：Automated Fail；
+- 仓库：Automated Fail；
+- 平台 / 店铺：Automated Fail；
+- 统一 UX：Manual Check Required。
+
+Automated Fail：
+
+- B002B-AF-001：Product / SKU 默认单位下拉未覆盖复核清单要求的完整单位集；
+- B002B-AF-002：Warehouse 生产厂家选择器初始可见，未严格按责任主体条件显示；
+- B002B-AF-003：Store 表单仍暴露外部店铺标识 UUID 相关说明。
+
+仍需人工抽检：
+
+- 产品分类同名防重复；
+- Product 详情 / SKU 规格列表；
+- SKU 失败行单独重试；
+- 平台详情所属店铺与平台上下文新增店铺；
+- 成功 / 错误反馈、Request ID、防重复提交和启用 / 停用二次确认。
+
+当前状态：
+
+Local UAT In Progress，Batch 002-B 为部分 Automated Pass，但存在 Automated Fail 项，暂不得标记 Verified / Closed。

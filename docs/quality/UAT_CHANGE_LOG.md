@@ -195,3 +195,36 @@ Commit：
 Commit：
 
 `fix: improve master data ux`
+
+### Batch 002-B Automated Verification
+
+问题：
+
+- Batch 002-B Master Data UX 自动复核；
+- UAT-009 自动编码继续保持 Blocked by CR。
+
+修改：
+
+- 新增 `docs/quality/UAT_BATCH_002_B_AUTOMATED_VERIFICATION_REPORT.md`；
+- 更新 UAT 测试记录与变更记录；
+- 记录 Batch 002-B 已通过项、Automated Fail 项和仍需人工抽检项。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过；
+- `http://localhost:3100/api/health`：Healthy；
+- AI 视觉设计平台 `http://localhost:3000` 在线，未操作 PM2。
+
+结果：
+
+- 产品分类、品牌、厂家、供应商：Automated Pass / Pending Final Manual Spot Check；
+- 产品 / SKU、仓库、平台 / 店铺：Automated Fail；
+- 统一 UX 写入路径：Manual Check Required；
+- 不标记 Verified / Closed。
+
+Commit：
+
+`test: verify UAT batch 002-B master data ux`

@@ -628,3 +628,39 @@ Automated Pass / Pending Final Manual Spot Check
 发现日期：
 
 2026-08-03
+
+## 5. Batch 002-B Automated Verification Observations
+
+说明：
+
+本节记录 Batch 002-B Master Data UX Refactoring 的自动复核观察项，不新增 UAT 编号，不修改 Database / API / Permission，不关闭人工尚未确认的问题。
+
+综合状态：
+
+Automated Fail with Partial Automated Pass / Pending Final Manual Spot Check
+
+已自动通过并等待最终人工抽检：
+
+- 产品分类：预设分类、自定义说明、分类层级隐藏 / 推导、显示顺序默认值；
+- 品牌：品牌名称突出，品牌编码保留；
+- 厂家：结算方式中文下拉与字段分组；
+- 供应商：结算方式中文下拉与字段分组；
+- 基础资料入口：`产品 / SKU 规格` 与 `平台 / 店铺` 组合入口可见。
+
+Automated Fail：
+
+- B002B-AF-001：Product / SKU 默认单位下拉未覆盖复核清单要求的完整单位集；
+- B002B-AF-002：Warehouse 生产厂家选择器初始可见，未严格按责任主体条件显示；
+- B002B-AF-003：Store 表单仍暴露外部店铺标识 UUID 相关说明。
+
+Manual Check Required：
+
+- 产品分类同名防重复；
+- Product 详情 / SKU 规格列表；
+- SKU 失败行单独重试；
+- 平台详情所属店铺与平台上下文新增店铺；
+- 成功 / 错误反馈、Request ID、防重复提交和启用 / 停用二次确认。
+
+处理：
+
+本轮仅记录自动复核结果，不进行代码修复；Batch 002-B 不得标记 Verified / Closed。
