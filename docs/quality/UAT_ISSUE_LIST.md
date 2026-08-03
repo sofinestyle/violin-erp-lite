@@ -637,7 +637,7 @@ Automated Pass / Pending Final Manual Spot Check
 
 综合状态：
 
-Fixed / Pending Automated Reverification
+Automated Verification Passed / Pending Final Manual Spot Check
 
 已自动通过并等待最终人工抽检：
 
@@ -647,11 +647,11 @@ Fixed / Pending Automated Reverification
 - 供应商：结算方式中文下拉与字段分组；
 - 基础资料入口：`产品 / SKU 规格` 与 `平台 / 店铺` 组合入口可见。
 
-Automated Fail：
+已修复并通过最终自动复核：
 
-- B002B-AF-001：Fixed / Pending Automated Reverification。Product / SKU 默认单位下拉已补齐完整单位集，并共用同一选项源；
-- B002B-AF-002：Fixed / Pending Automated Reverification。Warehouse 生产厂家选择器已按责任主体条件显示，非厂家主体提交时忽略残留值；
-- B002B-AF-003：Fixed / Pending Automated Reverification。Store 平台店铺标识已去除 UUID 技术说明，改为业务化中文说明。
+- B002B-AF-001：Automated Verification Passed / Pending Final Manual Spot Check。Product / SKU 默认单位下拉已补齐完整单位集，并共用同一选项源；
+- B002B-AF-002：Automated Verification Passed / Pending Final Manual Spot Check。Warehouse 生产厂家选择器已按责任主体条件显示，非厂家主体提交时忽略残留值；
+- B002B-AF-003：Automated Verification Passed / Pending Final Manual Spot Check。Store 平台店铺标识已去除 UUID 技术说明，改为业务化中文说明。
 
 Manual Check Required：
 
@@ -663,4 +663,4 @@ Manual Check Required：
 
 处理：
 
-本轮已修复三项自动复核失败项，并等待自动化回归与最终人工抽检；Batch 002-B 不得标记 Verified / Closed。
+本轮最终自动复核通过，Batch 002-B 进入 Final Manual Spot Check；Batch 002-B 不得标记 Verified / Closed。

@@ -221,7 +221,7 @@ Commit：
 结果：
 
 - 产品分类、品牌、厂家、供应商：Automated Pass / Pending Final Manual Spot Check；
-- 产品 / SKU、仓库、平台 / 店铺：Fixed / Pending Automated Reverification；
+- 产品 / SKU、仓库、平台 / 店铺：Automated Verification Passed / Pending Final Manual Spot Check；
 - 统一 UX 写入路径：Manual Check Required；
 - 不标记 Verified / Closed。
 
@@ -249,10 +249,42 @@ Commit：
 
 结果：
 
-- B002B-AF-001：Fixed / Pending Automated Reverification；
-- B002B-AF-002：Fixed / Pending Automated Reverification；
-- B002B-AF-003：Fixed / Pending Automated Reverification。
+- B002B-AF-001：Automated Verification Passed / Pending Final Manual Spot Check；
+- B002B-AF-002：Automated Verification Passed / Pending Final Manual Spot Check；
+- B002B-AF-003：Automated Verification Passed / Pending Final Manual Spot Check。
 
 Commit：
 
 `fix: resolve batch 002-B verification failures`
+
+### Batch 002-B Final Automated Verification
+
+问题：
+
+- Batch 002-B 最终自动复核。
+
+修改：
+
+- 更新 UAT 自动复核报告、测试记录、变更记录和问题清单；
+- 将 B002B-AF-001、B002B-AF-002、B002B-AF-003 记录为 Automated Verification Passed / Pending Final Manual Spot Check；
+- 未修改业务代码、Database、API Contract、Permission 或自动编码规则。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过；
+- 浏览器复核：Product / SKU 单位下拉、Warehouse 责任主体切换、Store 平台店铺标识文案通过；
+- `http://localhost:3100/api/health`：Healthy；
+- AI 视觉设计平台 `http://localhost:3000` 在线，未操作 PM2。
+
+结果：
+
+- Batch 002-B Automated Verification：Passed；
+- Pending：Final Manual Spot Check；
+- 不标记 Verified / Closed。
+
+Commit：
+
+`test: complete batch 002-B automated verification`

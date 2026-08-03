@@ -342,16 +342,16 @@ Local UAT In Progress，Batch 002-B 等待项目负责人进行人工复验。
 - 品牌：Automated Pass / Pending Final Manual Spot Check；
 - 厂家：Automated Pass / Pending Final Manual Spot Check；
 - 供应商：Automated Pass / Pending Final Manual Spot Check；
-- 产品 / SKU：Fixed / Pending Automated Reverification；
-- 仓库：Fixed / Pending Automated Reverification；
-- 平台 / 店铺：Fixed / Pending Automated Reverification；
+- 产品 / SKU：Automated Verification Passed / Pending Final Manual Spot Check；
+- 仓库：Automated Verification Passed / Pending Final Manual Spot Check；
+- 平台 / 店铺：Automated Verification Passed / Pending Final Manual Spot Check；
 - 统一 UX：Manual Check Required。
 
-Automated Fail：
+已修复并通过最终自动复核：
 
-- B002B-AF-001：Fixed / Pending Automated Reverification，单位下拉已补齐完整单位集；
-- B002B-AF-002：Fixed / Pending Automated Reverification，Warehouse 厂家选择器已改为条件显示；
-- B002B-AF-003：Fixed / Pending Automated Reverification，Store 平台店铺标识已去除 UUID 技术文案。
+- B002B-AF-001：Automated Verification Passed / Pending Final Manual Spot Check，单位下拉已补齐完整单位集并默认选中 `把`；
+- B002B-AF-002：Automated Verification Passed / Pending Final Manual Spot Check，Warehouse 厂家选择器已通过条件显示复核；
+- B002B-AF-003：Automated Verification Passed / Pending Final Manual Spot Check，Store 平台店铺标识已去除 UUID 技术文案。
 
 仍需人工抽检：
 
@@ -363,4 +363,4 @@ Automated Fail：
 
 当前状态：
 
-Local UAT In Progress，Batch 002-B 三项 Automated Fail 已修复并等待自动化回归；暂不得标记 Verified / Closed。
+Local UAT In Progress，Batch 002-B Automated Verification Passed，进入 Final Manual Spot Check；暂不得标记 Verified / Closed。
