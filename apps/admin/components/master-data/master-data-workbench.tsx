@@ -38,6 +38,14 @@ type RecordItem = Record<string, unknown> & {
 
 type RelationOptions = Record<string, readonly RecordItem[]>;
 
+type BatchSkuResult = Readonly<{
+  line: number;
+  message: string;
+  payload?: Record<string, unknown>;
+  row: string;
+  status: "failed" | "success";
+}>;
+
 export function formatApiError(envelope: ApiEnvelope): string {
   const details = envelope.error?.details
     ?.map((detail) => {
@@ -118,6 +126,45 @@ function buildSkuName(
   return parts.join(" / ");
 }
 
+function buildSkuNameFromParts(
+  productName: string,
+  size: string | undefined,
+  color: string | undefined,
+  specification: string | undefined,
+) {
+  return [productName, size, color, specification].filter(Boolean).join(" / ");
+}
+
+function buildBatchSkuPayload({
+  basePayload,
+  productId,
+  productName,
+  row,
+}: {
+  basePayload: Record<string, unknown>;
+  productId: string;
+  productName: string;
+  row: string;
+}) {
+  const [skuCode, size, color, specification, material] = row
+    .split(",")
+    .map((value) => value.trim());
+  if (!skuCode) throw new Error("批量 SKU 每行必须以 SKU 编码开头");
+  return {
+    ...basePayload,
+    color: color || basePayload.color,
+    material: material || basePayload.material,
+    productId,
+    safetyStockQuantity: basePayload.safetyStockQuantity ?? 0,
+    size: size || basePayload.size,
+    skuCode,
+    skuName:
+      String(basePayload.skuName ?? "").trim() ||
+      buildSkuNameFromParts(productName, size, color, specification),
+    specification: specification || basePayload.specification,
+  };
+}
+
 function derivedFieldValue(
   definition: WorkbenchDefinition,
   field: WorkbenchField,
@@ -193,6 +240,7 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
   const [relationOptionsLoading, setRelationOptionsLoading] = useState(false);
   const [selected, setSelected] = useState<RecordItem | null>(null);
   const [saving, setSaving] = useState(false);
+  const [batchSkuResults, setBatchSkuResults] = useState<BatchSkuResult[]>([]);
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const visibleFields = useMemo(
@@ -286,6 +334,7 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     try {
       const envelope = await apiRequest(`${definition.apiPath}/${item.id}`);
       setSelected(envelope.data as RecordItem);
+      setBatchSkuResults([]);
       setDrawerOpen(true);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "详情加载失败");
@@ -295,13 +344,92 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
   function openCreate() {
     setSelected(null);
     setRelationOptionsError(null);
+    setBatchSkuResults([]);
     setDrawerOpen(true);
+  }
+
+  async function submitBatchSkuRows(
+    rows: readonly string[],
+    basePayload: Record<string, unknown>,
+    productId: string,
+    productName: string,
+  ) {
+    const results: BatchSkuResult[] = [];
+    for (const [index, row] of rows.entries()) {
+      let batchPayload: Record<string, unknown> | undefined;
+      try {
+        batchPayload = buildBatchSkuPayload({
+          basePayload,
+          productId,
+          productName,
+          row,
+        });
+        await apiRequest("/api/v1/skus", {
+          body: JSON.stringify(batchPayload),
+          headers: { "Idempotency-Key": crypto.randomUUID() },
+          method: "POST",
+        });
+        results.push({
+          line: index + 1,
+          message: "创建成功",
+          payload: batchPayload,
+          row,
+          status: "success",
+        });
+      } catch (requestError) {
+        results.push({
+          line: index + 1,
+          message: requestError instanceof Error ? requestError.message : "创建失败",
+          ...(batchPayload ? { payload: batchPayload } : {}),
+          row,
+          status: "failed",
+        });
+      }
+    }
+    setBatchSkuResults(results);
+    return results;
+  }
+
+  async function retryBatchSkuResult(result: BatchSkuResult) {
+    if (!result.payload) {
+      setError("该失败行缺少有效 SKU 编码，请修正批量输入后重新保存。");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await apiRequest("/api/v1/skus", {
+        body: JSON.stringify(result.payload),
+        headers: { "Idempotency-Key": crypto.randomUUID() },
+        method: "POST",
+      });
+      setBatchSkuResults((current) =>
+        current.map((item) =>
+          item.line === result.line
+            ? { ...item, message: "重试创建成功", status: "success" }
+            : item,
+        ),
+      );
+      toast.success(`第 ${result.line} 行 SKU 创建成功`);
+      await load();
+    } catch (requestError) {
+      const message = requestError instanceof Error ? requestError.message : "重试失败";
+      setBatchSkuResults((current) =>
+        current.map((item) =>
+          item.line === result.line ? { ...item, message, status: "failed" } : item,
+        ),
+      );
+      setError(`第 ${result.line} 行 SKU 重试失败：${message}`);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError(null);
+    setBatchSkuResults([]);
     try {
       const form = new FormData(event.currentTarget);
       const basePayloadEntries = definition.fields
@@ -329,31 +457,52 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
         .map((line) => line.trim())
         .filter(Boolean);
       if (!selected && definition.key === "skus" && batchSkuRows.length > 0) {
-        for (const row of batchSkuRows) {
-          const [skuCode, size, color, specification, material] = row
-            .split(",")
-            .map((value) => value.trim());
-          if (!skuCode) throw new Error("批量 SKU 每行必须以 SKU 编码开头");
-          const batchPayload = {
-            ...payload,
-            color: color || payload.color,
-            material: material || payload.material,
-            size: size || payload.size,
-            skuCode,
-            skuName:
-              String(payload.skuName ?? "").trim() ||
-              [buildSkuName(form, relationOptions, definition.fields), size, color, specification]
-                .filter(Boolean)
-                .join(" / "),
-            specification: specification || payload.specification,
-          };
-          await apiRequest(url, {
-            body: JSON.stringify(batchPayload),
-            headers: { "Idempotency-Key": crypto.randomUUID() },
-            method,
-          });
+        const results = await submitBatchSkuRows(
+          batchSkuRows,
+          payload,
+          String(payload.productId ?? ""),
+          buildSkuName(form, relationOptions, definition.fields),
+        );
+        const failed = results.filter((result) => result.status === "failed");
+        if (failed.length > 0) {
+          setError(
+            `SKU 批量新增完成：成功 ${results.length - failed.length} 行，失败 ${failed.length} 行。`,
+          );
+          toast.error("部分 SKU 创建失败，请查看逐行结果并单独重试。");
+          return;
         }
-        toast.success(`${batchSkuRows.length} 个 SKU 创建成功`);
+        toast.success(`${results.length} 个 SKU 创建成功`);
+      } else if (definition.key === "products" && batchSkuRows.length > 0) {
+        const envelope = await apiRequest(url, {
+          body: JSON.stringify(payload),
+          ...(selected ? {} : { headers: { "Idempotency-Key": crypto.randomUUID() } }),
+          method,
+        });
+        const savedProduct = (envelope.data ?? selected ?? {}) as RecordItem;
+        const productId = String(savedProduct.id ?? selected?.id ?? "");
+        const productName = String(payload.productName ?? selected?.productName ?? "");
+        const results = await submitBatchSkuRows(
+          batchSkuRows,
+          {
+            productId,
+            safetyStockQuantity: 0,
+            unit: payload.defaultUnit,
+          },
+          productId,
+          productName,
+        );
+        const failed = results.filter((result) => result.status === "failed");
+        if (failed.length > 0) {
+          setError(
+            `产品已保存，SKU 逐条创建完成：成功 ${results.length - failed.length} 行，失败 ${failed.length} 行。失败行可单独重试；本操作不具备整体回滚能力。`,
+          );
+          toast.error("产品已保存，部分 SKU 创建失败。");
+          await load();
+          return;
+        }
+        toast.success(
+          `${definition.label}${selected ? "更新" : "创建"}成功，${results.length} 个 SKU 创建成功`,
+        );
       } else {
         await apiRequest(url, {
           body: JSON.stringify(payload),
@@ -590,6 +739,14 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                   </section>
                 ))}
                 {!selected && definition.key === "skus" ? <SkuBatchInput /> : null}
+                {definition.key === "products" ? <SkuBatchInput mode="product" /> : null}
+                {batchSkuResults.length > 0 ? (
+                  <SkuBatchResultPanel
+                    results={batchSkuResults}
+                    saving={saving}
+                    onRetry={retryBatchSkuResult}
+                  />
+                ) : null}
                 {selected && group === "security" ? (
                   <SecurityRelationsPanel
                     definition={definition}
@@ -628,7 +785,7 @@ function MasterDataUxHint({ definition }: { definition: WorkbenchDefinition }) {
       title: "平台 → 店铺",
     },
     "product-categories": {
-      body: "分类名称支持提琴、吉他、尤克里里、配件等预设，也可输入自定义；层级和排序由页面自动推导。",
+      body: "分类名称支持提琴、吉他、尤克里里、配件等预设，也可直接输入自定义分类；保存时通过现有分类 API 创建，同名分类由唯一性校验拦截。",
       title: "分类录入更轻量",
     },
     products: {
@@ -765,19 +922,71 @@ function MasterDataFieldControl({
   );
 }
 
-function SkuBatchInput() {
+function SkuBatchInput({ mode = "sku" }: { mode?: "product" | "sku" }) {
   return (
     <section className="rounded-xl border border-dashed border-primary/40 bg-primary-soft p-4">
       <h3 className="text-sm font-semibold text-[#1D4ED8]">SKU 批量新增</h3>
       <p className="mt-1 text-xs leading-5 text-[#1E3A8A]">
-        可选。每行一个 SKU，格式：SKU编码,尺寸,颜色,规格,材质。编码仍按 Frozen API
-        手填，自动编码等待 UAT-009 CR。
+        可选。每行一个 SKU，格式：SKU编码,尺寸,颜色,规格,材质。
+        {mode === "product"
+          ? "保存时会先保存产品，再逐条调用现有 SKU API 创建；不具备原子批量提交或整体回滚能力。"
+          : "保存时逐条调用现有 SKU API 创建；不新增批量 API，不具备原子批量提交或整体回滚能力。"}
+        编码仍按 Frozen API 手填，自动编码等待 UAT-009 CR。
       </p>
       <textarea
         className="mt-3 min-h-24 w-full rounded-md border bg-white p-3 text-sm text-[#1F2937]"
         name="batchSkuRows"
         placeholder={"SKU-VLN-44-NAT,4/4,原木色,单琴,实木\nSKU-VLN-34-NAT,3/4,原木色,单琴,实木"}
       />
+    </section>
+  );
+}
+
+function SkuBatchResultPanel({
+  onRetry,
+  results,
+  saving,
+}: {
+  onRetry: (result: BatchSkuResult) => Promise<void>;
+  results: readonly BatchSkuResult[];
+  saving: boolean;
+}) {
+  return (
+    <section className="rounded-xl border border-[#E5E7EB] bg-white p-4">
+      <h3 className="text-sm font-semibold text-[#111827]">SKU 逐行创建结果</h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        每一行独立调用现有 SKU API。成功行不会回滚；失败行可单独重试。
+      </p>
+      <div className="mt-3 space-y-2">
+        {results.map((result) => (
+          <div
+            className="flex items-start gap-3 rounded-lg border bg-[#F9FAFB] p-3 text-sm"
+            key={`${result.line}-${result.row}`}
+          >
+            <StatusBadge tone={result.status === "success" ? "success" : "danger"}>
+              {result.status === "success" ? "成功" : "失败"}
+            </StatusBadge>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-[#111827]">第 {result.line} 行</p>
+              <p className="truncate text-muted-foreground">{result.row}</p>
+              <p className={result.status === "success" ? "text-[#047857]" : "text-danger"}>
+                {result.message}
+              </p>
+            </div>
+            {result.status === "failed" ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={saving || !result.payload}
+                onClick={() => void onRetry(result)}
+              >
+                重试此行
+              </Button>
+            ) : null}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
