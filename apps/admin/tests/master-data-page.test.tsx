@@ -83,9 +83,33 @@ describe("Master Data PC pages", () => {
       hidden: true,
     });
     expect(product?.fields.find((field) => field.key === "defaultUnit")).toMatchObject({
+      defaultValue: "unit",
       inputMode: "select",
       options: MASTER_DATA_FIELD_OPTIONS.units,
     });
+  });
+
+  it("uses one complete unit option source for Product and SKU", () => {
+    const product = MASTER_WORKBENCHES.find((definition) => definition.key === "products");
+    const sku = MASTER_WORKBENCHES.find((definition) => definition.key === "skus");
+    expect(MASTER_DATA_FIELD_OPTIONS.units.map((option) => option.label)).toEqual([
+      "把",
+      "只",
+      "件",
+      "个",
+      "条",
+      "套",
+      "箱",
+      "包",
+      "支",
+      "其他",
+    ]);
+    expect(product?.fields.find((field) => field.key === "defaultUnit")?.options).toBe(
+      MASTER_DATA_FIELD_OPTIONS.units,
+    );
+    expect(sku?.fields.find((field) => field.key === "unit")?.options).toBe(
+      MASTER_DATA_FIELD_OPTIONS.units,
+    );
   });
 
   it("simplifies category entry with presets, derived level and default sort order", () => {
@@ -115,6 +139,7 @@ describe("Master Data PC pages", () => {
       "留空时前端会",
     );
     expect(sku?.fields.find((field) => field.key === "unit")).toMatchObject({
+      defaultValue: "unit",
       inputMode: "select",
       options: MASTER_DATA_FIELD_OPTIONS.units,
     });
@@ -151,6 +176,27 @@ describe("Master Data PC pages", () => {
       defaultValue: "0",
       hidden: true,
     });
+    expect(warehouse?.fields.find((field) => field.key === "manufacturerId")).toMatchObject({
+      visibleWhen: { equals: "manufacturer", field: "ownerType" },
+    });
+  });
+
+  it("keeps Store external id business-facing without UUID copy", () => {
+    const store = MASTER_WORKBENCHES.find((definition) => definition.key === "stores");
+    const externalStoreId = store?.fields.find((field) => field.key === "externalStoreId");
+    expect(externalStoreId).toMatchObject({
+      helpText: "填写平台后台显示的店铺ID或店铺编号；没有可暂不填写。",
+      label: "平台店铺标识",
+    });
+    expect(`${externalStoreId?.label ?? ""}${externalStoreId?.helpText ?? ""}`).not.toMatch(
+      /UUID|uuid/,
+    );
+    const storeHtml = renderToStaticMarkup(
+      <PermissionProvider permissions={["master.store.create"]}>
+        <MasterDataWorkbench definition={store!} group="master" />
+      </PermissionProvider>,
+    );
+    expect(storeHtml).not.toMatch(/UUID|uuid/);
   });
 
   it("renders product and SKU usability hints in master data pages", () => {

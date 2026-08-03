@@ -221,10 +221,38 @@ Commit：
 结果：
 
 - 产品分类、品牌、厂家、供应商：Automated Pass / Pending Final Manual Spot Check；
-- 产品 / SKU、仓库、平台 / 店铺：Automated Fail；
+- 产品 / SKU、仓库、平台 / 店铺：Fixed / Pending Automated Reverification；
 - 统一 UX 写入路径：Manual Check Required；
 - 不标记 Verified / Closed。
 
 Commit：
 
 `test: verify UAT batch 002-B master data ux`
+
+### Batch 002-B Verification Failure Fix
+
+问题：
+
+- B002B-AF-001：Product / SKU 单位下拉不完整；
+- B002B-AF-002：Warehouse 厂家选择器条件显示错误；
+- B002B-AF-003：Store 表单暴露 UUID 技术说明。
+
+修改：
+
+- 补齐 `MASTER_DATA_FIELD_OPTIONS.units`，Product 默认单位与 SKU 计量单位共用同一选项源，默认值为 `把`；
+- 增加字段级 `visibleWhen` 条件显示能力，Warehouse 仅在责任主体为厂家时显示厂家选择器，非厂家主体提交时忽略 `manufacturerId`；
+- 将 Store `externalStoreId` 前端标签与说明业务化为 `平台店铺标识`，不再展示 UUID 技术术语。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过。
+
+结果：
+
+- B002B-AF-001：Fixed / Pending Automated Reverification；
+- B002B-AF-002：Fixed / Pending Automated Reverification；
+- B002B-AF-003：Fixed / Pending Automated Reverification。
+
+Commit：
+
+`fix: resolve batch 002-B verification failures`

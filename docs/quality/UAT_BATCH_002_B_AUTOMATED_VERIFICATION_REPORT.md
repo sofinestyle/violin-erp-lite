@@ -65,20 +65,20 @@ Automated Pass
 |---|---|---|
 | 产品分类 | Automated Pass / Pending Final Manual Spot Check | 预设分类 `提琴`、`吉他`、`尤克里里`、`配件` 和自定义说明可见；产品类型、分类层级、显示顺序未暴露为普通必填输入；同名分类防重复依赖现有 API 唯一性校验，未在本轮写入测试中重复创建。 |
 | 品牌 | Automated Pass / Pending Final Manual Spot Check | 品牌名称、品牌编码、英文名称和说明字段可见；品牌编码保留，符合 UAT-009 暂不实现自动编码的边界。 |
-| 产品 / SKU | Automated Fail | Product 与 SKU 入口合并文案可见，底层对象和 API 保持独立；产品类型隐藏并使用默认值；SKU 批量录入、逐条保存、不具备原子批量提交的说明可见。但单位下拉未覆盖复核清单要求的完整单位集，详见 Automated Fail。 |
+| 产品 / SKU | Fixed / Pending Automated Reverification | Product 与 SKU 入口合并文案可见，底层对象和 API 保持独立；产品类型隐藏并使用默认值；SKU 批量录入、逐条保存、不具备原子批量提交的说明可见；单位下拉已补齐完整单位集，并由 Product 默认单位与 SKU 计量单位共用同一选项源。 |
 | 厂家 | Automated Pass / Pending Final Manual Spot Check | 结算方式下拉包含 `预付`、`现结`、`月结`、`自定义`；基础信息、联系信息、结算信息、生产信息和补充信息分组可见。 |
 | 供应商 | Automated Pass / Pending Final Manual Spot Check | 结算方式下拉包含 `预付`、`现结`、`月结`、`自定义`；基础信息、联系信息、结算信息、银行信息和补充信息分组可见。 |
-| 仓库 | Automated Fail | 仓库类型和责任主体使用中文下拉，排序字段隐藏；但生产厂家选择器在初始表单中已可见，未严格满足“选择生产厂家主体时显示厂家选择器”的条件显示要求。 |
-| 平台 / 店铺 | Automated Fail | 入口合并为 `平台 / 店铺`，底层 Platform / Store 对象保持独立；但店铺表单仍出现外部店铺标识 UUID 校验说明，不满足“不要求用户手工输入 UUID”的 UX 目标。 |
+| 仓库 | Fixed / Pending Automated Reverification | 仓库类型和责任主体使用中文下拉，排序字段隐藏；生产厂家选择器已改为仅在责任主体为 `厂家负责` 时显示，非厂家责任主体提交时会忽略残留 `manufacturerId`。 |
+| 平台 / 店铺 | Fixed / Pending Automated Reverification | 入口合并为 `平台 / 店铺`，底层 Platform / Store 对象保持独立；店铺表单已将外部标识改为业务化的 `平台店铺标识`，帮助说明不再展示 UUID 技术术语。 |
 | 统一 UX | Manual Check Required | 中文文案、字段分组、默认值和基础空状态可见；成功反馈、字段级错误反馈、Request ID、防重复提交、启用 / 停用二次确认属于写入或状态操作路径，本轮未污染人工验收数据，需最终人工抽检。 |
 
 ## 5. Automated Fail 项目
 
 | ID | 模块 | 结果 | 说明 |
 |---|---|---|---|
-| B002B-AF-001 | Product / SKU | Automated Fail | 默认单位下拉未覆盖复核清单要求的完整单位集：`把`、`只`、`件`、`个`、`条`、`套`、`箱`、`包`、`支`、`其他`。当前自动检查未确认 `只`、`支`、`其他` 全部可用。 |
-| B002B-AF-002 | Warehouse | Automated Fail | 生产厂家选择器在新增仓库初始表单中已可见；应在责任主体选择 `厂家负责` 后再显示或要求填写。 |
-| B002B-AF-003 | Platform / Store | Automated Fail | 店铺表单仍存在外部店铺标识 UUID 相关说明，普通用户仍可能接触 UUID 约束。 |
+| B002B-AF-001 | Product / SKU | Fixed / Pending Automated Reverification | 默认单位下拉已补齐：`把`、`只`、`件`、`个`、`条`、`套`、`箱`、`包`、`支`、`其他`；Product 默认单位与 SKU 计量单位共用 `MASTER_DATA_FIELD_OPTIONS.units`，默认值为 `把`。 |
+| B002B-AF-002 | Warehouse | Fixed / Pending Automated Reverification | `manufacturerId` 增加 `ownerType = manufacturer` 条件显示；责任主体切换为其他类型时隐藏厂家选择器，提交时忽略残留值；编辑已有厂家仓时按现有值回显。 |
+| B002B-AF-003 | Platform / Store | Fixed / Pending Automated Reverification | `externalStoreId` 前端标签改为 `平台店铺标识`；帮助说明改为“填写平台后台显示的店铺ID或店铺编号；没有可暂不填写。”，不再面向普通用户展示 UUID 技术术语。 |
 
 ## 6. Manual Check Required 项目
 
@@ -122,18 +122,14 @@ Automated Pass
 
 ## 10. 结论
 
-Batch 002-B 的大部分基础资料 UX 优化已通过自动复核，并可进入项目负责人的最终人工抽检；但以下项目未达到自动复核通过标准，不能标记为 Verified / Closed：
-
-- B002B-AF-001：Product / SKU 默认单位下拉选项不完整；
-- B002B-AF-002：Warehouse 生产厂家选择器条件显示不严格；
-- B002B-AF-003：Store 表单仍暴露 UUID 相关说明。
+Batch 002-B 的大部分基础资料 UX 优化已通过自动复核，并可进入项目负责人的最终人工抽检。上一轮自动复核发现的三项 Automated Fail 已完成修复，当前状态为 Fixed / Pending Automated Reverification，仍不能直接标记为 Verified / Closed。
 
 综合状态：
 
-Automated Fail with Partial Automated Pass / Pending Final Manual Spot Check
+Fixed / Pending Automated Reverification
 
 建议：
 
-- 先修复 Automated Fail 项；
+- 对三项修复执行本轮自动化回归与浏览器复核；
 - 对 Manual Check Required 项执行一次带 UAT 标识数据的人工抽检；
 - UAT-009 自动编码继续保持 Blocked by CR。

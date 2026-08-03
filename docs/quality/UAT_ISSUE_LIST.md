@@ -637,7 +637,7 @@ Automated Pass / Pending Final Manual Spot Check
 
 综合状态：
 
-Automated Fail with Partial Automated Pass / Pending Final Manual Spot Check
+Fixed / Pending Automated Reverification
 
 已自动通过并等待最终人工抽检：
 
@@ -649,9 +649,9 @@ Automated Fail with Partial Automated Pass / Pending Final Manual Spot Check
 
 Automated Fail：
 
-- B002B-AF-001：Product / SKU 默认单位下拉未覆盖复核清单要求的完整单位集；
-- B002B-AF-002：Warehouse 生产厂家选择器初始可见，未严格按责任主体条件显示；
-- B002B-AF-003：Store 表单仍暴露外部店铺标识 UUID 相关说明。
+- B002B-AF-001：Fixed / Pending Automated Reverification。Product / SKU 默认单位下拉已补齐完整单位集，并共用同一选项源；
+- B002B-AF-002：Fixed / Pending Automated Reverification。Warehouse 生产厂家选择器已按责任主体条件显示，非厂家主体提交时忽略残留值；
+- B002B-AF-003：Fixed / Pending Automated Reverification。Store 平台店铺标识已去除 UUID 技术说明，改为业务化中文说明。
 
 Manual Check Required：
 
@@ -663,4 +663,4 @@ Manual Check Required：
 
 处理：
 
-本轮仅记录自动复核结果，不进行代码修复；Batch 002-B 不得标记 Verified / Closed。
+本轮已修复三项自动复核失败项，并等待自动化回归与最终人工抽检；Batch 002-B 不得标记 Verified / Closed。

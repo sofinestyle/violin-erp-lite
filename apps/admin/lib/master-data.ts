@@ -15,6 +15,7 @@ export type WorkbenchField = Readonly<{
   placeholder?: string;
   required?: boolean;
   type?: "boolean" | "number" | "password" | "text";
+  visibleWhen?: Readonly<{ equals: string; field: string }>;
 }>;
 
 export type WorkbenchDefinition = Readonly<{
@@ -78,10 +79,16 @@ export const MASTER_DATA_FIELD_OPTIONS = {
     { label: "自定义", value: "custom" },
   ],
   units: [
-    { label: "件", value: "piece" },
-    { label: "套", value: "set" },
     { label: "把", value: "unit" },
+    { label: "只", value: "piece_single" },
+    { label: "件", value: "piece" },
+    { label: "个", value: "item" },
+    { label: "条", value: "strip" },
+    { label: "套", value: "set" },
     { label: "箱", value: "box" },
+    { label: "包", value: "pack" },
+    { label: "支", value: "stick" },
+    { label: "其他", value: "other" },
   ],
   warehouseTypes: [
     { label: "公司仓", value: "company" },
@@ -131,6 +138,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
         helpText: "底层字段保留，当前页面按默认产品类型提交。",
       }),
       field("defaultUnit", "默认单位", true, "text", {
+        defaultValue: "unit",
         group: "业务归类",
         inputMode: "select",
         options: MASTER_DATA_FIELD_OPTIONS.units,
@@ -188,6 +196,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
         placeholder: "例如：实木、夹板、树脂",
       }),
       field("unit", "计量单位", true, "text", {
+        defaultValue: "unit",
         group: "库存与价格",
         inputMode: "select",
         options: MASTER_DATA_FIELD_OPTIONS.units,
@@ -427,6 +436,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
         optionCodeField: "manufacturerCode",
         optionNameField: "manufacturerName",
         optionResource: "manufacturers",
+        visibleWhen: { equals: "manufacturer", field: "ownerType" },
       }),
       field("countryCode", "国家代码", false, "text", {
         group: "地址信息",
@@ -474,10 +484,10 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
         optionNameField: "platformName",
         optionResource: "ecommerce-platforms",
       }),
-      field("externalStoreId", "外部店铺标识", false, "text", {
+      field("externalStoreId", "平台店铺标识", false, "text", {
         group: "店铺信息",
-        helpText: "当前 API 校验 UUID；如需真实平台店铺 ID，需后续 CR。",
-        placeholder: "可选，需符合当前 API 校验规则",
+        helpText: "填写平台后台显示的店铺ID或店铺编号；没有可暂不填写。",
+        placeholder: "例如：Amazon 后台店铺编号，可选",
       }),
       field("countryCode", "国家代码", true, "text", {
         group: "经营信息",

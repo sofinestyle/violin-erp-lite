@@ -1,7 +1,7 @@
 "use client";
 
 import { FileUp, Pencil, Plus, RefreshCw, X } from "lucide-react";
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   ConfirmDialog,
@@ -85,6 +85,21 @@ function fieldValue(field: WorkbenchField, value: FormDataEntryValue | null): un
 
 function fieldDefaultValue(field: WorkbenchField, selected: RecordItem | null): string {
   return displayValue(selected?.[field.key] ?? field.defaultValue ?? "").replace("—", "");
+}
+
+function fieldInitialValue(field: WorkbenchField, selected: RecordItem | null): string {
+  const value = selected?.[field.key] ?? field.defaultValue ?? "";
+  if (value === null || value === undefined) return "";
+  return String(value);
+}
+
+function initialFormValues(
+  definition: WorkbenchDefinition,
+  selected: RecordItem | null,
+): Record<string, string> {
+  return Object.fromEntries(
+    definition.fields.map((field) => [field.key, fieldInitialValue(field, selected)]),
+  );
 }
 
 function displayValue(value: unknown): string {
@@ -192,8 +207,34 @@ function derivedFieldValue(
   return fieldValue(field, rawValue);
 }
 
-function shouldRenderField(selected: RecordItem | null, field: WorkbenchField): boolean {
+function fieldConditionMatches(
+  field: WorkbenchField,
+  selected: RecordItem | null,
+  formValues: Record<string, string>,
+): boolean {
+  if (!field.visibleWhen) return true;
+  const value = formValues[field.visibleWhen.field] ?? fieldInitialValue(field, selected);
+  return value === field.visibleWhen.equals;
+}
+
+function shouldRenderField(
+  selected: RecordItem | null,
+  field: WorkbenchField,
+  formValues: Record<string, string>,
+): boolean {
   if (field.hidden) return false;
+  if (!fieldConditionMatches(field, selected, formValues)) return false;
+  return !(
+    selected && ["password", "roleAssignments", "roleCode", "isSystemRole"].includes(field.key)
+  );
+}
+
+function shouldSubmitField(
+  selected: RecordItem | null,
+  field: WorkbenchField,
+  formValues: Record<string, string>,
+): boolean {
+  if (!fieldConditionMatches(field, selected, formValues)) return false;
   return !(
     selected && ["password", "roleAssignments", "roleCode", "isSystemRole"].includes(field.key)
   );
@@ -241,11 +282,14 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
   const [selected, setSelected] = useState<RecordItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [batchSkuResults, setBatchSkuResults] = useState<BatchSkuResult[]>([]);
+  const [formValues, setFormValues] = useState<Record<string, string>>(() =>
+    initialFormValues(definition, null),
+  );
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const visibleFields = useMemo(
-    () => definition.fields.filter((field) => shouldRenderField(selected, field)),
-    [definition.fields, selected],
+    () => definition.fields.filter((field) => shouldRenderField(selected, field, formValues)),
+    [definition.fields, formValues, selected],
   );
   const visibleFieldGroups = useMemo(() => groupedFields(visibleFields), [visibleFields]);
   const relationFields = useMemo(
@@ -333,7 +377,9 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     setError(null);
     try {
       const envelope = await apiRequest(`${definition.apiPath}/${item.id}`);
-      setSelected(envelope.data as RecordItem);
+      const nextSelected = envelope.data as RecordItem;
+      setSelected(nextSelected);
+      setFormValues(initialFormValues(definition, nextSelected));
       setBatchSkuResults([]);
       setDrawerOpen(true);
     } catch (requestError) {
@@ -343,9 +389,20 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
 
   function openCreate() {
     setSelected(null);
+    setFormValues(initialFormValues(definition, null));
     setRelationOptionsError(null);
     setBatchSkuResults([]);
     setDrawerOpen(true);
+  }
+
+  function captureFormValues(event: ChangeEvent<HTMLFormElement>) {
+    const values = Object.fromEntries(
+      [...new FormData(event.currentTarget).entries()].map(([key, value]) => [key, String(value)]),
+    );
+    if (definition.key === "warehouses" && values.ownerType !== "manufacturer") {
+      values.manufacturerId = "";
+    }
+    setFormValues({ ...initialFormValues(definition, selected), ...values });
   }
 
   async function submitBatchSkuRows(
@@ -432,14 +489,16 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     setBatchSkuResults([]);
     try {
       const form = new FormData(event.currentTarget);
+      const submittedFormValues = {
+        ...initialFormValues(definition, selected),
+        ...Object.fromEntries([...form.entries()].map(([key, value]) => [key, String(value)])),
+      };
+      if (definition.key === "warehouses" && submittedFormValues.ownerType !== "manufacturer") {
+        submittedFormValues.manufacturerId = "";
+        form.delete("manufacturerId");
+      }
       const basePayloadEntries = definition.fields
-        .filter(
-          (field) =>
-            !(
-              selected &&
-              ["password", "roleAssignments", "roleCode", "isSystemRole"].includes(field.key)
-            ),
-        )
+        .filter((field) => shouldSubmitField(selected, field, submittedFormValues))
         .map(
           (field) =>
             [
@@ -708,7 +767,11 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                 <X />
               </Button>
             </div>
-            <form className="flex min-h-0 flex-1 flex-col" onSubmit={save}>
+            <form
+              className="flex min-h-0 flex-1 flex-col"
+              onSubmit={save}
+              onChange={captureFormValues}
+            >
               {relationOptionsError ? (
                 <div className="mx-6 mt-4 rounded-lg border border-[#F59E0B]/40 bg-[#FFFBEB] p-3 text-sm text-[#92400E]">
                   {relationOptionsError}
@@ -729,6 +792,7 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                             selected && !hasPermission(definition.updatePermission),
                           )}
                           field={field}
+                          formValues={formValues}
                           key={field.key}
                           relationOptions={relationOptions}
                           relationOptionsLoading={relationOptionsLoading}
@@ -797,7 +861,7 @@ function MasterDataUxHint({ definition }: { definition: WorkbenchDefinition }) {
       title: "SKU 规格批量录入",
     },
     stores: {
-      body: "店铺必须选择所属平台；外部店铺标识当前仍受 Frozen API 校验约束，如需真实平台编号需后续 CR。",
+      body: "店铺必须选择所属平台；平台店铺标识填写平台后台显示的店铺 ID 或店铺编号，没有可暂不填写。",
       title: "平台 → 店铺",
     },
   };
@@ -815,6 +879,7 @@ function MasterDataFieldControl({
   definition,
   disabled,
   field,
+  formValues,
   relationOptions,
   relationOptionsLoading,
   selected,
@@ -822,11 +887,12 @@ function MasterDataFieldControl({
   definition: WorkbenchDefinition;
   disabled: boolean;
   field: WorkbenchField;
+  formValues: Record<string, string>;
   relationOptions: RelationOptions;
   relationOptionsLoading: boolean;
   selected: RecordItem | null;
 }) {
-  const value = fieldDefaultValue(field, selected);
+  const value = formValues[field.key] ?? fieldDefaultValue(field, selected);
   const datalistId = `${definition.key}-${field.key}-options`;
   const required =
     field.required &&
