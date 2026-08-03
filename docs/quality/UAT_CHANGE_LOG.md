@@ -5,7 +5,7 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-26
-updated_date: 2026-08-02
+updated_date: 2026-08-03
 related_phase: Phase 10
 ---
 
@@ -145,3 +145,26 @@ Commit：
 Commit：
 
 `fix: implement UAT batch 002 core business usability`
+
+### UAT-012 Transparent Workflow Form Fix
+
+问题：
+
+- UAT-012
+
+修改：
+
+- 将 Workflow Workbench 的新增表单、详情抽屉、Overlay、表单分区、明细卡片、表单控件和底部操作区统一改为明确不透明背景。
+- 修复采购、生产、质检、入库、库存调整、出库、跨境发货和销售退货共用业务表单的底层页面穿透问题。
+- 保持业务逻辑、Database、API 和 Permission 不变。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/workflow-page.test.tsx`：通过。
+- 全量 `pnpm check`：通过。
+- `pnpm status:check`：通过。
+- `git diff --check`：通过。
+
+Commit：
+
+`fix: resolve transparent workflow forms`

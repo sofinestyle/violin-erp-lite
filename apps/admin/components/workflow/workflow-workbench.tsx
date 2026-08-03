@@ -82,6 +82,32 @@ type WorkflowAction = Readonly<{
 
 const PAGE_SIZE = 20;
 
+export const WORKFLOW_SURFACE_CLASSES = {
+  detailCard:
+    "mt-5 border-slate-200 !bg-white p-4 text-slate-950 shadow-sm dark:border-slate-800 dark:!bg-slate-950 dark:text-slate-50",
+  dialogBody: "overflow-y-auto !bg-white p-6 dark:!bg-slate-950",
+  dialogContent:
+    "relative z-10 flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-slate-200 !bg-white text-slate-950 shadow-2xl dark:border-slate-800 dark:!bg-slate-950 dark:text-slate-50",
+  dialogFooter:
+    "flex justify-end gap-2 border-t border-slate-200 !bg-white p-6 dark:border-slate-800 dark:!bg-slate-950",
+  dialogHeader:
+    "flex items-center justify-between border-b border-slate-200 !bg-white p-6 dark:border-slate-800 dark:!bg-slate-950",
+  dialogOverlay: "fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4",
+  drawerContent:
+    "relative z-10 h-full w-full max-w-3xl overflow-y-auto border-l border-slate-200 !bg-white p-6 text-slate-950 shadow-2xl dark:border-slate-800 dark:!bg-slate-950 dark:text-slate-50",
+  drawerOverlay: "fixed inset-0 z-50 flex justify-end bg-slate-950/45",
+  fieldPanel:
+    "rounded-lg border border-slate-200 !bg-white p-3 text-slate-950 dark:border-slate-800 dark:!bg-slate-950 dark:text-slate-50",
+  formControl:
+    "mt-2 h-10 w-full rounded-md border border-slate-300 !bg-white px-3 text-sm text-slate-950 shadow-sm dark:border-slate-700 dark:!bg-slate-950 dark:text-slate-50",
+  historyCard:
+    "mt-4 border-slate-200 !bg-white p-4 text-slate-950 shadow-sm dark:border-slate-800 dark:!bg-slate-950 dark:text-slate-50",
+  sectionCard:
+    "mt-5 border-slate-200 !bg-white p-4 text-slate-950 shadow-sm dark:border-slate-800 dark:!bg-slate-950 dark:text-slate-50",
+  textareaControl:
+    "mt-2 min-h-24 w-full rounded-md border border-slate-300 !bg-white p-3 text-sm text-slate-950 shadow-sm dark:border-slate-700 dark:!bg-slate-950 dark:text-slate-50",
+} as const;
+
 const STATUS_LABELS: Record<string, string> = {
   approved: "已审核",
   cancelled: "已取消",
@@ -1266,12 +1292,8 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
       />
 
       {selected ? (
-        <div
-          className="fixed inset-0 z-50 flex justify-end bg-black/30"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="h-full w-full max-w-3xl overflow-y-auto bg-background p-6 shadow-2xl">
+        <div className={WORKFLOW_SURFACE_CLASSES.drawerOverlay} role="dialog" aria-modal="true">
+          <div className={WORKFLOW_SURFACE_CLASSES.drawerContent}>
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold">{view.label}详情</h2>
@@ -1287,7 +1309,7 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
               </Button>
             </div>
             {actions.length ? (
-              <Card className="mt-5 p-4">
+              <Card className={WORKFLOW_SURFACE_CLASSES.sectionCard}>
                 <h3 className="text-sm font-semibold">状态操作</h3>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {actions.map((action) => (
@@ -1300,11 +1322,11 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                 </div>
               </Card>
             ) : null}
-            <Card className="mt-5 p-4">
+            <Card className={WORKFLOW_SURFACE_CLASSES.detailCard}>
               <h3 className="text-sm font-semibold">基础信息</h3>
               <dl className="mt-3 grid gap-3 sm:grid-cols-2">
                 {detailFields(selected).map(([key, value]) => (
-                  <div className="rounded-lg border p-3" key={key}>
+                  <div className={WORKFLOW_SURFACE_CLASSES.fieldPanel} key={key}>
                     <dt className="text-xs text-muted-foreground">{BASIC_FIELDS[key] ?? key}</dt>
                     <dd className="mt-1 break-words text-sm font-medium">{display(value)}</dd>
                   </div>
@@ -1312,7 +1334,7 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
               </dl>
             </Card>
             {view.historyPath ? (
-              <Card className="mt-4 p-4">
+              <Card className={WORKFLOW_SURFACE_CLASSES.historyCard}>
                 <h3 className="text-sm font-semibold">状态历史</h3>
                 {timeline.length ? (
                   <ol className="mt-3 space-y-2 border-l pl-4 text-sm">
@@ -1333,16 +1355,9 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
       ) : null}
 
       {formOpen && form ? (
-        <div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <form
-            className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-xl bg-background p-6 shadow-2xl"
-            onSubmit={create}
-          >
-            <div className="flex items-center justify-between">
+        <div className={WORKFLOW_SURFACE_CLASSES.dialogOverlay} role="dialog" aria-modal="true">
+          <form className={WORKFLOW_SURFACE_CLASSES.dialogContent} onSubmit={create}>
+            <div className={WORKFLOW_SURFACE_CLASSES.dialogHeader}>
               <div>
                 <h2 className="text-lg font-semibold">新增{view.label}</h2>
                 <p className="text-sm text-muted-foreground">
@@ -1359,96 +1374,98 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                 <X />
               </Button>
             </div>
-            {formError ? (
-              <p className="mt-4 rounded-md border border-danger/30 p-3 text-sm text-danger">
-                {formError}
-              </p>
-            ) : null}
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              {form.fields.map((field) => (
-                <label className="block text-sm font-medium" key={field.key}>
-                  {field.label}
-                  {field.required ? <span className="text-danger"> *</span> : null}
-                  {field.type === "select" ? (
-                    <select
-                      className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
-                      defaultValue={form.defaults?.[field.key] ?? ""}
-                      name={field.key}
-                      onChange={(event) => onFieldChange(field, event)}
-                      required={field.required}
-                    >
-                      <option value="">请选择{field.label}</option>
-                      {(field.values ?? allOptions[field.optionKey ?? ""] ?? []).map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : field.type === "textarea" ? (
-                    <textarea
-                      className="mt-2 min-h-24 w-full rounded-md border bg-background p-3 text-sm"
-                      defaultValue={form.defaults?.[field.key] ?? ""}
-                      name={field.key}
-                      required={field.required}
-                    />
-                  ) : (
-                    <input
-                      className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
-                      defaultValue={form.defaults?.[field.key] ?? ""}
-                      name={field.key}
-                      placeholder={field.placeholder}
-                      required={field.required}
-                      type={field.type ?? "text"}
-                    />
-                  )}
-                </label>
-              ))}
-            </div>
-            {form.itemFields?.length ? (
-              <Card className="mt-5 p-4">
-                <h3 className="text-sm font-semibold">明细行</h3>
-                {sourceLoading ? (
-                  <p className="mt-3 text-sm text-muted-foreground">正在加载来源明细…</p>
-                ) : null}
-                <div className="mt-3 grid gap-4 md:grid-cols-3">
-                  {form.itemFields
-                    .filter((field) => !field.derived)
-                    .map((field) => (
-                      <label className="block text-sm font-medium" key={field.key}>
-                        {field.label}
-                        {field.required ? <span className="text-danger"> *</span> : null}
-                        {field.type === "select" ? (
-                          <select
-                            className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
-                            name={`item.${field.key}`}
-                            required={field.required}
-                          >
-                            <option value="">请选择{field.label}</option>
-                            {(field.values ?? allOptions[field.optionKey ?? ""] ?? []).map(
-                              (option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ),
-                            )}
-                          </select>
-                        ) : (
-                          <input
-                            className="mt-2 h-10 w-full rounded-md border bg-background px-3 text-sm"
-                            name={`item.${field.key}`}
-                            required={field.required}
-                            type={field.type ?? "text"}
-                          />
-                        )}
-                      </label>
-                    ))}
-                </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  当前批次先提供单行明细录入；多行明细可重复创建或后续进入增强批次。
+            <div className={WORKFLOW_SURFACE_CLASSES.dialogBody}>
+              {formError ? (
+                <p className="rounded-md border border-danger/30 !bg-white p-3 text-sm text-danger dark:!bg-slate-950">
+                  {formError}
                 </p>
-              </Card>
-            ) : null}
-            <div className="mt-5 flex justify-end gap-2">
+              ) : null}
+              <div className="grid gap-4 md:grid-cols-2">
+                {form.fields.map((field) => (
+                  <label className="block text-sm font-medium" key={field.key}>
+                    {field.label}
+                    {field.required ? <span className="text-danger"> *</span> : null}
+                    {field.type === "select" ? (
+                      <select
+                        className={WORKFLOW_SURFACE_CLASSES.formControl}
+                        defaultValue={form.defaults?.[field.key] ?? ""}
+                        name={field.key}
+                        onChange={(event) => onFieldChange(field, event)}
+                        required={field.required}
+                      >
+                        <option value="">请选择{field.label}</option>
+                        {(field.values ?? allOptions[field.optionKey ?? ""] ?? []).map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : field.type === "textarea" ? (
+                      <textarea
+                        className={WORKFLOW_SURFACE_CLASSES.textareaControl}
+                        defaultValue={form.defaults?.[field.key] ?? ""}
+                        name={field.key}
+                        required={field.required}
+                      />
+                    ) : (
+                      <input
+                        className={WORKFLOW_SURFACE_CLASSES.formControl}
+                        defaultValue={form.defaults?.[field.key] ?? ""}
+                        name={field.key}
+                        placeholder={field.placeholder}
+                        required={field.required}
+                        type={field.type ?? "text"}
+                      />
+                    )}
+                  </label>
+                ))}
+              </div>
+              {form.itemFields?.length ? (
+                <Card className={WORKFLOW_SURFACE_CLASSES.sectionCard}>
+                  <h3 className="text-sm font-semibold">明细行</h3>
+                  {sourceLoading ? (
+                    <p className="mt-3 text-sm text-muted-foreground">正在加载来源明细…</p>
+                  ) : null}
+                  <div className="mt-3 grid gap-4 md:grid-cols-3">
+                    {form.itemFields
+                      .filter((field) => !field.derived)
+                      .map((field) => (
+                        <label className="block text-sm font-medium" key={field.key}>
+                          {field.label}
+                          {field.required ? <span className="text-danger"> *</span> : null}
+                          {field.type === "select" ? (
+                            <select
+                              className={WORKFLOW_SURFACE_CLASSES.formControl}
+                              name={`item.${field.key}`}
+                              required={field.required}
+                            >
+                              <option value="">请选择{field.label}</option>
+                              {(field.values ?? allOptions[field.optionKey ?? ""] ?? []).map(
+                                (option) => (
+                                  <option key={option.value} value={option.value}>
+                                    {option.label}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                          ) : (
+                            <input
+                              className={WORKFLOW_SURFACE_CLASSES.formControl}
+                              name={`item.${field.key}`}
+                              required={field.required}
+                              type={field.type ?? "text"}
+                            />
+                          )}
+                        </label>
+                      ))}
+                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    当前批次先提供单行明细录入；多行明细可重复创建或后续进入增强批次。
+                  </p>
+                </Card>
+              ) : null}
+            </div>
+            <div className={WORKFLOW_SURFACE_CLASSES.dialogFooter}>
               <Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>
                 取消
               </Button>

@@ -2,7 +2,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { PermissionProvider } from "@/contexts/permission-context";
 import { UserProvider } from "@/contexts/user-context";
-import { WorkflowWorkbench, actionsFor, formFor } from "@/components/workflow/workflow-workbench";
+import {
+  WORKFLOW_SURFACE_CLASSES,
+  WorkflowWorkbench,
+  actionsFor,
+  formFor,
+} from "@/components/workflow/workflow-workbench";
 import {
   crossBorderViews,
   inboundViews,
@@ -112,5 +117,45 @@ describe("Parallel workflow pages", () => {
     expect(actionsFor(inventoryViews[2]!).map((action) => action.permission)).toContain(
       "inventory.adjustment.execute",
     );
+  });
+
+  it("uses opaque workflow drawer and dialog surfaces for UAT-012", () => {
+    expect(WORKFLOW_SURFACE_CLASSES.dialogOverlay).toContain("bg-slate-950/45");
+    expect(WORKFLOW_SURFACE_CLASSES.drawerOverlay).toContain("bg-slate-950/45");
+    expect(WORKFLOW_SURFACE_CLASSES.dialogContent).toContain("!bg-white");
+    expect(WORKFLOW_SURFACE_CLASSES.drawerContent).toContain("!bg-white");
+    expect(WORKFLOW_SURFACE_CLASSES.dialogContent).not.toContain("bg-transparent");
+    expect(WORKFLOW_SURFACE_CLASSES.drawerContent).not.toContain("bg-transparent");
+  });
+
+  it("keeps workflow form sections, controls and footer opaque for UAT-012", () => {
+    expect(WORKFLOW_SURFACE_CLASSES.sectionCard).toContain("!bg-white");
+    expect(WORKFLOW_SURFACE_CLASSES.detailCard).toContain("!bg-white");
+    expect(WORKFLOW_SURFACE_CLASSES.fieldPanel).toContain("!bg-white");
+    expect(WORKFLOW_SURFACE_CLASSES.formControl).toContain("!bg-white");
+    expect(WORKFLOW_SURFACE_CLASSES.formControl).toContain("border-slate-300");
+    expect(WORKFLOW_SURFACE_CLASSES.textareaControl).toContain("!bg-white");
+    expect(WORKFLOW_SURFACE_CLASSES.dialogFooter).toContain("!bg-white");
+  });
+
+  it("applies the same opaque business form shell across core workflow modules", () => {
+    const coreViews = [
+      procurementViews[0],
+      productionViews[0],
+      procurementViews[2],
+      procurementViews[3],
+      inventoryViews[2],
+      warehouseOperationViews[3],
+      crossBorderViews[0],
+      warehouseOperationViews[4],
+    ];
+
+    for (const view of coreViews) {
+      expect(view).toBeDefined();
+      expect(formFor(view!)).toBeDefined();
+    }
+    expect(WORKFLOW_SURFACE_CLASSES.dialogContent).toContain("max-w-4xl");
+    expect(WORKFLOW_SURFACE_CLASSES.dialogBody).toContain("overflow-y-auto");
+    expect(WORKFLOW_SURFACE_CLASSES.dialogFooter).toContain("border-t");
   });
 });

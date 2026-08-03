@@ -5,7 +5,7 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-26
-updated_date: 2026-08-02
+updated_date: 2026-08-03
 related_phase: Phase 10
 ---
 
@@ -42,6 +42,7 @@ violin_erp_lite
 - UAT-009
 - UAT-010
 - UAT-011
+- UAT-012
 
 ## 5. 已测试模块
 
@@ -188,3 +189,36 @@ Local UAT In Progress，剩余事项为 UAT-009 CR 阻断项。
 当前状态：
 
 Local UAT In Progress，UAT-010 等待人工复验，UAT-009 / UAT-011 为 CR 阻断项。
+
+## 11. UAT-012 Workflow Form Background Fix
+
+测试模块：
+
+- 新增采购订单
+- 新增生产任务
+- 新增质检单
+- 新增入库单
+- 新增库存调整
+- 新增出库单
+- 新增跨境发货
+- 新增销售退货
+
+问题：
+
+- UAT-012：核心业务工作台新增 / 编辑表单背景透明，底层页面内容穿透。
+
+处理结果：
+
+- Workflow Workbench 统一使用明确半透明 Overlay；
+- 表单主体、详情抽屉、基本信息区、明细区、底部操作区和表单控件统一使用不透明背景；
+- 长表单保持内容区滚动，保存 / 取消操作区保持清晰可见；
+- 未修改业务逻辑、Database、API 或 Permission。
+
+自动化回归：
+
+- `pnpm exec vitest run apps/admin/tests/workflow-page.test.tsx`：通过。
+- 全量 `pnpm check`：通过。
+
+当前状态：
+
+Local UAT In Progress，UAT-012 等待项目负责人人工复验。

@@ -5,7 +5,7 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-26
-updated_date: 2026-08-02
+updated_date: 2026-08-03
 related_phase: Phase 10
 ---
 
@@ -578,6 +578,52 @@ Blocked by CR
 处理：
 
 本批未新增销售分析 API Path，避免违反 Frozen API 约束；建议后续提交 API CR 明确 Sales Management 只读路由。
+
+发现日期：
+
+2026-08-03
+
+### UAT-012
+
+模块：
+
+Workflow Workbench
+
+页面：
+
+采购、生产、质检、入库、库存调整、出库、跨境发货、销售退货新增 / 编辑表单
+
+问题描述：
+
+所有核心业务表单背景透明，底层列表、筛选栏和文字穿透显示；输入框、明细区与底层内容叠加，影响表单可读性和操作准确性。
+
+期望结果：
+
+业务表单 Overlay、主体、基本信息区、明细区、底部操作区和表单控件均应使用明确不透明背景；底层页面内容不得穿透；下拉、日期控件和表单内容层级应稳定。
+
+问题类型：
+
+UI / UX Bug
+
+严重等级：
+
+Critical
+
+影响：
+
+阻塞核心业务工作台新增 / 编辑表单的人工验收，影响采购、生产、质检、入库、库存调整、出库、跨境发货和销售退货操作。
+
+发现阶段：
+
+Local UAT
+
+状态：
+
+Fixed / Pending Manual Verification
+
+处理：
+
+已统一修复 Workflow Workbench 共用表单和详情抽屉的遮罩、主体背景、分区背景、表单控件背景、底部操作区和层级；待项目负责人人工复验。
 
 发现日期：
 
