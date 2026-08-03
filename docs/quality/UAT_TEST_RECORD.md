@@ -222,3 +222,44 @@ Local UAT In Progress，UAT-010 等待人工复验，UAT-009 / UAT-011 为 CR �
 当前状态：
 
 Local UAT In Progress，UAT-012 等待项目负责人人工复验。
+
+## 12. Automated UAT Verification Pass
+
+复核范围：
+
+- UAT-010 Core Business / PC Admin Workbench；
+- UAT-012 Workflow Workbench 透明背景。
+
+自动化测试：
+
+- `pnpm exec vitest run apps/admin/tests/workflow-page.test.tsx apps/admin/tests/api-v1-contract.test.ts apps/admin/tests/app-shell.test.tsx apps/admin/tests/dashboard.test.tsx apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+浏览器复核：
+
+- `http://localhost:3100` 页面可打开；
+- `/api/health` 返回 `success=true`，database connected；
+- 连续切换生产、库存、出入库、跨境、采购后 App Shell 保持存在；
+- 控制台 error / warn 为空；
+- 核心业务新增表单均可打开，保存 / 取消按钮存在；
+- 未发现 `请求 DTO` 原始 JSON 输入区；
+- 未发现要求用户填写内部 `id` / `uuid` 的控件；
+- UAT-012 表单主体、明细区、Footer 和控件 computed background 均为非透明。
+
+AI 视觉平台：
+
+- `http://localhost:3000` 服务在线；
+- 未操作 PM2。
+
+结果：
+
+- UAT-010：Automated Pass / Pending Final Manual Spot Check；
+- UAT-012：Automated Pass / Pending Final Manual Spot Check；
+- UAT-009：Blocked by CR；
+- UAT-011：Blocked by CR。
+
+说明：
+
+本次未通过浏览器提交会写入正式本地验收库的业务单据；核心业务写入闭环由 Service / Repository 自动化测试和全量 `pnpm check` 覆盖，端到端写入建议使用独立测试批次进行最终人工抽检。

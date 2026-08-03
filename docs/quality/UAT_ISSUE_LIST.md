@@ -527,11 +527,11 @@ Local UAT Batch 002
 
 状态：
 
-Fixed / Pending Manual Verification
+Automated Pass / Pending Final Manual Spot Check
 
 处理：
 
-已将核心业务通用工作台改造为中文业务表单、关联对象选择器、状态中文映射、状态动作按钮和业务错误反馈；待项目负责人人工复验。
+已将核心业务通用工作台改造为中文业务表单、关联对象选择器、状态中文映射、状态动作按钮和业务错误反馈；自动化复核通过，待项目负责人进行最终人工抽检。
 
 发现日期：
 
@@ -619,11 +619,11 @@ Local UAT
 
 状态：
 
-Fixed / Pending Manual Verification
+Automated Pass / Pending Final Manual Spot Check
 
 处理：
 
-已统一修复 Workflow Workbench 共用表单和详情抽屉的遮罩、主体背景、分区背景、表单控件背景、底部操作区和层级；待项目负责人人工复验。
+已统一修复 Workflow Workbench 共用表单和详情抽屉的遮罩、主体背景、分区背景、表单控件背景、底部操作区和层级；自动化复核通过，待项目负责人进行最终人工抽检。
 
 发现日期：
 
