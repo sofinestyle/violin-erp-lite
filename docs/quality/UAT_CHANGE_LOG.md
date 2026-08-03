@@ -124,3 +124,24 @@ Verified / Closed
 Commit：
 
 `docs: close UAT batch 001 verification`
+
+### Batch 002-A
+
+问题：
+
+- UAT-010
+- UAT-011
+
+修改：
+
+- UAT-010：将采购、生产、质检、入库、库存调整、国内销售出库、跨境发货和销售退货的通用工作台改造为中文业务表单；新增关联对象下拉、来源明细选择、单行明细录入、状态中文映射、状态动作按钮、危险操作确认和 Request ID 错误反馈。
+- UAT-011：审查 Sales Management Admin API Route；确认当前 Frozen `API_SPEC.md` 未登记销售分析独立 Path，本批未新增 `/api/v1/sales/...` 路由，避免破坏 API Frozen 规则。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/workflow-page.test.tsx apps/admin/tests/api-v1-contract.test.ts`：通过。
+- `pnpm --filter @violin-erp/admin exec tsc --noEmit`：通过。
+
+Commit：
+
+`fix: implement UAT batch 002 core business usability`

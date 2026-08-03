@@ -490,3 +490,95 @@ Verified / Closed
 发现日期：
 
 2026-07-26
+
+### UAT-010
+
+模块：
+
+Core Business / PC Admin Workbench
+
+页面：
+
+采购、生产、质检、入库、库存调整、出库、跨境发货、销售退货业务工作台
+
+问题描述：
+
+核心业务页面仍以通用 Workflow Workbench 方式呈现，新增业务单据时要求用户理解并填写 JSON DTO、内部 UUID、英文状态码或技术字段，普通业务用户无法直接完成端到端操作。
+
+期望结果：
+
+PC Admin 应提供正式业务表单、关联对象下拉、明细行录入、中文状态、状态动作按钮、成功 / 失败反馈和 Request ID 保留；用户不得手工输入 JSON、UUID 或英文状态码。
+
+问题类型：
+
+Incomplete Implementation / Business Usability Bug
+
+严重等级：
+
+Critical
+
+影响：
+
+阻塞采购 → 生产 → 质检 → 入库 → 库存 → 出库 → 跨境 → 销售退货的端到端人工验收。
+
+发现阶段：
+
+Local UAT Batch 002
+
+状态：
+
+Fixed / Pending Manual Verification
+
+处理：
+
+已将核心业务通用工作台改造为中文业务表单、关联对象选择器、状态中文映射、状态动作按钮和业务错误反馈；待项目负责人人工复验。
+
+发现日期：
+
+2026-08-03
+
+### UAT-011
+
+模块：
+
+Sales Management / Admin API Route
+
+页面：
+
+统计分析 / 销售只读视图
+
+问题描述：
+
+`SalesManagementService` 与数据库仓储已存在，但 Admin API Route 未发现与 Frozen API Contract 对应的销售分析独立 Path。若直接新增 `/api/v1/sales/...` 路由，将构成新增 API Path。
+
+期望结果：
+
+Sales Admin API Route 只能接入已批准的正式 API Contract；若需要新增销售分析路径，应先提交 API Change Request。
+
+问题类型：
+
+Contract Boundary / API CR Required
+
+严重等级：
+
+Major
+
+影响：
+
+销售统计 / 平台店铺销售只读视图无法通过新增 Admin API Route 强行接入；但销售出库与销售退货流程仍可复用 OUT-* 与 SRT-*。
+
+发现阶段：
+
+Local UAT Batch 002
+
+状态：
+
+Blocked by CR
+
+处理：
+
+本批未新增销售分析 API Path，避免违反 Frozen API 约束；建议后续提交 API CR 明确 Sales Management 只读路由。
+
+发现日期：
+
+2026-08-03

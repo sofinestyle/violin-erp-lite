@@ -40,6 +40,8 @@ violin_erp_lite
 - UAT-007
 - UAT-008
 - UAT-009
+- UAT-010
+- UAT-011
 
 ## 5. 已测试模块
 
@@ -159,3 +161,30 @@ Passed
 当前状态：
 
 Local UAT In Progress，剩余事项为 UAT-009 CR 阻断项。
+
+## 10. UAT Batch 002-A Core Business Usability Fix
+
+测试模块：
+
+- 采购订单
+- 生产任务
+- 质检单
+- 入库单
+- 库存调整
+- 国内销售出库
+- 跨境发货
+- 销售退货
+- 销售统计 Admin API Route 边界
+
+处理结果：
+
+- UAT-010：核心业务工作台已从 JSON DTO / UUID 输入改为中文业务表单、关联对象下拉、明细行录入、中文状态显示和状态动作按钮。
+- UAT-011：Sales Management 只读 Service 已存在，但未发现 Frozen API Contract 对应 Path；本批未新增 API Path，状态为 Blocked by CR。
+
+自动化回归：
+
+- `pnpm exec vitest run apps/admin/tests/workflow-page.test.tsx apps/admin/tests/api-v1-contract.test.ts`：通过。
+
+当前状态：
+
+Local UAT In Progress，UAT-010 等待人工复验，UAT-009 / UAT-011 为 CR 阻断项。
