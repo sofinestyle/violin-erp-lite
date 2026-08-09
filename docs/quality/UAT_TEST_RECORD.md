@@ -309,7 +309,7 @@ AI 视觉平台：
 
 当前状态：
 
-Local UAT In Progress，Batch 002-B 等待项目负责人进行人工复验。
+Local UAT In Progress，Batch 002-B Final Manual Spot Check 已通过，状态更新为 Verified / Closed。
 
 ## 14. UAT Batch 002-B Automated Verification
 
@@ -364,7 +364,7 @@ Local UAT In Progress，Batch 002-B 等待项目负责人进行人工复验。
 
 当前状态：
 
-Local UAT In Progress，Batch 002-B Automated Verification Passed，进入 Final Manual Spot Check；暂不得标记 Verified / Closed。
+Local UAT In Progress，Batch 002-B Automated Verification Passed；项目负责人 Final Manual Spot Check 已通过，Batch 002-B 状态更新为 Verified / Closed。
 
 ## 15. UAT-013 Product Category Preset Selection Issue
 
@@ -387,4 +387,18 @@ Batch 002-B Final Manual Spot Check
 
 当前状态：
 
-Local UAT In Progress
+Fixed / Pending Manual Verification
+
+修复记录：
+
+- 根因：产品分类预设使用浏览器原生 `datalist`，选择“提琴”后会按输入值过滤候选项，导致下拉仅剩“提琴”；
+- 修复：将产品分类预设改为正式下拉选择，完整显示 `提琴`、`吉他`、`尤克里里`、`配件`、`自定义`；
+- 默认：新增产品分类时默认选中 `提琴`；
+- 边界：未修改 Category API、Database、Permission 或自动编码逻辑。
+
+自动化回归：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。

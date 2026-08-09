@@ -122,6 +122,18 @@ function optionName(field: WorkbenchField, option: RecordItem | undefined): stri
     : optionLabel(field, option);
 }
 
+function fieldSelectOptions(field: WorkbenchField, value: string) {
+  const options = [...(field.options ?? [])];
+  if (
+    field.inputMode === "preset-select" &&
+    value &&
+    !options.some((option) => option.value === value)
+  ) {
+    return [{ label: value, value }, ...options];
+  }
+  return options;
+}
+
 function buildSkuName(
   form: FormData,
   relationOptions: RelationOptions,
@@ -931,7 +943,7 @@ function MasterDataFieldControl({
             </option>
           ))}
         </select>
-      ) : field.inputMode === "select" && field.options ? (
+      ) : (field.inputMode === "select" || field.inputMode === "preset-select") && field.options ? (
         <select
           name={field.key}
           required={required}
@@ -940,7 +952,7 @@ function MasterDataFieldControl({
           className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
         >
           <option value="">{field.placeholder ?? `请选择${field.label}`}</option>
-          {field.options.map((option) => (
+          {fieldSelectOptions(field, value).map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

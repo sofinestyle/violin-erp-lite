@@ -2,10 +2,10 @@
 document_name: UAT Batch 002-B Master Data UX Refactoring Report
 project: Violin ERP Lite
 version: 1.0
-status: Draft
+status: Verified / Closed
 owner: Project Manager
 created_date: 2026-08-03
-updated_date: 2026-08-03
+updated_date: 2026-08-09
 related_phase: Phase 10
 ---
 
@@ -161,3 +161,15 @@ related_phase: Phase 10
 - 厂家 / 供应商结算方式下拉是否覆盖当前业务；
 - 仓库责任主体下拉是否符合运营用语；
 - 平台 / 店铺统一入口是否符合人工验收预期。
+
+## 8. Final Manual Spot Check
+
+结果：
+
+Verified / Closed
+
+说明：
+
+- 项目负责人已完成 Batch 002-B Final Manual Spot Check；
+- Batch 002-B Master Data UX Refactoring 已通过人工最终抽查；
+- UAT-013 为最终抽查中发现的独立问题，已在后续修复中处理，状态为 Fixed / Pending Manual Verification。

@@ -5,7 +5,7 @@ export type WorkbenchField = Readonly<{
   group?: string;
   helpText?: string;
   hidden?: true;
-  inputMode?: "datalist" | "select" | "textarea";
+  inputMode?: "datalist" | "preset-select" | "select" | "textarea";
   key: string;
   label: string;
   optionCodeField?: string;
@@ -46,6 +46,7 @@ export const MASTER_DATA_FIELD_OPTIONS = {
     { label: "吉他", value: "吉他" },
     { label: "尤克里里", value: "尤克里里" },
     { label: "配件", value: "配件" },
+    { label: "自定义", value: "自定义" },
   ],
   countryCodes: [
     { label: "中国大陆（CN）", value: "CN" },
@@ -242,10 +243,11 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
         placeholder: "例如：CAT-VLN",
       }),
       field("categoryName", "分类名称", true, "text", {
+        defaultValue: "提琴",
         group: "基础信息",
-        inputMode: "datalist",
+        inputMode: "preset-select",
         options: MASTER_DATA_FIELD_OPTIONS.categoryPresets,
-        placeholder: "可选预设：提琴 / 吉他 / 尤克里里 / 配件，或输入自定义分类",
+        placeholder: "请选择预设分类",
       }),
       field("parentCategoryId", "上级分类", false, "text", {
         group: "层级关系",

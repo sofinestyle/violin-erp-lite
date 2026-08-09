@@ -117,9 +117,17 @@ describe("Master Data PC pages", () => {
       (definition) => definition.key === "product-categories",
     );
     expect(category?.fields.find((field) => field.key === "categoryName")).toMatchObject({
-      inputMode: "datalist",
+      defaultValue: "提琴",
+      inputMode: "preset-select",
       options: MASTER_DATA_FIELD_OPTIONS.categoryPresets,
     });
+    expect(MASTER_DATA_FIELD_OPTIONS.categoryPresets.map((option) => option.label)).toEqual([
+      "提琴",
+      "吉他",
+      "尤克里里",
+      "配件",
+      "自定义",
+    ]);
     expect(category?.fields.find((field) => field.key === "categoryLevel")).toMatchObject({
       defaultValue: "1",
       hidden: true,
@@ -128,6 +136,18 @@ describe("Master Data PC pages", () => {
       defaultValue: "0",
       hidden: true,
     });
+  });
+
+  it("renders product category presets as switchable select options", () => {
+    const category = MASTER_WORKBENCHES.find(
+      (definition) => definition.key === "product-categories",
+    );
+    const categoryName = category?.fields.find((field) => field.key === "categoryName");
+    expect(categoryName?.inputMode).toBe("preset-select");
+    expect(categoryName?.defaultValue).toBe("提琴");
+    for (const preset of ["提琴", "吉他", "尤克里里", "配件", "自定义"]) {
+      expect(categoryName?.options).toContainEqual({ label: preset, value: preset });
+    }
   });
 
   it("supports SKU usability defaults without implementing automatic code generation", () => {

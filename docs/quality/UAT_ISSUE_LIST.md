@@ -680,11 +680,11 @@ Batch 002-B Final Manual Spot Check
 
 状态：
 
-Open
+Fixed / Pending Manual Verification
 
 处理：
 
-待评估修复；本次仅记录人工发现的问题，不修改代码、Database、API 或 Permission。
+已修复。根因为产品分类预设使用浏览器原生 `datalist`，选择“提琴”后候选项会被输入值过滤为“提琴”本身，导致无法继续切换其他预设。现已改为正式下拉选择，完整保留 `提琴`、`吉他`、`尤克里里`、`配件`、`自定义` 五个预设；默认值为 `提琴`，用户可自由切换。未修改 Category API、Database、Permission 或自动编码逻辑。
 
 发现日期：
 
@@ -698,7 +698,7 @@ Open
 
 综合状态：
 
-Automated Verification Passed / Pending Final Manual Spot Check
+Verified / Closed
 
 已自动通过并等待最终人工抽检：
 
@@ -724,4 +724,4 @@ Manual Check Required：
 
 处理：
 
-本轮最终自动复核通过，Batch 002-B 进入 Final Manual Spot Check；Batch 002-B 不得标记 Verified / Closed。
+项目负责人 Final Manual Spot Check 已通过，Batch 002-B 已更新为 Verified / Closed。UAT-013 为最终抽查中发现的独立问题，已完成修复并等待人工复验。

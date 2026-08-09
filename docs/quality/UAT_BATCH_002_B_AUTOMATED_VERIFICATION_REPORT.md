@@ -2,10 +2,10 @@
 document_name: UAT Batch 002-B Master Data UX Automated Verification Report
 project: Violin ERP Lite
 version: 1.0
-status: Draft
+status: Verified / Closed
 owner: Project Manager
 created_date: 2026-08-03
-updated_date: 2026-08-03
+updated_date: 2026-08-09
 related_phase: Phase 10
 ---
 
@@ -126,9 +126,21 @@ Batch 002-B 的基础资料 UX 优化已完成最终自动复核。上一轮自�
 
 综合状态：
 
-Automated Verification Passed / Pending Final Manual Spot Check
+Verified / Closed
 
 建议：
 
 - 对 Manual Check Required 项执行一次带 UAT 标识数据的人工抽检；
 - UAT-009 自动编码继续保持 Blocked by CR。
+
+## 11. Final Manual Spot Check
+
+结果：
+
+Verified / Closed
+
+说明：
+
+- 项目负责人已完成 Batch 002-B Final Manual Spot Check；
+- Batch 002-B 自动复核中列出的人工抽检项已通过最终抽查；
+- UAT-013 为 Final Manual Spot Check 中发现的独立问题，已在后续修复中处理，状态为 Fixed / Pending Manual Verification。

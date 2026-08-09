@@ -316,3 +316,35 @@ Commit：
 Commit：
 
 `docs: record UAT-013 category preset issue`
+
+### Batch 002-B Closure and UAT-013 Fix
+
+问题：
+
+- Batch 002-B Final Manual Spot Check；
+- UAT-013：产品分类预设选择“提琴”后无法切换到其他分类。
+
+修改：
+
+- 将 Batch 002-B 状态更新为 Verified / Closed；
+- 修复 UAT-013：产品分类预设由原生 `datalist` 改为正式下拉选择；
+- 补齐并保持五个预设：`提琴`、`吉他`、`尤克里里`、`配件`、`自定义`；
+- 默认选中 `提琴`，用户可自由切换其他分类；
+- 更新 UAT 问题清单、测试记录、变更记录和 Batch 002-B 报告。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+结果：
+
+- Batch 002-B：Verified / Closed；
+- UAT-013：Fixed / Pending Manual Verification；
+- 未修改 Database、API Contract、Permission、自动编码逻辑或 Sales API。
+
+Commit：
+
+`fix: close batch 002-B and resolve UAT-013`
