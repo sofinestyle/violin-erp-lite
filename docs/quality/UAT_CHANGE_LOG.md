@@ -419,3 +419,30 @@ Commit：
 Commit：
 
 `test: verify batch 002-C business flow`
+
+### UAT-009 Formal Change Request Documents
+
+问题：
+
+- UAT-009 自动编码。
+
+修改：
+
+- 新增 `docs/changes/CR-001_CODE_GENERATION_BUSINESS_RULE.md`；
+- 新增 `docs/changes/CR-002_CODE_GENERATION_API_CHANGE.md`；
+- 新增 `docs/changes/CR-003_CODE_GENERATION_DATABASE_CHANGE.md`；
+- 将 UAT-009 状态从 `Blocked by CR` 更新为 `Pending CR Approval`。
+
+测试：
+
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+结果：
+
+- 自动编码进入正式 CR 审批等待状态；
+- 本次未修改代码、Database、API Contract、Permission、Migration 或 Frozen SSOT。
+
+Commit：
+
+`docs: add UAT-009 change requests`

@@ -333,11 +333,11 @@ Local UAT
 
 状态：
 
-Blocked by CR
+Pending CR Approval
 
 处理：
 
-已完成影响评估。现有 Frozen 业务规则与 API Create DTO 均要求业务编码由用户提交，未批准统一自动编码规则；需要先提交业务规则 / API Change Request 后才能实施。
+已完成影响评估，并已形成 CR-001、CR-002、CR-003 正式变更请求草案。现有 Frozen 业务规则与 API Create DTO 均要求业务编码由用户提交，未批准统一自动编码规则；需等待 Business Rule CR、API CR 和 Database CR 审批后才能实施。
 
 处理要求：
 
@@ -749,7 +749,7 @@ Fixed / Pending Verification
 
 CR 边界：
 
-- UAT-009 自动编码：Blocked by CR；
+- UAT-009 自动编码：Pending CR Approval；
 - UAT-011 独立 Sales Admin API Route：Blocked by CR；
 - 跨境发货单直接保存平台 / 店铺：需要 Database CR + API CR，当前不伪造前端字段。
 
