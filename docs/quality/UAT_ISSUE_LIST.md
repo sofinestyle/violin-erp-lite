@@ -527,11 +527,11 @@ Local UAT Batch 002
 
 状态：
 
-Automated Pass / Pending Final Manual Spot Check
+Fixed / Pending Verification
 
 处理：
 
-已将核心业务通用工作台改造为中文业务表单、关联对象选择器、状态中文映射、状态动作按钮和业务错误反馈；自动化复核通过，待项目负责人进行最终人工抽检。
+已将核心业务通用工作台改造为中文业务表单、关联对象选择器、来源明细加载、状态中文映射、状态动作按钮和业务错误反馈。本批继续补齐业务化文案、状态中文映射和核心闭环自动化测试，确认采购、生产、质检、入库、库存调整、销售出库、跨境发货和销售退货均通过既有正式 API 进入人工复验阶段。跨境发货单直连平台 / 店铺、自动编码和独立 Sales API 仍按 CR 边界处理。
 
 发现日期：
 
@@ -725,3 +725,44 @@ Manual Check Required：
 处理：
 
 项目负责人 Final Manual Spot Check 已通过，Batch 002-B 已更新为 Verified / Closed。UAT-013 为最终抽查中发现的独立问题，已完成修复并等待人工复验。
+
+## 6. Batch 002-C Core Business Completion
+
+说明：
+
+本节记录 Batch 002-C Core Business Completion 的实现与验收准备状态。本批不新增 UAT 编号，不修改 Database / API / Permission，不实现自动编码、BOM / MRP、财务模块或 AI 功能。
+
+综合状态：
+
+Fixed / Pending Verification
+
+已完成并进入人工复验：
+
+- 基础资料：产品分类、产品、SKU、供应商、生产厂家、仓库、平台、店铺均保持中文业务化入口；
+- 采购：采购订单创建、提交、审核、驳回、撤回、反审核、取消等状态动作通过 `PUR-*`；
+- 生产：生产任务创建、提交、审核、开始生产、进度和分批完工通过 `PRO-*`；
+- 质检：采购来源和生产来源质检通过来源选择器与来源明细加载完成，不要求手填来源 UUID；
+- 入库：采购 / 生产来源入库通过已确认验收单、目标仓库和入库明细完成，确认入库由后端事务更新库存与流水；
+- 库存：库存调整通过仓库、SKU、方向和数量执行业务操作，确认由正式库存事务能力保障；
+- 销售出库：销售受限 MVP 复用 `OUT-*` 与 `SRT-*`，不新增独立 Sales API；
+- 跨境发货：跨境发货复用 `CBR-*`，支持来源仓、在途仓、海外仓、SKU、数量和确认发货。
+
+CR 边界：
+
+- UAT-009 自动编码：Blocked by CR；
+- UAT-011 独立 Sales Admin API Route：Blocked by CR；
+- 跨境发货单直接保存平台 / 店铺：需要 Database CR + API CR，当前不伪造前端字段。
+
+自动化回归：
+
+- `pnpm exec vitest run apps/admin/tests/workflow-page.test.tsx`：通过；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+待人工复验：
+
+- 使用 UAT 标识测试数据完成真实业务链路写入；
+- 验证无需输入 JSON、内部 UUID、英文状态码或内部技术字段；
+- 验证入库、出库、库存调整和跨境发货的库存流水与余额变化；
+- 验证错误提示、Request ID、成功反馈和状态刷新。

@@ -82,6 +82,8 @@ type WorkflowAction = Readonly<{
 
 const PAGE_SIZE = 20;
 
+export const WORKFLOW_FORM_HELP_TEXT = "使用中文业务表单提交，系统会自动携带必要的内部关联信息。";
+
 export const WORKFLOW_SURFACE_CLASSES = {
   detailCard:
     "mt-5 border-slate-200 !bg-white p-4 text-slate-950 shadow-sm dark:border-slate-800 dark:!bg-slate-950 dark:text-slate-50",
@@ -117,16 +119,26 @@ const STATUS_LABELS: Record<string, string> = {
   draft: "草稿",
   executed: "已执行",
   failed: "失败",
+  importing: "导入中",
   in_production: "生产中",
+  in_progress: "进行中",
   not_required: "无需审批",
   not_submitted: "未提交",
   pending: "待处理",
   pending_approval: "待审核",
+  pending_confirmation: "待确认",
+  pending_validation: "待校验",
   qualified: "合格",
   rejected: "已驳回",
+  reversed: "已冲销",
+  shipped: "已发货",
   submitted: "已提交",
+  succeeded: "成功",
   unqualified: "不合格",
+  valid: "有效",
+  validation_failed: "校验失败",
   voided: "已作废",
+  warning: "有警告",
 };
 
 const STATUS_FILTERS = [
@@ -836,7 +848,7 @@ function optionLabel(row: Row, fields: readonly string[]): string {
     fields
       .map((field) => display(row[field]))
       .filter((part) => part && part !== "—")
-      .join(" / ") || row.id
+      .join(" / ") || "未命名业务对象"
   );
 }
 
@@ -1360,9 +1372,7 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
             <div className={WORKFLOW_SURFACE_CLASSES.dialogHeader}>
               <div>
                 <h2 className="text-lg font-semibold">新增{view.label}</h2>
-                <p className="text-sm text-muted-foreground">
-                  使用中文业务表单提交，不需要填写 UUID、JSON 或英文状态码。
-                </p>
+                <p className="text-sm text-muted-foreground">{WORKFLOW_FORM_HELP_TEXT}</p>
               </div>
               <Button
                 type="button"

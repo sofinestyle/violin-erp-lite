@@ -348,3 +348,38 @@ Commit：
 Commit：
 
 `fix: close batch 002-B and resolve UAT-013`
+
+### Batch 002-C Core Business Completion
+
+问题：
+
+- UAT-010：核心业务工作台需从技术工作台升级为普通业务用户可操作的业务系统；
+- Batch 002-C：基础资料 → 采购 → 生产 → 质检 → 入库 → 库存 → 销售出库 → 跨境发货闭环验收准备；
+- UAT-009 自动编码和 UAT-011 独立 Sales Admin API Route 继续作为 CR 边界项。
+
+修改：
+
+- 补充 Workflow 状态中文映射，避免核心业务列表、详情和状态历史显示英文状态；
+- 表单帮助文案改为业务化说明，不再提示用户 UUID、JSON 或 DTO 等技术概念；
+- 关联下拉在缺少业务标签时不再回退显示内部 id；
+- 增加 Workflow 自动化测试，覆盖采购、生产、质检、入库、库存调整、销售出库、跨境发货和销售退货；
+- 新增 `docs/quality/UAT_BATCH_002_C_CORE_COMPLETION_REPORT.md`；
+- 更新 UAT 问题清单和测试记录，将 UAT-010 / Batch 002-C 标记为 Fixed / Pending Verification。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/workflow-page.test.tsx`：通过；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+结果：
+
+- 核心业务工作台进入人工复验；
+- 未修改 Database、Migration、API Contract、Permission 或自动编码逻辑；
+- 跨境发货单直接保存平台 / 店铺需 Database CR + API CR，当前不伪造前端字段；
+- 独立 Sales API 仍需 API CR，销售受限 MVP 继续复用 `OUT-*` / `SRT-*`。
+
+Commit：
+
+`fix: complete batch 002-C core business flow`

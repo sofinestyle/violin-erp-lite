@@ -402,3 +402,48 @@ Fixed / Pending Manual Verification
 - `pnpm check`：通过；
 - `pnpm status:check`：通过；
 - `git diff --check`：通过。
+
+## 16. UAT Batch 002-C Core Business Completion
+
+测试模块：
+
+- 基础资料；
+- 采购订单；
+- 生产任务；
+- 采购 / 生产质检；
+- 采购 / 生产入库；
+- 库存调整；
+- 国内销售出库；
+- 跨境发货；
+- 销售退货。
+
+处理结果：
+
+- PC Admin 核心业务工作台继续保持中文业务表单、关联对象下拉、来源明细加载、状态中文映射、状态动作按钮、成功 / 失败反馈和 Request ID 保留；
+- 表单帮助文案改为业务化说明，不再显示 UUID / JSON / DTO 等技术提示；
+- 关联下拉缺少业务标签时不再回退展示内部 id；
+- 补充 Workflow 状态中文映射，覆盖 `shipped`、`reversed`、`pending_validation`、`pending_confirmation` 等运行状态；
+- 增加核心闭环自动化测试，确认采购、生产、质检、入库、库存调整、销售出库、跨境发货和销售退货均使用既有正式 API；
+- 销售受限 MVP 继续复用 `OUT-*` 与 `SRT-*`，不新增 `/api/v1/sales`；
+- 跨境发货单直连平台 / 店铺因 Frozen Database/API 未覆盖，记录为 CR 边界，不伪造前端字段。
+
+当前状态：
+
+- UAT-010：Fixed / Pending Verification；
+- Batch 002-C：Fixed / Pending Verification；
+- UAT-009：Blocked by CR；
+- UAT-011：Blocked by CR。
+
+自动化回归：
+
+- `pnpm exec vitest run apps/admin/tests/workflow-page.test.tsx`：通过；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+待人工复验：
+
+- 使用 `http://localhost:3100` 和 UAT 标识测试数据完成真实业务链路写入；
+- 验证无需输入 JSON、内部 UUID、英文状态码或内部技术字段；
+- 验证库存增加、库存减少、库存调整、跨境发货库存流转和库存流水；
+- 验证状态刷新、成功反馈、错误提示和 Request ID。

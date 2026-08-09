@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { PermissionProvider } from "@/contexts/permission-context";
 import { UserProvider } from "@/contexts/user-context";
 import {
+  WORKFLOW_FORM_HELP_TEXT,
   WORKFLOW_SURFACE_CLASSES,
   WorkflowWorkbench,
   actionsFor,
@@ -99,6 +100,105 @@ describe("Parallel workflow pages", () => {
     expect(formFor(warehouseOperationViews[4]!)?.fields.map((field) => field.label)).toContain(
       "原销售出库单",
     );
+  });
+
+  it("keeps the Batch 002-C core flow business-friendly without technical prompts", () => {
+    const coreViews = [
+      procurementViews[0],
+      productionViews[0],
+      procurementViews[2],
+      procurementViews[3],
+      inventoryViews[2],
+      warehouseOperationViews[3],
+      crossBorderViews[0],
+      warehouseOperationViews[4],
+    ];
+
+    for (const view of coreViews) {
+      const form = formFor(view!);
+      expect(form).toBeDefined();
+      const labels = [
+        ...(form?.fields.map((field) => field.label) ?? []),
+        ...(form?.itemFields?.map((field) => field.label) ?? []),
+      ].join(" / ");
+
+      expect(labels).not.toMatch(/UUID|JSON|DTO|英文状态码|内部技术字段/i);
+    }
+
+    expect(WORKFLOW_FORM_HELP_TEXT).not.toMatch(/UUID|JSON|DTO|英文状态码|内部技术字段/i);
+    expect(WORKFLOW_FORM_HELP_TEXT).toContain("中文业务表单");
+  });
+
+  it("covers the procurement-production-inventory-sales-cross-border loop with existing APIs", () => {
+    const purchase = procurementViews[0]!;
+    const production = productionViews[0]!;
+    const inspection = procurementViews[2]!;
+    const inbound = procurementViews[3]!;
+    const adjustment = inventoryViews[2]!;
+    const outbound = warehouseOperationViews[3]!;
+    const crossBorder = crossBorderViews[0]!;
+    const salesReturn = warehouseOperationViews[4]!;
+
+    expect(purchase.createApiPath).toBe("/api/v1/purchase-orders");
+    expect(production.createApiPath).toBe("/api/v1/production-orders");
+    expect(inspection.createApiPath).toBe("/api/v1/inspection-orders");
+    expect(inbound.createApiPath).toBe("/api/v1/inbound-orders/purchase");
+    expect(adjustment.createApiPath).toBe("/api/v1/inventory-adjustments");
+    expect(outbound.createApiPath).toBe("/api/v1/outbound-orders/domestic-sales");
+    expect(crossBorder.createApiPath).toBe("/api/v1/cross-border-shipments");
+    expect(salesReturn.createApiPath).toBe("/api/v1/sales-returns");
+
+    expect(actionsFor(inbound).map((action) => action.label)).toContain("确认入库");
+    expect(actionsFor(outbound).map((action) => action.label)).toContain("确认出库");
+    expect(actionsFor(crossBorder).map((action) => action.label)).toContain("确认发货");
+    expect(actionsFor(salesReturn).map((action) => action.label)).toContain("退货入库");
+  });
+
+  it("keeps Sales MVP on OUT/SRT routes instead of adding an unapproved SALES API", () => {
+    const outbound = warehouseOperationViews.find((view) => view.id === "domestic-outbound")!;
+    const salesReturn = warehouseOperationViews.find((view) => view.id === "sales-returns")!;
+
+    expect(outbound.apiPath).toContain("/api/v1/outbound-orders");
+    expect(outbound.createApiPath).toContain("/api/v1/outbound-orders/domestic-sales");
+    expect(salesReturn.apiPath).toContain("/api/v1/sales-returns");
+    for (const path of [outbound.apiPath, outbound.createApiPath, salesReturn.apiPath]) {
+      expect(path).not.toMatch(/^\/api\/v1\/sales(\/|\?|$)/);
+    }
+  });
+
+  it("does not fake platform or store persistence on cross-border shipment without CR", () => {
+    const fields = formFor(crossBorderViews[0]!)?.fields.map((field) => field.key);
+    const optionKeys = formFor(crossBorderViews[0]!)?.optionSources?.map((source) => source.key);
+
+    expect(fields).toEqual(
+      expect.arrayContaining([
+        "sourceWarehouseId",
+        "transitWarehouseId",
+        "destinationWarehouseId",
+        "shipmentBatchNo",
+        "transportMethod",
+      ]),
+    );
+    expect(fields).not.toEqual(expect.arrayContaining(["platformId", "storeId"]));
+    expect(optionKeys).not.toEqual(expect.arrayContaining(["platforms", "stores"]));
+  });
+
+  it("does not show duplicate status actions on business documents", () => {
+    const views = [
+      procurementViews[0],
+      productionViews[0],
+      procurementViews[2],
+      procurementViews[3],
+      inventoryViews[2],
+      warehouseOperationViews[3],
+      crossBorderViews[0],
+      warehouseOperationViews[4],
+    ];
+
+    for (const view of views) {
+      const labels = actionsFor(view!).map((action) => action.label);
+      expect(new Set(labels).size).toBe(labels.length);
+    }
   });
 
   it("exposes Chinese status action buttons through existing permission codes", () => {
