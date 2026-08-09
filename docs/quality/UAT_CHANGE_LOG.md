@@ -487,3 +487,44 @@ Commit：
 Commit：
 
 `docs: approve automatic code generation CRs`
+
+### UAT-009 Automatic Code Generation Implementation
+
+问题：
+
+- UAT-009 自动编码；
+- CR-001 Automatic Code Generation Business Rules；
+- CR-002 Allow Server-side Code Generation；
+- CR-003 Code Generation Storage。
+
+修改：
+
+- 新增 `code_generation_rules` 与 `code_sequences`；
+- 新增统一 CodeGenerationService；
+- Product、SKU、Supplier、Manufacturer、Warehouse 支持服务端自动生成编码；
+- Product、SKU、Supplier、Manufacturer、Warehouse Create DTO 编码字段调整为可选；
+- PC Admin 基础资料页面隐藏第一阶段自动编码输入，创建后展示最终编码；
+- 新增 `UAT_009_CODE_GENERATION_IMPLEMENTATION_REPORT.md`；
+- 将 UAT-009 状态更新为 `Fixed / Pending Verification`。
+
+测试：
+
+- `pnpm --filter @violin-erp/api test -- --runInBand`：通过；
+- `pnpm --filter @violin-erp/database test`：通过；
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm --filter @violin-erp/database typecheck`：通过；
+- `pnpm --filter @violin-erp/api typecheck`：通过；
+- `pnpm --filter @violin-erp/admin exec tsc --noEmit`：通过。
+
+结果：
+
+- 自动编码第一阶段实现完成；
+- Category Code、Brand Code、Platform Code、Store Code 暂不纳入第一阶段；
+- 未新增 Permission Code；
+- 未新增 API Path、Response 字段、分页字段或错误码；
+- 未修改历史业务编码；
+- 待项目负责人进行最终人工复验。
+
+Commit：
+
+`feat: implement automatic code generation`

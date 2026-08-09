@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   InMemoryAuditWriter,
   MASTER_DATA_RESOURCE_KEYS,
+  MASTER_DATA_DEFINITIONS,
   MasterDataService,
   parseMasterDataListQuery,
   validateMasterDataInput,
@@ -59,6 +60,18 @@ const requestContext = {
   requestId: "33333333-3333-4333-8333-333333333333",
   timestamp: "2026-07-23T00:00:00.000Z",
 };
+
+function updateInputFor(
+  resource: (typeof MASTER_DATA_RESOURCE_KEYS)[number],
+  input: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const result = { ...input, updatedAt: "2026-07-23T00:00:00.000Z" };
+  const codeField = MASTER_DATA_DEFINITIONS[resource].codeField;
+  if (["products", "skus", "suppliers", "manufacturers", "warehouses"].includes(resource)) {
+    delete result[codeField];
+  }
+  return result;
+}
 
 describe("Master Data API contracts", () => {
   it("covers the eight authorized Frozen resources and parses pagination safely", () => {
@@ -171,6 +184,58 @@ describe("Master Data API contracts", () => {
     ).rejects.toMatchObject({ code: "PERMISSION_FORBIDDEN" });
   });
 
+  it("allows first-stage automatic code resources to omit code on create", () => {
+    expect(
+      validateMasterDataInput(
+        "products",
+        {
+          brandId: RECORD_ID,
+          categoryId: RECORD_ID,
+          defaultUnit: "piece",
+          productName: "手工小提琴",
+          productType: "violin",
+        },
+        "create",
+      ),
+    ).toMatchObject({ data: expect.not.objectContaining({ productCode: expect.anything() }) });
+    expect(
+      validateMasterDataInput(
+        "suppliers",
+        {
+          settlementMethod: "monthly",
+          supplierName: "测试供应商",
+        },
+        "create",
+      ),
+    ).toMatchObject({ data: expect.not.objectContaining({ supplierCode: expect.anything() }) });
+  });
+
+  it("keeps legacy create code compatibility but rejects generated code updates", () => {
+    expect(
+      validateMasterDataInput(
+        "products",
+        {
+          brandId: RECORD_ID,
+          categoryId: RECORD_ID,
+          defaultUnit: "piece",
+          productCode: "LEGACY-001",
+          productName: "历史产品",
+          productType: "violin",
+        },
+        "create",
+      ),
+    ).toMatchObject({ data: { productCode: "LEGACY-001" } });
+    expect(() =>
+      validateMasterDataInput(
+        "products",
+        { productCode: "PRD-999999", updatedAt: "2026-07-23T00:00:00.000Z" },
+        "update",
+      ),
+    ).toThrowError(
+      expect.objectContaining({ details: [expect.objectContaining({ field: "productCode" })] }),
+    );
+  });
+
   it.each([
     [
       "product-categories",
@@ -248,13 +313,7 @@ describe("Master Data API contracts", () => {
         persisted,
       );
       await expect(
-        service.update(
-          resource,
-          RECORD_ID,
-          { ...input, updatedAt: "2026-07-23T00:00:00.000Z" },
-          auth,
-          requestContext,
-        ),
+        service.update(resource, RECORD_ID, updateInputFor(resource, input), auth, requestContext),
       ).resolves.toMatchObject(persisted);
       await expect(
         service.setActive(
@@ -431,13 +490,7 @@ describe("Master Data API contracts", () => {
         persisted,
       );
       await expect(
-        service.update(
-          resource,
-          RECORD_ID,
-          { ...input, updatedAt: "2026-07-23T00:00:00.000Z" },
-          auth,
-          requestContext,
-        ),
+        service.update(resource, RECORD_ID, updateInputFor(resource, input), auth, requestContext),
       ).resolves.toMatchObject(persisted);
       await expect(
         service.setActive(

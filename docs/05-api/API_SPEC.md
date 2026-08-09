@@ -1,12 +1,12 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.6
+version: 1.7
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-25
-related_phase: Phase 5
+updated_date: 2026-08-09
+related_phase: Phase 5 / UAT-009
 ---
 
 # API Master Specification
@@ -15,7 +15,7 @@ related_phase: Phase 5
 
 本文件是 Violin ERP Lite Phase 5 正式 API 规范总入口，统一 Task 5.1 至 Task 5.5 的接口编号、Header、请求、响应、分页、排序、筛选、命名、版本、错误码、权限、日志、导入、附件和安全规则。
 
-API Master Specification v1.6 为 Completed / Approved / Frozen，正式接口总数保持 335。API Change Request 006 已正式批准，在不新增路径、编号、权限代码、错误码或数据库结构的前提下，为 Attachment Framework 正式新增 `AttachmentObjectType = product`、`product` → `products` Object Registry 映射，并允许 `general_business_document` 关联 Product。API Master Specification v1.5 及其 335 个接口保留为历史冻结基线。
+API Master Specification v1.7 为 Completed / Approved。CR-002 Allow Server-side Code Generation 已正式批准并实施，在不新增 API Path、接口编号、Response 结构、分页结构、错误码或 Permission Code 的前提下，将第一阶段自动编码对象的 Create DTO 编码字段调整为可选，由服务端生成最终编码并在既有响应字段中返回。API Master Specification v1.6 及其 335 个接口保留为历史冻结基线。
 
 ## 2. 正式文档入口
 
@@ -38,8 +38,10 @@ API Master Specification v1.6 为 Completed / Approved / Frozen，正式接口�
 17. [API Change Request 005：Attachment API 契约补齐](../00-governance/API_CHANGE_REQUEST_005.md)
 18. 本文件第 23 节：API Master Specification v1.6 Attachment Framework 正式契约
 19. [API Change Request 006：Product Attachment Object Type](../00-governance/API_CHANGE_REQUEST_006.md)
+20. [CR-002 Code Generation API Change](../changes/CR-002_CODE_GENERATION_API_CHANGE.md)
+21. 本文件第 24 节：API Master Specification v1.7 自动编码正式契约
 
-发生冲突时，Frozen 业务规则、Frozen Database Logical Design v2.3 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
+发生冲突时，Frozen 业务规则、当前获批 Database Logical Design、已批准 Change Request 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
 
 ## 3. 接口编号与数量
 
@@ -63,7 +65,7 @@ API Master Specification v1.6 为 Completed / Approved / Frozen，正式接口�
 | API CR-001 | 库存盘点 `STC-*` | 17 | Completed / Approved |
 | API CR-001 | 销售退货 `SRT-*` | 13 | Completed / Approved |
 | API CR-001 | 报损 `DMG-*` | 13 | Completed / Approved |
-| 合计 | API Master Specification v1.6 正式接口 | 335 | Completed / Approved / Frozen |
+| 合计 | API Master Specification v1.7 正式接口 | 335 | Completed / Approved |
 
 逐模块复核结果为 `74 + 29 + 29 + 10 + 26 + 18 + 17 + 15 + 22 + 15 + 8 + 4 + 5 + 16 + 4 + 17 + 13 + 13 = 335`。接口编号唯一且稳定，不得复用、改义或因排序调整重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。`STC-*`、`SRT-*` 和 `DMG-*` 的完整正式契约以 API Change Request 001 及 Task 5.4 补充章节为准；`SEC-006` 至 `SEC-021` 的完整正式契约以本文件第 16 节为准；`SEC-022` 至 `SEC-025` 的完整正式契约以本文件第 17 节为准；`CBR-003` 的 `transportMethod` 字段补充契约以本文件第 18 节为准。
 
@@ -1327,3 +1329,82 @@ API v1.5 新增且仅新增以下 9 个稳定错误码：
 | `SYSTEM_ATTACHMENT_STORAGE_DELETE_FAILED` | 503 | Storage 删除失败且状态已安全保留 |
 
 错误响应不得返回 Storage Key、路径、Checksum 差异、SQL、堆栈、锁、Hash 或无权对象信息。API v1.5 的错误码净增加 9，权限代码变化为 0，正式 API 总数仍为 335。
+
+## 24. API Master Specification v1.7 自动编码正式契约
+
+CR-002 Allow Server-side Code Generation 已批准并实施。API v1.7 只调整第一阶段基础资料 Create DTO 的编码字段必填语义，不新增 API Path、接口编号、Response 字段、分页字段、错误码或 Permission Code。
+
+### 24.1 第一阶段范围
+
+编码字段从 Create Request 必填调整为可选的对象：
+
+| 对象 | API 模块 | 编码字段 | 服务端生成规则 |
+| --- | --- | --- | --- |
+| Product | `MD-*` | `productCode` | `PRD-000001` |
+| SKU | `MD-*` | `skuCode` | `型号-尺寸-颜色`，例如 `L2-44-BK` |
+| Supplier | `MD-*` | `supplierCode` | `SUP-000001` |
+| Manufacturer | `MD-*` | `manufacturerCode` | `MFR-000001` |
+| Warehouse | `MD-*` | `warehouseCode` | `WH-000001` |
+
+第一阶段不调整：
+
+- Category `categoryCode`；
+- Brand `brandCode`；
+- Platform `platformCode`；
+- Store `storeCode`。
+
+上述对象继续要求客户端按既有 API Contract 提交编码字段。
+
+### 24.2 Create DTO 兼容规则
+
+第一阶段对象创建时：
+
+1. 客户端不提交编码字段、提交 `null` 或提交空字符串时，服务端必须生成编码；
+2. 客户端提交合法历史编码时，服务端保持兼容并使用客户端编码；
+3. 客户端提交重复编码时，继续返回既有冲突错误；
+4. Response 必须在既有 DTO 编码字段中返回最终持久化编码；
+5. 不得新增 Response 包装结构或新增分页字段。
+
+### 24.3 Update DTO 规则
+
+自动编码第一阶段对象创建后，普通更新不得修改编码字段。若请求体显式提交第一阶段自动编码字段，服务端必须返回字段级校验错误。历史已有编码继续作为只读业务标识展示，不被自动重写。
+
+### 24.4 SKU 组合编码规则
+
+SKU 自动编码格式为：
+
+```text
+型号-尺寸-颜色
+```
+
+尺寸映射：
+
+| 输入 | 编码 |
+| --- | --- |
+| `4/4` | `44` |
+| `3/4` | `34` |
+| `1/2` | `12` |
+| `1/4` | `14` |
+
+颜色映射：
+
+| 输入 | 编码 |
+| --- | --- |
+| 黑色 | `BK` |
+| 棕色 | `BR` |
+| 原木色 | `NAT` |
+| 绿色 | `GN` |
+| 蓝色 | `BL` |
+
+型号来源必须是服务端可验证的稳定型号来源。当前第一阶段不新增 Product Model 字段；若现有 Product 记录无法提供稳定字母数字型号，SKU Create 必须返回明确字段级校验错误，不得使用中文名称、时间戳或随机值生成正式 SKU 编码。
+
+### 24.5 错误与权限
+
+自动编码继续复用既有错误结构和错误码：
+
+- 字段缺失、型号无法推导、尺寸或颜色不支持：复用 `VALIDATION_INVALID_FIELD`；
+- 编码重复或 SKU 组合重复：复用既有冲突错误；
+- 权限不足：复用既有 Master Data 权限错误；
+- 服务端并发或数据库异常：复用既有系统错误。
+
+CR-002 不新增 Permission Code。自动编码不改变 RBAC、Data Scope、字段权限或审计边界。

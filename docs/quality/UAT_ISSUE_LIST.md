@@ -333,24 +333,31 @@ Local UAT
 
 状态：
 
-Approved for Implementation
+Fixed / Pending Verification
 
 处理：
 
-已完成影响评估，并已形成 CR-001、CR-002、CR-003 正式变更请求。CR-001 Business Rule、CR-002 API Contract、CR-003 Database 已由 Project Owner 于 2026-08-09 批准，第一阶段实施范围为 Product Code、SKU Code、Supplier Code、Manufacturer Code、Warehouse Code；Category Code、Brand Code、Platform Code、Store Code 暂不纳入第一阶段。
+已完成 CR-001、CR-002、CR-003 第一阶段实施。Product Code、SKU Code、Supplier Code、Manufacturer Code、Warehouse Code 已支持服务端自动生成；Category Code、Brand Code、Platform Code、Store Code 暂不纳入第一阶段。普通用户创建第一阶段对象时不再输入编码，创建后展示最终生成编码；历史已有编码保持不变，旧客户端提交合法编码继续兼容。
 
 处理要求：
 
-后续修复前必须评估：
+已完成评估：
 
-- 现有业务规则是否已有编码规范
-- 前端是否应隐藏或只读显示编码字段
-- API Create DTO 是否要求编码必填
-- Repository 是否已有编号生成器
-- 唯一性及并发生成安全
-- 是否涉及 Frozen API 或 Database
+- CR-001 已批准并定义第一阶段编码规则；
+- CR-002 已批准并将第一阶段 Create DTO 编码字段调整为可选；
+- CR-003 已批准并新增 `code_generation_rules` 与 `code_sequences`；
+- 编码由统一 CodeGenerationService 服务端生成；
+- 普通流水编码通过数据库事务与行级锁保证并发安全；
+- SKU 组合编码由服务端基于型号、尺寸、颜色生成，并由既有 SKU 唯一约束裁决重复组合。
 
-如涉及 API Contract、Database 或正式业务规则变化，必须先提交相应 CR。
+待人工复验：
+
+- 创建 Product 时生成 `PRD-xxxxxx`；
+- 创建 SKU 时生成 `型号-尺寸-颜色`；
+- 创建 Supplier 时生成 `SUP-xxxxxx`；
+- 创建 Manufacturer 时生成 `MFR-xxxxxx`；
+- 创建 Warehouse 时生成 `WH-xxxxxx`；
+- 确认普通表单不再要求用户输入上述编码。
 
 发现日期：
 

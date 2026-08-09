@@ -12,6 +12,10 @@ export {
 } from "./attachment/prisma-attachment-transaction.js";
 export { createCurrentUserResolver } from "./auth/current-user-resolver.js";
 export { PrismaAuthRepository } from "./auth/prisma-auth-repository.js";
+export {
+  CodeGenerationService,
+  isAutomaticCodeResource,
+} from "./code-generation/code-generation-service.js";
 export { PrismaMasterDataRepository } from "./master-data/prisma-master-data-repository.js";
 export {
   applyInventoryMovements,

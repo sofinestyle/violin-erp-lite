@@ -1,34 +1,34 @@
 ---
 document_name: 数据库规格
 project: Violin ERP Lite
-version: 2.5
-status: Completed / Approved / Pending Migration
+version: 2.6
+status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-19
 updated_date: 2026-07-25
-related_phase: Phase 3 / Phase 7
+related_phase: Phase 3 / Phase 7 / UAT-009
 ---
 
 # DATABASE SPEC
 
 ## 1. 正式状态
 
-Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计；项目负责人于 2026-07-24 批准 Database Change Request 003，为四个既有导入状态字段增加正式值域 Check；项目负责人于 2026-07-25 批准 Database Change Request 004，补齐 Import 文件摘要去重与通用持久化幂等数据库基础；同日批准 Database Change Request 005，补齐 Attachment 生命周期状态值域、默认值和状态定位索引；项目负责人批准 Task 7.6 Background Job Database Change Request，新增后台任务、执行尝试、执行结果、死信闭环和调度租约的逻辑数据库设计；项目负责人批准 Task 7.7 Event Infrastructure Database Change Request，新增事件 Outbox、事件历史、消费 Inbox、事件死信和投递状态的逻辑数据库设计。
+Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计；项目负责人于 2026-07-24 批准 Database Change Request 003，为四个既有导入状态字段增加正式值域 Check；项目负责人于 2026-07-25 批准 Database Change Request 004，补齐 Import 文件摘要去重与通用持久化幂等数据库基础；同日批准 Database Change Request 005，补齐 Attachment 生命周期状态值域、默认值和状态定位索引；项目负责人批准 Task 7.6 Background Job Database Change Request，新增后台任务、执行尝试、执行结果、死信闭环和调度租约的逻辑数据库设计；项目负责人批准 Task 7.7 Event Infrastructure Database Change Request，新增事件 Outbox、事件历史、消费 Inbox、事件死信和投递状态的逻辑数据库设计；项目负责人于 2026-08-09 批准 CR-003 Code Generation Storage，并在 UAT-009 第一阶段新增统一自动编码数据库基础。
 
 当前唯一有效版本为：
 
-- Database Logical Design：v2.5；
-- 状态：Completed / Approved / Pending Migration；
-- 正式表：73；
-- 正式字段：1330；
-- 主键：73；
-- 唯一约束/唯一索引：88；
+- Database Logical Design：v2.6；
+- 状态：Completed / Approved；
+- 正式表：75；
+- 正式字段：1343；
+- 主键：75；
+- 唯一约束/唯一索引：90；
 - 外键：310；
-- 普通索引：130；
-- Check：277；
+- 普通索引：131；
+- Check：279；
 - 正式数据库枚举：2。
 
-Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check。v2.3 按 DCR-005 为既有 `attachments.status` 增加 `active` 默认值和五值域 Check，并新增一个状态定位普通索引；不新增表、字段、外键、唯一约束或 PostgreSQL Enum。v2.4 按 Task 7.6 Background Job Database Change Request 新增 `jobs`、`job_attempts`、`job_results`、`job_dead_letters` 与 `scheduler_locks` 五个逻辑表，新增 65 个字段、5 个主键、5 个唯一约束/唯一索引、8 个外键、8 个普通索引和 16 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.5 按 Task 7.7 Event Infrastructure Database Change Request 新增 `event_outbox`、`event_history`、`event_consumptions`、`event_dead_letters` 与 `event_deliveries` 五个逻辑表，新增 89 个字段、5 个主键、4 个唯一约束/唯一索引、10 个外键、24 个普通索引和 27 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。
+Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check。v2.3 按 DCR-005 为既有 `attachments.status` 增加 `active` 默认值和五值域 Check，并新增一个状态定位普通索引；不新增表、字段、外键、唯一约束或 PostgreSQL Enum。v2.4 按 Task 7.6 Background Job Database Change Request 新增 `jobs`、`job_attempts`、`job_results`、`job_dead_letters` 与 `scheduler_locks` 五个逻辑表，新增 65 个字段、5 个主键、5 个唯一约束/唯一索引、8 个外键、8 个普通索引和 16 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.5 按 Task 7.7 Event Infrastructure Database Change Request 新增 `event_outbox`、`event_history`、`event_consumptions`、`event_dead_letters` 与 `event_deliveries` 五个逻辑表，新增 89 个字段、5 个主键、4 个唯一约束/唯一索引、10 个外键、24 个普通索引和 27 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.6 按 CR-003 新增 `code_generation_rules` 与 `code_sequences` 两个逻辑表，新增 13 个字段、2 个主键、2 个唯一约束/唯一索引、1 个普通索引和 2 项 Check；不新增外键、不新增 PostgreSQL Enum、不修改既有业务领域表。
 
 ## 2. 既有正式设计来源
 
@@ -54,8 +54,9 @@ Task 3.1 至 Task 3.5.7 的正式成果继续有效：
 - [Task 7.6 Database Design Update](../phases/phase-07/TASK_7_6_DATABASE_DESIGN_UPDATE.md)。
 - [Task 7.7 Event Infrastructure Database Change Request](../phases/phase-07/TASK_7_7_EVENT_DATABASE_CHANGE_REQUEST.md)。
 - [Task 7.7 Database Design Update](../phases/phase-07/TASK_7_7_DATABASE_DESIGN_UPDATE.md)。
+- [CR-003 Code Generation Storage](../changes/CR-003_CODE_GENERATION_DATABASE_CHANGE.md)。
 
-DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；DCR-003 是 v2.0 到 v2.1 的唯一约束增量；DCR-004 是 v2.1 到 v2.2 的唯一结构增量；DCR-005 是 v2.2 到 v2.3 的唯一约束与索引增量；Task 7.6 Background Job Database Change Request 是 v2.3 到 v2.4 的唯一逻辑结构增量；Task 7.7 Event Infrastructure Database Change Request 是 v2.4 到 v2.5 的唯一逻辑结构增量。发生冲突时，本文件和已批准 Change Request 的对应定义优先于历史版本数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
+DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；DCR-003 是 v2.0 到 v2.1 的唯一约束增量；DCR-004 是 v2.1 到 v2.2 的唯一结构增量；DCR-005 是 v2.2 到 v2.3 的唯一约束与索引增量；Task 7.6 Background Job Database Change Request 是 v2.3 到 v2.4 的唯一逻辑结构增量；Task 7.7 Event Infrastructure Database Change Request 是 v2.4 到 v2.5 的唯一逻辑结构增量；CR-003 Code Generation Storage 是 v2.5 到 v2.6 的唯一结构增量。发生冲突时，本文件和已批准 Change Request 的对应定义优先于历史版本数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
 
 ## 3. `user_wechat_identities` 正式定位
 
@@ -958,3 +959,68 @@ Event Infrastructure 的正式职责是保存领域事件事实、发布状态�
 7. 不写入真实业务数据、密钥、Token、Storage 私有路径或敏感数据；
 8. 不新增 PostgreSQL Enum；
 9. 不修改业务领域表、API Contract、Permission 或 DTO。
+
+## 39. CR-003 自动编码数据库定位
+
+CR-003 Code Generation Storage 为 UAT-009 自动编码第一阶段提供统一数据库基础。其正式职责是保存编码规则、维护并发安全流水和支持服务端统一生成编码。
+
+第一阶段覆盖：
+
+- Product Code：`PRD-000001`；
+- Supplier Code：`SUP-000001`；
+- Manufacturer Code：`MFR-000001`；
+- Warehouse Code：`WH-000001`；
+- SKU Code：业务组合编码，例如 `L2-44-BK`。
+
+第一阶段不覆盖：
+
+- Category Code；
+- Brand Code；
+- Platform Code；
+- Store Code。
+
+自动编码不得使用 `max(code)+1`。普通连续流水必须通过 `code_sequences` 行级锁与事务更新生成；SKU 组合编码必须由服务端基于正式业务字段生成并由既有 SKU 唯一约束裁决重复组合。
+
+## 40. `code_generation_rules` 正式字段
+
+`code_generation_rules` 是自动编码规则配置事实来源。第一阶段不提供编号管理后台，规则由获批 Migration 初始化。
+
+| 字段 | PostgreSQL 类型 | 必填 | 默认值 | 正式语义 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | `uuidv7()` | 主键 |
+| `code_type` | `varchar(50)` | 是 | 无 | 编码类型，例如 `product`、`sku`、`supplier`、`manufacturer`、`warehouse` |
+| `prefix` | `varchar(20)` | 是 | 无 | 普通流水编码前缀，例如 `PRD` |
+| `format` | `varchar(50)` | 是 | 无 | 编码格式，例如 `{prefix}-{sequence:6}` 或 `{model}-{size}-{color}` |
+| `enabled` | `boolean` | 是 | `true` | 是否启用该编码规则 |
+| `created_at` | `timestamptz` | 是 | `now()` | 创建时间 |
+| `updated_at` | `timestamptz` | 是 | `now()` | 更新时间 |
+
+### 40.1 `code_generation_rules` 主键、唯一约束与索引
+
+- 主键：`pk_code_generation_rules (id)`；
+- 唯一约束：`uq_code_generation_rules_code_type (lower(code_type))`；
+- 普通索引：`idx_code_generation_rules_enabled_code_type (enabled, code_type)`。
+
+## 41. `code_sequences` 正式字段
+
+`code_sequences` 是普通流水编码的并发安全流水事实来源。它只记录下一次流水生成所需的当前位置，不记录业务对象编码历史；业务对象编码仍保存在对应业务表字段中。
+
+| 字段 | PostgreSQL 类型 | 必填 | 默认值 | 正式语义 |
+| --- | --- | --- | --- | --- |
+| `id` | `uuid` | 是 | `uuidv7()` | 主键 |
+| `code_type` | `varchar(50)` | 是 | 无 | 编码类型，例如 `product`、`supplier`、`manufacturer`、`warehouse` |
+| `current_value` | `bigint` | 是 | `0` | 当前已分配流水值 |
+| `version` | `integer` | 是 | `0` | 乐观版本号，配合事务内行锁审计更新 |
+| `created_at` | `timestamptz` | 是 | `now()` | 创建时间 |
+| `updated_at` | `timestamptz` | 是 | `now()` | 更新时间 |
+
+### 41.1 `code_sequences` 主键、唯一约束与 Check
+
+- 主键：`pk_code_sequences (id)`；
+- 唯一约束：`uq_code_sequences_code_type (lower(code_type))`；
+- Check：`ck_code_sequences_current_value_non_negative`，要求 `current_value >= 0`；
+- Check：`ck_code_sequences_version_non_negative`，要求 `version >= 0`。
+
+### 41.2 CR-003 Migration 边界
+
+CR-003 已通过 Forward-only Migration 创建 `code_generation_rules` 与 `code_sequences`，并初始化第一阶段规则与普通流水行。Migration 不回填、不重写、不推断任何历史业务编码；已有 Product、SKU、Supplier、Manufacturer、Warehouse 编码保持不变。

@@ -10,6 +10,10 @@ import {
 } from "@violin-erp/api";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { getPrismaClient } from "../client.js";
+import {
+  CodeGenerationService,
+  isAutomaticCodeResource,
+} from "../code-generation/code-generation-service.js";
 
 type UnknownRecord = Record<string, unknown>;
 type GenericDelegate = Readonly<{
@@ -353,9 +357,14 @@ async function validateActiveRelations(
 
 export class PrismaMasterDataRepository implements MasterDataRepository {
   readonly #client: PrismaClient;
+  readonly #codeGeneration: CodeGenerationService;
 
-  constructor(client: PrismaClient = getPrismaClient()) {
+  constructor(
+    client: PrismaClient = getPrismaClient(),
+    codeGeneration: CodeGenerationService = new CodeGenerationService(),
+  ) {
     this.#client = client;
+    this.#codeGeneration = codeGeneration;
   }
 
   async list(
@@ -403,17 +412,34 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
     data: Readonly<Record<string, unknown>>,
     actorUserId: string,
   ): Promise<MasterDataRecord> {
-    await validateActiveRelations(this.#client, resource, data);
     try {
-      const record = await delegate(this.#client, resource).create({
-        data: {
-          ...dataToPrisma(data),
-          created_by: actorUserId,
-          updated_by: actorUserId,
-        },
-        select: selectFor(resource, actorUserId),
-      });
-      return toApiRecord(record);
+      const createWithClient = async (client: PrismaClient) => {
+        const dataWithCode = await this.#codeGeneration.applyMasterDataCode(
+          client as never,
+          resource,
+          data,
+        );
+        await validateActiveRelations(client, resource, dataWithCode);
+        const record = await delegate(client, resource).create({
+          data: {
+            ...dataToPrisma(dataWithCode),
+            created_by: actorUserId,
+            updated_by: actorUserId,
+          },
+          select: selectFor(resource, actorUserId),
+        });
+        return toApiRecord(record);
+      };
+      const codeField = MASTER_DATA_DEFINITIONS[resource].codeField;
+      const shouldGenerateCode =
+        isAutomaticCodeResource(resource) &&
+        !(typeof data[codeField] === "string" && data[codeField].trim());
+      if (shouldGenerateCode) {
+        return await this.#client.$transaction(async (transaction) =>
+          createWithClient(transaction as PrismaClient),
+        );
+      }
+      return await createWithClient(this.#client);
     } catch (error) {
       if (prismaErrorCode(error) === "P2002") {
         throw new ConflictError("基础资料编码或受控唯一值重复");

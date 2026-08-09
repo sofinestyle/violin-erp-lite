@@ -118,6 +118,65 @@ describe("Prisma Master Data repository", () => {
     );
   });
 
+  it("wraps automatic code generation and master data creation in one transaction", async () => {
+    const create = vi.fn().mockResolvedValue({
+      id: "22222222-2222-4222-8222-222222222222",
+      product_code: "PRD-000001",
+      product_name: "自动编码产品",
+    });
+    const transactionClient = {
+      brands: { count: vi.fn().mockResolvedValue(1) },
+      product_categories: { count: vi.fn().mockResolvedValue(1) },
+      products: { create },
+    };
+    const transaction = vi.fn(async (callback: (client: typeof transactionClient) => unknown) =>
+      callback(transactionClient),
+    );
+    const codeGeneration = {
+      applyMasterDataCode: vi.fn().mockResolvedValue({
+        brandId: "33333333-3333-4333-8333-333333333333",
+        categoryId: "44444444-4444-4444-8444-444444444444",
+        defaultUnit: "unit",
+        productCode: "PRD-000001",
+        productName: "自动编码产品",
+        productType: "violin",
+      }),
+    };
+    const repository = new PrismaMasterDataRepository(
+      {
+        $transaction: transaction,
+      } as never,
+      codeGeneration as never,
+    );
+
+    await expect(
+      repository.create(
+        "products",
+        {
+          brandId: "33333333-3333-4333-8333-333333333333",
+          categoryId: "44444444-4444-4444-8444-444444444444",
+          defaultUnit: "unit",
+          productName: "自动编码产品",
+          productType: "violin",
+        },
+        USER_ID,
+      ),
+    ).resolves.toMatchObject({ productCode: "PRD-000001" });
+    expect(transaction).toHaveBeenCalledTimes(1);
+    expect(codeGeneration.applyMasterDataCode).toHaveBeenCalledWith(
+      transactionClient,
+      "products",
+      expect.objectContaining({ productName: "自动编码产品" }),
+    );
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          product_code: "PRD-000001",
+        }),
+      }),
+    );
+  });
+
   it("applies store role scope before pagination and maps platform summary", async () => {
     const findMany = vi.fn().mockResolvedValue([
       {

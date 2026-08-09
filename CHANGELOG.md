@@ -11,6 +11,38 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.39] - 2026-08-09
+
+### Added
+
+- 实施 CR-001 / CR-002 / CR-003 自动编码第一阶段能力
+- 新增 `code_generation_rules` 与 `code_sequences`
+- 新增统一 CodeGenerationService
+- 新增 Product、SKU、Supplier、Manufacturer、Warehouse 自动编码测试
+- 新增 `UAT_009_CODE_GENERATION_IMPLEMENTATION_REPORT.md`
+
+### Changed
+
+- Database Logical Design 更新为 v2.6
+- API Master Specification 更新为 v1.7
+- Product、SKU、Supplier、Manufacturer、Warehouse Create DTO 编码字段调整为可选
+- PC Admin 基础资料页面隐藏第一阶段自动编码输入，创建后展示生成结果
+- UAT-009 状态更新为 `Fixed / Pending Verification`
+
+### Verified
+
+- 普通流水编码通过数据库事务和行级锁生成
+- SKU 组合编码按型号、尺寸、颜色生成
+- 历史编码兼容，旧客户端提交合法编码仍可创建
+- Category、Brand、Platform、Store 编码未纳入第一阶段
+
+### Scope
+
+- 未新增 Permission Code
+- 未新增 API Path、Response 字段、分页字段或错误码
+- 未修改历史业务编码
+- 未新增编号管理后台
+
 ## [0.11.38] - 2026-07-26
 
 ### Changed

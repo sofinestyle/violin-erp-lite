@@ -2692,3 +2692,31 @@ Approved
 ### 影响
 
 本决定只批准自动编码第一阶段变更请求并同步治理状态，不实施代码、不修改 Database Schema、不创建 Migration、不修改 API Contract、不修改 Permission、不实现自动编码服务。后续实现阶段可在第一阶段范围内更新 DATABASE_SPEC、API_SPEC、Prisma Schema、Migration、DTO、Service、Repository、Admin 前端和测试；如需扩展到 Category Code、Brand Code、Platform Code、Store Code，必须另行获得批准或扩大 CR 实施范围。
+
+## DEC-107 完成自动编码CR-001 / CR-002 / CR-003第一阶段实施
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-08-09
+
+### 决定
+
+- 批准 CR-001 / CR-002 / CR-003 自动编码第一阶段实施完成；
+- 第一阶段已实现 Product Code、SKU Code、Supplier Code、Manufacturer Code、Warehouse Code；
+- 第一阶段暂不实现 Category Code、Brand Code、Platform Code、Store Code；
+- 新增 `code_generation_rules` 与 `code_sequences` 数据库对象；
+- 新增统一 CodeGenerationService，禁止各业务 Repository 自行生成编码；
+- 普通流水编码通过数据库事务与行级锁生成，禁止 `max(code)+1`；
+- SKU 编码采用 `型号-尺寸-颜色` 组合规则，例如 `L2-44-BK`；
+- API Create DTO 对第一阶段对象的编码字段调整为可选，旧客户端提交合法编码继续兼容；
+- PC Admin 基础资料页面隐藏第一阶段自动编码输入并展示最终生成编码；
+- UAT-009 状态更新为 `Fixed / Pending Verification`；
+- Permission 确认为 No Change。
+
+### 影响
+
+本决定完成已批准自动编码 CR 的第一阶段实施，并同步 Database SSOT、API SSOT、UAT 文档和测试。该实施不新增 API Path、接口编号、Response 字段、分页字段、错误码或 Permission Code；不修改历史业务编码；不新增编号管理后台；不扩展到 Category Code、Brand Code、Platform Code 或 Store Code。后续如需扩展编码对象、增加 Product Model 正式字段、建设编号管理后台或调整 SKU 编码字典，必须另行提交并批准对应 CR。
