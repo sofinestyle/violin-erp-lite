@@ -447,3 +447,48 @@ Fixed / Pending Manual Verification
 - 验证无需输入 JSON、内部 UUID、英文状态码或内部技术字段；
 - 验证库存增加、库存减少、库存调整、跨境发货库存流转和库存流水；
 - 验证状态刷新、成功反馈、错误提示和 Request ID。
+
+## 17. UAT Batch 002-C Automated Verification
+
+测试类型：
+
+Automated / Read-only
+
+测试范围：
+
+- 基础资料 → 业务流程衔接；
+- 采购 → 生产 → 质检 → 入库 → 库存闭环；
+- 销售出库库存闭环；
+- 跨境发货库存流转；
+- 中文业务化体验。
+
+测试结果：
+
+Batch 002-C：Automated Pass / Pending Manual Business Verification
+
+自动化检查：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx apps/admin/tests/workflow-page.test.tsx`：通过，27 tests passed；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+运行环境：
+
+- `http://localhost:3100/api/health`：Healthy，`application.status = ok`，`database.status = connected`；
+- `http://localhost:3000`：服务有响应，未操作 PM2。
+
+只读边界：
+
+本次未创建测试产品、采购订单、入库单、出库单或跨境发货单，未写入 `inventories` 或 `inventory_transactions`。真实写入型业务验证保留为 Pending Manual Business Verification。
+
+发现问题：
+
+- B002C-OBS-001：只读限制与写入型业务操作存在范围冲突，已接受为本轮检查限制；
+- B002C-CR-001：跨境发货平台 / 店铺持久化需 Database CR + API CR；
+- B002C-CR-002：自动编码需 Business Rule CR + API CR，推荐 Database CR；
+- B002C-CR-003：独立 Sales Admin API Route 需 API CR。
+
+当前状态：
+
+Local UAT In Progress，Batch 002-C Automated Pass，Pending Manual Business Verification。

@@ -383,3 +383,39 @@ Commit：
 Commit：
 
 `fix: complete batch 002-C core business flow`
+
+### Batch 002-C Automated Verification
+
+问题：
+
+- Batch 002-C Core Business Completion 自动复核；
+- 重点验证基础资料衔接、采购生产库存闭环、销售出库闭环、跨境发货库存流转和中文业务化体验。
+
+修改：
+
+- 新增 `docs/quality/UAT_BATCH_002_C_AUTOMATED_VERIFICATION_REPORT.md`；
+- 更新 UAT 测试记录；
+- 记录 Batch 002-C 自动复核结果为 Automated Pass / Pending Manual Business Verification；
+- 保持 UAT-009、UAT-011 和跨境发货平台 / 店铺持久化为 CR 边界；
+- 未修改代码、Database、Migration、API Contract、Permission 或 UAT Closed 状态。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx apps/admin/tests/workflow-page.test.tsx`：通过，27 tests passed；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过；
+- `http://localhost:3100/api/health`：Healthy；
+- AI 视觉平台 `http://localhost:3000` 有响应，未操作 PM2。
+
+结果：
+
+- Batch 002-C：Automated Pass / Pending Manual Business Verification；
+- B002C-OBS-001：只读限制与写入型业务操作存在范围冲突，已记录为 Accepted；
+- B002C-CR-001：跨境发货平台 / 店铺持久化需 Database CR + API CR；
+- B002C-CR-002：自动编码需 Business Rule CR + API CR，推荐 Database CR；
+- B002C-CR-003：独立 Sales Admin API Route 需 API CR。
+
+Commit：
+
+`test: verify batch 002-C business flow`
