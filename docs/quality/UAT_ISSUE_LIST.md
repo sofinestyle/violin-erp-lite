@@ -629,6 +629,67 @@ Automated Pass / Pending Final Manual Spot Check
 
 2026-08-03
 
+### UAT-013
+
+模块：
+
+Master Data / Product Category
+
+页面：
+
+产品分类
+
+问题描述：
+
+产品分类预设功能中，选择“提琴”后，下拉列表无法切换到其他分类。
+
+当前表现：
+
+- 下拉仅显示提琴；
+- 吉他、尤克里里、配件、自定义无法选择。
+
+期望结果：
+
+预设分类应完整显示：
+
+- 提琴
+- 吉他
+- 尤克里里
+- 配件
+- 自定义
+
+实际结果：
+
+仅显示部分分类。
+
+问题类型：
+
+UX / Configuration Bug
+
+严重等级：
+
+Major
+
+影响：
+
+产品基础资料创建受影响。
+
+发现阶段：
+
+Batch 002-B Final Manual Spot Check
+
+状态：
+
+Open
+
+处理：
+
+待评估修复；本次仅记录人工发现的问题，不修改代码、Database、API 或 Permission。
+
+发现日期：
+
+2026-08-09
+
 ## 5. Batch 002-B Automated Verification Observations
 
 说明：

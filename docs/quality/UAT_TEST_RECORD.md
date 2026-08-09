@@ -43,6 +43,7 @@ violin_erp_lite
 - UAT-010
 - UAT-011
 - UAT-012
+- UAT-013
 
 ## 5. 已测试模块
 
@@ -364,3 +365,26 @@ Local UAT In Progress，Batch 002-B 等待项目负责人进行人工复验。
 当前状态：
 
 Local UAT In Progress，Batch 002-B Automated Verification Passed，进入 Final Manual Spot Check；暂不得标记 Verified / Closed。
+
+## 15. UAT-013 Product Category Preset Selection Issue
+
+发现阶段：
+
+Batch 002-B Final Manual Spot Check
+
+测试模块：
+
+- Master Data / Product Category
+- 产品分类预设选择
+
+新增问题：
+
+- UAT-013
+
+问题摘要：
+
+产品分类预设功能中，选择“提琴”后，下拉列表无法切换到其他分类；吉他、尤克里里、配件、自定义无法选择。
+
+当前状态：
+
+Local UAT In Progress

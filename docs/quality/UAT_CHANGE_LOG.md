@@ -288,3 +288,31 @@ Commit：
 Commit：
 
 `test: complete batch 002-B automated verification`
+
+### UAT-013 Product Category Preset Selection Issue
+
+问题：
+
+- UAT-013：Master Data / Product Category 预设分类选择问题。
+
+发现记录：
+
+- Batch 002-B Final Manual Spot Check 中发现；
+- 选择“提琴”后，下拉列表仅显示提琴，无法切换到吉他、尤克里里、配件或自定义；
+- 问题类型为 UX / Configuration Bug；
+- 严重等级为 Major；
+- 状态为 Open。
+
+修改：
+
+- 仅更新 UAT 问题清单、测试记录和变更记录；
+- 未修改代码、Database、API Contract 或 Permission。
+
+测试：
+
+- `git diff --check`：通过；
+- `pnpm status:check`：通过。
+
+Commit：
+
+`docs: record UAT-013 category preset issue`
