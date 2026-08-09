@@ -446,3 +446,44 @@ Commit：
 Commit：
 
 `docs: add UAT-009 change requests`
+
+### Automatic Code Generation CR Approval Completed
+
+问题：
+
+- UAT-009 自动编码；
+- CR-001 Automatic Code Generation Business Rules；
+- CR-002 Allow Server-side Code Generation；
+- CR-003 Code Generation Storage。
+
+修改：
+
+- 将 CR-001 状态更新为 `Approved`；
+- 将 CR-002 状态更新为 `Approved`；
+- 将 CR-003 状态更新为 `Approved`；
+- 补充 Approved By、Approval Date 和 Approval Scope；
+- 将 UAT-009 状态更新为 `Approved for Implementation`。
+
+审批：
+
+- Approved By：Project Owner；
+- Approval Date：2026-08-09；
+- Approval Scope：批准自动编码第一阶段实施，包含 Product Code、SKU Code、Supplier Code、Manufacturer Code、Warehouse Code；暂不包含 Category Code、Brand Code、Platform Code、Store Code；
+- Business Rule：Approved；
+- API Contract：Approved；
+- Database：Approved；
+- Permission：No Change。
+
+测试：
+
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+结果：
+
+- 自动编码正式进入第一阶段实现准备状态；
+- 本次未修改代码、Database、Migration、API Contract、Permission 或业务实现。
+
+Commit：
+
+`docs: approve automatic code generation CRs`

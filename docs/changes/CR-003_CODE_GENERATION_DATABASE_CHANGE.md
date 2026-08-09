@@ -3,7 +3,7 @@ document_name: CR-003 自动编码数据库变更
 project: Violin ERP Lite
 cr_id: CR-003
 type: Database Change
-status: Pending Approval
+status: Approved
 owner: Project Manager
 created_date: 2026-08-09
 related_issue: UAT-009
@@ -22,6 +22,35 @@ Database Change
 主题：
 
 Code Generation Storage
+
+## 审批信息
+
+Approved By：
+
+Project Owner
+
+Approval Date：
+
+2026-08-09
+
+Approval Scope：
+
+批准自动编码第一阶段数据库变更。
+
+包含：
+
+- Product Code
+- SKU Code
+- Supplier Code
+- Manufacturer Code
+- Warehouse Code
+
+暂不包含：
+
+- Category Code
+- Brand Code
+- Platform Code
+- Store Code
 
 ## 当前问题
 
@@ -125,6 +154,6 @@ UAT-009 自动编码要求服务端生成唯一业务编码。
 
 当前状态：
 
-Pending Approval
+Approved
 
-审批通过后，方可进入 Database SSOT、Prisma Schema 和 Migration 实施阶段。
+已批准进入第一阶段 Database SSOT、Prisma Schema 和 Migration 实施。Permission 确认为 No Change。

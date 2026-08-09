@@ -2663,3 +2663,32 @@ Approved
 ### 影响
 
 本决定只同步 Phase 10 最终发布批准、项目完成状态与治理文档，不修改业务代码、Database Schema、Migration、API Contract、Permission、DTO、业务规则或库存逻辑。项目开发阶段已关闭；后续如需生产实际部署、运维变更、业务扩展、外部平台接入、新功能或既有功能变更，必须通过独立获批任务、正式 Change Request、DCR、API Change Request 或 Permission 评估执行。
+
+## DEC-106 批准自动编码CR-001 / CR-002 / CR-003
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-08-09
+
+### 决定
+
+- 项目负责人批准 CR-001 Automatic Code Generation Business Rules；
+- 项目负责人批准 CR-002 Allow Server-side Code Generation；
+- 项目负责人批准 CR-003 Code Generation Storage；
+- Approved By：Project Owner；
+- Approval Date：2026-08-09；
+- 第一阶段自动编码实施范围包含 Product Code、SKU Code、Supplier Code、Manufacturer Code、Warehouse Code；
+- 第一阶段暂不包含 Category Code、Brand Code、Platform Code、Store Code；
+- CR-001 Business Rule 状态更新为 Approved；
+- CR-002 API Contract 状态更新为 Approved；
+- CR-003 Database 状态更新为 Approved；
+- Permission 确认为 No Change；
+- UAT-009 状态更新为 Approved for Implementation。
+
+### 影响
+
+本决定只批准自动编码第一阶段变更请求并同步治理状态，不实施代码、不修改 Database Schema、不创建 Migration、不修改 API Contract、不修改 Permission、不实现自动编码服务。后续实现阶段可在第一阶段范围内更新 DATABASE_SPEC、API_SPEC、Prisma Schema、Migration、DTO、Service、Repository、Admin 前端和测试；如需扩展到 Category Code、Brand Code、Platform Code、Store Code，必须另行获得批准或扩大 CR 实施范围。
