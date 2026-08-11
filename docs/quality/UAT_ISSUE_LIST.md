@@ -780,3 +780,40 @@ CR 边界：
 - 验证无需输入 JSON、内部 UUID、英文状态码或内部技术字段；
 - 验证入库、出库、库存调整和跨境发货的库存流水与余额变化；
 - 验证错误提示、Request ID、成功反馈和状态刷新。
+
+## 7. Product / SKU Management Unified Refactoring
+
+说明：
+
+本节记录 Product / SKU Management Unified Refactoring 的 UAT 状态。本轮不新增无批准 Database 字段，不新增 API Path，不新增 Permission Code，不新增 SKU 批量原子创建 API。
+
+综合状态：
+
+Fixed / Pending Automated Verification
+
+已完成：
+
+- Product 页面回归型号级主数据职责；
+- `productNameEn` 前端语义调整为“产品型号”；
+- Product Create 中产品型号不能为空；
+- Product 页面移除 SKU 批量新增区域；
+- Product 列表提供“SKU 管理”入口；
+- SKU 页面以“产品型号”下拉选择 Product；
+- SKU 新增主流程调整为尺寸 × 颜色组合生成；
+- SKU 组合预览包含编码、名称、单位、价格和最低安全库存；
+- SKU 保存仍逐条调用现有 SKU Create API；
+- 自定义颜色必须输入受控色码，不直接使用中文生成 SKU Code；
+- SKU 编码映射补齐 `1/8`、`1/10`、`1/16`、白色、红色、黄绿色等本轮要求。
+
+CR 边界：
+
+- 产品型号唯一性需要 Database CR。当前 `products.product_name_en` 未发现数据库唯一约束，本轮不擅自新增唯一索引，也不以应用层查询伪造并发安全唯一约束。
+
+待自动复核：
+
+- Product 创建与“SKU 管理”入口；
+- SKU 产品型号下拉显示 `型号｜产品名称`；
+- 组合生成 6 个指定 SKU；
+- 批量设置与逐行编辑；
+- 已存在 SKU 标记与失败行重试；
+- 用户无需输入 UUID、JSON、SKU Code 或 SKU Name。

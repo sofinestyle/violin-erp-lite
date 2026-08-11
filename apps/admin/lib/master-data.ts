@@ -101,6 +101,26 @@ export const MASTER_DATA_FIELD_OPTIONS = {
   ],
 } as const;
 
+export const SKU_SIZE_PRESETS_BY_CATEGORY = {
+  default: ["4/4", "3/4", "1/2", "1/4", "自定义"],
+  吉他: ["36寸", "38寸", "39寸", "40寸", "41寸", "自定义"],
+  尤克里里: ["21寸", "23寸", "26寸", "自定义"],
+  提琴: ["4/4", "3/4", "1/2", "1/4", "1/8", "1/10", "1/16", "自定义"],
+  配件: ["无尺寸", "自定义"],
+} as const;
+
+export const SKU_COLOR_PRESETS = [
+  { code: "NAT", label: "原木色" },
+  { code: "BR", label: "棕色" },
+  { code: "BK", label: "黑色" },
+  { code: "WH", label: "白色" },
+  { code: "RD", label: "红色" },
+  { code: "BL", label: "蓝色" },
+  { code: "GN", label: "绿色" },
+  { code: "YG", label: "黄绿色" },
+  { code: "", label: "自定义" },
+] as const;
+
 export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
   {
     apiPath: "/api/v1/products",
@@ -118,10 +138,10 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
         group: "基础信息",
         placeholder: "例如：入门级实木小提琴",
       }),
-      field("productNameEn", "英文名称", false, "text", {
+      field("productNameEn", "产品型号", true, "text", {
         group: "基础信息",
-        helpText: "如需自动生成 SKU 组合编码，可填写稳定型号，例如 L2。",
-        placeholder: "可选，例如：L2 或 Student Violin",
+        helpText: "用于 SKU 自动编码，例如 L2。型号唯一性需要 Database CR 后由数据库约束正式保障。",
+        placeholder: "例如：L2、N101、S-VLN",
       }),
       field("categoryId", "产品分类", true, "text", {
         group: "业务归类",
@@ -173,12 +193,12 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
       }),
       field("skuName", "SKU 名称", true, "text", {
         group: "SKU 基础信息",
-        helpText: "留空时前端会按产品、尺寸、颜色和规格自动生成。",
-        placeholder: "留空自动生成，例如：入门级小提琴 / 4/4 / 原木色",
+        helpText: "组合生成时由页面按产品名称、尺寸和颜色自动生成。",
+        placeholder: "例如：普及实木亮光小提琴 4/4 黑色",
       }),
-      field("productId", "所属产品", true, "text", {
+      field("productId", "产品型号", true, "text", {
         group: "SKU 基础信息",
-        optionCodeField: "productCode",
+        optionCodeField: "productNameEn",
         optionNameField: "productName",
         optionResource: "products",
       }),

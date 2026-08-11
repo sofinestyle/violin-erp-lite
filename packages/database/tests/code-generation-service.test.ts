@@ -73,6 +73,33 @@ describe("CodeGenerationService", () => {
     ).resolves.toMatchObject({ skuCode: "L2-44-BK" });
   });
 
+  it("supports approved extended SKU size and color mappings", async () => {
+    const service = new CodeGenerationService();
+    const client = {
+      products: {
+        findFirst: vi.fn().mockResolvedValue({
+          product_code: "PRD-000001",
+          product_name_en: "L2",
+        }),
+      },
+    };
+
+    await expect(
+      service.applyMasterDataCode(client, "skus", {
+        color: "黄绿色",
+        productId: "22222222-2222-4222-8222-222222222222",
+        size: "1/10",
+      }),
+    ).resolves.toMatchObject({ skuCode: "L2-110-YG" });
+    await expect(
+      service.applyMasterDataCode(client, "skus", {
+        color: "白色",
+        productId: "22222222-2222-4222-8222-222222222222",
+        size: "无尺寸",
+      }),
+    ).resolves.toMatchObject({ skuCode: "L2-NS-WH" });
+  });
+
   it("rejects SKU generation when model source is missing", async () => {
     const service = new CodeGenerationService();
     const client = {

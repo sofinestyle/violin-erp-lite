@@ -139,6 +139,7 @@ describe("Prisma Master Data repository", () => {
         defaultUnit: "unit",
         productCode: "PRD-000001",
         productName: "自动编码产品",
+        productNameEn: "L2",
         productType: "violin",
       }),
     };
@@ -157,6 +158,7 @@ describe("Prisma Master Data repository", () => {
           categoryId: "44444444-4444-4444-8444-444444444444",
           defaultUnit: "unit",
           productName: "自动编码产品",
+          productNameEn: "L2",
           productType: "violin",
         },
         USER_ID,

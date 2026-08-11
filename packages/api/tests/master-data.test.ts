@@ -168,6 +168,7 @@ describe("Master Data API contracts", () => {
           defaultUnit: "piece",
           productCode: "P-001",
           productName: "测试产品",
+          productNameEn: "L2",
           productType: "violin",
         },
         authentication(["master.product.create"]),
@@ -193,6 +194,7 @@ describe("Master Data API contracts", () => {
           categoryId: RECORD_ID,
           defaultUnit: "piece",
           productName: "手工小提琴",
+          productNameEn: "L2",
           productType: "violin",
         },
         "create",
@@ -210,6 +212,55 @@ describe("Master Data API contracts", () => {
     ).toMatchObject({ data: expect.not.objectContaining({ supplierCode: expect.anything() }) });
   });
 
+  it("requires Product model while leaving database uniqueness to approved CR", () => {
+    expect(() =>
+      validateMasterDataInput(
+        "products",
+        {
+          brandId: RECORD_ID,
+          categoryId: RECORD_ID,
+          defaultUnit: "piece",
+          productName: "手工小提琴",
+          productType: "violin",
+        },
+        "create",
+      ),
+    ).toThrowError(
+      expect.objectContaining({ details: [expect.objectContaining({ field: "productNameEn" })] }),
+    );
+    expect(
+      MASTER_DATA_DEFINITIONS.products.fields.find((field) => field.key === "productNameEn"),
+    ).toMatchObject({ label: "产品型号", requiredOnCreate: true });
+  });
+
+  it("returns Product model in options for SKU business-facing selectors", async () => {
+    const writer = new InMemoryAuditWriter();
+    const store = repositoryWithRecord({
+      id: RECORD_ID,
+      isActive: true,
+      productCode: "PRD-000001",
+      defaultUnit: "unit",
+      productName: "普及实木亮光小提琴",
+      productNameEn: "L2",
+      updatedAt: "2026-07-23T00:00:00.000Z",
+    });
+    const service = new MasterDataService(store, writer);
+
+    await expect(
+      service.options(
+        "products",
+        parseMasterDataListQuery("products", new URLSearchParams("page=1&pageSize=20")),
+        authentication(["master.product.read"]),
+      ),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        productName: "普及实木亮光小提琴",
+        productNameEn: "L2",
+        defaultUnit: "unit",
+      }),
+    ]);
+  });
+
   it("keeps legacy create code compatibility but rejects generated code updates", () => {
     expect(
       validateMasterDataInput(
@@ -220,6 +271,7 @@ describe("Master Data API contracts", () => {
           defaultUnit: "piece",
           productCode: "LEGACY-001",
           productName: "历史产品",
+          productNameEn: "L2",
           productType: "violin",
         },
         "create",
@@ -263,9 +315,16 @@ describe("Master Data API contracts", () => {
         defaultUnit: "piece",
         productCode: "PRD-001",
         productName: "手工小提琴",
+        productNameEn: "L2",
         productType: "violin",
       },
-      { id: RECORD_ID, isActive: true, productCode: "PRD-001", productName: "手工小提琴" },
+      {
+        id: RECORD_ID,
+        isActive: true,
+        productCode: "PRD-001",
+        productName: "手工小提琴",
+        productNameEn: "L2",
+      },
     ],
     [
       "skus",
@@ -593,6 +652,7 @@ describe("Master Data API contracts", () => {
           inventoryQuantity: 1,
           productCode: "PRD-001",
           productName: "手工小提琴",
+          productNameEn: "L2",
           productType: "violin",
         },
         "create",

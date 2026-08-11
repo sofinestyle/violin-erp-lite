@@ -1,6 +1,8 @@
 "use client";
 
 import { FileUp, Pencil, Plus, RefreshCw, X } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { type ChangeEvent, type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
@@ -16,7 +18,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePermission } from "@/contexts/permission-context";
 import { authenticatedFetch } from "@/lib/auth-client";
-import type { WorkbenchDefinition, WorkbenchField } from "@/lib/master-data";
+import {
+  MASTER_DATA_FIELD_OPTIONS,
+  SKU_COLOR_PRESETS,
+  SKU_SIZE_PRESETS_BY_CATEGORY,
+  type WorkbenchDefinition,
+  type WorkbenchField,
+} from "@/lib/master-data";
 
 type ApiEnvelope = Readonly<{
   data?: unknown;
@@ -43,7 +51,25 @@ type BatchSkuResult = Readonly<{
   message: string;
   payload?: Record<string, unknown>;
   row: string;
-  status: "failed" | "success";
+  status: "existing" | "failed" | "success";
+}>;
+
+type SkuCombinationRow = Readonly<{
+  color: string;
+  colorCode: string;
+  defaultProductionPrice: string;
+  defaultPurchasePrice: string;
+  defaultSalePrice: string;
+  material?: string;
+  productId: string;
+  rowId: string;
+  safetyStockQuantity: string;
+  size: string;
+  skuCode: string;
+  skuName: string;
+  specification?: string;
+  status: "existing" | "pending";
+  unit: string;
 }>;
 
 export function formatApiError(envelope: ApiEnvelope): string {
@@ -115,6 +141,12 @@ function optionLabel(field: WorkbenchField, option: RecordItem): string {
   return [code, name].filter((item) => item && item !== "—").join(" / ") || option.id;
 }
 
+function productOptionLabel(option: RecordItem): string {
+  const model = displayValue(option.productNameEn);
+  const name = displayValue(option.productName);
+  return [model, name].filter((item) => item && item !== "—").join("｜") || option.id;
+}
+
 function optionName(field: WorkbenchField, option: RecordItem | undefined): string {
   if (!option) return "";
   return field.optionNameField
@@ -159,34 +191,56 @@ function buildSkuNameFromParts(
   color: string | undefined,
   specification: string | undefined,
 ) {
-  return [productName, size, color, specification].filter(Boolean).join(" / ");
+  return [productName, size, color, specification].filter(Boolean).join(" ");
 }
 
-function buildBatchSkuPayload({
-  basePayload,
-  productId,
-  productName,
-  row,
-}: {
-  basePayload: Record<string, unknown>;
-  productId: string;
-  productName: string;
-  row: string;
-}) {
-  const [size, color, specification, material] = row.split(",").map((value) => value.trim());
-  if (!size || !color) throw new Error("批量 SKU 每行必须包含尺寸和颜色");
-  return {
-    ...basePayload,
-    color: color || basePayload.color,
-    material: material || basePayload.material,
-    productId,
-    safetyStockQuantity: basePayload.safetyStockQuantity ?? 0,
-    size: size || basePayload.size,
-    skuName:
-      String(basePayload.skuName ?? "").trim() ||
-      buildSkuNameFromParts(productName, size, color, specification),
-    specification: specification || basePayload.specification,
+function skuSizeCode(size: string): string | null {
+  const normalized = size.trim();
+  const map: Record<string, string> = {
+    "1/10": "110",
+    "1/16": "116",
+    "1/8": "18",
+    "1/2": "12",
+    "1/4": "14",
+    "3/4": "34",
+    "4/4": "44",
+    "21寸": "21",
+    "23寸": "23",
+    "26寸": "26",
+    "36寸": "36",
+    "38寸": "38",
+    "39寸": "39",
+    "40寸": "40",
+    "41寸": "41",
+    无尺寸: "NS",
   };
+  return (
+    map[normalized] ?? (/^[A-Z0-9]{1,12}$/i.test(normalized) ? normalized.toUpperCase() : null)
+  );
+}
+
+function colorCodeFor(color: string, customColorCode: string): string | null {
+  const preset = SKU_COLOR_PRESETS.find((item) => item.label === color && item.code);
+  if (preset?.code) return preset.code;
+  const normalized = customColorCode.trim().toUpperCase();
+  return /^[A-Z0-9]{1,8}$/.test(normalized) ? normalized : null;
+}
+
+function categoryNameFromProduct(option: RecordItem | undefined): string {
+  const category = option?.category;
+  if (category && typeof category === "object" && "categoryName" in category) {
+    return displayValue((category as Record<string, unknown>).categoryName);
+  }
+  return "default";
+}
+
+function sizePresetsForProduct(option: RecordItem | undefined): readonly string[] {
+  const categoryName = categoryNameFromProduct(option);
+  if (categoryName.includes("吉他")) return SKU_SIZE_PRESETS_BY_CATEGORY.吉他;
+  if (categoryName.includes("尤克里里")) return SKU_SIZE_PRESETS_BY_CATEGORY.尤克里里;
+  if (categoryName.includes("配件")) return SKU_SIZE_PRESETS_BY_CATEGORY.配件;
+  if (categoryName.includes("提琴")) return SKU_SIZE_PRESETS_BY_CATEGORY.提琴;
+  return SKU_SIZE_PRESETS_BY_CATEGORY.default;
 }
 
 function derivedFieldValue(
@@ -227,12 +281,20 @@ function fieldConditionMatches(
 }
 
 function shouldRenderField(
+  definition: WorkbenchDefinition,
   selected: RecordItem | null,
   field: WorkbenchField,
   formValues: Record<string, string>,
 ): boolean {
   if (field.hidden) return false;
   if (!fieldConditionMatches(field, selected, formValues)) return false;
+  if (
+    definition.key === "skus" &&
+    !selected &&
+    ["skuName", "size", "color", "specification", "material", "barcode"].includes(field.key)
+  ) {
+    return false;
+  }
   return !(
     selected && ["password", "roleAssignments", "roleCode", "isSystemRole"].includes(field.key)
   );
@@ -277,6 +339,9 @@ type MasterDataWorkbenchProps = Readonly<{
 
 export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchProps) {
   const { hasPermission } = usePermission();
+  const searchParams = useSearchParams();
+  const initialProductFilter =
+    definition.key === "skus" ? (searchParams?.get("productId") ?? "") : "";
   const [items, setItems] = useState<RecordItem[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
@@ -292,14 +357,22 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
   const [selected, setSelected] = useState<RecordItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [batchSkuResults, setBatchSkuResults] = useState<BatchSkuResult[]>([]);
+  const [skuCombinationRows, setSkuCombinationRows] = useState<SkuCombinationRow[]>([]);
+  const [skuCombinationMessage, setSkuCombinationMessage] = useState<string | null>(null);
+  const [skuFilterProductId] = useState(initialProductFilter);
   const [formValues, setFormValues] = useState<Record<string, string>>(() =>
-    initialFormValues(definition, null),
+    definition.key === "skus" && initialProductFilter
+      ? { ...initialFormValues(definition, null), productId: initialProductFilter }
+      : initialFormValues(definition, null),
   );
 
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const visibleFields = useMemo(
-    () => definition.fields.filter((field) => shouldRenderField(selected, field, formValues)),
-    [definition.fields, formValues, selected],
+    () =>
+      definition.fields.filter((field) =>
+        shouldRenderField(definition, selected, field, formValues),
+      ),
+    [definition, formValues, selected],
   );
   const visibleFieldGroups = useMemo(() => groupedFields(visibleFields), [visibleFields]);
   const relationFields = useMemo(
@@ -315,8 +388,10 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     });
     if (keyword.trim()) params.set("keyword", keyword.trim());
     if (isActive) params.set("isActive", isActive);
+    if (definition.key === "skus" && skuFilterProductId)
+      params.set("productId", skuFilterProductId);
     return params;
-  }, [isActive, keyword, page, pageSize]);
+  }, [definition.key, isActive, keyword, page, pageSize, skuFilterProductId]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -391,6 +466,8 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
       setSelected(nextSelected);
       setFormValues(initialFormValues(definition, nextSelected));
       setBatchSkuResults([]);
+      setSkuCombinationRows([]);
+      setSkuCombinationMessage(null);
       setDrawerOpen(true);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "详情加载失败");
@@ -399,9 +476,15 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
 
   function openCreate() {
     setSelected(null);
-    setFormValues(initialFormValues(definition, null));
+    setFormValues(
+      definition.key === "skus" && skuFilterProductId
+        ? { ...initialFormValues(definition, null), productId: skuFilterProductId }
+        : initialFormValues(definition, null),
+    );
     setRelationOptionsError(null);
     setBatchSkuResults([]);
+    setSkuCombinationRows([]);
+    setSkuCombinationMessage(null);
     setDrawerOpen(true);
   }
 
@@ -415,22 +498,138 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     setFormValues({ ...initialFormValues(definition, selected), ...values });
   }
 
-  async function submitBatchSkuRows(
-    rows: readonly string[],
-    basePayload: Record<string, unknown>,
-    productId: string,
-    productName: string,
-  ) {
+  function updateSkuCombinationRow(rowId: string, patch: Partial<SkuCombinationRow>) {
+    setSkuCombinationRows((current) =>
+      current.map((row) => (row.rowId === rowId ? { ...row, ...patch } : row)),
+    );
+  }
+
+  async function loadExistingSkuCodes(productId: string): Promise<Set<string>> {
+    const envelope = await apiRequest(`/api/v1/skus?page=1&pageSize=100&productId=${productId}`);
+    const records = Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : [];
+    return new Set(
+      records
+        .map((record) =>
+          String(record.skuCode ?? "")
+            .trim()
+            .toUpperCase(),
+        )
+        .filter(Boolean),
+    );
+  }
+
+  async function generateSkuCombinations({
+    bulkValues,
+    colorCode,
+    colors,
+    customColorName,
+    customSize,
+    sizes,
+  }: {
+    bulkValues: Pick<
+      SkuCombinationRow,
+      | "defaultProductionPrice"
+      | "defaultPurchasePrice"
+      | "defaultSalePrice"
+      | "safetyStockQuantity"
+      | "unit"
+    >;
+    colorCode: string;
+    colors: readonly string[];
+    customColorName: string;
+    customSize: string;
+    sizes: readonly string[];
+  }) {
+    setSkuCombinationMessage(null);
+    const productId = formValues.productId;
+    const product = (relationOptions.productId ?? []).find((option) => option.id === productId);
+    if (!productId || !product) {
+      setSkuCombinationMessage("请先选择产品型号。");
+      return;
+    }
+    const productModel = String(product.productNameEn ?? "")
+      .trim()
+      .toUpperCase();
+    if (!productModel) {
+      setSkuCombinationMessage("所选产品缺少产品型号，无法预览 SKU 编码。");
+      return;
+    }
+    const normalizedSizes = sizes
+      .map((size) => (size === "自定义" ? customSize.trim() : size))
+      .filter(Boolean);
+    const normalizedColors = colors.filter(Boolean);
+    if (normalizedSizes.length === 0 || normalizedColors.length === 0) {
+      setSkuCombinationMessage("请至少选择一个尺寸和一个颜色。");
+      return;
+    }
+    const existingCodes = await loadExistingSkuCodes(productId);
+    const nextRows: SkuCombinationRow[] = [];
+    const seen = new Set<string>();
+    for (const size of normalizedSizes) {
+      const sizeCode = skuSizeCode(size);
+      if (!sizeCode) {
+        setSkuCombinationMessage("自定义尺寸必须填写可控编码，例如 44、36 或 ACC。");
+        return;
+      }
+      for (const color of normalizedColors) {
+        const resolvedColor = color === "自定义" ? customColorName.trim() || "自定义颜色" : color;
+        const resolvedColorCode = colorCodeFor(color, colorCode);
+        if (!resolvedColorCode) {
+          setSkuCombinationMessage("自定义颜色必须填写英文或数字色码，例如 BK、YG 或 NAT。");
+          return;
+        }
+        const skuCode = `${productModel}-${sizeCode}-${resolvedColorCode}`;
+        if (seen.has(skuCode)) continue;
+        seen.add(skuCode);
+        const productName = String(product.productName ?? "").trim();
+        nextRows.push({
+          color: resolvedColor,
+          colorCode: resolvedColorCode,
+          defaultProductionPrice: bulkValues.defaultProductionPrice,
+          defaultPurchasePrice: bulkValues.defaultPurchasePrice,
+          defaultSalePrice: bulkValues.defaultSalePrice,
+          productId,
+          rowId: `${skuCode}-${nextRows.length}`,
+          safetyStockQuantity: bulkValues.safetyStockQuantity || "0",
+          size,
+          skuCode,
+          skuName: buildSkuNameFromParts(productName, size, resolvedColor, undefined),
+          status: existingCodes.has(skuCode) ? "existing" : "pending",
+          unit: bulkValues.unit || "unit",
+        });
+      }
+    }
+    setSkuCombinationRows(nextRows);
+    const existingCount = nextRows.filter((row) => row.status === "existing").length;
+    setSkuCombinationMessage(
+      `已生成 ${nextRows.length} 个组合${existingCount ? `，其中 ${existingCount} 个已存在，将跳过创建。` : "。"}`,
+    );
+  }
+
+  async function submitSkuCombinationRows(rows: readonly SkuCombinationRow[]) {
     const results: BatchSkuResult[] = [];
     for (const [index, row] of rows.entries()) {
-      let batchPayload: Record<string, unknown> | undefined;
-      try {
-        batchPayload = buildBatchSkuPayload({
-          basePayload,
-          productId,
-          productName,
-          row,
+      if (row.status === "existing") {
+        results.push({
+          line: index + 1,
+          message: "该 SKU 编码已存在，已跳过。",
+          row: row.skuCode,
+          status: "existing",
         });
+        continue;
+      }
+      const batchPayload: Record<string, unknown> = {
+        color: row.color,
+        defaultProductionPrice: row.defaultProductionPrice || undefined,
+        defaultPurchasePrice: row.defaultPurchasePrice || undefined,
+        defaultSalePrice: row.defaultSalePrice || undefined,
+        productId: row.productId,
+        safetyStockQuantity: row.safetyStockQuantity || "0",
+        size: row.size,
+        skuName: row.skuName,
+        unit: row.unit,
+      };
+      try {
         await apiRequest("/api/v1/skus", {
           body: JSON.stringify(batchPayload),
           headers: { "Idempotency-Key": crypto.randomUUID() },
@@ -440,15 +639,15 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
           line: index + 1,
           message: "创建成功",
           payload: batchPayload,
-          row,
+          row: row.skuCode,
           status: "success",
         });
       } catch (requestError) {
         results.push({
           line: index + 1,
           message: requestError instanceof Error ? requestError.message : "创建失败",
-          ...(batchPayload ? { payload: batchPayload } : {}),
-          row,
+          payload: batchPayload,
+          row: row.skuCode,
           status: "failed",
         });
       }
@@ -521,17 +720,8 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
       if (selected?.updatedAt) payload.updatedAt = selected.updatedAt;
       const method = selected ? (group === "security" ? "PUT" : "PATCH") : "POST";
       const url = selected ? `${definition.apiPath}/${selected.id}` : definition.apiPath;
-      const batchSkuRows = String(form.get("batchSkuRows") ?? "")
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean);
-      if (!selected && definition.key === "skus" && batchSkuRows.length > 0) {
-        const results = await submitBatchSkuRows(
-          batchSkuRows,
-          payload,
-          String(payload.productId ?? ""),
-          buildSkuName(form, relationOptions, definition.fields),
-        );
+      if (!selected && definition.key === "skus" && skuCombinationRows.length > 0) {
+        const results = await submitSkuCombinationRows(skuCombinationRows);
         const failed = results.filter((result) => result.status === "failed");
         if (failed.length > 0) {
           setError(
@@ -540,38 +730,8 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
           toast.error("部分 SKU 创建失败，请查看逐行结果并单独重试。");
           return;
         }
-        toast.success(`${results.length} 个 SKU 创建成功`);
-      } else if (definition.key === "products" && batchSkuRows.length > 0) {
-        const envelope = await apiRequest(url, {
-          body: JSON.stringify(payload),
-          ...(selected ? {} : { headers: { "Idempotency-Key": crypto.randomUUID() } }),
-          method,
-        });
-        const savedProduct = (envelope.data ?? selected ?? {}) as RecordItem;
-        const productId = String(savedProduct.id ?? selected?.id ?? "");
-        const productName = String(payload.productName ?? selected?.productName ?? "");
-        const results = await submitBatchSkuRows(
-          batchSkuRows,
-          {
-            productId,
-            safetyStockQuantity: 0,
-            unit: payload.defaultUnit,
-          },
-          productId,
-          productName,
-        );
-        const failed = results.filter((result) => result.status === "failed");
-        if (failed.length > 0) {
-          setError(
-            `产品已保存，SKU 逐条创建完成：成功 ${results.length - failed.length} 行，失败 ${failed.length} 行。失败行可单独重试；本操作不具备整体回滚能力。`,
-          );
-          toast.error("产品已保存，部分 SKU 创建失败。");
-          await load();
-          return;
-        }
-        toast.success(
-          `${definition.label}${selected ? "更新" : "创建"}成功，${results.length} 个 SKU 创建成功`,
-        );
+        const successCount = results.filter((result) => result.status === "success").length;
+        toast.success(`${successCount} 个 SKU 创建成功`);
       } else {
         await apiRequest(url, {
           body: JSON.stringify(payload),
@@ -706,6 +866,16 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
+                        {definition.key === "products" ? (
+                          <PermissionWrapper permission="master.sku.read">
+                            <Link
+                              className="inline-flex h-8 items-center justify-center rounded-md border bg-white px-2.5 text-xs font-medium text-[#1F2937] hover:bg-[#F9FAFB]"
+                              href={`/workspace/master-data/skus?productId=${item.id}`}
+                            >
+                              SKU 管理
+                            </Link>
+                          </PermissionWrapper>
+                        ) : null}
                         <PermissionWrapper permission={definition.readPermission}>
                           <Button variant="ghost" size="sm" onClick={() => void openDetail(item)}>
                             <Pencil data-icon="inline-start" />
@@ -812,8 +982,18 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                     </div>
                   </section>
                 ))}
-                {!selected && definition.key === "skus" ? <SkuBatchInput /> : null}
-                {definition.key === "products" ? <SkuBatchInput mode="product" /> : null}
+                {!selected && definition.key === "skus" ? (
+                  <SkuCombinationBuilder
+                    formValues={formValues}
+                    message={skuCombinationMessage}
+                    productOptions={relationOptions.productId ?? []}
+                    relationOptionsLoading={relationOptionsLoading}
+                    rows={skuCombinationRows}
+                    onGenerate={generateSkuCombinations}
+                    onRowChange={updateSkuCombinationRow}
+                  />
+                ) : null}
+                {definition.key === "products" ? <ProductSkuNextStep selected={selected} /> : null}
                 {batchSkuResults.length > 0 ? (
                   <SkuBatchResultPanel
                     results={batchSkuResults}
@@ -863,12 +1043,12 @@ function MasterDataUxHint({ definition }: { definition: WorkbenchDefinition }) {
       title: "分类录入更轻量",
     },
     products: {
-      body: "产品与 SKU 数据仍保持分离；建议先维护产品，再进入 SKU 管理补充尺寸、颜色、规格等销售/库存最小单元。",
+      body: "产品只维护型号级资料；保存后从列表或详情进入 SKU 管理补充尺寸、颜色、单位、价格和安全库存。",
       title: "产品 → SKU 规格",
     },
     skus: {
-      body: "SKU 名称可留空，页面会根据所属产品、尺寸、颜色和规格自动生成；批量新增支持每行录入一个 SKU 编码和规格。",
-      title: "SKU 规格批量录入",
+      body: "SKU 通过产品型号、尺寸和颜色组合生成预览；保存时逐条调用现有 SKU API，失败行可单独重试。",
+      title: "SKU 组合生成",
     },
     stores: {
       body: "店铺必须选择所属平台；平台店铺标识填写平台后台显示的店铺 ID 或店铺编号，没有可暂不填写。",
@@ -951,7 +1131,9 @@ function MasterDataFieldControl({
           </option>
           {(relationOptions[field.key] ?? []).map((option) => (
             <option key={option.id} value={option.id}>
-              {optionLabel(field, option)}
+              {definition.key === "skus" && field.key === "productId"
+                ? productOptionLabel(option)
+                : optionLabel(field, option)}
             </option>
           ))}
         </select>
@@ -1012,22 +1194,309 @@ function MasterDataFieldControl({
   );
 }
 
-function SkuBatchInput({ mode = "sku" }: { mode?: "product" | "sku" }) {
+function ProductSkuNextStep({ selected }: { selected: RecordItem | null }) {
   return (
     <section className="rounded-xl border border-dashed border-primary/40 bg-primary-soft p-4">
-      <h3 className="text-sm font-semibold text-[#1D4ED8]">SKU 批量新增</h3>
+      <h3 className="text-sm font-semibold text-[#1D4ED8]">下一步：维护 SKU 规格</h3>
       <p className="mt-1 text-xs leading-5 text-[#1E3A8A]">
-        可选。每行一个 SKU，格式：尺寸,颜色,规格,材质。
-        {mode === "product"
-          ? "保存时会先保存产品，再逐条调用现有 SKU API 创建；不具备原子批量提交或整体回滚能力。"
-          : "保存时逐条调用现有 SKU API 创建；不新增批量 API，不具备原子批量提交或整体回滚能力。"}
-        SKU 编码由服务端按型号、尺寸和颜色自动生成。
+        Product 只维护产品型号级资料；尺寸、颜色、价格和库存最小单元请进入 SKU 管理维护。
       </p>
-      <textarea
-        className="mt-3 min-h-24 w-full rounded-md border bg-white p-3 text-sm text-[#1F2937]"
-        name="batchSkuRows"
-        placeholder={"4/4,原木色,单琴,实木\n3/4,原木色,单琴,实木"}
-      />
+      {selected ? (
+        <Link
+          className="mt-3 inline-flex rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          href={`/workspace/master-data/skus?productId=${selected.id}`}
+        >
+          去维护 SKU
+        </Link>
+      ) : (
+        <p className="mt-3 rounded-md border bg-white px-3 py-2 text-xs text-muted-foreground">
+          产品保存成功后，可从产品列表或详情进入 SKU 管理。
+        </p>
+      )}
+    </section>
+  );
+}
+
+function SkuCombinationBuilder({
+  formValues,
+  message,
+  onGenerate,
+  onRowChange,
+  productOptions,
+  relationOptionsLoading,
+  rows,
+}: {
+  formValues: Record<string, string>;
+  message: string | null;
+  onGenerate: (input: {
+    bulkValues: Pick<
+      SkuCombinationRow,
+      | "defaultProductionPrice"
+      | "defaultPurchasePrice"
+      | "defaultSalePrice"
+      | "safetyStockQuantity"
+      | "unit"
+    >;
+    colorCode: string;
+    colors: readonly string[];
+    customColorName: string;
+    customSize: string;
+    sizes: readonly string[];
+  }) => Promise<void>;
+  onRowChange: (rowId: string, patch: Partial<SkuCombinationRow>) => void;
+  productOptions: readonly RecordItem[];
+  relationOptionsLoading: boolean;
+  rows: readonly SkuCombinationRow[];
+}) {
+  const selectedProduct = productOptions.find((option) => option.id === formValues.productId);
+  const sizeOptions = sizePresetsForProduct(selectedProduct);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [customSize, setCustomSize] = useState("");
+  const [customColorName, setCustomColorName] = useState("");
+  const [customColorCode, setCustomColorCode] = useState("");
+  const [bulkValues, setBulkValues] = useState({
+    defaultProductionPrice: formValues.defaultProductionPrice ?? "",
+    defaultPurchasePrice: formValues.defaultPurchasePrice ?? "",
+    defaultSalePrice: formValues.defaultSalePrice ?? "",
+    safetyStockQuantity: formValues.safetyStockQuantity || "0",
+    unit: formValues.unit ?? "",
+  });
+  const productDefaultUnit = String(selectedProduct?.defaultUnit ?? "").trim();
+  const effectiveBulkValues = {
+    ...bulkValues,
+    unit: bulkValues.unit || productDefaultUnit || "unit",
+  };
+
+  function toggleValue(values: string[], value: string): string[] {
+    return values.includes(value) ? values.filter((item) => item !== value) : [...values, value];
+  }
+
+  return (
+    <section className="rounded-xl border border-dashed border-primary/40 bg-primary-soft p-4">
+      <h3 className="text-sm font-semibold text-[#1D4ED8]">SKU 组合生成</h3>
+      <p className="mt-1 text-xs leading-5 text-[#1E3A8A]">
+        选择产品型号、尺寸和颜色后生成预览；保存时逐条调用现有 SKU
+        API，不新增批量接口，不具备整体回滚能力。
+      </p>
+      <div className="mt-3 rounded-lg border bg-white p-3 text-xs text-[#374151]">
+        当前产品：
+        <span className="ml-1 font-medium">
+          {selectedProduct
+            ? productOptionLabel(selectedProduct)
+            : relationOptionsLoading
+              ? "正在加载产品…"
+              : "请先选择产品型号"}
+        </span>
+      </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <fieldset className="rounded-lg border bg-white p-3">
+          <legend className="px-1 text-sm font-medium">尺寸</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {sizeOptions.map((size) => (
+              <label
+                key={size}
+                className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedSizes.includes(size)}
+                  onChange={() => setSelectedSizes((current) => toggleValue(current, size))}
+                />
+                {size}
+              </label>
+            ))}
+          </div>
+          {selectedSizes.includes("自定义") ? (
+            <input
+              className="mt-3 h-10 w-full rounded-md border bg-white px-3 text-sm text-[#1F2937]"
+              placeholder="自定义尺寸需填写可控编码，例如 44、36 或 ACC"
+              value={customSize}
+              onChange={(event) => setCustomSize(event.target.value)}
+            />
+          ) : null}
+        </fieldset>
+        <fieldset className="rounded-lg border bg-white p-3">
+          <legend className="px-1 text-sm font-medium">颜色</legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {SKU_COLOR_PRESETS.map((color) => (
+              <label
+                key={color.label}
+                className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedColors.includes(color.label)}
+                  onChange={() => setSelectedColors((current) => toggleValue(current, color.label))}
+                />
+                {color.label}
+                {color.code ? (
+                  <span className="text-xs text-muted-foreground">{color.code}</span>
+                ) : null}
+              </label>
+            ))}
+          </div>
+          {selectedColors.includes("自定义") ? (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <input
+                className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
+                placeholder="自定义颜色名称"
+                value={customColorName}
+                onChange={(event) => setCustomColorName(event.target.value)}
+              />
+              <input
+                className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
+                placeholder="色码，如 YG、BK"
+                value={customColorCode}
+                onChange={(event) => setCustomColorCode(event.target.value)}
+              />
+            </div>
+          ) : null}
+        </fieldset>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="w-full rounded-lg border bg-white p-3">
+          <h4 className="text-sm font-medium text-[#111827]">批量设置</h4>
+          <div className="mt-3 grid gap-3 md:grid-cols-5">
+            <label className="text-xs text-muted-foreground">
+              单位
+              <select
+                className="mt-1 h-9 w-full rounded border bg-white px-2 text-sm text-[#1F2937]"
+                value={effectiveBulkValues.unit}
+                onChange={(event) =>
+                  setBulkValues((current) => ({ ...current, unit: event.target.value }))
+                }
+              >
+                {MASTER_DATA_FIELD_OPTIONS.units.map((unit) => (
+                  <option key={unit.value} value={unit.value}>
+                    {unit.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {(
+              [
+                ["defaultPurchasePrice", "采购价"],
+                ["defaultProductionPrice", "生产价"],
+                ["defaultSalePrice", "销售价"],
+                ["safetyStockQuantity", "最低安全库存"],
+              ] as const
+            ).map(([key, label]) => (
+              <label className="text-xs text-muted-foreground" key={key}>
+                {label}
+                <input
+                  className="mt-1 h-9 w-full rounded border bg-white px-2 text-sm text-[#1F2937]"
+                  value={bulkValues[key as keyof typeof bulkValues]}
+                  onChange={(event) =>
+                    setBulkValues((current) => ({ ...current, [key]: event.target.value }))
+                  }
+                />
+              </label>
+            ))}
+          </div>
+          <Button
+            className="mt-3"
+            type="button"
+            variant="secondary"
+            onClick={() =>
+              rows.forEach((row) =>
+                onRowChange(row.rowId, {
+                  defaultProductionPrice: bulkValues.defaultProductionPrice,
+                  defaultPurchasePrice: bulkValues.defaultPurchasePrice,
+                  defaultSalePrice: bulkValues.defaultSalePrice,
+                  safetyStockQuantity: bulkValues.safetyStockQuantity,
+                  unit: effectiveBulkValues.unit,
+                }),
+              )
+            }
+          >
+            应用到全部 SKU
+          </Button>
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() =>
+            void onGenerate({
+              bulkValues: effectiveBulkValues,
+              colorCode: customColorCode,
+              colors: selectedColors,
+              customColorName,
+              customSize,
+              sizes: selectedSizes,
+            })
+          }
+        >
+          生成 SKU 组合
+        </Button>
+      </div>
+      {message ? <p className="mt-3 text-sm text-[#1D4ED8]">{message}</p> : null}
+      {rows.length > 0 ? (
+        <div className="mt-4 overflow-x-auto rounded-lg border bg-white">
+          <table className="w-full min-w-[760px] text-left text-xs">
+            <thead className="bg-[#F9FAFB] text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">状态</th>
+                <th className="px-3 py-2">预览编码</th>
+                <th className="px-3 py-2">SKU 名称</th>
+                <th className="px-3 py-2">单位</th>
+                <th className="px-3 py-2">采购价</th>
+                <th className="px-3 py-2">生产价</th>
+                <th className="px-3 py-2">销售价</th>
+                <th className="px-3 py-2">最低安全库存</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.rowId} className="border-t">
+                  <td className="px-3 py-2">
+                    <StatusBadge tone={row.status === "existing" ? "neutral" : "info"}>
+                      {row.status === "existing" ? "已存在" : "待创建"}
+                    </StatusBadge>
+                  </td>
+                  <td className="px-3 py-2 font-medium">{row.skuCode}</td>
+                  <td className="px-3 py-2">
+                    <input
+                      className="h-8 w-full rounded border bg-white px-2"
+                      value={row.skuName}
+                      onChange={(event) => onRowChange(row.rowId, { skuName: event.target.value })}
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <select
+                      className="h-8 rounded border bg-white px-2"
+                      value={row.unit}
+                      onChange={(event) => onRowChange(row.rowId, { unit: event.target.value })}
+                    >
+                      {MASTER_DATA_FIELD_OPTIONS.units.map((unit) => (
+                        <option key={unit.value} value={unit.value}>
+                          {unit.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  {(
+                    [
+                      "defaultPurchasePrice",
+                      "defaultProductionPrice",
+                      "defaultSalePrice",
+                      "safetyStockQuantity",
+                    ] as const
+                  ).map((key) => (
+                    <td className="px-3 py-2" key={key}>
+                      <input
+                        className="h-8 w-24 rounded border bg-white px-2"
+                        value={row[key] ?? ""}
+                        onChange={(event) => onRowChange(row.rowId, { [key]: event.target.value })}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -1053,8 +1522,20 @@ function SkuBatchResultPanel({
             className="flex items-start gap-3 rounded-lg border bg-[#F9FAFB] p-3 text-sm"
             key={`${result.line}-${result.row}`}
           >
-            <StatusBadge tone={result.status === "success" ? "success" : "danger"}>
-              {result.status === "success" ? "成功" : "失败"}
+            <StatusBadge
+              tone={
+                result.status === "success"
+                  ? "success"
+                  : result.status === "existing"
+                    ? "neutral"
+                    : "danger"
+              }
+            >
+              {result.status === "success"
+                ? "成功"
+                : result.status === "existing"
+                  ? "已存在"
+                  : "失败"}
             </StatusBadge>
             <div className="min-w-0 flex-1">
               <p className="font-medium text-[#111827]">第 {result.line} 行</p>

@@ -38,14 +38,26 @@ const RESOURCE_CODE_FIELD: Readonly<Partial<Record<MasterDataResourceKey, string
 };
 
 const SIZE_CODES: Readonly<Record<string, string>> = {
+  "1/10": "110",
+  "1/16": "116",
+  "1/8": "18",
   "1/2": "12",
   "1/4": "14",
   "3/4": "34",
   "4/4": "44",
+  "110": "110",
+  "116": "116",
   "12": "12",
   "14": "14",
+  "18": "18",
   "34": "34",
+  "36寸": "36",
+  "38寸": "38",
+  "39寸": "39",
+  "40寸": "40",
+  "41寸": "41",
   "44": "44",
+  无尺寸: "NS",
 };
 
 const COLOR_CODES: Readonly<Record<string, string>> = {
@@ -59,10 +71,22 @@ const COLOR_CODES: Readonly<Record<string, string>> = {
   green: "GN",
   nat: "NAT",
   natural: "NAT",
+  rd: "RD",
+  red: "RD",
+  wh: "WH",
+  white: "WH",
+  yg: "YG",
+  yellowgreen: "YG",
+  "yellow-green": "YG",
   原木: "NAT",
   原木色: "NAT",
+  白: "WH",
+  白色: "WH",
   棕: "BR",
   棕色: "BR",
+  红: "RD",
+  红色: "RD",
+  黄绿色: "YG",
   绿: "GN",
   绿色: "GN",
   蓝: "BL",
@@ -106,14 +130,14 @@ function formatSequentialCode(rule: CodeRuleRow, nextValue: number): string {
 function normalizeSize(value: unknown): string {
   if (typeof value !== "string" || !value.trim()) {
     throw new ValidationError("SKU 尺寸缺失，无法生成 SKU 编码", [
-      { field: "size", message: "尺寸必须填写，例如 4/4、3/4、1/2、1/4" },
+      { field: "size", message: "尺寸必须填写，例如 4/4、3/4、1/8、36寸、无尺寸" },
     ]);
   }
   const normalized = value.trim().replace(/\s+/g, "");
   const code = SIZE_CODES[normalized];
   if (!code) {
     throw new ValidationError("SKU 尺寸不在自动编码映射范围内", [
-      { field: "size", message: "尺寸仅支持 4/4、3/4、1/2、1/4" },
+      { field: "size", message: "尺寸仅支持已批准的提琴、吉他、尤克里里和配件尺寸映射" },
     ]);
   }
   return code;
@@ -129,7 +153,7 @@ function normalizeColor(value: unknown): string {
   const code = COLOR_CODES[normalized] ?? COLOR_CODES[value.trim()];
   if (!code) {
     throw new ValidationError("SKU 颜色不在自动编码映射范围内", [
-      { field: "color", message: "颜色仅支持 黑色、棕色、原木色、绿色、蓝色" },
+      { field: "color", message: "颜色仅支持 原木色、棕色、黑色、白色、红色、蓝色、绿色、黄绿色" },
     ]);
   }
   return code;

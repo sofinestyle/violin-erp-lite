@@ -568,3 +568,40 @@ Commit：
 Commit：
 
 `test: verify automatic code generation deployment`
+
+### Product / SKU Management Unified Refactoring
+
+问题：
+
+- Product / SKU 管理职责不够清晰；
+- SKU 新增仍偏技术工作台形态；
+- Product 页面仍残留 SKU 批量维护入口；
+- 产品型号唯一性需治理判断。
+
+修改：
+
+- Product 页面聚焦型号级主数据；
+- `productNameEn` 前端语义改为“产品型号”，Create 校验必填；
+- Product 页面移除 SKU 批量新增区域；
+- Product 列表增加“SKU 管理”入口；
+- SKU 页面产品选择改为“产品型号”，下拉展示 `型号｜产品名称`；
+- 新增 SKU 尺寸 × 颜色组合生成器；
+- 新增 SKU 组合预览、批量设置、逐行编辑、已存在标记和失败行重试；
+- 扩展 SKU 编码服务尺寸 / 颜色映射；
+- 新增 `UAT_PRODUCT_SKU_MANAGEMENT_REFACTOR_REPORT.md`。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm --filter @violin-erp/api exec vitest run tests/master-data.test.ts`：通过；
+- `pnpm --filter @violin-erp/database exec vitest run tests/code-generation-service.test.ts`：通过。
+
+结果：
+
+- Product / SKU Management UX Refactoring：Fixed / Pending Automated Verification；
+- 产品型号唯一性：Blocked by Database CR；
+- 未新增 Database Schema、Migration、API Path 或 Permission Code。
+
+Commit：
+
+`refactor: simplify product and sku management`

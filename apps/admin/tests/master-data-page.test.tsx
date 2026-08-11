@@ -10,6 +10,8 @@ import {
   MASTER_DATA_FIELD_OPTIONS,
   MASTER_WORKBENCHES,
   SECURITY_WORKBENCHES,
+  SKU_COLOR_PRESETS,
+  SKU_SIZE_PRESETS_BY_CATEGORY,
 } from "../lib/master-data";
 
 describe("Master Data PC pages", () => {
@@ -78,6 +80,10 @@ describe("Master Data PC pages", () => {
 
   it("keeps product type hidden while preserving the frozen field payload", () => {
     const product = MASTER_WORKBENCHES.find((definition) => definition.key === "products");
+    expect(product?.fields.find((field) => field.key === "productNameEn")).toMatchObject({
+      label: "产品型号",
+      required: true,
+    });
     expect(product?.fields.find((field) => field.key === "productType")).toMatchObject({
       defaultValue: "violin",
       hidden: true,
@@ -170,9 +176,12 @@ describe("Master Data PC pages", () => {
     expect(sku?.fields.find((field) => field.key === "skuCode")?.helpText).toContain(
       "服务端按型号-尺寸-颜色生成",
     );
-    expect(sku?.fields.find((field) => field.key === "skuName")?.helpText).toContain(
-      "留空时前端会",
-    );
+    expect(sku?.fields.find((field) => field.key === "productId")).toMatchObject({
+      label: "产品型号",
+      optionCodeField: "productNameEn",
+      optionNameField: "productName",
+    });
+    expect(sku?.fields.find((field) => field.key === "skuName")?.helpText).toContain("组合生成");
     expect(sku?.fields.find((field) => field.key === "unit")).toMatchObject({
       defaultValue: "unit",
       inputMode: "select",
@@ -181,6 +190,41 @@ describe("Master Data PC pages", () => {
     expect(sku?.fields.find((field) => field.key === "safetyStockQuantity")).toMatchObject({
       defaultValue: "0",
       label: "最低安全库存",
+    });
+  });
+
+  it("defines approved SKU size and color presets for combination generation", () => {
+    expect(SKU_SIZE_PRESETS_BY_CATEGORY.提琴).toEqual([
+      "4/4",
+      "3/4",
+      "1/2",
+      "1/4",
+      "1/8",
+      "1/10",
+      "1/16",
+      "自定义",
+    ]);
+    expect(SKU_SIZE_PRESETS_BY_CATEGORY.吉他).toEqual([
+      "36寸",
+      "38寸",
+      "39寸",
+      "40寸",
+      "41寸",
+      "自定义",
+    ]);
+    expect(SKU_COLOR_PRESETS.map((option) => option.label)).toEqual([
+      "原木色",
+      "棕色",
+      "黑色",
+      "白色",
+      "红色",
+      "蓝色",
+      "绿色",
+      "黄绿色",
+      "自定义",
+    ]);
+    expect(SKU_COLOR_PRESETS.find((option) => option.label === "黄绿色")).toMatchObject({
+      code: "YG",
     });
   });
 
@@ -246,7 +290,8 @@ describe("Master Data PC pages", () => {
       </PermissionProvider>,
     );
     expect(productHtml).toContain("产品 → SKU 规格");
-    expect(skuHtml).toContain("SKU 规格批量录入");
+    expect(skuHtml).toContain("SKU 组合生成");
+    expect(productHtml).not.toContain("SKU 批量新增");
   });
 
   it("surfaces API validation field details and request id to operators", () => {

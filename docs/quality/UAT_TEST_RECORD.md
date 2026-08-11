@@ -544,3 +544,44 @@ Health 验证：
 测试结果：
 
 UAT-009：Automated Pass / Pending Final Manual Spot Check
+
+## 19. Product / SKU Management Unified Refactoring
+
+测试类型：
+
+Implementation / Automated Regression Preparation
+
+测试范围：
+
+- Product 型号级主数据页面；
+- SKU 产品型号选择；
+- SKU 尺寸 × 颜色组合生成；
+- SKU 编码预览与服务端生成规则；
+- SKU 批量设置、逐行保存和失败重试；
+- Product → SKU 管理导航。
+
+测试结果：
+
+Product / SKU Management UX Refactoring：Fixed / Pending Automated Verification
+
+已执行自动化回归：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过，15 tests passed；
+- `pnpm --filter @violin-erp/api exec vitest run tests/master-data.test.ts`：通过，20 tests passed；
+- `pnpm --filter @violin-erp/database exec vitest run tests/code-generation-service.test.ts`：通过，5 tests passed。
+
+边界记录：
+
+- 未新增 Database 字段、表或 Migration；
+- 未新增 API Path；
+- 未新增 Permission Code；
+- 未新增 SKU 批量原子创建 API；
+- 产品型号唯一性需 Database CR，当前保持 Blocked by Database CR；
+- SKU Code 最终仍由服务端生成，前端仅预览。
+
+待复验：
+
+- 使用 `http://localhost:3100` 完成 Product 创建和 SKU 组合生成；
+- 确认 `L2-44-BR`、`L2-44-BK`、`L2-34-BR`、`L2-34-BK`、`L2-12-BR`、`L2-12-BK` 预览正确；
+- 确认用户无需录入 UUID、JSON、SKU Code 或 SKU Name；
+- 确认已存在 SKU 标记和失败行重试。
