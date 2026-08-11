@@ -528,3 +528,43 @@ Commit：
 Commit：
 
 `feat: implement automatic code generation`
+
+### UAT-009 Automatic Code Generation Deployment Verification
+
+问题：
+
+- UAT-009 自动编码本地 UAT Migration 部署与真实运行验证。
+
+修改：
+
+- 部署 `20260809090000_add_code_generation_foundation` 到本地 UAT PostgreSQL；
+- 验证 `code_generation_rules` 与 `code_sequences` 已创建并初始化；
+- 验证 `localhost:3100/api/health` 恢复 HTTP 200；
+- 通过正式 API 创建 UAT 标识 Product、SKU、Supplier、Manufacturer、Warehouse；
+- 更新 UAT-009 验证记录。
+
+测试：
+
+- `pnpm db:migrate:status`：Database schema is up to date；
+- `GET /api/health`：HTTP 200；
+- Product 自动生成 `PRD-000001`；
+- SKU 自动生成 `L2-44-BK`；
+- Supplier 自动生成 `SUP-000001`；
+- Manufacturer 自动生成 `MFR-000001`；
+- Warehouse 自动生成 `WH-000001`；
+- 并发 Supplier 自动编码无重复；
+- 显式合法历史编码兼容；
+- 重复显式编码返回 `CONFLICT_REQUEST`；
+- 失败事务未推进 Product 编码流水；
+- `pnpm check`：通过；
+- `pnpm status:check`：通过；
+- `git diff --check`：通过。
+
+结果：
+
+- UAT-009 更新为 `Automated Pass / Pending Final Manual Spot Check`；
+- 本轮只更新验证文档，未修改业务代码、Database Schema、Migration、API Contract 或 Permission。
+
+Commit：
+
+`test: verify automatic code generation deployment`

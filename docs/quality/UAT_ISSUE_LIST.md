@@ -333,11 +333,11 @@ Local UAT
 
 状态：
 
-Fixed / Pending Verification
+Automated Pass / Pending Final Manual Spot Check
 
 处理：
 
-已完成 CR-001、CR-002、CR-003 第一阶段实施。Product Code、SKU Code、Supplier Code、Manufacturer Code、Warehouse Code 已支持服务端自动生成；Category Code、Brand Code、Platform Code、Store Code 暂不纳入第一阶段。普通用户创建第一阶段对象时不再输入编码，创建后展示最终生成编码；历史已有编码保持不变，旧客户端提交合法编码继续兼容。
+已完成 CR-001、CR-002、CR-003 第一阶段实施和本地 UAT Migration 部署验证。Product Code、SKU Code、Supplier Code、Manufacturer Code、Warehouse Code 已支持服务端自动生成；Category Code、Brand Code、Platform Code、Store Code 暂不纳入第一阶段。普通用户创建第一阶段对象时不再输入编码，创建后展示最终生成编码；历史已有编码保持不变，旧客户端提交合法编码继续兼容。
 
 处理要求：
 
@@ -349,8 +349,15 @@ Fixed / Pending Verification
 - 编码由统一 CodeGenerationService 服务端生成；
 - 普通流水编码通过数据库事务与行级锁保证并发安全；
 - SKU 组合编码由服务端基于型号、尺寸、颜色生成，并由既有 SKU 唯一约束裁决重复组合。
+- 本地 UAT PostgreSQL 已部署 `20260809090000_add_code_generation_foundation`；
+- `GET /api/health` 已恢复 HTTP 200，`application.status = ok`，`database.status = connected`；
+- 真实 API 验证已生成 `PRD-000001`、`SUP-000001`、`MFR-000001`、`WH-000001` 和 `L2-44-BK`；
+- 并发创建 Supplier 自动编码无重复；
+- 显式合法历史编码兼容；
+- 重复显式编码被唯一约束拒绝；
+- 失败事务未推进 Product 编码流水。
 
-待人工复验：
+待最终人工抽查：
 
 - 创建 Product 时生成 `PRD-xxxxxx`；
 - 创建 SKU 时生成 `型号-尺寸-颜色`；

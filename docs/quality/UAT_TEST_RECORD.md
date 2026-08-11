@@ -492,3 +492,55 @@ Batch 002-C：Automated Pass / Pending Manual Business Verification
 当前状态：
 
 Local UAT In Progress，Batch 002-C Automated Pass，Pending Manual Business Verification。
+
+## 18. UAT-009 Automatic Code Generation Deployment Verification
+
+测试类型：
+
+Migration Deployment / API Runtime Verification / Automated Regression
+
+测试环境：
+
+- Violin ERP：`http://localhost:3100`
+- PostgreSQL：`localhost:5432`
+- Database：`violin_erp_lite`
+- Node：22.x
+
+部署验证：
+
+- `20260809090000_add_code_generation_foundation` 已部署；
+- `code_generation_rules` 已创建并初始化 5 条规则；
+- `code_sequences` 已创建并初始化 4 条流水；
+- 未执行 reset、drop database、重新 Seed 或清空业务数据。
+
+Health 验证：
+
+- `GET /api/health`：HTTP 200；
+- `application.status = ok`；
+- `database.status = connected`。
+
+真实 API 验证：
+
+- Product 未提交 `productCode`，生成 `PRD-000001`；
+- SKU 未提交 `skuCode`，型号 `L2`、尺寸 `4/4`、颜色 `黑色`，生成 `L2-44-BK`；
+- Supplier 未提交 `supplierCode`，生成 `SUP-000001`；
+- Manufacturer 未提交 `manufacturerCode`，生成 `MFR-000001`；
+- Warehouse 未提交 `warehouseCode`，生成 `WH-000001`。
+
+并发与兼容验证：
+
+- 并发创建 Supplier 自动编码无重复；
+- `code_sequences` 正确递增；
+- 显式合法历史编码兼容；
+- 重复显式编码被唯一约束拒绝；
+- 失败事务未推进 Product 编码流水；
+- 未发现 `max(code)+1` 路径。
+
+前端验证：
+
+- Admin 自动化测试覆盖编码字段隐藏和自动编码展示；
+- 本轮真实浏览器点击式验证因 Browser 插件无可用交互输出且本地未安装 Playwright CLI，保留为 Final Manual Spot Check。
+
+测试结果：
+
+UAT-009：Automated Pass / Pending Final Manual Spot Check

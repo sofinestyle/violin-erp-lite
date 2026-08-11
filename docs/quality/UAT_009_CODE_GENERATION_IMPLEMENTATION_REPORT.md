@@ -169,10 +169,69 @@ PC Admin 基础资料页面已调整：
 
 ## 9. UAT状态
 
+## 9. 本地UAT部署验证
+
+验证日期：
+
+2026-08-11
+
+部署结果：
+
+- `20260809090000_add_code_generation_foundation` 已通过 `pnpm db:migrate:deploy` 正式部署到本地 UAT PostgreSQL；
+- `pnpm db:migrate:status` 显示 Database schema is up to date；
+- 新增表验证：
+  - `code_generation_rules`：5 条规则；
+  - `code_sequences`：4 条流水；
+  - 规则类型：manufacturer、product、sku、supplier、warehouse；
+- 未执行 `prisma migrate reset`；
+- 未执行 drop database；
+- 未重新 Seed；
+- 未清空或重建业务数据。
+
+Health 验证：
+
+- `GET http://localhost:3100/api/health`：HTTP 200；
+- `application.status = ok`；
+- `database.status = connected`。
+
+真实 API 验证：
+
+| 对象 | 输入编码 | 生成结果 | 结果 |
+| --- | --- | --- | --- |
+| Product | 未提交 `productCode` | `PRD-000001` | Pass |
+| SKU | 未提交 `skuCode`，型号 `L2`、尺寸 `4/4`、颜色 `黑色` | `L2-44-BK` | Pass |
+| Supplier | 未提交 `supplierCode` | `SUP-000001` | Pass |
+| Manufacturer | 未提交 `manufacturerCode` | `MFR-000001` | Pass |
+| Warehouse | 未提交 `warehouseCode` | `WH-000001` | Pass |
+
+并发与兼容验证：
+
+- 并发创建 5 个 Supplier，生成 `SUP-000002` 至 `SUP-000006`，无重复；
+- `code_sequences.supplier.current_value` 正确递增至 6；
+- 显式提交合法历史 Supplier Code 成功；
+- 重复显式 Supplier Code 返回 `CONFLICT_REQUEST`；
+- 使用无效关联创建 Product 触发 `VALIDATION_INVALID_FIELD`，Product sequence 未推进；
+- 未发现 `max(code)+1` 运行路径。
+
+前端验证：
+
+- `localhost:3100` 已可启动；
+- Health 已恢复；
+- 现有 Admin 自动化测试覆盖编码字段隐藏、创建后展示和 SKU 批量录入不要求编码；
+- Browser 插件未返回可用交互输出，且本地未安装 Playwright CLI，因此本轮未完成真实浏览器点击式表单提交；该项保留为 Final Manual Spot Check。
+
+AI视觉平台验证：
+
+- `http://localhost:3000` 返回登录跳转响应；
+- 未操作 PM2；
+- 未停止、重启或修改 AI 视觉平台。
+
+## 10. UAT状态
+
 UAT-009 状态更新为：
 
 ```text
-Fixed / Pending Verification
+Automated Pass / Pending Final Manual Spot Check
 ```
 
-待项目负责人完成最终人工复验后，再决定是否进入 Verified / Closed。
+待项目负责人完成最终人工抽查后，再决定是否进入 Verified / Closed。
