@@ -233,6 +233,38 @@ describe("Master Data API contracts", () => {
     expect(
       MASTER_DATA_DEFINITIONS.products.fields.find((field) => field.key === "productNameEn"),
     ).toMatchObject({ label: "产品型号", requiredOnCreate: true });
+    expect(
+      validateMasterDataInput(
+        "products",
+        {
+          brandId: RECORD_ID,
+          categoryId: RECORD_ID,
+          defaultUnit: "piece",
+          productName: "手工小提琴",
+          productNameEn: "L101-BR",
+          productType: "violin",
+        },
+        "create",
+      ),
+    ).toMatchObject({ data: expect.objectContaining({ productNameEn: "L101-BR" }) });
+    for (const productNameEn of ["L 2", "L/2", "小提琴L2", "L2--BR", "-L2", "L2-"]) {
+      expect(() =>
+        validateMasterDataInput(
+          "products",
+          {
+            brandId: RECORD_ID,
+            categoryId: RECORD_ID,
+            defaultUnit: "piece",
+            productName: "手工小提琴",
+            productNameEn,
+            productType: "violin",
+          },
+          "create",
+        ),
+      ).toThrowError(
+        expect.objectContaining({ details: [expect.objectContaining({ field: "productNameEn" })] }),
+      );
+    }
 
     const store = repositoryWithRecord({
       id: RECORD_ID,

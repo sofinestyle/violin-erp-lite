@@ -160,21 +160,16 @@ function normalizeColor(value: unknown): string {
 }
 
 function extractModelCode(product: Record<string, unknown> | null): string {
-  const candidates = [
-    product?.product_model_code,
-    product?.model_code,
-    product?.product_name_en,
-    product?.product_code,
-  ];
+  const candidates = [product?.product_model_code, product?.model_code, product?.product_name_en];
   for (const candidate of candidates) {
     if (typeof candidate !== "string") continue;
     const normalized = candidate.trim().toUpperCase();
-    if (/^[A-Z][A-Z0-9]{0,19}$/.test(normalized)) return normalized;
+    if (/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) return normalized;
   }
   throw new ValidationError("产品缺少可用于 SKU 自动编码的型号", [
     {
       field: "productId",
-      message: "请在产品英文名称中维护稳定型号（例如 L2），或提交已批准的历史 SKU 编码。",
+      message: "请在产品型号中维护稳定型号（例如 L2、L101-BR），或提交已批准的历史 SKU 编码。",
     },
   ]);
 }

@@ -725,3 +725,44 @@ Automated Business Flow Verification
 状态：
 
 Batch 003-A：Automated Verification Complete / Pending Manual Business Verification
+
+## 23. Batch 003-A Major Risk Consolidated Fix & Reverification
+
+测试类型：
+
+Automated Reverification / Real Prisma Business Flow Test
+
+测试环境：
+
+- Node：v22.23.1
+- Web / API：`http://localhost:3100`
+- Database：`violin_erp_lite`
+- 日期：2026-08-13
+- 测试数据标识：`UAT-003A`
+
+执行内容：
+
+- 修复创建类 Workflow 审计 `object_id` 使用 `collection` 的 UUID 类型风险；
+- 使用真实 `PrismaAuditWriter` 重新验证采购、生产、质检、入库、出库、跨境发货审计落库；
+- 调整产品型号校验与 SKU 编码生成规则，允许业务型号包含单连字符；
+- 验证 `L2 → L2-44-BK`、`L101-BR → L101-BR-44-BK`、`N101-BR → N101-BR-44-BK`；
+- 使用 `UAT-003A-L3` 产品型号重新执行真实 Prisma 业务闭环；
+- 验证库存变化、库存流水、重复提交保护和权限拦截。
+
+测试结果：
+
+- Audit Persistence：通过；
+- 产品型号 / SKU 编码规则：通过；
+- 采购闭环：通过；
+- 生产闭环：通过；
+- 质检：通过；
+- 入库：通过；
+- 销售出库：通过；
+- 跨境发货 + 海外导入：通过；
+- 库存与流水：通过；
+- 重复提交保护：通过；
+- 权限控制：通过。
+
+状态：
+
+Batch 003-A：Automated Verification Passed / Pending Manual Business Verification

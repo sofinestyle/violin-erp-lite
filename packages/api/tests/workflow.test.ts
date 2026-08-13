@@ -176,6 +176,7 @@ describe("Frozen workflow API contracts", () => {
     expect(audit.events[0]).toMatchObject({
       action: "PRO-003",
       actorUserId: USER_ID,
+      resourceId: DOCUMENT_ID,
       resourceType: "production",
     });
   });
@@ -217,6 +218,7 @@ describe("Frozen workflow API contracts", () => {
     expect(audit.events[0]).toMatchObject({
       action: "PUR-003",
       actorUserId: USER_ID,
+      resourceId: DOCUMENT_ID,
       resourceType: "purchase",
     });
   });
@@ -269,6 +271,7 @@ describe("Frozen workflow API contracts", () => {
     expect(audit.events[0]).toMatchObject({
       action: "INS-003",
       actorUserId: USER_ID,
+      resourceId: DOCUMENT_ID,
       resourceType: "inspection",
     });
   });

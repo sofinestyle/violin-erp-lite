@@ -981,7 +981,7 @@ export class InventoryWorkflowService {
         metadata: { action: command.action },
         moduleCode: command.resource,
         requestId: context.requestId,
-        resourceId: command.entityId ?? "collection",
+        resourceId: auditResourceId(result, command.entityId),
         resourceType: command.resource,
         result: "success",
         timestamp: new Date(context.timestamp),
@@ -1073,4 +1073,13 @@ export class InventoryWorkflowService {
       scope: { apiId: command.apiId, userId: authentication.user.userId },
     });
   }
+}
+
+function auditResourceId(result: unknown, fallback: string | undefined): string {
+  if (result && typeof result === "object" && !Array.isArray(result)) {
+    const id = (result as Readonly<Record<string, unknown>>).id;
+    if (typeof id === "string" && id.trim()) return id;
+  }
+  if (typeof fallback === "string" && fallback.trim()) return fallback;
+  throw new ValidationError("审计对象缺少正式主键");
 }

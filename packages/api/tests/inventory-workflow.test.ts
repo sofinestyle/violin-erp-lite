@@ -99,7 +99,9 @@ describe("Task 7.5-C Frozen API coverage", () => {
   });
 
   it("requires CBR-003 transportMethod as a non-enum string of at most 50 characters", async () => {
-    const repository: InventoryWorkflowRepository = { execute: vi.fn() };
+    const repository: InventoryWorkflowRepository = {
+      execute: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "draft" }),
+    };
     const service = new InventoryWorkflowService(repository, new InMemoryAuditWriter());
     const base: InventoryWorkflowCommand = {
       action: "create",
@@ -144,7 +146,7 @@ describe("Task 7.5-C Frozen API coverage", () => {
         authentication(["cross-border.shipment.create"]),
         context,
       ),
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ id: DOCUMENT_ID, status: "draft" });
   });
 
   it("enforces RBAC and records audit for mutations", async () => {
@@ -175,6 +177,39 @@ describe("Task 7.5-C Frozen API coverage", () => {
     expect(audit.events[0]).toMatchObject({ action: "CBR-012", actorUserId: USER_ID });
   });
 
+  it("uses returned document id for create mutation audit instead of a collection placeholder", async () => {
+    const repository: InventoryWorkflowRepository = {
+      execute: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "draft" }),
+    };
+    const audit = new InMemoryAuditWriter();
+    const service = new InventoryWorkflowService(repository, audit);
+    const command: InventoryWorkflowCommand = {
+      action: "create-domestic-sales",
+      apiId: "OUT-003",
+      mutation: true,
+      payload: {
+        documentDate: "2026-07-23",
+        items: [{ quantity: 1, skuId: DOCUMENT_ID, unitCost: 10 }],
+        warehouseId: DOCUMENT_ID,
+      },
+      query: new URLSearchParams(),
+      resource: "outbound",
+    };
+
+    await service.execute(
+      command,
+      "outbound.order.create-domestic-sales",
+      authentication(["outbound.order.create-domestic-sales"]),
+      context,
+    );
+
+    expect(audit.events[0]).toMatchObject({
+      action: "OUT-003",
+      resourceId: DOCUMENT_ID,
+      resourceType: "outbound",
+    });
+  });
+
   it("records outbound confirmation audit through OUT-012", async () => {
     const repository: InventoryWorkflowRepository = {
       execute: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "completed" }),
@@ -202,6 +237,7 @@ describe("Task 7.5-C Frozen API coverage", () => {
     expect(audit.events[0]).toMatchObject({
       action: "OUT-012",
       moduleCode: "outbound",
+      resourceId: DOCUMENT_ID,
       resourceType: "outbound",
       result: "success",
     });
@@ -237,6 +273,7 @@ describe("Task 7.5-C Frozen API coverage", () => {
     expect(audit.events[0]).toMatchObject({
       action: "INV-024",
       moduleCode: "inventory-adjustment",
+      resourceId: DOCUMENT_ID,
       resourceType: "inventory-adjustment",
       result: "success",
     });

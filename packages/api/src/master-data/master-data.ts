@@ -124,6 +124,7 @@ export type MasterDataResourceDefinition = Readonly<{
 }>;
 
 const PRODUCT_MODEL_DUPLICATE_MESSAGE = "产品型号已存在，请使用其他型号";
+const PRODUCT_MODEL_PATTERN = /^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/;
 
 const requiredString = (key: string, label: string, maxLength: number): MasterDataField => ({
   key,
@@ -447,6 +448,7 @@ export function validateMasterDataInput(
   }
 
   if (resource === "warehouses") validateWarehouse(data);
+  if (resource === "products") validateProductModel(data);
   if (resource === "product-categories" && data.categoryLevel === 0) {
     throw validationIssue("categoryLevel", "分类层级必须从 1 开始");
   }
@@ -455,6 +457,18 @@ export function validateMasterDataInput(
     data,
     ...(typeof updatedAt === "string" ? { updatedAt } : {}),
   };
+}
+
+function validateProductModel(data: Readonly<Record<string, unknown>>): void {
+  const value = data.productNameEn;
+  if (typeof value !== "string") return;
+  const normalized = value.trim();
+  if (!PRODUCT_MODEL_PATTERN.test(normalized)) {
+    throw validationIssue(
+      "productNameEn",
+      "产品型号仅允许字母、数字和单个连字符分隔，不允许中文、空格、斜杠或特殊符号",
+    );
+  }
 }
 
 function validateWarehouse(data: Readonly<Record<string, unknown>>): void {

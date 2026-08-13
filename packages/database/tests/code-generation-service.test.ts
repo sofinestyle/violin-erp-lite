@@ -73,6 +73,63 @@ describe("CodeGenerationService", () => {
     ).resolves.toMatchObject({ skuCode: "L2-44-BK" });
   });
 
+  it("preserves hyphenated Product model semantics when generating SKU codes", async () => {
+    const service = new CodeGenerationService();
+    const client = {
+      products: {
+        findFirst: vi
+          .fn()
+          .mockResolvedValueOnce({ product_code: "PRD-000001", product_name_en: "L101-BR" })
+          .mockResolvedValueOnce({ product_code: "PRD-000002", product_name_en: "N101-BR" })
+          .mockResolvedValueOnce({ product_code: "PRD-000003", product_name_en: " l2 " }),
+      },
+    };
+
+    await expect(
+      service.applyMasterDataCode(client, "skus", {
+        color: "黑色",
+        productId: "22222222-2222-4222-8222-222222222222",
+        size: "4/4",
+      }),
+    ).resolves.toMatchObject({ skuCode: "L101-BR-44-BK" });
+    await expect(
+      service.applyMasterDataCode(client, "skus", {
+        color: "黑色",
+        productId: "22222222-2222-4222-8222-222222222222",
+        size: "4/4",
+      }),
+    ).resolves.toMatchObject({ skuCode: "N101-BR-44-BK" });
+    await expect(
+      service.applyMasterDataCode(client, "skus", {
+        color: "黑色",
+        productId: "22222222-2222-4222-8222-222222222222",
+        size: "4/4",
+      }),
+    ).resolves.toMatchObject({ skuCode: "L2-44-BK" });
+  });
+
+  it("rejects Product models with spaces, slashes, non-ascii text or malformed separators", async () => {
+    const service = new CodeGenerationService();
+
+    for (const productNameEn of ["L 2", "L/2", "小提琴L2", "L2--BR", "-L2", "L2-"]) {
+      const client = {
+        products: {
+          findFirst: vi.fn().mockResolvedValue({
+            product_code: "PRD-000001",
+            product_name_en: productNameEn,
+          }),
+        },
+      };
+      await expect(
+        service.applyMasterDataCode(client, "skus", {
+          color: "黑色",
+          productId: "22222222-2222-4222-8222-222222222222",
+          size: "4/4",
+        }),
+      ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
+    }
+  });
+
   it("supports approved extended SKU size and color mappings", async () => {
     const service = new CodeGenerationService();
     const client = {

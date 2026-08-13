@@ -719,3 +719,35 @@ Commit：
 - Batch 003-A：Automated Verification Complete / Pending Manual Business Verification；
 - 核心库存闭环通过；
 - 发现 Audit 落库风险和 UAT 型号编码规则冲突，均记录为 Major。
+
+### Batch 003-A Major Risk Consolidated Fix & Reverification
+
+问题：
+
+- B003A-001：创建类 Workflow / Inventory Workflow 缺少 `entityId` 时，审计 resourceId 可能写入 `collection`，与 `audit_logs.object_id` UUID 类型不兼容；
+- B003A-002：产品型号实际允许 `L2`、`L101-BR`、`N101-BR` 等含连字符业务型号，但 SKU 自动编码服务此前只接受纯字母数字。
+
+修改：
+
+- Workflow / Inventory Workflow 审计 resourceId 改为优先使用 Repository 返回结果中的正式业务对象主键 `id`；
+- 无正式对象主键时返回业务校验错误，不伪造 UUID，不关闭 Audit；
+- 产品型号校验调整为允许字母、数字和单连字符分隔；
+- SKU 生成时保留连字符并统一转为大写；
+- SKU 自动编码不再使用 Product Code 作为型号兜底；
+- 更新 `UAT_BATCH_003_A_BUSINESS_FLOW_VERIFICATION_REPORT.md`；
+- 更新 `UAT_TEST_RECORD.md`。
+
+测试：
+
+- `pnpm --filter @violin-erp/api exec vitest run tests/workflow.test.ts tests/inventory-workflow.test.ts tests/master-data.test.ts`：通过；
+- `pnpm --filter @violin-erp/database exec vitest run tests/code-generation-service.test.ts`：通过；
+- 真实 Prisma 业务闭环复核：通过；
+- 真实 `PrismaAuditWriter` audit_logs 落库复核：通过；
+- SKU 编码验证：`L2-44-BK`、`L101-BR-44-BK`、`N101-BR-44-BK`、`UAT-003A-L3-44-BR` 均通过。
+
+结果：
+
+- B003A-001：Resolved；
+- B003A-002：Resolved；
+- 当前未发现未解决的 Blocker / Critical / Major；
+- Batch 003-A：Automated Verification Passed / Pending Manual Business Verification。
