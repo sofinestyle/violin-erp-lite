@@ -685,3 +685,37 @@ Commit：
 - 未修改 Database Schema 或 Migration；
 - 未新增 Permission Code；
 - 未删除业务数据或历史业务记录。
+
+### Batch 003-A Business Flow Verification
+
+问题：
+
+- 需要建立带 `UAT-003A` 标识的本地 UAT 测试数据；
+- 需要验证基础资料、采购、生产、质检、入库、库存、销售出库、跨境发货是否能形成真实业务闭环。
+
+修改：
+
+- 新增 `UAT_BATCH_003_A_BUSINESS_FLOW_VERIFICATION_REPORT.md`；
+- 更新 `UAT_TEST_RECORD.md`；
+- 未修改业务代码；
+- 未修改 Database Schema；
+- 未修改 API Contract；
+- 未修改 Permission；
+- 未修改自动编码规则。
+
+测试：
+
+- 创建或复用 `UAT-003A` 基础资料；
+- 采购订单 `PO-20260813-C425E71D`：创建、提交、审核通过；
+- 生产任务 `PRO-20260813-33E1C694`：创建、提交、审核、开始生产、完工确认通过；
+- 质检单 `INS-20260813-3B433C20`：确认合格 98、不合格 2；
+- 入库单 `INB-20260813-B44FF97A`：确认入库，库存 `0 → 98`；
+- 销售出库 `OUT-20260813-AA18C10B`：确认出库，库存 `98 → 88`；
+- 跨境发货 `CBR-20260813-94147514`：确认发货，国内仓 `88 → 38`，在途仓 `0 → 50`；
+- 海外库存导入：执行成功，在途仓 `50 → 0`，海外仓 `0 → 50`。
+
+结果：
+
+- Batch 003-A：Automated Verification Complete / Pending Manual Business Verification；
+- 核心库存闭环通过；
+- 发现 Audit 落库风险和 UAT 型号编码规则冲突，均记录为 Major。

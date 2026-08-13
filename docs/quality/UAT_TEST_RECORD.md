@@ -676,3 +676,52 @@ Master Data Delete Strategy Enhancement：Fixed / Pending Manual Verification
 - 未新增 Permission Code；
 - 新增受控 Delete API 并同步 API SSOT；
 - 未删除业务单据、库存记录或库存流水。
+
+## 22. Batch 003-A Business Flow Verification
+
+测试类型：
+
+Automated Business Flow Verification
+
+测试环境：
+
+- Node：v22.23.1
+- Web / API：`http://localhost:3100`
+- Database：`violin_erp_lite`
+- 日期：2026-08-13
+- 测试数据标识：`UAT-003A`
+
+执行内容：
+
+- 创建或复用 `UAT-003A` 基础资料；
+- 验证 Product / SKU / Supplier / Manufacturer / Warehouse 自动编码；
+- 执行采购订单创建、提交、审核；
+- 执行生产任务创建、提交、审核、开始生产、完工确认；
+- 执行生产来源质检，合格 98、不合格 2；
+- 执行生产来源入库，国内仓库存增加 98；
+- 执行销售出库，国内仓库存减少 10；
+- 执行跨境发货，国内仓减少 50、在途仓增加 50；
+- 执行海外库存导入，在途仓减少 50、海外仓增加 50；
+- 验证重复确认 / 重复执行不会产生重复库存流水；
+- 验证权限拦截。
+
+测试结果：
+
+- 采购闭环：通过；
+- 生产闭环：通过；
+- 质检：通过；
+- 入库：通过；
+- 库存变化：通过；
+- 销售出库：通过；
+- 跨境发货 + 海外导入：通过；
+- 权限控制：通过；
+- 重复提交保护：通过。
+
+发现问题：
+
+- B003A-001：Audit 落库风险，等级 Major；
+- B003A-002：`UAT-003A-L2` 与当前 SKU 编码规则冲突，等级 Major。
+
+状态：
+
+Batch 003-A：Automated Verification Complete / Pending Manual Business Verification
