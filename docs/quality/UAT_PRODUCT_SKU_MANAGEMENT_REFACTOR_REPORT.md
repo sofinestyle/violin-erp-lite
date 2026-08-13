@@ -24,21 +24,19 @@
 - Product 新增 / 编辑页移除 SKU 批量新增区域；
 - Product 列表新增“SKU 管理”入口，跳转至 SKU 页面并携带当前 Product 上下文。
 
-未落地：
+CR-004 补充结果：
 
-- 产品型号唯一性未落地。
-
-原因：
-
-- 当前 `products.product_name_en` 未发现数据库唯一约束；
-- 根据本任务治理要求，唯一约束落地需先提交 Database CR；
-- 本轮不以应用层查询模拟数据库唯一约束，避免并发下形成伪保障。
+- 产品型号唯一性已落地；
+- `products.product_name_en` 已设置为必填；
+- 新增唯一索引 `uq_products_product_name_en`；
+- 新增 Check `ck_products_product_name_en_not_blank`；
+- Product Create / Update 重复型号返回“产品型号已存在，请使用其他型号”。
 
 状态：
 
-Product 页面重构：Fixed / Pending Automated Verification
+Product 页面重构：Fixed / Pending Verification
 
-产品型号唯一性：Blocked by Database CR
+产品型号唯一性：Fixed / Pending Verification
 
 ## 3. SKU 页面调整
 
@@ -121,11 +119,12 @@ SKU 页面重构：Fixed / Pending Automated Verification
 
 Database：
 
-- 未新增表；
 - 未新增字段；
-- 未新增 Migration；
-- 未修改 Schema；
-- 产品型号唯一性需要 Database CR。
+- 已按 CR-004 新增产品型号唯一性 Migration；
+- 未新增表；
+- 未新增 Product Model 字段；
+- `products.product_name_en` 作为产品型号保持既有字段复用；
+- 产品型号唯一性由数据库唯一索引和 Check 正式保障。
 
 API：
 
@@ -186,8 +185,8 @@ Permission：
 
 Product / SKU Management UX Refactoring：
 
-Fixed / Pending Automated Verification
+Fixed / Pending Verification
 
 产品型号唯一性：
 
-Blocked by Database CR
+Fixed / Pending Verification

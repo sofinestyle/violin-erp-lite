@@ -5,7 +5,7 @@ version: 1.7
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-08-09
+updated_date: 2026-08-13
 related_phase: Phase 5 / UAT-009
 ---
 
@@ -15,7 +15,7 @@ related_phase: Phase 5 / UAT-009
 
 本文件是 Violin ERP Lite Phase 5 正式 API 规范总入口，统一 Task 5.1 至 Task 5.5 的接口编号、Header、请求、响应、分页、排序、筛选、命名、版本、错误码、权限、日志、导入、附件和安全规则。
 
-API Master Specification v1.7 为 Completed / Approved。CR-002 Allow Server-side Code Generation 已正式批准并实施，在不新增 API Path、接口编号、Response 结构、分页结构、错误码或 Permission Code 的前提下，将第一阶段自动编码对象的 Create DTO 编码字段调整为可选，由服务端生成最终编码并在既有响应字段中返回。API Master Specification v1.6 及其 335 个接口保留为历史冻结基线。
+API Master Specification v1.7 为 Completed / Approved。CR-002 Allow Server-side Code Generation 已正式批准并实施，在不新增 API Path、接口编号、Response 结构、分页结构、错误码或 Permission Code 的前提下，将第一阶段自动编码对象的 Create DTO 编码字段调整为可选，由服务端生成最终编码并在既有响应字段中返回。CR-004 Product Model Unique Constraint 已批准并实施，Product Create / Update 继续复用既有 `MD-*` 接口，在既有错误结构内增加产品型号唯一性业务校验。API Master Specification v1.6 及其 335 个接口保留为历史冻结基线。
 
 ## 2. 正式文档入口
 
@@ -40,6 +40,7 @@ API Master Specification v1.7 为 Completed / Approved。CR-002 Allow Server-sid
 19. [API Change Request 006：Product Attachment Object Type](../00-governance/API_CHANGE_REQUEST_006.md)
 20. [CR-002 Code Generation API Change](../changes/CR-002_CODE_GENERATION_API_CHANGE.md)
 21. 本文件第 24 节：API Master Specification v1.7 自动编码正式契约
+22. [CR-004 Product Model Unique Constraint](../changes/CR-004_PRODUCT_MODEL_UNIQUE_CONSTRAINT.md)
 
 发生冲突时，Frozen 业务规则、当前获批 Database Logical Design、已批准 Change Request 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
 
@@ -1413,7 +1414,7 @@ SKU 自动编码格式为：
 
 型号来源必须是服务端可验证的稳定型号来源。当前第一阶段不新增 Product Model 字段，复用 `productNameEn` 的业务语义作为“产品型号”。若现有 Product 记录无法提供稳定字母数字型号，SKU Create 必须返回明确字段级校验错误，不得使用中文名称、时间戳或随机值生成正式 SKU 编码。
 
-Product Create Request 中 `productNameEn` 在第一阶段业务语义下为产品型号，必须提交非空值。产品型号唯一性需要 Database CR 提供数据库唯一约束后正式落地；在唯一约束批准前，不得以应用层查询伪造并发安全唯一保障。
+Product Create Request 中 `productNameEn` 在第一阶段业务语义下为产品型号，必须提交非空值。CR-004 已批准并落地数据库级唯一约束；Product Create / Update 必须校验产品型号唯一，重复时返回既有错误结构与业务化提示“产品型号已存在，请使用其他型号”。并发冲突由数据库唯一索引裁决，API 不新增 Path、Response 字段、分页字段、错误码或 Permission Code。
 
 ### 24.5 错误与权限
 

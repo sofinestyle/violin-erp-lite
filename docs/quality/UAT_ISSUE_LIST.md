@@ -337,7 +337,7 @@ Automated Pass / Pending Final Manual Spot Check
 
 处理：
 
-已完成 CR-001、CR-002、CR-003 第一阶段实施和本地 UAT Migration 部署验证。Product Code、SKU Code、Supplier Code、Manufacturer Code、Warehouse Code 已支持服务端自动生成；Category Code、Brand Code、Platform Code、Store Code 暂不纳入第一阶段。普通用户创建第一阶段对象时不再输入编码，创建后展示最终生成编码；历史已有编码保持不变，旧客户端提交合法编码继续兼容。
+已完成 CR-001、CR-002、CR-003 第一阶段实施和本地 UAT Migration 部署验证。Product Code、SKU Code、Supplier Code、Manufacturer Code、Warehouse Code 已支持服务端自动生成；Category Code、Brand Code、Platform Code、Store Code 暂不纳入第一阶段。普通用户创建第一阶段对象时不再输入编码，创建后展示最终生成编码；历史已有编码保持不变，旧客户端提交合法编码继续兼容。CR-004 已批准并实施，产品型号唯一性已通过数据库唯一索引和 Product Create / Update 业务校验落地。
 
 处理要求：
 
@@ -789,7 +789,7 @@ CR 边界：
 
 综合状态：
 
-Fixed / Pending Automated Verification
+Fixed / Pending Verification
 
 已完成：
 
@@ -805,11 +805,15 @@ Fixed / Pending Automated Verification
 - 自定义颜色必须输入受控色码，不直接使用中文生成 SKU Code；
 - SKU 编码映射补齐 `1/8`、`1/10`、`1/16`、白色、红色、黄绿色等本轮要求。
 
-CR 边界：
+CR-004 结果：
 
-- 产品型号唯一性需要 Database CR。当前 `products.product_name_en` 未发现数据库唯一约束，本轮不擅自新增唯一索引，也不以应用层查询伪造并发安全唯一约束。
+- 产品型号唯一性已落地；
+- `products.product_name_en` 已设置为必填；
+- 新增 `uq_products_product_name_en` 唯一索引；
+- 新增 `ck_products_product_name_en_not_blank` 非空白 Check；
+- Product Create / Update 重复型号返回“产品型号已存在，请使用其他型号”。
 
-待自动复核：
+待人工复验：
 
 - Product 创建与“SKU 管理”入口；
 - SKU 产品型号下拉显示 `型号｜产品名称`；

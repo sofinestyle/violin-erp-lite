@@ -5,11 +5,36 @@ version: 1.5
 status: Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-25
+updated_date: 2026-08-13
 related_phase: Phase 1
 ---
 
 # DECISION LOG
+
+## DEC-108 批准并完成产品型号唯一性约束
+
+### 状态
+
+Approved
+
+### 日期
+
+2026-08-13
+
+### 决定
+
+- 批准 CR-004 Product Model Unique Constraint；
+- 确认 `products.product_name_en` 在 UAT-009 第一阶段正式作为“产品型号”使用；
+- 批准 `products.product_name_en` 必填；
+- 批准新增 `ck_products_product_name_en_not_blank`；
+- 批准新增 `uq_products_product_name_en`；
+- Product Create / Update 必须校验产品型号唯一；
+- 重复产品型号返回业务提示“产品型号已存在，请使用其他型号”；
+- Product / SKU Final Verification 更新为 `Fixed / Pending Verification`。
+
+### 影响
+
+本决定只在已批准 CR-004 范围内强化既有 `products.product_name_en` 字段约束，不新增 Product Model 字段，不修改 SKU 编码规则，不新增 API Path、Response 字段、分页字段、错误码或 Permission Code，不重写历史业务编码。后续如需新增正式产品型号字段、调整 SKU 编码字典、建设编号管理后台或扩大自动编码范围，必须另行提交并批准对应 CR。
 
 ## DEC-001 GitHub仓库公开
 

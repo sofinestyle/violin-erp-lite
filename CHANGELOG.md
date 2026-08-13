@@ -5,11 +5,45 @@ version: 1.0
 status: Draft
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-25
+updated_date: 2026-08-13
 related_phase: Phase 1
 ---
 
 # CHANGELOG
+
+## [0.11.40] - 2026-08-13
+
+### Added
+
+- 新增 CR-004 Product Model Unique Constraint
+- 新增 Migration `20260813090000_add_product_model_unique_constraint`
+- 新增 `UAT_PRODUCT_SKU_FINAL_VERIFICATION_REPORT.md`
+- 新增 Product 型号唯一性 API 与 Repository 回归测试
+
+### Changed
+
+- Database Logical Design 更新为 v2.7
+- `products.product_name_en` 正式作为产品型号必填字段
+- 新增 `uq_products_product_name_en` 唯一索引
+- 新增 `ck_products_product_name_en_not_blank` Check
+- Product Create / Update 增加产品型号唯一性校验
+- API 文档同步 CR-004 产品型号唯一性落地状态
+- Product / SKU UAT 状态更新为 `Fixed / Pending Verification`
+
+### Verified
+
+- Migration 部署前审计空型号 0、重复型号 0
+- Product 创建型号 `L2` 成功，生成 `PRD-000005`
+- SKU 组合生成 `L2-44-BR`、`L2-44-BK`、`L2-34-BR`、`L2-34-BK`、`L2-12-BR`、`L2-12-BK`
+- 重复 Product 型号返回业务提示“产品型号已存在，请使用其他型号”
+- 重复 SKU 组合被唯一约束拒绝
+
+### Scope
+
+- 未新增 Product Model 字段
+- 未修改 SKU 编码规则
+- 未新增 API Path、Response 字段、分页字段或错误码
+- 未新增 Permission Code
 
 ## [0.11.39] - 2026-08-09
 

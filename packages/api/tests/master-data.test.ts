@@ -212,7 +212,7 @@ describe("Master Data API contracts", () => {
     ).toMatchObject({ data: expect.not.objectContaining({ supplierCode: expect.anything() }) });
   });
 
-  it("requires Product model while leaving database uniqueness to approved CR", () => {
+  it("requires Product model and exposes approved uniqueness checks", async () => {
     expect(() =>
       validateMasterDataInput(
         "products",
@@ -231,6 +231,80 @@ describe("Master Data API contracts", () => {
     expect(
       MASTER_DATA_DEFINITIONS.products.fields.find((field) => field.key === "productNameEn"),
     ).toMatchObject({ label: "产品型号", requiredOnCreate: true });
+
+    const store = repositoryWithRecord({
+      id: RECORD_ID,
+      productCode: "PRD-000001",
+      productName: "手工小提琴",
+      productNameEn: "L2",
+    });
+    const service = new MasterDataService(store, new InMemoryAuditWriter());
+    await expect(
+      service.uniqueness(
+        "products",
+        new URLSearchParams("field=productNameEn&value=L2"),
+        authentication(["master.product.read"]),
+      ),
+    ).resolves.toEqual({ isUnique: true, normalizedValue: "l2" });
+  });
+
+  it("returns a business error when Product model is duplicated on create or update", async () => {
+    const store = {
+      ...repository(),
+      uniqueness: vi.fn().mockResolvedValue(false),
+    };
+    const service = new MasterDataService(store, new InMemoryAuditWriter());
+    const duplicatedInput = {
+      brandId: RECORD_ID,
+      categoryId: RECORD_ID,
+      defaultUnit: "piece",
+      productName: "重复型号产品",
+      productNameEn: "L2",
+      productType: "violin",
+    };
+
+    await expect(
+      service.create(
+        "products",
+        duplicatedInput,
+        authentication(["master.product.create"]),
+        requestContext,
+      ),
+    ).rejects.toMatchObject({
+      code: "CONFLICT_REQUEST",
+      message: "产品型号已存在，请使用其他型号",
+    });
+    expect(store.create).not.toHaveBeenCalled();
+    expect(store.uniqueness).toHaveBeenCalledWith(
+      "products",
+      "productNameEn",
+      "L2",
+      undefined,
+      {},
+      USER_ID,
+    );
+
+    await expect(
+      service.update(
+        "products",
+        RECORD_ID,
+        { productNameEn: "L2", updatedAt: "2026-07-23T00:00:00.000Z" },
+        authentication(["master.product.update"]),
+        requestContext,
+      ),
+    ).rejects.toMatchObject({
+      code: "CONFLICT_REQUEST",
+      message: "产品型号已存在，请使用其他型号",
+    });
+    expect(store.update).not.toHaveBeenCalled();
+    expect(store.uniqueness).toHaveBeenCalledWith(
+      "products",
+      "productNameEn",
+      "L2",
+      RECORD_ID,
+      {},
+      USER_ID,
+    );
   });
 
   it("returns Product model in options for SKU business-facing selectors", async () => {

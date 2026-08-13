@@ -1,34 +1,34 @@
 ---
 document_name: 数据库规格
 project: Violin ERP Lite
-version: 2.6
+version: 2.7
 status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-07-25
-related_phase: Phase 3 / Phase 7 / UAT-009
+updated_date: 2026-08-13
+related_phase: Phase 3 / Phase 7 / UAT-009 / CR-004
 ---
 
 # DATABASE SPEC
 
 ## 1. 正式状态
 
-Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计；项目负责人于 2026-07-24 批准 Database Change Request 003，为四个既有导入状态字段增加正式值域 Check；项目负责人于 2026-07-25 批准 Database Change Request 004，补齐 Import 文件摘要去重与通用持久化幂等数据库基础；同日批准 Database Change Request 005，补齐 Attachment 生命周期状态值域、默认值和状态定位索引；项目负责人批准 Task 7.6 Background Job Database Change Request，新增后台任务、执行尝试、执行结果、死信闭环和调度租约的逻辑数据库设计；项目负责人批准 Task 7.7 Event Infrastructure Database Change Request，新增事件 Outbox、事件历史、消费 Inbox、事件死信和投递状态的逻辑数据库设计；项目负责人于 2026-08-09 批准 CR-003 Code Generation Storage，并在 UAT-009 第一阶段新增统一自动编码数据库基础。
+Phase 3 数据库设计（Database Design）已完成并冻结。Database Logical Design v1.0 于 2026-07-20 冻结；DCR-001 于 2026-07-21 批准后升级为 v1.1；项目负责人于 2026-07-23 批准 Database Change Request 002，并将微信身份映射对象纳入正式数据库设计；项目负责人于 2026-07-24 批准 Database Change Request 003，为四个既有导入状态字段增加正式值域 Check；项目负责人于 2026-07-25 批准 Database Change Request 004，补齐 Import 文件摘要去重与通用持久化幂等数据库基础；同日批准 Database Change Request 005，补齐 Attachment 生命周期状态值域、默认值和状态定位索引；项目负责人批准 Task 7.6 Background Job Database Change Request，新增后台任务、执行尝试、执行结果、死信闭环和调度租约的逻辑数据库设计；项目负责人批准 Task 7.7 Event Infrastructure Database Change Request，新增事件 Outbox、事件历史、消费 Inbox、事件死信和投递状态的逻辑数据库设计；项目负责人于 2026-08-09 批准 CR-003 Code Generation Storage，并在 UAT-009 第一阶段新增统一自动编码数据库基础；项目负责人于 2026-08-13 批准 CR-004 Product Model Unique Constraint，为产品型号增加数据库级必填、非空和唯一保护。
 
 当前唯一有效版本为：
 
-- Database Logical Design：v2.6；
+- Database Logical Design：v2.7；
 - 状态：Completed / Approved；
 - 正式表：75；
 - 正式字段：1343；
 - 主键：75；
-- 唯一约束/唯一索引：90；
+- 唯一约束/唯一索引：91；
 - 外键：310；
 - 普通索引：131；
-- Check：279；
+- Check：280；
 - 正式数据库枚举：2。
 
-Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check。v2.3 按 DCR-005 为既有 `attachments.status` 增加 `active` 默认值和五值域 Check，并新增一个状态定位普通索引；不新增表、字段、外键、唯一约束或 PostgreSQL Enum。v2.4 按 Task 7.6 Background Job Database Change Request 新增 `jobs`、`job_attempts`、`job_results`、`job_dead_letters` 与 `scheduler_locks` 五个逻辑表，新增 65 个字段、5 个主键、5 个唯一约束/唯一索引、8 个外键、8 个普通索引和 16 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.5 按 Task 7.7 Event Infrastructure Database Change Request 新增 `event_outbox`、`event_history`、`event_consumptions`、`event_dead_letters` 与 `event_deliveries` 五个逻辑表，新增 89 个字段、5 个主键、4 个唯一约束/唯一索引、10 个外键、24 个普通索引和 27 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.6 按 CR-003 新增 `code_generation_rules` 与 `code_sequences` 两个逻辑表，新增 13 个字段、2 个主键、2 个唯一约束/唯一索引、1 个普通索引和 2 项 Check；不新增外键、不新增 PostgreSQL Enum、不修改既有业务领域表。
+Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check。v2.3 按 DCR-005 为既有 `attachments.status` 增加 `active` 默认值和五值域 Check，并新增一个状态定位普通索引；不新增表、字段、外键、唯一约束或 PostgreSQL Enum。v2.4 按 Task 7.6 Background Job Database Change Request 新增 `jobs`、`job_attempts`、`job_results`、`job_dead_letters` 与 `scheduler_locks` 五个逻辑表，新增 65 个字段、5 个主键、5 个唯一约束/唯一索引、8 个外键、8 个普通索引和 16 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.5 按 Task 7.7 Event Infrastructure Database Change Request 新增 `event_outbox`、`event_history`、`event_consumptions`、`event_dead_letters` 与 `event_deliveries` 五个逻辑表，新增 89 个字段、5 个主键、4 个唯一约束/唯一索引、10 个外键、24 个普通索引和 27 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.6 按 CR-003 新增 `code_generation_rules` 与 `code_sequences` 两个逻辑表，新增 13 个字段、2 个主键、2 个唯一约束/唯一索引、1 个普通索引和 2 项 Check；不新增外键、不新增 PostgreSQL Enum、不修改既有业务领域表。v2.7 按 CR-004 只修改 `products.product_name_en` 约束语义，新增 1 个唯一索引和 1 项 Check，不新增表、字段、外键、普通索引或 PostgreSQL Enum。
 
 ## 2. 既有正式设计来源
 
@@ -55,8 +55,9 @@ Task 3.1 至 Task 3.5.7 的正式成果继续有效：
 - [Task 7.7 Event Infrastructure Database Change Request](../phases/phase-07/TASK_7_7_EVENT_DATABASE_CHANGE_REQUEST.md)。
 - [Task 7.7 Database Design Update](../phases/phase-07/TASK_7_7_DATABASE_DESIGN_UPDATE.md)。
 - [CR-003 Code Generation Storage](../changes/CR-003_CODE_GENERATION_DATABASE_CHANGE.md)。
+- [CR-004 Product Model Unique Constraint](../changes/CR-004_PRODUCT_MODEL_UNIQUE_CONSTRAINT.md)。
 
-DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；DCR-003 是 v2.0 到 v2.1 的唯一约束增量；DCR-004 是 v2.1 到 v2.2 的唯一结构增量；DCR-005 是 v2.2 到 v2.3 的唯一约束与索引增量；Task 7.6 Background Job Database Change Request 是 v2.3 到 v2.4 的唯一逻辑结构增量；Task 7.7 Event Infrastructure Database Change Request 是 v2.4 到 v2.5 的唯一逻辑结构增量；CR-003 Code Generation Storage 是 v2.5 到 v2.6 的唯一结构增量。发生冲突时，本文件和已批准 Change Request 的对应定义优先于历史版本数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
+DCR-002 及其 Completion Fix 是 v1.1 到 v2.0 的唯一结构增量；DCR-003 是 v2.0 到 v2.1 的唯一约束增量；DCR-004 是 v2.1 到 v2.2 的唯一结构增量；DCR-005 是 v2.2 到 v2.3 的唯一约束与索引增量；Task 7.6 Background Job Database Change Request 是 v2.3 到 v2.4 的唯一逻辑结构增量；Task 7.7 Event Infrastructure Database Change Request 是 v2.4 到 v2.5 的唯一逻辑结构增量；CR-003 Code Generation Storage 是 v2.5 到 v2.6 的唯一结构增量；CR-004 Product Model Unique Constraint 是 v2.6 到 v2.7 的唯一约束增量。发生冲突时，本文件和已批准 Change Request 的对应定义优先于历史版本数量结论。正式枚举代码仍以 `DATABASE_ENUM_SPEC.md` 为唯一入口。
 
 ## 3. `user_wechat_identities` 正式定位
 
@@ -1024,3 +1025,13 @@ CR-003 Code Generation Storage 为 UAT-009 自动编码第一阶段提供统一�
 ### 41.2 CR-003 Migration 边界
 
 CR-003 已通过 Forward-only Migration 创建 `code_generation_rules` 与 `code_sequences`，并初始化第一阶段规则与普通流水行。Migration 不回填、不重写、不推断任何历史业务编码；已有 Product、SKU、Supplier、Manufacturer、Warehouse 编码保持不变。
+
+## 42. CR-004 Product Model Unique Constraint
+
+`products.product_name_en` 在 UAT-009 第一阶段正式作为“产品型号”使用，是 SKU 组合编码的型号来源。CR-004 不新增字段，仅强化既有字段约束：
+
+- `products.product_name_en` 必填；
+- Check：`ck_products_product_name_en_not_blank`，要求去空格后非空；
+- 唯一索引：`uq_products_product_name_en`，基于 `lower(trim(product_name_en))`，保证大小写不敏感且首尾空格不导致重复型号。
+
+CR-004 Migration 执行前必须审计历史数据。发现空型号或重复型号时 Migration 失败并停止，不自动修改正式业务数据。Product Create / Update 的业务校验必须与数据库约束保持一致，普通用户不得通过前端修改已生成产品编码。

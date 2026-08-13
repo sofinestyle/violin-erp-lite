@@ -179,6 +179,53 @@ describe("Prisma Master Data repository", () => {
     );
   });
 
+  it("maps Product model unique constraint conflicts to a business message", async () => {
+    const uniqueError = {
+      code: "P2002",
+      meta: { target: "uq_products_product_name_en" },
+    };
+    const repository = new PrismaMasterDataRepository({
+      brands: { count: vi.fn().mockResolvedValue(1) },
+      product_categories: { count: vi.fn().mockResolvedValue(1) },
+      products: {
+        create: vi.fn().mockRejectedValue(uniqueError),
+        updateMany: vi.fn().mockRejectedValue(uniqueError),
+      },
+    } as never);
+
+    await expect(
+      repository.create(
+        "products",
+        {
+          brandId: "33333333-3333-4333-8333-333333333333",
+          categoryId: "44444444-4444-4444-8444-444444444444",
+          defaultUnit: "unit",
+          productCode: "PRD-LEGACY-001",
+          productName: "重复型号产品",
+          productNameEn: "L2",
+          productType: "violin",
+        },
+        USER_ID,
+      ),
+    ).rejects.toMatchObject({
+      code: "CONFLICT_REQUEST",
+      message: "产品型号已存在，请使用其他型号",
+    });
+
+    await expect(
+      repository.update(
+        "products",
+        "22222222-2222-4222-8222-222222222222",
+        { productNameEn: "L2" },
+        "2026-07-23T00:00:00.000Z",
+        USER_ID,
+      ),
+    ).rejects.toMatchObject({
+      code: "CONFLICT_REQUEST",
+      message: "产品型号已存在，请使用其他型号",
+    });
+  });
+
   it("applies store role scope before pagination and maps platform summary", async () => {
     const findMany = vi.fn().mockResolvedValue([
       {

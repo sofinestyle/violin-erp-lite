@@ -45,6 +45,19 @@ function prismaErrorCode(error: unknown): string | undefined {
     : undefined;
 }
 
+function prismaErrorMeta(error: unknown): string {
+  if (!error || typeof error !== "object" || !("meta" in error)) return "";
+  return JSON.stringify((error as { meta: unknown }).meta).toLowerCase();
+}
+
+function uniqueConflictError(error: unknown): ConflictError {
+  const meta = prismaErrorMeta(error);
+  if (meta.includes("uq_products_product_name_en") || meta.includes("product_name_en")) {
+    return new ConflictError("产品型号已存在，请使用其他型号");
+  }
+  return new ConflictError("基础资料编码或受控唯一值重复");
+}
+
 function toSnakeCase(value: string): string {
   return value.replace(CAMEL_BOUNDARY, (letter) => `_${letter.toLowerCase()}`);
 }
@@ -442,7 +455,7 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
       return await createWithClient(this.#client);
     } catch (error) {
       if (prismaErrorCode(error) === "P2002") {
-        throw new ConflictError("基础资料编码或受控唯一值重复");
+        throw uniqueConflictError(error);
       }
       if (prismaErrorCode(error) === "P2003") {
         throw new ValidationError("引用的基础资料不存在或不可用");
@@ -458,19 +471,29 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
     updatedAt: string,
     actorUserId: string,
   ): Promise<MasterDataRecord | null> {
-    await validateActiveRelations(this.#client, resource, data);
-    const model = delegate(this.#client, resource);
-    const result = await model.updateMany({
-      data: { ...dataToPrisma(data), updated_at: new Date(), updated_by: actorUserId },
-      where: {
-        AND: [
-          { id, updated_at: new Date(updatedAt) },
-          dataScopeWhere(resource, actorUserId, "manage"),
-        ],
-      },
-    });
-    if (result.count !== 1) return null;
-    return this.findById(resource, id, actorUserId);
+    try {
+      await validateActiveRelations(this.#client, resource, data);
+      const model = delegate(this.#client, resource);
+      const result = await model.updateMany({
+        data: { ...dataToPrisma(data), updated_at: new Date(), updated_by: actorUserId },
+        where: {
+          AND: [
+            { id, updated_at: new Date(updatedAt) },
+            dataScopeWhere(resource, actorUserId, "manage"),
+          ],
+        },
+      });
+      if (result.count !== 1) return null;
+      return this.findById(resource, id, actorUserId);
+    } catch (error) {
+      if (prismaErrorCode(error) === "P2002") {
+        throw uniqueConflictError(error);
+      }
+      if (prismaErrorCode(error) === "P2003") {
+        throw new ValidationError("引用的基础资料不存在或不可用");
+      }
+      throw error;
+    }
   }
 
   async setActive(

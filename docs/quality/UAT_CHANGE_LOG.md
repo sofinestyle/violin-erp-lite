@@ -605,3 +605,49 @@ Commit：
 Commit：
 
 `refactor: simplify product and sku management`
+
+### Product Model Unique Constraint and Product / SKU Final Verification
+
+问题：
+
+- Product 型号已作为 SKU 编码的型号来源，但数据库层未限制唯一；
+- 重复型号会导致 `型号-尺寸-颜色` SKU 编码冲突；
+- Product / SKU Management Refactoring 需要最终自动复核。
+
+修改：
+
+- 新增 CR-004 Product Model Unique Constraint；
+- 新增 Migration `20260813090000_add_product_model_unique_constraint`；
+- `products.product_name_en` 调整为必填；
+- 新增唯一索引 `uq_products_product_name_en`；
+- 新增 Check `ck_products_product_name_en_not_blank`；
+- Product Create / Update 增加产品型号唯一性校验；
+- Prisma Repository 将产品型号唯一冲突映射为“产品型号已存在，请使用其他型号”；
+- 更新 `DATABASE_SPEC.md` 至 v2.7；
+- 更新 API 产品型号唯一性说明；
+- 新增 `UAT_PRODUCT_SKU_FINAL_VERIFICATION_REPORT.md`。
+
+测试：
+
+- Migration 部署前审计：空型号 0，重复型号 0；
+- Migration `20260813090000_add_product_model_unique_constraint`：已应用；
+- 数据库约束检查：NOT NULL、`uq_products_product_name_en`、`ck_products_product_name_en_not_blank` 均存在；
+- Product 创建型号 `L2` 成功，生成 `PRD-000005`；
+- SKU 创建成功：`L2-44-BR`、`L2-44-BK`、`L2-34-BR`、`L2-34-BK`、`L2-12-BR`、`L2-12-BK`；
+- 重复 Product 型号返回“产品型号已存在，请使用其他型号”；
+- 重复 SKU 组合被唯一约束拒绝；
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm --filter @violin-erp/api exec vitest run tests/master-data.test.ts`：通过；
+- `pnpm --filter @violin-erp/database exec vitest run tests/code-generation-service.test.ts tests/master-data-repository.test.ts`：通过。
+
+结果：
+
+- 产品型号唯一性：Fixed / Pending Verification；
+- Product / SKU Final Verification：Fixed / Pending Verification；
+- 未新增 Product Model 字段；
+- 未修改 SKU 编码规则；
+- 未新增 API Path 或 Permission Code。
+
+Commit：
+
+`feat: enforce product model uniqueness`

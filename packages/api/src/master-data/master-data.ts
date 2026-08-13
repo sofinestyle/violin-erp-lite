@@ -110,6 +110,8 @@ export type MasterDataResourceDefinition = Readonly<{
   sortFields: readonly string[];
 }>;
 
+const PRODUCT_MODEL_DUPLICATE_MESSAGE = "产品型号已存在，请使用其他型号";
+
 const requiredString = (key: string, label: string, maxLength: number): MasterDataField => ({
   key,
   kind: "string",
@@ -577,6 +579,7 @@ export class MasterDataService {
   ): Promise<MasterDataRecord> {
     const { user } = requirePermission(authentication, permissionFor(resource, "create"));
     const { data } = validateMasterDataInput(resource, input, "create");
+    await this.#assertProductModelUnique(resource, data, undefined, user.userId);
     const record = await this.#repository.create(resource, data, user.userId);
     const safeRecord = this.#sanitize(resource, record, authentication);
     await this.#audit("create", resource, safeRecord, user.userId, requestContext);
@@ -592,6 +595,7 @@ export class MasterDataService {
   ): Promise<MasterDataRecord> {
     const { user } = requirePermission(authentication, permissionFor(resource, "update"));
     const { data, updatedAt } = validateMasterDataInput(resource, input, "update");
+    await this.#assertProductModelUnique(resource, data, id, user.userId);
     const record = await this.#repository.update(resource, id, data, updatedAt!, user.userId);
     if (!record) throw new ConflictError("基础资料已被其他请求修改或不存在");
     const safeRecord = this.#sanitize(resource, record, authentication);
@@ -685,6 +689,7 @@ export class MasterDataService {
     const allowed = new Set([
       MASTER_DATA_DEFINITIONS[resource].codeField,
       MASTER_DATA_DEFINITIONS[resource].nameField,
+      ...(resource === "products" ? ["productNameEn"] : []),
       ...(resource === "skus" ? ["barcode"] : []),
       ...(resource === "stores" ? ["externalStoreId"] : []),
     ]);
@@ -707,6 +712,26 @@ export class MasterDataService {
       user.userId,
     );
     return { isUnique, normalizedValue: value.toLowerCase() };
+  }
+
+  async #assertProductModelUnique(
+    resource: MasterDataResourceKey,
+    data: Readonly<Record<string, unknown>>,
+    excludeId: string | undefined,
+    actorUserId: string,
+  ): Promise<void> {
+    if (resource !== "products" || typeof data.productNameEn !== "string") return;
+    const productModel = data.productNameEn.trim();
+    if (!productModel) return;
+    const isUnique = await this.#repository.uniqueness(
+      "products",
+      "productNameEn",
+      productModel,
+      excludeId,
+      {},
+      actorUserId,
+    );
+    if (!isUnique) throw new ConflictError(PRODUCT_MODEL_DUPLICATE_MESSAGE);
   }
 
   async #audit(

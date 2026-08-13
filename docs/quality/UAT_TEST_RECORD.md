@@ -562,21 +562,21 @@ Implementation / Automated Regression Preparation
 
 测试结果：
 
-Product / SKU Management UX Refactoring：Fixed / Pending Automated Verification
+Product / SKU Management UX Refactoring：Fixed / Pending Verification
 
 已执行自动化回归：
 
 - `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过，15 tests passed；
-- `pnpm --filter @violin-erp/api exec vitest run tests/master-data.test.ts`：通过，20 tests passed；
+- `pnpm --filter @violin-erp/api exec vitest run tests/master-data.test.ts`：通过，21 tests passed；
 - `pnpm --filter @violin-erp/database exec vitest run tests/code-generation-service.test.ts`：通过，5 tests passed。
 
 边界记录：
 
-- 未新增 Database 字段、表或 Migration；
+- 已按 CR-004 新增 Product 型号唯一性 Migration；
 - 未新增 API Path；
 - 未新增 Permission Code；
 - 未新增 SKU 批量原子创建 API；
-- 产品型号唯一性需 Database CR，当前保持 Blocked by Database CR；
+- 产品型号唯一性已通过数据库唯一索引、非空 Check 和 Product Create / Update 校验落地；
 - SKU Code 最终仍由服务端生成，前端仅预览。
 
 待复验：
@@ -585,3 +585,45 @@ Product / SKU Management UX Refactoring：Fixed / Pending Automated Verification
 - 确认 `L2-44-BR`、`L2-44-BK`、`L2-34-BR`、`L2-34-BK`、`L2-12-BR`、`L2-12-BK` 预览正确；
 - 确认用户无需录入 UUID、JSON、SKU Code 或 SKU Name；
 - 确认已存在 SKU 标记和失败行重试。
+
+## 20. Product Model Unique Constraint and Product / SKU Final Verification
+
+测试类型：
+
+Database Migration / API Validation / Product-SKU Runtime Verification
+
+测试环境：
+
+- PostgreSQL：`violin_erp_lite`
+- Node：22.x
+- 日期：2026-08-13
+
+执行内容：
+
+- 新增 CR-004 Product Model Unique Constraint；
+- 部署 `20260813090000_add_product_model_unique_constraint`；
+- 确认 `products.product_name_en` 为 NOT NULL；
+- 确认唯一索引 `uq_products_product_name_en` 存在；
+- 确认 Check `ck_products_product_name_en_not_blank` 存在；
+- Product Create / Update 增加产品型号唯一性业务校验；
+- 通过正式仓储 / 服务路径创建产品型号 `L2`；
+- 通过正式仓储 / 服务路径生成 6 个 SKU：
+  - `L2-44-BR`
+  - `L2-44-BK`
+  - `L2-34-BR`
+  - `L2-34-BK`
+  - `L2-12-BR`
+  - `L2-12-BK`
+
+测试结果：
+
+- Product 自动生成编码：`PRD-000005`；
+- 重复创建产品型号 `L2` 返回：`产品型号已存在，请使用其他型号`；
+- 重复创建相同 SKU 组合被唯一约束拒绝；
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过，15 tests passed；
+- `pnpm --filter @violin-erp/api exec vitest run tests/master-data.test.ts`：通过，21 tests passed；
+- `pnpm --filter @violin-erp/database exec vitest run tests/code-generation-service.test.ts tests/master-data-repository.test.ts`：通过，11 tests passed。
+
+状态：
+
+Product / SKU Final Verification：Fixed / Pending Verification
