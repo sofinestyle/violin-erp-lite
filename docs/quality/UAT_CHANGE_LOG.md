@@ -651,3 +651,37 @@ Commit：
 Commit：
 
 `feat: enforce product model uniqueness`
+
+### Master Data Delete Strategy Enhancement
+
+问题：
+
+- 基础资料仅支持停用；
+- 本地 UAT 期间未被业务引用的测试基础资料无法清理；
+- 已被业务引用的数据仍必须保护历史完整性。
+
+修改：
+
+- 为 Product Category、Product、SKU、Supplier、Manufacturer、Warehouse 增加安全删除入口；
+- 删除前执行统一业务引用检查；
+- 无业务引用时允许删除；
+- 已被业务引用时返回“该数据已被业务单据引用，无法删除，请停用。”；
+- 系统数据返回“系统数据不可删除。”；
+- 前端列表增加删除按钮和二次确认；
+- 新增 `MASTER_DATA_DELETE_STRATEGY_REPORT.md`；
+- 同步 `API_SPEC.md` v1.8，新增 6 个受控 `MD-*` Delete API；
+- 不新增 Permission Code，删除复用对应 `master.*.update` 权限。
+
+测试：
+
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过；
+- `pnpm --filter @violin-erp/api exec vitest run tests/master-data.test.ts`：通过；
+- `pnpm --filter @violin-erp/database exec vitest run tests/master-data-repository.test.ts`：通过；
+- `pnpm check`：通过。
+
+结果：
+
+- Master Data Delete Strategy Enhancement：Fixed / Pending Manual Verification；
+- 未修改 Database Schema 或 Migration；
+- 未新增 Permission Code；
+- 未删除业务数据或历史业务记录。

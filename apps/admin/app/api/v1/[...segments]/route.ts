@@ -724,6 +724,12 @@ async function dispatchMasterData(
       context,
     );
   }
+  if (segments.length === 2 && request.method === "DELETE") {
+    return createSuccessResponse(
+      await endpoint.delete(resource, id, authentication, context),
+      context,
+    );
+  }
   if (segments.length === 2 && request.method === "PATCH") {
     return createSuccessResponse(
       await endpoint.update(resource, id, await body(request), authentication, context),

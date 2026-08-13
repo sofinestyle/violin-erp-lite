@@ -4,6 +4,7 @@ import {
   ValidationError,
   type MasterDataListQuery,
   type MasterDataListResult,
+  type MasterDataDeleteOutcome,
   type MasterDataRecord,
   type MasterDataRepository,
   type MasterDataResourceKey,
@@ -19,9 +20,15 @@ type UnknownRecord = Record<string, unknown>;
 type GenericDelegate = Readonly<{
   count: (args: UnknownRecord) => Promise<number>;
   create: (args: UnknownRecord) => Promise<UnknownRecord>;
+  deleteMany: (args: UnknownRecord) => Promise<{ count: number }>;
   findFirst: (args: UnknownRecord) => Promise<UnknownRecord | null>;
   findMany: (args: UnknownRecord) => Promise<UnknownRecord[]>;
   updateMany: (args: UnknownRecord) => Promise<{ count: number }>;
+}>;
+
+type ReferenceCheck = Readonly<{
+  field: string;
+  model: string;
 }>;
 
 const RESOURCE_MODELS: Readonly<Record<MasterDataResourceKey, string>> = {
@@ -34,6 +41,86 @@ const RESOURCE_MODELS: Readonly<Record<MasterDataResourceKey, string>> = {
   stores: "stores",
   suppliers: "suppliers",
   warehouses: "warehouses",
+};
+
+const DELETABLE_RESOURCES = new Set<MasterDataResourceKey>([
+  "product-categories",
+  "products",
+  "skus",
+  "suppliers",
+  "manufacturers",
+  "warehouses",
+]);
+
+const REFERENCE_CHECKS: Readonly<Record<MasterDataResourceKey, readonly ReferenceCheck[]>> = {
+  brands: [],
+  "ecommerce-platforms": [],
+  "product-categories": [
+    { model: "product_categories", field: "parent_category_id" },
+    { model: "products", field: "category_id" },
+  ],
+  products: [
+    { model: "skus", field: "product_id" },
+    { model: "product_manufacturers", field: "product_id" },
+    { model: "product_suppliers", field: "product_id" },
+  ],
+  skus: [
+    { model: "inventories", field: "sku_id" },
+    { model: "inventory_transactions", field: "sku_id" },
+    { model: "purchase_order_items", field: "sku_id" },
+    { model: "production_order_items", field: "sku_id" },
+    { model: "inspection_order_items", field: "sku_id" },
+    { model: "inbound_order_items", field: "sku_id" },
+    { model: "outbound_order_items", field: "sku_id" },
+    { model: "inventory_adjustment_items", field: "sku_id" },
+    { model: "cross_border_shipment_items", field: "sku_id" },
+    { model: "sales_return_items", field: "sku_id" },
+    { model: "transfer_order_items", field: "sku_id" },
+    { model: "stock_count_items", field: "sku_id" },
+    { model: "damage_report_items", field: "sku_id" },
+    { model: "purchase_return_items", field: "sku_id" },
+    { model: "production_completion_record_items", field: "sku_id" },
+    { model: "import_task_items", field: "matched_sku_id" },
+    { model: "inventory_alerts", field: "sku_id" },
+  ],
+  suppliers: [
+    { model: "purchase_orders", field: "supplier_id" },
+    { model: "purchase_payments", field: "supplier_id" },
+    { model: "purchase_returns", field: "supplier_id" },
+    { model: "inbound_orders", field: "supplier_id" },
+    { model: "product_suppliers", field: "supplier_id" },
+  ],
+  manufacturers: [
+    { model: "production_orders", field: "manufacturer_id" },
+    { model: "production_payments", field: "manufacturer_id" },
+    { model: "inbound_orders", field: "manufacturer_id" },
+    { model: "product_manufacturers", field: "manufacturer_id" },
+    { model: "warehouses", field: "manufacturer_id" },
+  ],
+  warehouses: [
+    { model: "inventories", field: "warehouse_id" },
+    { model: "inventory_transactions", field: "warehouse_id" },
+    { model: "inbound_orders", field: "warehouse_id" },
+    { model: "inspection_orders", field: "inspection_warehouse_id" },
+    { model: "outbound_orders", field: "warehouse_id" },
+    { model: "inventory_adjustments", field: "warehouse_id" },
+    { model: "cross_border_shipments", field: "source_warehouse_id" },
+    { model: "cross_border_shipments", field: "transit_warehouse_id" },
+    { model: "cross_border_shipments", field: "destination_warehouse_id" },
+    { model: "transfer_orders", field: "source_warehouse_id" },
+    { model: "transfer_orders", field: "transit_warehouse_id" },
+    { model: "transfer_orders", field: "destination_warehouse_id" },
+    { model: "stock_counts", field: "warehouse_id" },
+    { model: "damage_reports", field: "warehouse_id" },
+    { model: "sales_returns", field: "return_warehouse_id" },
+    { model: "purchase_returns", field: "return_warehouse_id" },
+    { model: "import_tasks", field: "warehouse_id" },
+    { model: "import_task_items", field: "matched_warehouse_id" },
+    { model: "inventory_alerts", field: "warehouse_id" },
+    { model: "production_completion_records", field: "warehouse_id" },
+    { model: "role_warehouses", field: "warehouse_id" },
+  ],
+  stores: [],
 };
 
 const CAMEL_BOUNDARY = /[A-Z]/g;
@@ -71,6 +158,35 @@ function delegate(client: PrismaClient, resource: MasterDataResourceKey): Generi
   const modelDelegate = delegates[RESOURCE_MODELS[resource]];
   if (!modelDelegate) throw new Error(`Unsupported Prisma model: ${resource}`);
   return modelDelegate;
+}
+
+function modelCounter(client: PrismaClient, modelName: string): GenericDelegate["count"] {
+  const delegates = client as unknown as Record<string, GenericDelegate>;
+  const modelDelegate = delegates[modelName];
+  if (!modelDelegate) throw new Error(`Unsupported Prisma model: ${modelName}`);
+  return modelDelegate.count;
+}
+
+function isSystemMasterData(
+  resource: MasterDataResourceKey,
+  record: Readonly<Record<string, unknown>>,
+): boolean {
+  const code = record[toSnakeCase(MASTER_DATA_DEFINITIONS[resource].codeField)];
+  if (typeof code !== "string") return false;
+  const normalized = code.trim().toUpperCase();
+  return normalized.startsWith("SYS-") || normalized.startsWith("SYSTEM-");
+}
+
+async function hasBusinessReference(
+  client: PrismaClient,
+  resource: MasterDataResourceKey,
+  id: string,
+): Promise<boolean> {
+  for (const check of REFERENCE_CHECKS[resource]) {
+    const count = await modelCounter(client, check.model)({ where: { [check.field]: id } });
+    if (count > 0) return true;
+  }
+  return false;
 }
 
 function selectFor(resource: MasterDataResourceKey, actorUserId?: string): UnknownRecord {
@@ -462,6 +578,25 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
       }
       throw error;
     }
+  }
+
+  async delete(
+    resource: MasterDataResourceKey,
+    id: string,
+    actorUserId: string,
+  ): Promise<MasterDataDeleteOutcome> {
+    if (!DELETABLE_RESOURCES.has(resource)) return { status: "unsupported" };
+    const model = delegate(this.#client, resource);
+    const scope = dataScopeWhere(resource, actorUserId, "manage");
+    const record = await model.findFirst({
+      select: { id: true, [toSnakeCase(MASTER_DATA_DEFINITIONS[resource].codeField)]: true },
+      where: { AND: [{ id }, scope] },
+    });
+    if (!record) return { status: "not_found" };
+    if (isSystemMasterData(resource, record)) return { status: "system" };
+    if (await hasBusinessReference(this.#client, resource, id)) return { status: "referenced" };
+    const result = await model.deleteMany({ where: { AND: [{ id }, scope] } });
+    return result.count === 1 ? { status: "deleted", id } : { status: "not_found" };
   }
 
   async update(

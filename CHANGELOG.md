@@ -11,6 +11,37 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [0.11.41] - 2026-08-13
+
+### Added
+
+- 新增基础资料安全删除能力
+- 新增 6 个受控 Master Data Delete API：Product Category、Product、SKU、Supplier、Manufacturer、Warehouse
+- 新增 `MASTER_DATA_DELETE_STRATEGY_REPORT.md`
+- 新增基础资料删除引用保护测试
+
+### Changed
+
+- API Master Specification 更新为 v1.8
+- PC Admin 基础资料列表增加删除按钮和二次确认
+- 删除失败统一返回业务化提示，不暴露数据库错误
+- UAT 记录同步 Master Data Delete Strategy Enhancement
+
+### Verified
+
+- Product / Product Category 无引用删除成功，有引用删除失败
+- Supplier 有采购引用删除失败，无引用删除成功
+- Warehouse 有库存引用删除失败，无引用删除成功
+- 系统编码数据禁止删除
+- `pnpm check` 通过
+
+### Scope
+
+- 未修改 Database Schema
+- 未新增 Migration
+- 未新增 Permission Code
+- 未删除业务单据、库存记录或库存流水
+
 ## [0.11.40] - 2026-08-13
 
 ### Added

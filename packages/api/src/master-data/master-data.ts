@@ -22,6 +22,14 @@ export type MasterDataResourceKey = (typeof MASTER_DATA_RESOURCE_KEYS)[number];
 export type MasterDataAction = "create" | "disable" | "enable" | "read" | "update";
 export type MasterDataRecord = Readonly<Record<string, unknown> & { id: string }>;
 
+export type MasterDataDeleteOutcome = Readonly<
+  | { status: "deleted"; id: string }
+  | { status: "not_found" }
+  | { status: "referenced" }
+  | { status: "system" }
+  | { status: "unsupported" }
+>;
+
 export type MasterDataListQuery = Readonly<{
   filters: Readonly<Record<string, boolean | string>>;
   isActive?: boolean;
@@ -45,6 +53,11 @@ export type MasterDataRepository = Readonly<{
     data: Readonly<Record<string, unknown>>,
     actorUserId: string,
   ) => Promise<MasterDataRecord>;
+  delete: (
+    resource: MasterDataResourceKey,
+    id: string,
+    actorUserId: string,
+  ) => Promise<MasterDataDeleteOutcome>;
   findById: (
     resource: MasterDataResourceKey,
     id: string,
@@ -601,6 +614,35 @@ export class MasterDataService {
     const safeRecord = this.#sanitize(resource, record, authentication);
     await this.#audit("update", resource, safeRecord, user.userId, requestContext);
     return safeRecord;
+  }
+
+  async delete(
+    resource: MasterDataResourceKey,
+    id: string,
+    authentication: AuthenticationContext,
+    requestContext: RequestContext,
+  ): Promise<Readonly<{ deleted: true; id: string }>> {
+    const { user } = requirePermission(authentication, permissionFor(resource, "update"));
+    const outcome = await this.#repository.delete(resource, id, user.userId);
+    if (outcome.status === "not_found") throw new NotFoundError("基础资料不存在或不可访问");
+    if (outcome.status === "system") throw new ConflictError("系统数据不可删除。");
+    if (outcome.status === "referenced") {
+      throw new ConflictError("该数据已被业务单据引用，无法删除，请停用。");
+    }
+    if (outcome.status === "unsupported") {
+      throw new ValidationError("该基础资料暂不支持删除，请停用。");
+    }
+    await recordAuditEvent(this.#auditWriter, {
+      action: "delete",
+      actorUserId: user.userId,
+      moduleCode: MASTER_DATA_DEFINITIONS[resource].permissionResource,
+      requestId: requestContext.requestId,
+      resourceId: id,
+      resourceType: resource,
+      result: "success",
+      timestamp: new Date(requestContext.timestamp),
+    });
+    return { deleted: true, id };
   }
 
   async setActive(

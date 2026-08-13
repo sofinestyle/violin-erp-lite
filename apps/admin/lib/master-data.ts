@@ -23,6 +23,7 @@ export type WorkbenchDefinition = Readonly<{
   apiPath: string;
   codeField: string;
   createPermission: PermissionCode;
+  deleteSupported?: boolean;
   disablePermission: PermissionCode;
   enablePermission: PermissionCode;
   fields: readonly WorkbenchField[];
@@ -126,6 +127,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     apiPath: "/api/v1/products",
     codeField: "productCode",
     createPermission: "master.product.create",
+    deleteSupported: true,
     disablePermission: "master.product.disable",
     enablePermission: "master.product.enable",
     fields: [
@@ -183,6 +185,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     apiPath: "/api/v1/skus",
     codeField: "skuCode",
     createPermission: "master.sku.create",
+    deleteSupported: true,
     disablePermission: "master.sku.disable",
     enablePermission: "master.sku.enable",
     fields: [
@@ -256,6 +259,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     apiPath: "/api/v1/product-categories",
     codeField: "categoryCode",
     createPermission: "master.category.create",
+    deleteSupported: true,
     disablePermission: "master.category.disable",
     enablePermission: "master.category.enable",
     fields: [
@@ -367,6 +371,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     apiPath: "/api/v1/manufacturers",
     codeField: "manufacturerCode",
     createPermission: "master.manufacturer.create",
+    deleteSupported: true,
     disablePermission: "master.manufacturer.disable",
     enablePermission: "master.manufacturer.enable",
     fields: [
@@ -403,6 +408,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     apiPath: "/api/v1/suppliers",
     codeField: "supplierCode",
     createPermission: "master.supplier.create",
+    deleteSupported: true,
     disablePermission: "master.supplier.disable",
     enablePermission: "master.supplier.enable",
     fields: [
@@ -439,6 +445,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
     apiPath: "/api/v1/warehouses",
     codeField: "warehouseCode",
     createPermission: "master.warehouse.create",
+    deleteSupported: true,
     disablePermission: "master.warehouse.disable",
     enablePermission: "master.warehouse.enable",
     fields: [

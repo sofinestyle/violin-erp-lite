@@ -1,12 +1,12 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.7
+version: 1.8
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
 updated_date: 2026-08-13
-related_phase: Phase 5 / UAT-009
+related_phase: Phase 5 / UAT-009 / UAT Master Data Delete Strategy
 ---
 
 # API Master Specification
@@ -15,7 +15,7 @@ related_phase: Phase 5 / UAT-009
 
 本文件是 Violin ERP Lite Phase 5 正式 API 规范总入口，统一 Task 5.1 至 Task 5.5 的接口编号、Header、请求、响应、分页、排序、筛选、命名、版本、错误码、权限、日志、导入、附件和安全规则。
 
-API Master Specification v1.7 为 Completed / Approved。CR-002 Allow Server-side Code Generation 已正式批准并实施，在不新增 API Path、接口编号、Response 结构、分页结构、错误码或 Permission Code 的前提下，将第一阶段自动编码对象的 Create DTO 编码字段调整为可选，由服务端生成最终编码并在既有响应字段中返回。CR-004 Product Model Unique Constraint 已批准并实施，Product Create / Update 继续复用既有 `MD-*` 接口，在既有错误结构内增加产品型号唯一性业务校验。API Master Specification v1.6 及其 335 个接口保留为历史冻结基线。
+API Master Specification v1.8 为 Completed / Approved。CR-002 Allow Server-side Code Generation 已正式批准并实施，在不新增 Response 结构、分页结构、错误码或 Permission Code 的前提下，将第一阶段自动编码对象的 Create DTO 编码字段调整为可选，由服务端生成最终编码并在既有响应字段中返回。CR-004 Product Model Unique Constraint 已批准并实施，Product Create / Update 继续复用既有 `MD-*` 接口，在既有错误结构内增加产品型号唯一性业务校验。UAT Master Data Delete Strategy 增加 6 个安全删除接口，用于清理无业务引用的测试基础资料；API Master Specification v1.6 及其 335 个接口保留为历史冻结基线。
 
 ## 2. 正式文档入口
 
@@ -41,6 +41,7 @@ API Master Specification v1.7 为 Completed / Approved。CR-002 Allow Server-sid
 20. [CR-002 Code Generation API Change](../changes/CR-002_CODE_GENERATION_API_CHANGE.md)
 21. 本文件第 24 节：API Master Specification v1.7 自动编码正式契约
 22. [CR-004 Product Model Unique Constraint](../changes/CR-004_PRODUCT_MODEL_UNIQUE_CONSTRAINT.md)
+23. 本文件第 25 节：API Master Specification v1.8 基础资料安全删除契约
 
 发生冲突时，Frozen 业务规则、当前获批 Database Logical Design、已批准 Change Request 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
 
@@ -48,7 +49,7 @@ API Master Specification v1.7 为 Completed / Approved。CR-002 Allow Server-sid
 
 | 来源 | 模块与编号 | 数量 | 状态 |
 | --- | --- | ---: | --- |
-| Task 5.2 | 基础资料 `MD-*` | 74 | Completed / Approved |
+| Task 5.2 | 基础资料 `MD-*` | 80 | Completed / Approved |
 | Task 5.2 | 采购 `PUR-*` | 29 | Completed / Approved |
 | Task 5.3 | 生产 `PRO-*` | 29 | Completed / Approved |
 | Task 5.3 | 质量验收 `INS-*` | 10 | Completed / Approved |
@@ -66,9 +67,9 @@ API Master Specification v1.7 为 Completed / Approved。CR-002 Allow Server-sid
 | API CR-001 | 库存盘点 `STC-*` | 17 | Completed / Approved |
 | API CR-001 | 销售退货 `SRT-*` | 13 | Completed / Approved |
 | API CR-001 | 报损 `DMG-*` | 13 | Completed / Approved |
-| 合计 | API Master Specification v1.7 正式接口 | 335 | Completed / Approved |
+| 合计 | API Master Specification v1.8 正式接口 | 341 | Completed / Approved |
 
-逐模块复核结果为 `74 + 29 + 29 + 10 + 26 + 18 + 17 + 15 + 22 + 15 + 8 + 4 + 5 + 16 + 4 + 17 + 13 + 13 = 335`。接口编号唯一且稳定，不得复用、改义或因排序调整重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。`STC-*`、`SRT-*` 和 `DMG-*` 的完整正式契约以 API Change Request 001 及 Task 5.4 补充章节为准；`SEC-006` 至 `SEC-021` 的完整正式契约以本文件第 16 节为准；`SEC-022` 至 `SEC-025` 的完整正式契约以本文件第 17 节为准；`CBR-003` 的 `transportMethod` 字段补充契约以本文件第 18 节为准。
+逐模块复核结果为 `80 + 29 + 29 + 10 + 26 + 18 + 17 + 15 + 22 + 15 + 8 + 4 + 5 + 16 + 4 + 17 + 13 + 13 = 341`。接口编号唯一且稳定，不得复用、改义或因排序调整重新编号。Task 5.4 的海外导入只读投影属于 `CBR-018` 至 `CBR-020`，不在 Task 5.5 重复计数。`STC-*`、`SRT-*` 和 `DMG-*` 的完整正式契约以 API Change Request 001 及 Task 5.4 补充章节为准；`SEC-006` 至 `SEC-021` 的完整正式契约以本文件第 16 节为准；`SEC-022` 至 `SEC-025` 的完整正式契约以本文件第 17 节为准；`CBR-003` 的 `transportMethod` 字段补充契约以本文件第 18 节为准。
 
 ## 4. Version 与 Naming
 
@@ -1426,3 +1427,58 @@ Product Create Request 中 `productNameEn` 在第一阶段业务语义下为产�
 - 服务端并发或数据库异常：复用既有系统错误。
 
 CR-002 不新增 Permission Code。自动编码不改变 RBAC、Data Scope、字段权限或审计边界。
+
+## 25. API Master Specification v1.8 基础资料安全删除契约
+
+UAT Master Data Delete Strategy 已批准作为上线前 UAT 易用性增强。该增强只允许清理无业务引用的测试基础资料，保持启用 / 停用生命周期、历史业务数据完整性和既有 Permission Code 不变。
+
+### 25.1 接口范围
+
+新增 6 个 `MD-*` 安全删除接口：
+
+| 接口编号 | Method | Path | 对象 | 权限 |
+| --- | --- | --- | --- | --- |
+| `MD-075` | DELETE | `/api/v1/product-categories/{id}` | Product Category | `master.category.update` |
+| `MD-076` | DELETE | `/api/v1/products/{id}` | Product | `master.product.update` |
+| `MD-077` | DELETE | `/api/v1/skus/{id}` | SKU | `master.sku.update` |
+| `MD-078` | DELETE | `/api/v1/suppliers/{id}` | Supplier | `master.supplier.update` |
+| `MD-079` | DELETE | `/api/v1/manufacturers/{id}` | Manufacturer | `master.manufacturer.update` |
+| `MD-080` | DELETE | `/api/v1/warehouses/{id}` | Warehouse | `master.warehouse.update` |
+
+第一阶段不开放 Brand、Platform、Store 删除；上述对象继续使用启用 / 停用生命周期。
+
+### 25.2 删除前置规则
+
+删除前必须由服务端统一检查：
+
+1. 无业务引用：允许删除；
+2. 已被业务单据、库存、库存流水、角色范围或关系表引用：禁止删除；
+3. 系统数据：禁止删除；
+4. 不得删除采购、生产、质检、入库、库存、出库、跨境、销售退货等业务单据或流水。
+
+系统数据识别受当前数据库模型限制；在未新增 `is_system` 字段前，服务端以系统编码前缀作为保护依据。该限制不改变 Database Schema。
+
+### 25.3 Response 与错误
+
+成功响应继续使用统一响应包装：
+
+```json
+{
+  "success": true,
+  "data": {
+    "deleted": true,
+    "id": "uuid"
+  },
+  "requestId": "uuid",
+  "timestamp": "2026-08-13T00:00:00.000Z"
+}
+```
+
+失败响应继续复用既有错误结构和错误码：
+
+- 存在业务引用：复用 `CONFLICT_REQUEST`，业务提示为“该数据已被业务单据引用，无法删除，请停用。”；
+- 系统数据：复用 `CONFLICT_REQUEST`，业务提示为“系统数据不可删除。”；
+- 不存在或不可访问：复用 `RESOURCE_NOT_FOUND`；
+- 权限不足：复用既有 Master Data 权限错误。
+
+本增强不新增 DTO 字段、Response 包装结构、分页字段、错误码或 Permission Code。

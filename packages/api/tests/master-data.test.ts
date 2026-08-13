@@ -35,6 +35,7 @@ function repository(): MasterDataRepository {
   };
   return {
     create: vi.fn().mockResolvedValue(record),
+    delete: vi.fn().mockResolvedValue({ id: RECORD_ID, status: "deleted" }),
     findById: vi.fn().mockResolvedValue(record),
     list: vi.fn().mockResolvedValue({ items: [record], page: 1, pageSize: 20, total: 1 }),
     setActive: vi.fn().mockResolvedValue({ ...record, isActive: false }),
@@ -48,6 +49,7 @@ function repositoryWithRecord(
 ): MasterDataRepository {
   return {
     create: vi.fn().mockResolvedValue(record),
+    delete: vi.fn().mockResolvedValue({ id: record.id, status: "deleted" }),
     findById: vi.fn().mockResolvedValue(record),
     list: vi.fn().mockResolvedValue({ items: [record], page: 1, pageSize: 20, total: 1 }),
     setActive: vi.fn().mockResolvedValue({ ...record, isActive: false }),
@@ -333,6 +335,78 @@ describe("Master Data API contracts", () => {
         defaultUnit: "unit",
       }),
     ]);
+  });
+
+  it("allows safe master data delete and records audit with update permission", async () => {
+    const writer = new InMemoryAuditWriter();
+    const store = repository();
+    const service = new MasterDataService(store, writer);
+
+    await expect(
+      service.delete(
+        "products",
+        RECORD_ID,
+        authentication(["master.product.update"]),
+        requestContext,
+      ),
+    ).resolves.toEqual({ deleted: true, id: RECORD_ID });
+    expect(store.delete).toHaveBeenCalledWith("products", RECORD_ID, USER_ID);
+    expect(writer.events.at(-1)).toMatchObject({
+      action: "delete",
+      resourceId: RECORD_ID,
+      resourceType: "products",
+    });
+  });
+
+  it("returns business messages for referenced and system master data deletes", async () => {
+    const referencedStore = {
+      ...repository(),
+      delete: vi.fn().mockResolvedValue({ status: "referenced" }),
+    };
+    const systemStore = {
+      ...repository(),
+      delete: vi.fn().mockResolvedValue({ status: "system" }),
+    };
+    const unsupportedStore = {
+      ...repository(),
+      delete: vi.fn().mockResolvedValue({ status: "unsupported" }),
+    };
+
+    await expect(
+      new MasterDataService(referencedStore, new InMemoryAuditWriter()).delete(
+        "products",
+        RECORD_ID,
+        authentication(["master.product.update"]),
+        requestContext,
+      ),
+    ).rejects.toMatchObject({
+      code: "CONFLICT_REQUEST",
+      message: "该数据已被业务单据引用，无法删除，请停用。",
+    });
+
+    await expect(
+      new MasterDataService(systemStore, new InMemoryAuditWriter()).delete(
+        "products",
+        RECORD_ID,
+        authentication(["master.product.update"]),
+        requestContext,
+      ),
+    ).rejects.toMatchObject({
+      code: "CONFLICT_REQUEST",
+      message: "系统数据不可删除。",
+    });
+
+    await expect(
+      new MasterDataService(unsupportedStore, new InMemoryAuditWriter()).delete(
+        "brands",
+        RECORD_ID,
+        authentication(["master.brand.update"]),
+        requestContext,
+      ),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_INVALID_FIELD",
+      message: "该基础资料暂不支持删除，请停用。",
+    });
   });
 
   it("keeps legacy create code compatibility but rejects generated code updates", () => {

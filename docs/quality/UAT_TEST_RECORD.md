@@ -627,3 +627,52 @@ Database Migration / API Validation / Product-SKU Runtime Verification
 状态：
 
 Product / SKU Final Verification：Fixed / Pending Verification
+
+## 21. Master Data Delete Strategy Enhancement
+
+测试类型：
+
+Implementation / Automated Regression
+
+测试环境：
+
+- Node：22.x
+- 日期：2026-08-13
+
+执行内容：
+
+- Product Category、Product、SKU、Supplier、Manufacturer、Warehouse 增加安全删除能力；
+- 删除前检查业务引用；
+- 已被业务引用的数据禁止删除并提示停用；
+- 系统数据禁止删除；
+- 前端保留启用 / 停用，并增加删除二次确认；
+- 新增 `MASTER_DATA_DELETE_STRATEGY_REPORT.md`。
+
+测试结果：
+
+- Product 无引用删除成功；
+- Product 有 SKU 引用删除失败；
+- Product Category 无引用删除成功；
+- Product Category 有产品或子分类引用删除失败；
+- Supplier 有采购引用删除失败；
+- Supplier 无引用删除成功；
+- Warehouse 有库存引用删除失败；
+- Warehouse 无引用删除成功；
+- 系统编码数据禁止删除；
+- 前端只对批准范围显示删除能力；
+- `pnpm exec vitest run apps/admin/tests/master-data-page.test.tsx`：通过，16 tests passed；
+- `pnpm --filter @violin-erp/api exec vitest run tests/master-data.test.ts`：通过，23 tests passed；
+- `pnpm --filter @violin-erp/database exec vitest run tests/master-data-repository.test.ts`：通过，11 tests passed；
+- `pnpm check`：通过。
+
+状态：
+
+Master Data Delete Strategy Enhancement：Fixed / Pending Manual Verification
+
+边界记录：
+
+- 未修改 Database Schema；
+- 未新增 Migration；
+- 未新增 Permission Code；
+- 新增受控 Delete API 并同步 API SSOT；
+- 未删除业务单据、库存记录或库存流水。

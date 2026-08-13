@@ -64,6 +64,25 @@ describe("Master Data PC pages", () => {
     expect(html).not.toContain("新增产品");
   });
 
+  it("enables safe delete only for approved master data resources", () => {
+    const deletable = MASTER_WORKBENCHES.filter((definition) => definition.deleteSupported).map(
+      (definition) => definition.key,
+    );
+    expect(deletable).toEqual([
+      "products",
+      "skus",
+      "product-categories",
+      "manufacturers",
+      "suppliers",
+      "warehouses",
+    ]);
+    for (const definition of MASTER_WORKBENCHES) {
+      if (deletable.includes(definition.key)) {
+        expect(definition.updatePermission).toMatch(/^master\..+\.update$/);
+      }
+    }
+  });
+
   it("uses approved option endpoints for product relation fields", () => {
     const product = MASTER_WORKBENCHES.find((definition) => definition.key === "products");
     expect(product?.fields.find((field) => field.key === "categoryId")).toMatchObject({

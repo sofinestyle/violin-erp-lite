@@ -773,6 +773,18 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     }
   }
 
+  async function deleteItem(item: RecordItem) {
+    try {
+      await apiRequest(`${definition.apiPath}/${item.id}`, { method: "DELETE" });
+      toast.success(`${definition.label}删除成功`);
+      await load();
+    } catch (requestError) {
+      const message = requestError instanceof Error ? requestError.message : "删除失败";
+      setError(message);
+      toast.error(message);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {group === "master" ? <MasterDataUxHint definition={definition} /> : null}
@@ -901,6 +913,21 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                             }
                           />
                         </PermissionWrapper>
+                        {group === "master" && definition.deleteSupported ? (
+                          <PermissionWrapper permission={definition.updatePermission}>
+                            <ConfirmDialog
+                              title={`删除${definition.label}`}
+                              description="删除后无法恢复，确认删除吗？"
+                              confirmLabel="确认删除"
+                              onConfirm={() => void deleteItem(item)}
+                              trigger={
+                                <Button variant="danger" size="sm">
+                                  删除
+                                </Button>
+                              }
+                            />
+                          </PermissionWrapper>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
