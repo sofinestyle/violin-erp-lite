@@ -20,6 +20,9 @@ related_phase: Phase 1
 
 ### Fixed
 
+- 对齐采购与生产两条独立业务链，明确采购质检/入库与成品质检/入库入口；来源按状态过滤，自动带出原订单、剩余合格数量和版本号，状态操作与错误提示中文化。
+- 真实 Prisma 验证独立生产入库97及采购入库98、两条库存流水和23条业务审计；前端模拟API交互通过，保持 Fixed / Pending Manual Verification，不改动 Frozen Database/API/Permission。
+
 - 补齐 Admin DELETE 路由导出，修复基础资料删除返回 HTTP 405 的接线遗漏。
 - 基础资料空响应、非 JSON 响应改为中文反馈，保留状态码和可用 Request ID。
 - 七类基础资料删除与真实 Prisma Audit 写入统一事务，审计失败回滚删除；并发外键冲突统一业务化处理。

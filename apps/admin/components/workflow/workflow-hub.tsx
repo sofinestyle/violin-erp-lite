@@ -24,7 +24,7 @@ export function WorkflowHub({ views }: Readonly<{ views: readonly WorkflowView[]
         ))}
       </div>
       <p className="text-sm text-muted-foreground">{view.description}</p>
-      <WorkflowWorkbench view={view} />
+      <WorkflowWorkbench key={view.id} view={view} />
     </div>
   );
 }

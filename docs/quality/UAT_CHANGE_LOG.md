@@ -11,6 +11,12 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Change Log
 
+## 2026-09-07 Procurement & Production Dual-Flow Alignment
+
+将采购质检/采购入库与成品质检/成品入库入口明确分开，保留并验证生产直接创建。自动筛选合法来源并推导原单、可处理数量和版本号，修正完工确认/生产开始/入库确认请求编排，按状态显示中文动作，避免来源切换串单；保留独立采购付款、生产进度及分批完工。数据库、Frozen API、Permission、BUSINESS_RULES及Phase路线不变，无需CR。
+
+验证：Admin双链7项+原工作台14项；默认质量门禁379项通过/38项条件性跳过；真实Prisma3项另行通过，生产+97、采购+98、2条流水、23条业务审计；浏览器模拟既有API完成23次动作，无控制台错误/警告。真实用例先生产、后采购，未删除或覆盖UAT数据。详细记录见 [双业务链报告](PROCUREMENT_PRODUCTION_DUAL_FLOW_ALIGNMENT_REPORT.md)。状态为 Fixed / Pending Manual Verification，不自动关闭。
+
 ## 2026-09-07 品牌安全删除 CR-005
 
 Project Owner 批准品牌安全删除扩展，Product Manager Review Completed。品牌删除收紧为仅 administrator，前后端独立校验；编辑权限不再授权品牌删除。七类基础资料删除与真实 Prisma Audit 同事务提交，Audit 失败回滚删除；保留全部产品引用保护及并发 FK 错误业务化、二次确认、六类路由修复及中文异常响应。SYS- / SYSTEM- 明确为临时系统数据识别规则。同步 API_SPEC v1.9、Approved CR-005 和 DEC-109。

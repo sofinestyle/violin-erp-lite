@@ -1,7 +1,15 @@
 "use client";
 
 import { Eye, Plus, RefreshCw, X } from "lucide-react";
-import { type ChangeEvent, type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Card,
   Pagination,
@@ -16,6 +24,15 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/user-context";
 import { authenticatedFetch } from "@/lib/auth-client";
 import type { WorkflowView } from "@/lib/workflow";
+import {
+  actionStateAllowed,
+  availableSourceQuantity,
+  dualActionPayload,
+  dualFlowStatusOptions,
+  eligibleSourceRows,
+  isDualFlow,
+  sourceContextFor,
+} from "@/lib/dual-flow";
 import type { PermissionCode } from "@violin-erp/api";
 
 type Envelope = Readonly<{
@@ -138,6 +155,20 @@ const STATUS_LABELS: Record<string, string> = {
   valid: "有效",
   validation_failed: "校验失败",
   voided: "已作废",
+  revoked: "已撤销",
+  partially_completed: "部分完成",
+  Draft: "草稿",
+  Confirmed: "已确认",
+  Revoked: "已撤销",
+  Voided: "已作废",
+  purchase: "采购",
+  production: "生产",
+  purchase_order: "采购订单",
+  production_order: "生产订单",
+  company: "公司仓",
+  manufacturer: "厂家仓",
+  transit: "在途仓",
+  overseas: "海外仓",
   warning: "有警告",
 };
 
@@ -165,14 +196,21 @@ const BASIC_FIELDS: Record<string, string> = {
   destinationCountry: "目的国家",
   documentDate: "单据日期",
   documentNo: "单据编号",
+  approvalStatus: "审核状态",
+  completionStatus: "完工状态",
+  sourceType: "业务来源",
+  sourceDocumentType: "来源单据类型",
+  inboundType: "入库类型",
+  supplierNameSnapshot: "供应商",
+  manufacturerNameSnapshot: "生产厂家",
   expectedCompletionDate: "预计完成日期",
   expectedDeliveryDate: "预计交付日期",
   externalOrderNo: "外部订单号",
   externalReturnNo: "外部退货号",
   generatedAt: "生成时间",
   id: "内部标识",
-  inspectionDate: "验收日期",
-  inspectionResult: "验收结果",
+  inspectionDate: "质检日期",
+  inspectionResult: "质检结果",
   onHandQuantity: "账面库存",
   paidAmount: "已付款金额",
   pendingQuantity: "待处理库存",
@@ -191,6 +229,9 @@ const BASIC_FIELDS: Record<string, string> = {
   subtotalAmount: "小计金额",
   totalAmount: "总金额",
   totalCompletedQuantity: "完工数量",
+  totalInspectedQuantity: "质检总数量",
+  totalQualifiedQuantity: "合格数量",
+  totalUnqualifiedQuantity: "不合格数量",
   totalQuantity: "总数量",
   trackingNo: "运单号",
   transactionAt: "发生时间",
@@ -274,7 +315,7 @@ export function formFor(view: WorkflowView): BusinessForm | null {
   const defaults = { documentDate: today(), returnDate: today(), inspectionDate: today() };
   if (view.id === "purchase-orders") {
     return {
-      defaults,
+      defaults: { ...defaults, "item.taxRate": "0" },
       fields: [
         { key: "documentDate", label: "采购日期", required: true, type: "date" },
         {
@@ -348,13 +389,28 @@ export function formFor(view: WorkflowView): BusinessForm | null {
       fields: [
         {
           key: "parentId",
-          label: "生产任务",
+          label: "生产订单",
           optionKey: "productionOrders",
           required: true,
           type: "select",
         },
         { key: "progressDate", label: "进度日期", required: true, type: "date" },
-        { key: "progressStage", label: "进度阶段", required: true, type: "text" },
+        {
+          key: "progressStage",
+          label: "进度阶段",
+          required: true,
+          type: "select",
+          values: [
+            { value: "pending_production", label: "待生产" },
+            { value: "scheduled", label: "已排产" },
+            { value: "in_production", label: "生产中" },
+            { value: "partially_completed", label: "部分完工" },
+            { value: "fully_completed", label: "全部完工" },
+            { value: "paused", label: "暂停" },
+            { value: "overdue", label: "逾期" },
+            { value: "terminated", label: "已终止" },
+          ],
+        },
         { key: "progressPercentage", label: "进度百分比", required: true, type: "number" },
         { key: "completedQuantity", label: "完成数量", required: true, type: "number" },
         { key: "progressDescription", label: "进度说明", required: true, type: "textarea" },
@@ -368,7 +424,7 @@ export function formFor(view: WorkflowView): BusinessForm | null {
       fields: [
         {
           key: "parentId",
-          label: "生产任务",
+          label: "生产订单",
           optionKey: "productionOrders",
           required: true,
           type: "select",
@@ -381,12 +437,6 @@ export function formFor(view: WorkflowView): BusinessForm | null {
           optionKey: "warehouses",
           required: true,
           type: "select",
-        },
-        {
-          key: "productionOrderVersionNo",
-          label: "生产任务版本号",
-          required: true,
-          type: "number",
         },
       ],
       itemFields: [
@@ -417,20 +467,20 @@ export function formFor(view: WorkflowView): BusinessForm | null {
       fields: [
         {
           key: purchase ? "purchaseOrderId" : "productionOrderId",
-          label: purchase ? "采购来源单" : "生产来源单",
+          label: purchase ? "采购订单" : "生产订单",
           optionKey: purchase ? "purchaseOrders" : "productionOrders",
           required: true,
           type: "select",
         },
-        { key: "inspectionDate", label: "验收日期", required: true, type: "date" },
+        { key: "inspectionDate", label: "质检日期", required: true, type: "date" },
         {
           key: "inspectionWarehouseId",
-          label: "验收仓库",
+          label: "质检仓库",
           optionKey: "warehouses",
           required: true,
           type: "select",
         },
-        { key: "remark", label: "验收说明", type: "textarea" },
+        { key: "remark", label: "质检说明", type: "textarea" },
       ],
       itemFields: [
         {
@@ -441,12 +491,12 @@ export function formFor(view: WorkflowView): BusinessForm | null {
           type: "select",
         },
         { derived: true, key: "skuId", label: "SKU", sourceOptionKey: "sourceItems" },
-        createNumberField("inspectedQuantity", "验收数量"),
+        createNumberField("inspectedQuantity", "质检数量"),
         createNumberField("qualifiedQuantity", "合格数量"),
         createNumberField("unqualifiedQuantity", "不合格数量"),
         {
           key: "inspectionResult",
-          label: "验收结果",
+          label: "质检结果",
           required: true,
           type: "select",
           values: [
@@ -456,6 +506,8 @@ export function formFor(view: WorkflowView): BusinessForm | null {
           ],
         },
         { key: "remark", label: "明细说明", type: "text" },
+        { key: "defectDescription", label: "不合格说明", type: "text" },
+        { key: "dispositionMethod", label: "处理说明", type: "text" },
       ],
       optionSources: [
         purchase ? OPTION_SOURCES.purchaseOrders : OPTION_SOURCES.productionOrders,
@@ -477,18 +529,11 @@ export function formFor(view: WorkflowView): BusinessForm | null {
   if (view.id === "purchase-inbound" || view.id === "production-inbound") {
     const purchase = view.sourceType === "purchase";
     return {
-      defaults,
+      defaults: { ...defaults, "item.inventoryCondition": "qualified" },
       fields: [
         {
-          key: purchase ? "purchaseOrderId" : "productionOrderId",
-          label: purchase ? "采购来源单" : "生产来源单",
-          optionKey: purchase ? "purchaseOrders" : "productionOrders",
-          required: true,
-          type: "select",
-        },
-        {
           key: "inspectionOrderId",
-          label: "已确认验收单",
+          label: purchase ? "已确认采购质检单" : "已确认成品质检单",
           optionKey: purchase ? "purchaseInspections" : "productionInspections",
           required: true,
           type: "select",
@@ -496,7 +541,7 @@ export function formFor(view: WorkflowView): BusinessForm | null {
         { key: "documentDate", label: "入库日期", required: true, type: "date" },
         {
           key: "warehouseId",
-          label: "目标仓库",
+          label: purchase ? "目标仓库" : "成品仓库",
           optionKey: "warehouses",
           required: true,
           type: "select",
@@ -506,7 +551,7 @@ export function formFor(view: WorkflowView): BusinessForm | null {
       itemFields: [
         {
           key: "inspectionOrderItemId",
-          label: "验收明细",
+          label: "合格质检明细",
           optionKey: "sourceItems",
           required: true,
           type: "select",
@@ -520,11 +565,16 @@ export function formFor(view: WorkflowView): BusinessForm | null {
         { derived: true, key: "skuId", label: "SKU", sourceOptionKey: "sourceItems" },
         createNumberField("quantity", "入库数量"),
         createNumberField("unitCost", "单位成本"),
-        { key: "inventoryCondition", label: "库存状态", required: true, type: "text" },
-        { key: "batchNo", label: "批次号", type: "text" },
+        {
+          key: "inventoryCondition",
+          label: "库存状态",
+          required: true,
+          type: "select",
+          values: [{ value: "qualified", label: "合格品" }],
+        },
+        { key: "batchNo", label: "批次号", required: true, type: "text" },
       ],
       optionSources: [
-        purchase ? OPTION_SOURCES.purchaseOrders : OPTION_SOURCES.productionOrders,
         purchase ? OPTION_SOURCES.purchaseInspections : OPTION_SOURCES.productionInspections,
         OPTION_SOURCES.warehouses,
       ],
@@ -747,7 +797,7 @@ export function actionsFor(view: WorkflowView): readonly WorkflowAction[] {
   if (view.id === "purchase-inspections" || view.id === "production-inspections") {
     return map("inspection.order", [
       ["submit", "提交"],
-      ["confirm", "确认验收"],
+      ["confirm", "确认质检"],
       ["revoke", "撤销", true],
       ["void", "作废", true],
     ]);
@@ -817,12 +867,42 @@ export function actionsFor(view: WorkflowView): readonly WorkflowAction[] {
 }
 
 export function formatWorkflowApiError(envelope: Envelope): string {
+  const labels: Record<string, string> = {
+    ...BASIC_FIELDS,
+    purchaseOrderId: "采购订单",
+    productionOrderId: "生产订单",
+    inspectionOrderId: "质检单",
+    inspectionOrderItemId: "质检明细",
+    sourceItemId: "来源明细",
+    skuId: "SKU",
+    manufacturerId: "生产厂家",
+    supplierId: "供应商",
+    warehouseId: "仓库",
+    inspectionWarehouseId: "质检仓库",
+    inspectorId: "质检人员",
+    plannedQuantity: "计划数量",
+    inspectedQuantity: "质检数量",
+    qualifiedQuantity: "合格数量",
+    unqualifiedQuantity: "不合格数量",
+    processingUnitPrice: "加工单价",
+    unitPrice: "单价",
+    unitCost: "单位成本",
+    taxRate: "税率",
+    batchNo: "批次号",
+    versionNo: "单据版本",
+    productionOrderVersionNo: "生产订单版本",
+  };
+  const humanize = (value: string) =>
+    value.replace(/\b[A-Za-z][A-Za-z0-9]*\b/g, (field) => labels[field] ?? field);
   const details = envelope.error?.details
-    ?.map((detail) => `${detail.field ? `${detail.field}：` : ""}${detail.message}`)
+    ?.map(
+      (detail) =>
+        `${detail.field ? `${humanize(detail.field)}：` : ""}${humanize(detail.message ?? "数据无效")}`,
+    )
     .filter(Boolean);
   const detailMessage = details?.length ? `；${details.join("；")}` : "";
   const suffix = envelope.requestId ? `（Request ID：${envelope.requestId}）` : "";
-  return `${envelope.error?.message ?? "请求失败"}${detailMessage}${suffix}`;
+  return `${humanize(envelope.error?.message ?? "请求失败")}${detailMessage}${suffix}`;
 }
 
 async function request(url: string, init: RequestInit = {}): Promise<Envelope> {
@@ -897,15 +977,17 @@ function rowDate(row: Row): string {
   );
 }
 
-function rowStatus(row: Row): string {
-  return display(
+function rowStatus(row: Row, view?: WorkflowView): string {
+  const value =
     row.status ??
-      row.alertStatus ??
-      row.validationStatus ??
-      row.paymentStatus ??
-      row.completionStatus ??
-      row.inspectionResult,
-  );
+    row.alertStatus ??
+    row.validationStatus ??
+    row.paymentStatus ??
+    row.completionStatus ??
+    row.inspectionResult;
+  return view
+    ? (dualFlowStatusOptions(view)?.find(([state]) => state === value)?.[1] ?? display(value))
+    : display(value);
 }
 
 function rowQuantity(row: Row): string {
@@ -915,6 +997,7 @@ function rowQuantity(row: Row): string {
       row.availableQuantity ??
       row.quantity ??
       row.totalRows ??
+      row.totalInspectedQuantity ??
       row.totalCompletedQuantity,
   );
 }
@@ -965,6 +1048,8 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
   const [options, setOptions] = useState<OptionsMap>({});
   const [sourceRows, setSourceRows] = useState<readonly Row[]>([]);
   const [sourceLoading, setSourceLoading] = useState(false);
+  const [sourceItemId, setSourceItemId] = useState("");
+  const sourceRequest = useRef(0);
   const [formError, setFormError] = useState<string | null>(null);
 
   const form = useMemo(() => formFor(view), [view]);
@@ -985,17 +1070,49 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
 
   const sourceItemOptions = useMemo<readonly Option[]>(() => {
     if (!form?.sourceItems) return [];
-    return relationRows(sourceRows[0] ?? null, form.sourceItems.itemRelation).map((item) => ({
-      label: optionLabel(item, form.sourceItems!.itemLabelFields),
-      raw: item,
-      value: item.id,
-    }));
-  }, [form, sourceRows]);
+    return relationRows(sourceRows[0] ?? null, form.sourceItems.itemRelation)
+      .filter((item) => {
+        const quantity = availableSourceQuantity(view, item, sourceRows[1]);
+        return quantity === undefined || quantity > 0;
+      })
+      .map((item) => ({
+        label: `${optionLabel(item, form.sourceItems!.itemLabelFields)}${availableSourceQuantity(view, item, sourceRows[1]) === undefined ? "" : ` / 可处理 ${availableSourceQuantity(view, item, sourceRows[1])}`}`,
+        raw: item,
+        value: item.id,
+      }));
+  }, [form, sourceRows, view]);
 
-  const allOptions = useMemo<OptionsMap>(
-    () => ({ ...options, ...(sourceItemOptions.length ? { sourceItems: sourceItemOptions } : {}) }),
-    [options, sourceItemOptions],
-  );
+  const chosenSourceItem =
+    sourceItemOptions.find((item) => item.value === sourceItemId) ?? sourceItemOptions[0];
+  const itemDefaults: Record<string, string> = { ...form?.defaults };
+  if (chosenSourceItem) {
+    const quantity = availableSourceQuantity(view, chosenSourceItem.raw, sourceRows[1]);
+    if (quantity !== undefined) {
+      itemDefaults["item.inspectedQuantity"] = String(quantity);
+      itemDefaults["item.qualifiedQuantity"] = String(quantity);
+      itemDefaults["item.unqualifiedQuantity"] = "0";
+      itemDefaults["item.inspectionResult"] = "qualified";
+      itemDefaults["item.quantity"] = String(quantity);
+      itemDefaults["item.completedQuantity"] = String(quantity);
+    }
+  }
+
+  const allOptions = useMemo<OptionsMap>(() => {
+    const formOptions = Object.fromEntries(
+      Object.entries(options).map(([key, values]) => {
+        const eligible = new Set(
+          eligibleSourceRows(
+            view,
+            key,
+            values.map((option) => option.raw),
+          ).map((row) => row.id),
+        );
+        return [key, values.filter((option) => eligible.has(option.value))];
+      }),
+    );
+    // Listing historical completion/progress records must still include completed parents.
+    return { ...formOptions, sourceItems: sourceItemOptions };
+  }, [options, sourceItemOptions, view]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1045,23 +1162,40 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
     return () => {
       active = false;
     };
-  }, [form, formOpen, view.apiPath]);
+  }, [form, formOpen, view]);
 
   async function loadSourceItems(fieldKey: string, id: string) {
+    const sequence = ++sourceRequest.current;
+    setSourceRows([]);
+    setSourceItemId("");
     const detailPath = sourceDetailPath(view, fieldKey, id);
-    if (!detailPath) return;
+    if (!detailPath) {
+      setSourceLoading(false);
+      return;
+    }
     setSourceLoading(true);
     setFormError(null);
     try {
       const envelope = await request(detailPath);
-      setSourceRows(
-        envelope.data && typeof envelope.data === "object" ? [envelope.data as Row] : [],
-      );
+      const source = envelope.data as Row;
+      if (!source?.id || source.id !== id) throw new Error("来源信息已变化，请重新选择。");
+      const context = sourceContextFor(view, source);
+      const result = [source];
+      if (view.id.endsWith("-inbound") && view.sourceType) {
+        const key = view.sourceType === "purchase" ? "purchaseOrderId" : "productionOrderId";
+        const orderPath = sourceDetailPath(view, key, String(context[key]))!;
+        const order = (await request(orderPath)).data as Row;
+        if (order?.id !== context[key]) throw new Error("质检来源订单不匹配，请重新选择。");
+        result.push(order);
+      }
+      if (sequence === sourceRequest.current) setSourceRows(result);
     } catch (reason) {
-      setSourceRows([]);
-      setFormError(reason instanceof Error ? reason.message : "来源明细加载失败");
+      if (sequence === sourceRequest.current) {
+        setSourceRows([]);
+        setFormError(reason instanceof Error ? reason.message : "来源明细加载失败");
+      }
     } finally {
-      setSourceLoading(false);
+      if (sequence === sourceRequest.current) setSourceLoading(false);
     }
   }
 
@@ -1072,8 +1206,11 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
   }
 
   function openCreate() {
+    ++sourceRequest.current;
     setFormError(null);
     setSourceRows([]);
+    setSourceItemId("");
+    setSourceLoading(false);
     setFormOpen(true);
   }
 
@@ -1091,6 +1228,12 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
     }
     if (view.sourceType && view.id.includes("inspection")) payload.sourceType = view.sourceType;
     if (user?.id && view.id.includes("inspection")) payload.inspectorId = user.id;
+    if (form.sourceItems) {
+      const selectedId = fieldInputValue(formData.get(form.sourceItems.dependsOn));
+      if (sourceLoading || !sourceRows[0] || sourceRows[0].id !== selectedId)
+        throw new Error("请先选择来源单据并等待明细加载完成。");
+      Object.assign(payload, sourceContextFor(view, sourceRows[0]));
+    }
 
     if (form.itemFields?.length) {
       const item: Record<string, unknown> = {};
@@ -1109,6 +1252,17 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
         const sourceItem = sourceItemOptions.find(
           (option) => option.value === selectedSourceItemId,
         )?.raw;
+        if (!sourceItem) throw new Error("请选择当前来源的可处理明细。");
+        const available = availableSourceQuantity(view, sourceItem, sourceRows[1]);
+        const quantity = Number(item.inspectedQuantity ?? item.completedQuantity ?? item.quantity);
+        if (available !== undefined && (!(quantity > 0) || quantity > available))
+          throw new Error(`本次数量应大于 0 且不超过可处理数量 ${available}。`);
+        if (
+          view.id.endsWith("-inspections") &&
+          Number(item.inspectedQuantity) !==
+            Number(item.qualifiedQuantity) + Number(item.unqualifiedQuantity)
+        )
+          throw new Error("质检数量必须等于合格数量与不合格数量之和。");
         if (sourceItem && form.sourceItems.inject)
           Object.assign(item, form.sourceItems.inject(sourceItem));
       }
@@ -1157,22 +1311,37 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
   }
 
   async function runAction(action: WorkflowAction) {
-    if (!selected) return;
+    if (!selected || saving || !actionStateAllowed(view, action.action, selected)) return;
     const reason = action.requiresReason
       ? globalThis.prompt(`请输入${action.label}原因`)?.trim()
       : undefined;
     if (action.requiresReason && !reason) return;
-    const versionNo = selected.versionNo;
-    if (versionNo === undefined || versionNo === null) {
-      setError("当前单据缺少版本号，无法执行状态操作");
-      return;
+    const extras: Record<string, unknown> = reason ? { reason } : {};
+    if (view.id === "production-orders" && action.action === "start") {
+      const actualStartDate = globalThis.prompt("实际开始日期（年-月-日）", today())?.trim();
+      const progressDescription = actualStartDate
+        ? globalThis.prompt("请输入生产说明")?.trim()
+        : undefined;
+      if (!actualStartDate || !progressDescription) return;
+      Object.assign(extras, { actualStartDate, progressDescription });
     }
     if (!globalThis.confirm(`确认执行：${action.label}？`)) return;
+    setSaving(true);
+    setError(null);
     try {
+      if (view.id === "production-completions") {
+        const order = (
+          await request(
+            `/api/v1/production-orders/${encodeURIComponent(String(selected.productionOrderId))}`,
+          )
+        ).data as Row;
+        Object.assign(extras, { productionOrderVersionNo: order.versionNo });
+      }
+      const payload = dualActionPayload(view, action.action, selected, extras);
       await request(
         `${view.detailPath.replace("/{id}", "")}/${encodeURIComponent(selected.id)}/${action.action}`,
         {
-          body: JSON.stringify({ versionNo, ...(reason ? { reason } : {}) }),
+          body: JSON.stringify(payload),
           headers: { "Idempotency-Key": crypto.randomUUID() },
           method: "POST",
         },
@@ -1182,6 +1351,8 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
       await load();
     } catch (reasonValue) {
       setError(reasonValue instanceof Error ? reasonValue.message : `${action.label}失败`);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -1219,22 +1390,24 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
               }}
             />
           )}
-          <select
-            aria-label="状态筛选"
-            className="h-9 rounded-md border bg-background px-3 text-sm"
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">全部状态</option>
-            {STATUS_FILTERS.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          {!view.apiPath.includes("{parentId}") ? (
+            <select
+              aria-label="状态筛选"
+              className="h-9 rounded-md border bg-background px-3 text-sm"
+              value={status}
+              onChange={(event) => {
+                setStatus(event.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">全部状态</option>
+              {(dualFlowStatusOptions(view) ?? STATUS_FILTERS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          ) : null}
           <Button variant="secondary" onClick={() => void load()}>
             <RefreshCw data-icon="inline-start" />
             刷新
@@ -1282,7 +1455,7 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                   <td className="px-4 py-3 font-medium">{rowTitle(row)}</td>
                   <td className="px-4 py-3">{rowDate(row)}</td>
                   <td className="px-4 py-3">
-                    <StatusBadge tone="info">{rowStatus(row)}</StatusBadge>
+                    <StatusBadge tone="info">{rowStatus(row, view)}</StatusBadge>
                   </td>
                   <td className="px-4 py-3">{rowQuantity(row)}</td>
                   <td className="px-4 py-3 text-right">
@@ -1324,25 +1497,46 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
               <Card className={WORKFLOW_SURFACE_CLASSES.sectionCard}>
                 <h3 className="text-sm font-semibold">状态操作</h3>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {actions.map((action) => (
-                    <PermissionWrapper permission={action.permission} key={action.action}>
-                      <Button variant="secondary" onClick={() => void runAction(action)}>
-                        {action.label}
-                      </Button>
-                    </PermissionWrapper>
-                  ))}
+                  {actions
+                    .filter((action) => actionStateAllowed(view, action.action, selected))
+                    .map((action) => (
+                      <PermissionWrapper permission={action.permission} key={action.action}>
+                        <Button
+                          disabled={saving}
+                          variant="secondary"
+                          onClick={() => void runAction(action)}
+                        >
+                          {action.label}
+                        </Button>
+                      </PermissionWrapper>
+                    ))}
                 </div>
               </Card>
+            ) : null}
+            {error ? (
+              <p role="alert" className="mt-4 text-danger">
+                {error}
+              </p>
             ) : null}
             <Card className={WORKFLOW_SURFACE_CLASSES.detailCard}>
               <h3 className="text-sm font-semibold">基础信息</h3>
               <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-                {detailFields(selected).map(([key, value]) => (
-                  <div className={WORKFLOW_SURFACE_CLASSES.fieldPanel} key={key}>
-                    <dt className="text-xs text-muted-foreground">{BASIC_FIELDS[key] ?? key}</dt>
-                    <dd className="mt-1 break-words text-sm font-medium">{display(value)}</dd>
-                  </div>
-                ))}
+                {detailFields(selected)
+                  .filter(
+                    ([key]) =>
+                      !isDualFlow(view) ||
+                      (key in BASIC_FIELDS && !["id", "versionNo"].includes(key)),
+                  )
+                  .map(([key, value]) => (
+                    <div className={WORKFLOW_SURFACE_CLASSES.fieldPanel} key={key}>
+                      <dt className="text-xs text-muted-foreground">{BASIC_FIELDS[key] ?? key}</dt>
+                      <dd className="mt-1 break-words text-sm font-medium">
+                        {["status", "completionStatus"].includes(key)
+                          ? rowStatus(selected, view)
+                          : display(value)}
+                      </dd>
+                    </div>
+                  ))}
               </dl>
             </Card>
             {view.historyPath ? (
@@ -1436,7 +1630,17 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                   {sourceLoading ? (
                     <p className="mt-3 text-sm text-muted-foreground">正在加载来源明细…</p>
                   ) : null}
-                  <div className="mt-3 grid gap-4 md:grid-cols-3">
+                  {sourceRows[0] && form.sourceItems ? (
+                    <p className="mt-2 text-sm">
+                      已选择：{rowTitle(sourceRows[0])}。
+                      {sourceRows[1] ? `来源订单：${rowTitle(sourceRows[1])}。` : ""}
+                      可处理数量以服务端最终校验为准。
+                    </p>
+                  ) : null}
+                  <div
+                    key={`${sourceRows[0]?.id ?? ""}:${chosenSourceItem?.value ?? ""}`}
+                    className="mt-3 grid gap-4 md:grid-cols-3"
+                  >
                     {form.itemFields
                       .filter((field) => !field.derived)
                       .map((field) => (
@@ -1448,6 +1652,16 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                               className={WORKFLOW_SURFACE_CLASSES.formControl}
                               name={`item.${field.key}`}
                               required={field.required}
+                              defaultValue={
+                                field.optionKey === "sourceItems"
+                                  ? (chosenSourceItem?.value ?? "")
+                                  : (itemDefaults[`item.${field.key}`] ?? "")
+                              }
+                              onChange={
+                                field.optionKey === "sourceItems"
+                                  ? (event) => setSourceItemId(event.target.value)
+                                  : undefined
+                              }
                             >
                               <option value="">请选择{field.label}</option>
                               {(field.values ?? allOptions[field.optionKey ?? ""] ?? []).map(
@@ -1462,6 +1676,7 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                             <input
                               className={WORKFLOW_SURFACE_CLASSES.formControl}
                               name={`item.${field.key}`}
+                              defaultValue={itemDefaults[`item.${field.key}`] ?? ""}
                               required={field.required}
                               type={field.type ?? "text"}
                             />
@@ -1479,7 +1694,10 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
               <Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>
                 取消
               </Button>
-              <Button disabled={saving} type="submit">
+              <Button
+                disabled={saving || sourceLoading || Boolean(form.sourceItems && !chosenSourceItem)}
+                type="submit"
+              >
                 {saving ? "保存中…" : "保存"}
               </Button>
             </div>

@@ -11,6 +11,14 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Test Record
 
+## 2026-09-07 采购与生产双业务链对齐
+
+状态：Fixed / Pending Manual Verification。采购为“供应商 → 采购订单 → 采购质检 → 采购入库”，生产为“厂家 → 独立生产订单 → 完工 → 成品质检 → 成品入库”；历史模块串行图不代表采购自动产生生产或生产依赖采购。
+
+真实 Prisma / PostgreSQL 批次 UAT-DUAL-9328A072：先生产100，完工100，质检97/3，入库+97；再采购100，质检98/2，入库+98。各自无另一类新建订单，库存流水2条，23条 Workflow 成功审计逐一落库，4项交叉来源和2项重复确认均拒绝。审核使用测试授权上下文及不同真实用户主键，未修改角色/权限；实际岗位登录仍待人工复验。预跑脚本详情 DTO 读取错误已修正，UAT-DUAL-A4B925AB 标识数据保留且未入库，不删除业务数据。
+
+浏览器模拟 API 完成23次业务动作，129次请求，无页面异常或控制台 error/warn；白色不透明表单、中文来源与状态、默认数量、取消/关闭、刷新与标签切换通过。真实服务 Health 200，数据库 connected。默认 `pnpm check` 379通过/38条件性跳过，新增真实数据库3项另行执行通过；status:check / diff --check 通过。AI 3000 跟随跳转200，未操作 PM2。详细单号、驱动警告、验证限制及人工清单见 [双业务链对齐报告](PROCUREMENT_PRODUCTION_DUAL_FLOW_ALIGNMENT_REPORT.md)。
+
 ## 2026-09-07 品牌安全删除 CR-005
 
 状态：Fixed / Pending Manual Verification。

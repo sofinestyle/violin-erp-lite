@@ -34,7 +34,7 @@ describe("Parallel workflow pages", () => {
       "production-inbound",
     ]);
     expect(procurementViews[0]?.description).toContain("不触发生产");
-    expect(productionViews[0]?.description).toContain("不接收采购订单标识");
+    expect(productionViews[0]?.description).toContain("无需采购订单");
   });
 
   it("limits inbound confirmation workbench to purchase and production sources", () => {
@@ -86,11 +86,9 @@ describe("Parallel workflow pages", () => {
   it("defines Chinese business form fields for the core UAT Batch 002-A flows", () => {
     expect(formFor(procurementViews[0]!)?.fields.map((field) => field.label)).toContain("供应商");
     expect(formFor(productionViews[0]!)?.fields.map((field) => field.label)).toContain("生产厂家");
-    expect(formFor(procurementViews[2]!)?.fields.map((field) => field.label)).toContain(
-      "采购来源单",
-    );
+    expect(formFor(procurementViews[2]!)?.fields.map((field) => field.label)).toContain("采购订单");
     expect(formFor(procurementViews[3]!)?.fields.map((field) => field.label)).toContain(
-      "已确认验收单",
+      "已确认采购质检单",
     );
     expect(formFor(inventoryViews[2]!)?.itemFields?.map((field) => field.label)).toContain("方向");
     expect(formFor(warehouseOperationViews[3]!)?.fields.map((field) => field.label)).toContain(

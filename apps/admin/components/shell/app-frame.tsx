@@ -11,6 +11,14 @@ import { HealthGate } from "./health-gate";
 const routeTitles: Partial<
   Record<NavigationSectionId, Readonly<{ description: string; title: string }>>
 > = {
+  purchase: {
+    description: "供应商采购独立流转：采购订单、采购质检、采购入库。",
+    title: "采购管理",
+  },
+  production: {
+    description: "直接向生产厂家下单，完工后进行成品质检和成品入库；无需先建采购单。",
+    title: "生产管理",
+  },
   "access-control": {
     description: "统一维护用户、正式角色、权限分配及仓库和店铺数据范围。",
     title: "用户权限",
