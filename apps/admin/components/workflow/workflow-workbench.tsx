@@ -22,6 +22,8 @@ import {
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/user-context";
+import { usePermission } from "@/contexts/permission-context";
+import { isUatPurchaseOrder } from "@violin-erp/api";
 import { authenticatedFetch } from "@/lib/auth-client";
 import type { WorkflowView } from "@/lib/workflow";
 import {
@@ -48,6 +50,21 @@ type Envelope = Readonly<{
 }>;
 
 type Row = Record<string, unknown> & { id: string };
+export function purchaseDeleteVisible(
+  viewId: string,
+  row: Record<string, unknown>,
+  canCancel: boolean,
+  administrator: boolean,
+): boolean {
+  return (
+    viewId === "purchase-orders" &&
+    canCancel &&
+    (row.status === "draft" ||
+      (row.status === "cancelled" &&
+        administrator &&
+        isUatPurchaseOrder({ documentNo: row.documentNo, remark: row.remark })))
+  );
+}
 type Option = Readonly<{ label: string; raw: Row; value: string }>;
 type OptionsMap = Record<string, readonly Option[]>;
 
@@ -1033,6 +1050,8 @@ function sourceDetailPath(view: WorkflowView, fieldKey: string, id: string): str
 
 export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
   const { user } = useUser();
+  const { hasPermission, isAdministrator } = usePermission();
+  const deleting = useRef(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
@@ -1356,6 +1375,41 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
     }
   }
 
+  function canDelete(row: Row) {
+    return purchaseDeleteVisible(
+      view.id,
+      row,
+      hasPermission("purchase.order.cancel"),
+      isAdministrator,
+    );
+  }
+
+  async function deleteOrder(row: Row) {
+    if (!canDelete(row) || saving || deleting.current) return;
+    const message =
+      row.status === "cancelled"
+        ? "仅用于清理测试数据。确认永久删除该测试采购订单吗？"
+        : "删除后无法恢复，确认删除该采购订单吗？";
+    if (!globalThis.confirm(message)) return;
+    deleting.current = true;
+    setSaving(true);
+    setError(null);
+    try {
+      await request(`/api/v1/purchase-orders/${encodeURIComponent(row.id)}`, {
+        method: "DELETE",
+        headers: { "Idempotency-Key": crypto.randomUUID() },
+      });
+      if (selected?.id === row.id) setSelected(null);
+      toast.success("采购订单删除成功");
+      await load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "采购订单删除失败");
+    } finally {
+      deleting.current = false;
+      setSaving(false);
+    }
+  }
+
   const parentField = form?.fields.find((field) => field.key === "parentId");
 
   return (
@@ -1463,6 +1517,16 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                       <Eye data-icon="inline-start" />
                       详情
                     </Button>
+                    {canDelete(row) ? (
+                      <Button
+                        variant="ghost"
+                        className="text-danger"
+                        disabled={saving}
+                        onClick={() => void deleteOrder(row)}
+                      >
+                        删除
+                      </Button>
+                    ) : null}
                   </td>
                 </tr>
               ))}

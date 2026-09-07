@@ -11,6 +11,12 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Change Log
 
+## 2026-09-07 Procurement Order Safe Delete
+
+Approved CR-006 / DEC-110：新增 PUR-030 受控采购删除及前端二次确认，保守拒绝任何下游引用，取消单必须管理员与明确UAT标记；删除、明细及真实审计同事务，附件多态关联增加父单锁协调。无 Schema / Migration / Permission 变化，无阶段状态变更。
+
+验证：默认门禁408通过/51条件跳过，真实Prisma专项13项通过；浏览器三角色模拟API、取消确认及刷新通过，控制台无error/warn。真实登录因配置密码不匹配未执行，未修改账号，待有效岗位账号人工复验。状态 Fixed / Pending Manual Verification，不新增UAT编号、不自动关闭。完整范围、风险及证据见 [采购安全删除报告](PROCUREMENT_ORDER_SAFE_DELETE_REPORT.md)。
+
 ## 2026-09-07 Procurement & Production Dual-Flow Alignment
 
 将采购质检/采购入库与成品质检/成品入库入口明确分开，保留并验证生产直接创建。自动筛选合法来源并推导原单、可处理数量和版本号，修正完工确认/生产开始/入库确认请求编排，按状态显示中文动作，避免来源切换串单；保留独立采购付款、生产进度及分批完工。数据库、Frozen API、Permission、BUSINESS_RULES及Phase路线不变，无需CR。

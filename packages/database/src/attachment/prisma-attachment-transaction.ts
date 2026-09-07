@@ -3,6 +3,7 @@ import type {
   AttachmentTransactionRunner,
   AttachmentUploadReceiptReader,
 } from "@violin-erp/api";
+import { NotFoundError } from "@violin-erp/api";
 import { PrismaAuditWriter } from "../audit/prisma-audit-writer.js";
 import { getPrismaClient } from "../client.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
@@ -22,7 +23,22 @@ export class PrismaAttachmentTransactionRunner implements AttachmentTransactionR
       operation({
         attachments: new PrismaAttachmentRepository(transaction),
         audit: new PrismaAuditWriter(transaction),
-        links: new PrismaAttachmentLinkRepository(transaction),
+        links: new PrismaAttachmentLinkRepository(transaction, async (input) => {
+          if (input.objectType !== "purchase_order") return;
+          // Polymorphic links have no parent FK: hold the same parent lock until link commit.
+          const parents = await transaction.$queryRaw<{ id: string }[]>(
+            Prisma.sql`SELECT id FROM purchase_orders WHERE id = ${input.objectId}::uuid FOR KEY SHARE`,
+          );
+          if (parents.length === 0) throw new NotFoundError("采购订单已不存在，无法关联附件");
+          if (
+            input.objectItemId &&
+            !(await transaction.purchase_order_items.count({
+              where: { id: input.objectItemId, purchase_order_id: input.objectId },
+            }))
+          ) {
+            throw new NotFoundError("采购明细已不存在，无法关联附件");
+          }
+        }),
         lockAttachment: async (id) => {
           await transaction.$queryRaw(
             Prisma.sql`SELECT id FROM attachments WHERE id = ${id}::uuid FOR UPDATE`,

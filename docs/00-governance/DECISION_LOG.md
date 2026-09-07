@@ -11,6 +11,12 @@ related_phase: Phase 1
 
 # DECISION LOG
 
+## DEC-110 批准采购订单受控安全删除 CR-006
+
+状态：Approved。日期：2026-09-07。批准人：Project Owner。
+
+批准 PUR-030，草稿删除复用 purchase.order.cancel 并遵守数据范围；取消订单必须同时为 administrator、明确 UAT 测试数据且无下游引用。其他状态禁止。删除、明细及真实审计同事务，附件关联协调父单据锁，保留历史审计和状态历史。不修改 Schema、Migration、Permission SSOT、正式状态机和项目阶段。本次不清理既有订单，UAT 保持 Fixed / Pending Manual Verification。依据见 CR-006。
+
 ## DEC-109 批准品牌安全删除 CR-005
 
 状态：Approved

@@ -11,6 +11,12 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Test Record
 
+## 2026-09-07 采购订单受控删除 CR-006
+
+状态：Fixed / Pending Manual Verification，不新增 UAT 编号。草稿复用取消权限及数据范围，取消单仅 administrator + 明确 UAT 前缀 + 无引用可删；其他状态禁止。保守保护全部下游及审核记录，删除和真实 Audit 同事务，附件写入协调采购父单锁。
+
+完整门禁408项通过/51项条件性跳过；真实 Prisma 13项另行通过，含审计故障回滚、两次并发删除仅一次成功、陈旧附件关联拒绝。浏览器三角色模拟API通过，无控制台错误/警告；真实Health200、匿名DELETE401及Trace、AI3000最终200。既有采购订单字段比对未变化，仅本轮UAT-PODELETE夹具发生写入/受控删除；拒绝夹具保留。本地配置密码与数据库不匹配，未执行真实登录，待当前有效岗位账号人工抽查。详见 [采购安全删除报告](PROCUREMENT_ORDER_SAFE_DELETE_REPORT.md)。
+
 ## 2026-09-07 采购与生产双业务链对齐
 
 状态：Fixed / Pending Manual Verification。采购为“供应商 → 采购订单 → 采购质检 → 采购入库”，生产为“厂家 → 独立生产订单 → 完工 → 成品质检 → 成品入库”；历史模块串行图不代表采购自动产生生产或生产依赖采购。

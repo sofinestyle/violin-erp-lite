@@ -10,6 +10,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { getPrismaClient } from "../client.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
+import { purchaseDelete } from "./prisma-purchase-delete.js";
 
 type JsonRecord = Record<string, unknown>;
 type DynamicDelegate = {
@@ -1782,9 +1783,11 @@ async function related(client: DynamicClient, command: WorkflowCommand) {
 
 export class PrismaWorkflowRepository implements WorkflowRepository {
   private readonly client: DynamicClient;
+  readonly deletePurchase: NonNullable<WorkflowRepository["deletePurchase"]>;
 
   constructor(client: PrismaClient = getPrismaClient()) {
     this.client = client as unknown as DynamicClient;
+    this.deletePurchase = purchaseDelete(client);
   }
 
   async execute(command: WorkflowCommand, actor: AuthenticatedUser): Promise<unknown> {

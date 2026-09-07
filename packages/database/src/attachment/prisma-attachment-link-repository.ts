@@ -41,12 +41,16 @@ function uniqueConflict(error: unknown): boolean {
 export class PrismaAttachmentLinkRepository implements AttachmentLinkRepository {
   readonly #client: AttachmentLinkPrismaClient;
 
-  constructor(client: AttachmentLinkPrismaClient = getPrismaClient()) {
+  constructor(
+    client: AttachmentLinkPrismaClient = getPrismaClient(),
+    private readonly beforeCreate?: (input: CreateAttachmentLinkInput) => Promise<void>,
+  ) {
     this.#client = client;
   }
 
   async create(input: CreateAttachmentLinkInput): Promise<AttachmentLinkRecord> {
     try {
+      await this.beforeCreate?.(input);
       const created = await this.#client.attachment_links.create({
         data: {
           attachment_category: input.attachmentCategory,

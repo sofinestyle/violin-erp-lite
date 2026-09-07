@@ -6,6 +6,7 @@ import { AppError, ValidationError } from "../errors/app-error.js";
 import type { RequestContext } from "../request-context/request-context.js";
 
 export const WORKFLOW_API_IDS = [
+  "PUR-030",
   ...Array.from({ length: 19 }, (_, index) => `PUR-${String(index + 1).padStart(3, "0")}`),
   ...Array.from({ length: 29 }, (_, index) => `PRO-${String(index + 1).padStart(3, "0")}`),
   ...Array.from({ length: 10 }, (_, index) => `INS-${String(index + 1).padStart(3, "0")}`),
@@ -38,6 +39,11 @@ export type WorkflowCommand = Readonly<{
 
 export type WorkflowRepository = Readonly<{
   execute: (command: WorkflowCommand, actor: AuthenticatedUser) => Promise<unknown>;
+  deletePurchase?: (
+    id: string,
+    actor: AuthenticatedUser,
+    audit: (writer: AuditWriter, before: WorkflowPayload) => Promise<void>,
+  ) => Promise<{ id: string; deleted: true }>;
 }>;
 
 type Endpoint = Readonly<{
@@ -52,6 +58,15 @@ type Endpoint = Readonly<{
 
 const p = (code: PermissionCode) => code;
 const endpoints: readonly Endpoint[] = [
+  {
+    apiId: "PUR-030",
+    method: "DELETE",
+    path: /^purchase-orders\/([^/]+)$/,
+    resource: "purchase",
+    action: "delete",
+    permission: p("purchase.order.cancel"),
+    mutation: true,
+  },
   {
     apiId: "PUR-001",
     method: "GET",
@@ -656,6 +671,39 @@ export class WorkflowService {
   ): Promise<unknown> {
     const authenticated = requirePermission(authentication, permission);
     validateCommand(command);
+    if (command.action === "delete") {
+      requirePermission(authentication, "purchase.order.cancel");
+      if (command.resource !== "purchase" || command.apiId !== "PUR-030" || !command.entityId) {
+        throw new ValidationError("不支持的采购删除请求");
+      }
+      if (!this.repository.deletePurchase)
+        throw new AppError("SYSTEM_INTERNAL_ERROR", 500, "采购删除服务未配置");
+      return this.repository.deletePurchase(
+        command.entityId,
+        authenticated.user,
+        async (writer, before) => {
+          await recordAuditEvent(
+            writer,
+            {
+              action: "PUR-030",
+              actorUserId: authenticated.user.userId,
+              beforeSnapshot: before,
+              afterSnapshot: { deleted: true },
+              metadata: { action: "delete", policy: "CR-006" },
+              moduleCode: "purchase",
+              requestId: context.requestId,
+              resourceId: command.entityId!,
+              resourceNoSnapshot: String(before.document_no),
+              resourceType: "purchase_order",
+              result: "success",
+              timestamp: new Date(context.timestamp),
+              usernameSnapshot: authenticated.user.username,
+            },
+            { failureMode: "required" },
+          );
+        },
+      );
+    }
     const result = await this.repository.execute(command, authenticated.user);
     if (command.mutation) {
       await recordAuditEvent(this.audit, {

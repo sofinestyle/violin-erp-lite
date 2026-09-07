@@ -8,6 +8,7 @@ import {
   WorkflowWorkbench,
   actionsFor,
   formFor,
+  purchaseDeleteVisible,
 } from "@/components/workflow/workflow-workbench";
 import {
   crossBorderViews,
@@ -19,6 +20,22 @@ import {
 } from "@/lib/workflow";
 
 describe("Parallel workflow pages", () => {
+  it("shows purchase delete only for permitted draft or administrator UAT cancelled", () => {
+    const visible = (
+      status: string,
+      administrator = false,
+      canCancel = true,
+      remark = "UAT-003A-test",
+    ) => purchaseDeleteVisible("purchase-orders", { status, remark }, canCancel, administrator);
+    expect(visible("draft")).toBe(true);
+    expect(visible("draft", false, false)).toBe(false);
+    expect(visible("cancelled")).toBe(false);
+    expect(visible("cancelled", true)).toBe(true);
+    expect(visible("cancelled", true, true, "正式订单")).toBe(false);
+    for (const status of ["approved", "completed", "pending_approval", "rejected"])
+      expect(visible(status, true)).toBe(false);
+    expect(purchaseDeleteVisible("production-orders", { status: "draft" }, true, true)).toBe(false);
+  });
   it("keeps procurement and production routes independent", () => {
     expect(procurementViews.map((view) => view.id)).toEqual([
       "purchase-orders",

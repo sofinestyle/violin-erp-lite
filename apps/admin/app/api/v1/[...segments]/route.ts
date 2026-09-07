@@ -422,7 +422,9 @@ async function dispatchWorkflow(
   );
   if (!candidate) return null;
   const payload =
-    request.method === "GET" ? {} : ((await body(request)) as Readonly<Record<string, unknown>>);
+    request.method === "GET" || request.method === "DELETE"
+      ? {}
+      : ((await body(request)) as Readonly<Record<string, unknown>>);
   const matched =
     request.method === "GET"
       ? candidate

@@ -75,8 +75,8 @@ function inboundCommand(payload: Record<string, unknown>): WorkflowCommand {
 
 describe("Frozen workflow API contracts", () => {
   it("registers all in-scope APIs and excludes only INB-005 other inbound", () => {
-    expect(WORKFLOW_API_IDS).toHaveLength(75);
-    expect(new Set(WORKFLOW_API_IDS).size).toBe(75);
+    expect(WORKFLOW_API_IDS).toHaveLength(76);
+    expect(new Set(WORKFLOW_API_IDS).size).toBe(76);
     expect([...WORKFLOW_IMPLEMENTED_API_IDS].sort()).toEqual([...WORKFLOW_API_IDS].sort());
     expect(WORKFLOW_API_IDS).toContain("PUR-019");
     expect(WORKFLOW_API_IDS).toContain("PRO-029");

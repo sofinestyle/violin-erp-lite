@@ -1,7 +1,7 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.9
+version: 1.10
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -10,6 +10,8 @@ related_phase: Phase 5 / UAT-009 / UAT Master Data Delete Strategy
 ---
 
 # API Master Specification
+
+CR-006 已于 2026-09-07 获项目负责人批准。v1.10 在第 26 节增加采购订单受控删除 PUR-030；不修改 Database、Migration、Permission Code、既有响应或错误码。
 
 CR-005 已于 2026-09-07 获项目负责人批准。v1.9 在第 25 节基础资料安全删除契约中新增品牌删除 MD-081；原有响应、错误码、权限和其他业务范围不变。
 
@@ -48,6 +50,8 @@ API Master Specification v1.8 为 Completed / Approved。CR-002 Allow Server-sid
 发生冲突时，Frozen 业务规则、当前获批 Database Logical Design、已批准 Change Request 和 Frozen `ROLE_PERMISSION_SPEC.md` 优先；Task 5.1 提供通用规则，Task 5.2 至 Task 5.5 提供模块契约，本文件提供统一索引与最终规范。
 
 ## 3. 接口编号与数量
+
+以下表格保留 v1.8 的 341 个接口历史基线。当前 v1.10 在该基线上增加 CR-005 的 MD-081 和 CR-006 的 PUR-030，共 343 个；当前基础资料 81 个、采购 30 个，其余模块数量不变。
 
 | 来源 | 模块与编号 | 数量 | 状态 |
 | --- | --- | ---: | --- |
@@ -1490,3 +1494,19 @@ Product Manager Review Completed（2026-09-07）：品牌物理删除仅限已�
 - 权限不足：复用既有 Master Data 权限错误。
 
 本增强不新增 DTO 字段、Response 包装结构、分页字段、错误码或 Permission Code。
+
+## 26. CR-006 采购订单受控删除
+
+批准依据：[CR-006](../changes/CR-006_PURCHASE_ORDER_SAFE_DELETE.md)，Approved / Project Owner / 2026-09-07。
+
+| API | 方法及路径 | 权限及数据范围 | 结果 |
+| --- | --- | --- | --- |
+| PUR-030 | DELETE /api/v1/purchase-orders/{id} | purchase.order.cancel；all / self_created；已取消另需 administrator 及明确 UAT 标记 | HTTP 200，标准 envelope，data 为 { id, deleted: true } |
+
+路径参数为 UUID，无请求体；要求 Idempotency-Key 和现有认证。沿用工作台变更入口键校验；并发重复删除由行锁串行化，成功只发生一次，后续请求返回 404，不承诺跨请求重放原成功响应。
+
+仅无下游引用的 draft 可删；cancelled 必须额外满足管理员和数据库单号/备注去空白后的明确大写 UAT 批次前缀。正式取消单与其他状态拒绝。引用包含付款、退货及明细、质检、入库、库存流水、报损、附件及审核记录，含已作废记录；已有执行累计数量也阻断。保留审计和状态历史。第 25 节禁止基础资料接口删除业务记录的边界不变，仅本节提供独立批准的采购草稿/测试清理例外。
+
+采购单锁定、状态/范围/引用复查、明细级联删除及真实 Audit 同事务；Audit 失败全部回滚。附件关联写入持有采购父单锁并重新校验父单存在，避免悬空多态关联。
+
+复用错误：403 权限不足；404 不存在或范围不可见；409 CONFLICT_REQUEST，引用提示“该采购订单已产生后续业务记录，无法删除。”，状态提示“当前状态的采购订单不允许删除。”；审计故障沿用既有 503。外键冲突映射为同一引用提示。不新增错误码、权限或数据模型。
