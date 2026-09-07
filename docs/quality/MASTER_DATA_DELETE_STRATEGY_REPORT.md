@@ -1,5 +1,67 @@
 # Master Data Delete Strategy Report
 
+## 2026-09-07 CR-005 品牌安全删除实施
+
+CR-005 保持 Approved，Product Manager Review Completed。API_SPEC v1.9 增加 MD-081；品牌删除仅 administrator 可以执行，前端根据正式角色隐藏按钮，服务端独立校验角色。仅有 `master.brand.update` 的用户无法删除品牌；该权限继续用于编辑。六类既有删除入口、中文异常响应、二次确认、引用检查及启用/停用全部保留。
+
+### 删除与审计事务边界
+
+分类、产品、SKU、供应商、厂家、仓库和品牌共同使用 `PrismaMasterDataRepository.delete()` 的 `$transaction`。事务内先做范围、系统数据、引用检查和删除，再调用 Service 的必需审计回调；回调接收绑定同一 transaction client 的 `PrismaAuditWriter`，以 `failureMode: required` 写入正式 `audit_logs`。全部成功后提交；审计失败抛出既有 `SYSTEM_AUDIT_UNAVAILABLE` 并回滚删除。引用/系统/不存在等拒绝不会触发成功审计。无独立连接写审计、无内存 Writer 替代正式路径，无 Schema / Migration 改动或大规模架构重写。
+
+继续使用引用预检查、数据库 FK 最终保护及业务错误映射。全部删除路径的 P2003 外键拒绝转换为引用冲突；普通对象提示“该数据已被业务单据引用，无法删除，请停用。”，品牌保留“该品牌已被产品引用，无法删除，请停用。”。SYS- / SYSTEM- 为当前版本临时识别规则，未来预置数据扩大时独立设计 system-data 标识。
+
+测试结果：
+
+- `pnpm check` 通过：默认套件 372 项通过、35 项条件性集成测试跳过，较加固前 369 项无新增失败。其中新增的 5 项真实删除测试通过专用环境变量单独执行，全部通过；其余未配置集成条件的测试仍不计为通过。
+- Admin 页面与路由、API 基础资料、Repository 基础资料四个文件共 84 项通过；认证客户端另 4 项通过，验证角色读取。覆盖空/非 JSON 响应、引用、系统数据、FK 冲突及审计。
+- Playwright + Chrome 浏览器验证通过：管理员即使无品牌编辑权限仍可见删除按钮，非管理员即使有编辑权限也不可见；二次确认、取消不请求、成功刷新、引用阻断提示通过。使用模拟 API，无现有数据写入；无页面异常，控制台仅有预期模拟 HTTP 409。截图确认遮罩、白色弹窗与操作按钮清晰。
+- 真实本地 PostgreSQL + Prisma Repository + PrismaAuditWriter 五项测试通过：管理员无引用删除和审计共同持久化；非管理员被拒；故意让真实 Audit INSERT 发生 UUID 校验失败，删除回滚且无成功审计；启用/停用产品引用保护；系统品牌保护。并非以外层强制回滚替代正式路径验证。结束后仅清理本轮随机 UAT-DELETE 标识及精确 ID 的临时记录，逐项核对既有品牌未变化。
+- 并发新增引用后外键错误映射由 Repository 单元测试验证；未执行多连接真实并发压测。
+
+复跑真实数据库专项：先安全加载项目根 `.env`，将 `DATABASE_URL` 传入 `MASTER_DATA_DELETE_INTEGRATION_DATABASE_URL`，执行 `pnpm --filter @violin-erp/database exec vitest run tests/master-data-delete.integration.test.ts`。未设置此变量时默认跳过。测试需要本地 dev-admin 和至少一个既有产品作为关联模板，只创建并清理本轮专属测试记录。
+
+环境复核：Node 22；localhost:3100 Health HTTP 200，application=ok、database=connected；localhost:3000 仍返回 HTTP 307，未操作 AI 平台或 PM2。`pnpm status:check`、`git diff --check` 通过。本轮删除审计原子性风险已解决，不留 Major 技术债；仍需人工检查真实账号的按钮权限、无引用删除、引用阻断和停用。
+
+实施状态：Fixed / Pending Manual Verification。无 Schema、Migration、Permission Code 变化；不开放平台和店铺删除。以下原报告内容保留 v1.8 初始六类对象范围作为历史记录。
+
+### 本轮统一提交文件（21 个）
+
+基准 HEAD：`b29487cb55b8880f79853f9501cb7de71cb15284`。原有 15 个已跟踪文件和 CR-005 全部保留，新增认证角色接线及事务回归测试后，共 21 个文件作为一个批次提交。
+
+1. `apps/admin/app/api/v1/[...segments]/route.ts`
+2. `apps/admin/components/master-data/master-data-workbench.tsx`
+3. `apps/admin/contexts/auth-context.tsx`
+4. `apps/admin/contexts/permission-context.tsx`
+5. `apps/admin/lib/auth-client.ts`
+6. `apps/admin/lib/master-data.ts`
+7. `apps/admin/tests/api-v1-contract.test.ts`
+8. `apps/admin/tests/auth-client.test.ts`
+9. `apps/admin/tests/master-data-page.test.tsx`
+10. `packages/api/src/master-data/master-data.ts`
+11. `packages/api/tests/master-data.test.ts`
+12. `packages/database/src/master-data/prisma-master-data-repository.ts`
+13. `packages/database/tests/master-data-repository.test.ts`
+14. `packages/database/tests/master-data-delete.integration.test.ts`
+15. `docs/changes/CR-005_BRAND_SAFE_DELETE.md`
+16. `docs/05-api/API_SPEC.md`
+17. `docs/00-governance/DECISION_LOG.md`
+18. `docs/quality/MASTER_DATA_DELETE_STRATEGY_REPORT.md`
+19. `docs/quality/UAT_TEST_RECORD.md`
+20. `docs/quality/UAT_CHANGE_LOG.md`
+21. `CHANGELOG.md`
+
+不包含环境文件、凭据、测试数据、截图、本地日志或构建产物；无 ROADMAP / Phase 状态变更。
+
+## 2026-09-07 删除入口故障修复
+
+现场日志确认 SKU 和产品的 DELETE 请求返回 HTTP 405。Admin 路由已包含删除分支，但未导出 Next.js 的 DELETE 方法；前端直接解析空响应，导致显示 `Unexpected end of JSON input`。
+
+修复范围：补齐既有 DELETE 路由导出，为基础资料请求增加空响应、非 JSON 响应及异常响应结构的中文提示，保留 HTTP 状态与可用的 Request ID。继续复用 API_SPEC 第 25 节的六类安全删除契约、权限、引用保护和审计，不修改数据库或 API 契约。
+
+验证结果：专项测试共 72 项通过（Admin 页面与路由 34 项、API 基础资料 25 项、Repository 基础资料 13 项）。新增测试覆盖六类删除路由鉴权与 Request ID、SKU 删除权限和审计、库存引用阻断、正常删除响应、空响应、HTML 响应及异常 JSON 结构。Repository 测试使用模拟委托，不代表真实数据库删除验证。
+
+本地 `localhost:3100` 已通过 OPTIONS 确认允许 DELETE；无鉴权 DELETE 返回 HTTP 401、标准中文错误包装与 Request ID，证实请求进入正式鉴权边界，不再返回 405。API Health 为 HTTP 200，应用 `ok`、数据库 `connected`。本次未执行带身份凭据的真实数据删除，未清理任何现有 SKU。完整检查结果见 UAT 测试记录；修复状态为 Fixed / Pending Manual Verification。
+
 ## 1. 删除规则
 
 本次优化面向基础资料测试数据清理，保留正式启用 / 停用生命周期，并只允许删除无业务引用的数据。

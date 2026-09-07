@@ -1,15 +1,17 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.8
+version: 1.9
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-08-13
+updated_date: 2026-09-07
 related_phase: Phase 5 / UAT-009 / UAT Master Data Delete Strategy
 ---
 
 # API Master Specification
+
+CR-005 已于 2026-09-07 获项目负责人批准。v1.9 在第 25 节基础资料安全删除契约中新增品牌删除 MD-081；原有响应、错误码、权限和其他业务范围不变。
 
 ## 1. 文档定位
 
@@ -1434,7 +1436,7 @@ UAT Master Data Delete Strategy 已批准作为上线前 UAT 易用性增强。�
 
 ### 25.1 接口范围
 
-新增 6 个 `MD-*` 安全删除接口：
+v1.8 新增 6 个 `MD-*` 安全删除接口；v1.9 按 CR-005 增加品牌删除，当前共 7 个：
 
 | 接口编号 | Method | Path | 对象 | 权限 |
 | --- | --- | --- | --- | --- |
@@ -1444,8 +1446,11 @@ UAT Master Data Delete Strategy 已批准作为上线前 UAT 易用性增强。�
 | `MD-078` | DELETE | `/api/v1/suppliers/{id}` | Supplier | `master.supplier.update` |
 | `MD-079` | DELETE | `/api/v1/manufacturers/{id}` | Manufacturer | `master.manufacturer.update` |
 | `MD-080` | DELETE | `/api/v1/warehouses/{id}` | Warehouse | `master.warehouse.update` |
+| `MD-081` | DELETE | `/api/v1/brands/{id}` | Brand | 仅 `administrator` 角色 |
 
-第一阶段不开放 Brand、Platform、Store 删除；上述对象继续使用启用 / 停用生命周期。
+CR-005 批准开放 Brand 安全删除；Platform、Store 仍不开放删除，继续使用启用 / 停用生命周期。所有品牌删除均须校验 `products.brand_id` 引用（包括已停用产品）。检查后并发产生引用时，既有外键仍须阻止删除并返回业务引用错误。
+
+Product Manager Review Completed（2026-09-07）：品牌物理删除仅限已认证的 `administrator`，服务端独立校验正式角色；前端非管理员隐藏删除按钮。`master.brand.update` 仅授权品牌编辑，不授权品牌删除。其余六类既有接口权限不变，不新增 Permission Code，也不修改 Permission SSOT。
 
 ### 25.2 删除前置规则
 
@@ -1456,7 +1461,9 @@ UAT Master Data Delete Strategy 已批准作为上线前 UAT 易用性增强。�
 3. 系统数据：禁止删除；
 4. 不得删除采购、生产、质检、入库、库存、出库、跨境、销售退货等业务单据或流水。
 
-系统数据识别受当前数据库模型限制；在未新增 `is_system` 字段前，服务端以系统编码前缀作为保护依据。该限制不改变 Database Schema。
+系统数据识别暂时使用 `SYS-` / `SYSTEM-` 编码前缀；这是当前版本临时保护规则，并非完整系统数据标识。未来预置数据扩大时另行设计正式标识，本轮不改变 Database Schema。
+
+七类正式删除路径必须在同一 Prisma 数据库事务内完成删除与成功 Audit 写入。删除失败不得记录成功；Audit 写入失败必须回滚删除并返回既有安全错误。引用预检查不替代数据库外键最终保护，检查后的并发引用拒绝须转换为业务提示，不暴露 Prisma / SQL 错误。
 
 ### 25.3 Response 与错误
 
@@ -1477,6 +1484,7 @@ UAT Master Data Delete Strategy 已批准作为上线前 UAT 易用性增强。�
 失败响应继续复用既有错误结构和错误码：
 
 - 存在业务引用：复用 `CONFLICT_REQUEST`，业务提示为“该数据已被业务单据引用，无法删除，请停用。”；
+- 品牌存在产品引用：复用 `CONFLICT_REQUEST`，业务提示为“该品牌已被产品引用，无法删除，请停用。”；
 - 系统数据：复用 `CONFLICT_REQUEST`，业务提示为“系统数据不可删除。”；
 - 不存在或不可访问：复用 `RESOURCE_NOT_FOUND`；
 - 权限不足：复用既有 Master Data 权限错误。

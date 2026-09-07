@@ -1014,6 +1014,7 @@ const handler = createRouteHandler(async (request, context) => {
 });
 
 export const GET = handler;
+export const DELETE = handler;
 export const PATCH = handler;
 export const POST = handler;
 export const PUT = handler;

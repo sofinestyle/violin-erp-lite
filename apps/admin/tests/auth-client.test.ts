@@ -79,12 +79,14 @@ describe("Admin authentication client", () => {
         }
         return response({
           permissions: [{ permissionCode: "master.product.read" }],
+          roles: [{ roleCode: "administrator" }],
         });
       }),
     );
 
     await passwordLogin("dev-admin", "not-logged");
     await expect(restoreAuthentication()).resolves.toEqual({
+      roleCodes: ["administrator"],
       permissions: ["master.product.read"],
       session: { displayName: "开发管理员", userId: "user-1", username: "dev-admin" },
     });

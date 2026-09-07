@@ -4,6 +4,7 @@ import type { PermissionCode } from "@violin-erp/api";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
 
 type PermissionContextValue = Readonly<{
+  isAdministrator: boolean;
   permissions: ReadonlySet<PermissionCode>;
   hasPermission: (permission: PermissionCode) => boolean;
   hasAnyPermission: (permissions: readonly PermissionCode[]) => boolean;
@@ -15,19 +16,22 @@ const PermissionContext = createContext<PermissionContextValue | null>(null);
 export function PermissionProvider({
   children,
   permissions = [],
+  roleCodes = [],
 }: {
   children: ReactNode;
   permissions?: readonly PermissionCode[];
+  roleCodes?: readonly string[];
 }) {
   const value = useMemo<PermissionContextValue>(() => {
     const granted = new Set(permissions);
     return {
+      isAdministrator: roleCodes.includes("administrator"),
       permissions: granted,
       hasPermission: (permission) => granted.has(permission),
       hasAnyPermission: (required) => required.some((permission) => granted.has(permission)),
       hasAllPermissions: (required) => required.every((permission) => granted.has(permission)),
     };
-  }, [permissions]);
+  }, [permissions, roleCodes]);
 
   return <PermissionContext.Provider value={value}>{children}</PermissionContext.Provider>;
 }

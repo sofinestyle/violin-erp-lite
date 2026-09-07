@@ -3,7 +3,120 @@ import { PrismaMasterDataRepository } from "../src/index";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 
+function testRepository(client: unknown) {
+  const delegates = client as Record<string, unknown>;
+  return new PrismaMasterDataRepository({
+    ...delegates,
+    $transaction: async (work: (tx: unknown) => Promise<unknown>) => work(delegates),
+  } as never);
+}
+
 describe("Prisma Master Data repository", () => {
+  it.each(["unreferenced", "referenced", "system", "missing", "concurrent-reference"])(
+    "handles brand delete protection: %s",
+    async (scenario) => {
+      const id = "22222222-2222-4222-8222-222222222222";
+      const deleteMany =
+        scenario === "concurrent-reference"
+          ? vi.fn().mockRejectedValue({ code: "P2003" })
+          : vi.fn().mockResolvedValue({ count: 1 });
+      const count = vi.fn().mockResolvedValue(scenario === "referenced" ? 1 : 0);
+      const client = {
+        brands: {
+          findFirst: vi
+            .fn()
+            .mockResolvedValue(
+              scenario === "missing"
+                ? null
+                : { id, brand_code: scenario === "system" ? "SYS-BRAND" : "UAT-BRAND" },
+            ),
+          deleteMany,
+        },
+        products: { count },
+      };
+      const audit = vi.fn().mockResolvedValue(undefined);
+      const result = await testRepository(client as never).delete("brands", id, USER_ID, audit);
+      expect(audit).toHaveBeenCalledTimes(scenario === "unreferenced" ? 1 : 0);
+      const status = {
+        unreferenced: "deleted",
+        referenced: "referenced",
+        system: "system",
+        missing: "not_found",
+        "concurrent-reference": "referenced",
+      }[scenario];
+      expect(result.status).toBe(status);
+      if (scenario === "unreferenced" || scenario === "concurrent-reference") {
+        expect(deleteMany).toHaveBeenCalledTimes(1);
+      } else {
+        expect(deleteMany).not.toHaveBeenCalled();
+      }
+      if (["unreferenced", "referenced", "concurrent-reference"].includes(scenario)) {
+        // No is_active filter: inactive products must also protect their brand.
+        expect(count).toHaveBeenCalledWith({ where: { brand_id: id } });
+      }
+    },
+  );
+  it("maps a concurrent foreign-key refusal for existing non-brand deletion", async () => {
+    const audit = vi.fn();
+    const repository = new PrismaMasterDataRepository({
+      $transaction: vi.fn().mockRejectedValue({ code: "P2003" }),
+    } as never);
+    await expect(repository.delete("skus", USER_ID, USER_ID, audit)).resolves.toEqual({
+      status: "referenced",
+    });
+    expect(audit).not.toHaveBeenCalled();
+  });
+  it.each([false, true])(
+    "protects SKU inventory references (referenced=%s)",
+    async (referenced) => {
+      const id = "22222222-2222-4222-8222-222222222222";
+      const deleteMany = vi.fn().mockResolvedValue({ count: 1 });
+      const models = [
+        "inventories",
+        "inventory_transactions",
+        "purchase_order_items",
+        "production_order_items",
+        "inspection_order_items",
+        "inbound_order_items",
+        "outbound_order_items",
+        "inventory_adjustment_items",
+        "cross_border_shipment_items",
+        "sales_return_items",
+        "transfer_order_items",
+        "stock_count_items",
+        "damage_report_items",
+        "purchase_return_items",
+        "production_completion_record_items",
+        "import_task_items",
+        "inventory_alerts",
+      ];
+      const client = {
+        ...Object.fromEntries(
+          models.map((model) => [
+            model,
+            { count: vi.fn().mockResolvedValue(model === "inventories" && referenced ? 1 : 0) },
+          ]),
+        ),
+        skus: {
+          findFirst: vi.fn().mockResolvedValue({ id, sku_code: "UAT-DELETE-44-BK" }),
+          deleteMany,
+        },
+      };
+      const result = await testRepository(client as never).delete(
+        "skus",
+        id,
+        USER_ID,
+        async () => undefined,
+      );
+      if (referenced) {
+        expect(result).toEqual({ status: "referenced" });
+        expect(deleteMany).not.toHaveBeenCalled();
+      } else {
+        expect(result).toEqual({ status: "deleted", id });
+        expect(deleteMany).toHaveBeenCalledTimes(1);
+      }
+    },
+  );
   it("applies warehouse role scope before pagination and maps response fields", async () => {
     const findMany = vi.fn().mockResolvedValue([
       {
@@ -15,7 +128,7 @@ describe("Prisma Master Data repository", () => {
       },
     ]);
     const count = vi.fn().mockResolvedValue(1);
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       warehouses: { count, findMany },
     } as never);
 
@@ -60,7 +173,7 @@ describe("Prisma Master Data repository", () => {
       brand_code: "B-001",
       brand_name: "测试品牌",
     });
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       brands: { create },
     } as never);
 
@@ -86,7 +199,7 @@ describe("Prisma Master Data repository", () => {
       platform_name: "测试平台",
       platform_type: "domestic",
     });
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       ecommerce_platforms: { create },
     } as never);
 
@@ -184,7 +297,7 @@ describe("Prisma Master Data repository", () => {
       code: "P2002",
       meta: { target: "uq_products_product_name_en" },
     };
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       brands: { count: vi.fn().mockResolvedValue(1) },
       product_categories: { count: vi.fn().mockResolvedValue(1) },
       products: {
@@ -229,7 +342,7 @@ describe("Prisma Master Data repository", () => {
   it("deletes unreferenced Product and Product Category master data", async () => {
     const productDeleteMany = vi.fn().mockResolvedValue({ count: 1 });
     const categoryDeleteMany = vi.fn().mockResolvedValue({ count: 1 });
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       product_categories: {
         count: vi.fn().mockResolvedValue(0),
         deleteMany: categoryDeleteMany,
@@ -252,13 +365,23 @@ describe("Prisma Master Data repository", () => {
     } as never);
 
     await expect(
-      repository.delete("products", "22222222-2222-4222-8222-222222222222", USER_ID),
+      repository.delete(
+        "products",
+        "22222222-2222-4222-8222-222222222222",
+        USER_ID,
+        async () => undefined,
+      ),
     ).resolves.toEqual({
       id: "22222222-2222-4222-8222-222222222222",
       status: "deleted",
     });
     await expect(
-      repository.delete("product-categories", "33333333-3333-4333-8333-333333333333", USER_ID),
+      repository.delete(
+        "product-categories",
+        "33333333-3333-4333-8333-333333333333",
+        USER_ID,
+        async () => undefined,
+      ),
     ).resolves.toEqual({
       id: "33333333-3333-4333-8333-333333333333",
       status: "deleted",
@@ -272,7 +395,7 @@ describe("Prisma Master Data repository", () => {
   });
 
   it("blocks Product and Product Category delete when referenced", async () => {
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       product_categories: {
         count: vi.fn().mockResolvedValue(1),
         deleteMany: vi.fn(),
@@ -293,15 +416,25 @@ describe("Prisma Master Data repository", () => {
     } as never);
 
     await expect(
-      repository.delete("products", "22222222-2222-4222-8222-222222222222", USER_ID),
+      repository.delete(
+        "products",
+        "22222222-2222-4222-8222-222222222222",
+        USER_ID,
+        async () => undefined,
+      ),
     ).resolves.toEqual({ status: "referenced" });
     await expect(
-      repository.delete("product-categories", "33333333-3333-4333-8333-333333333333", USER_ID),
+      repository.delete(
+        "product-categories",
+        "33333333-3333-4333-8333-333333333333",
+        USER_ID,
+        async () => undefined,
+      ),
     ).resolves.toEqual({ status: "referenced" });
   });
 
   it("blocks Supplier delete when purchase order references exist", async () => {
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       inbound_orders: { count: vi.fn().mockResolvedValue(0) },
       product_suppliers: { count: vi.fn().mockResolvedValue(0) },
       purchase_orders: { count: vi.fn().mockResolvedValue(1) },
@@ -317,7 +450,12 @@ describe("Prisma Master Data repository", () => {
     } as never);
 
     await expect(
-      repository.delete("suppliers", "22222222-2222-4222-8222-222222222222", USER_ID),
+      repository.delete(
+        "suppliers",
+        "22222222-2222-4222-8222-222222222222",
+        USER_ID,
+        async () => undefined,
+      ),
     ).resolves.toEqual({ status: "referenced" });
   });
 
@@ -325,7 +463,7 @@ describe("Prisma Master Data repository", () => {
     const supplierDeleteMany = vi.fn().mockResolvedValue({ count: 1 });
     const warehouseDeleteMany = vi.fn().mockResolvedValue({ count: 1 });
     const zeroCount = vi.fn().mockResolvedValue(0);
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       cross_border_shipments: { count: zeroCount },
       damage_reports: { count: zeroCount },
       import_task_items: { count: zeroCount },
@@ -363,13 +501,23 @@ describe("Prisma Master Data repository", () => {
     } as never);
 
     await expect(
-      repository.delete("suppliers", "22222222-2222-4222-8222-222222222222", USER_ID),
+      repository.delete(
+        "suppliers",
+        "22222222-2222-4222-8222-222222222222",
+        USER_ID,
+        async () => undefined,
+      ),
     ).resolves.toEqual({
       id: "22222222-2222-4222-8222-222222222222",
       status: "deleted",
     });
     await expect(
-      repository.delete("warehouses", "33333333-3333-4333-8333-333333333333", USER_ID),
+      repository.delete(
+        "warehouses",
+        "33333333-3333-4333-8333-333333333333",
+        USER_ID,
+        async () => undefined,
+      ),
     ).resolves.toEqual({
       id: "33333333-3333-4333-8333-333333333333",
       status: "deleted",
@@ -377,7 +525,7 @@ describe("Prisma Master Data repository", () => {
   });
 
   it("blocks Warehouse delete when inventory exists and protects system records", async () => {
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       inventories: { count: vi.fn().mockResolvedValue(1) },
       warehouses: {
         deleteMany: vi.fn(),
@@ -388,10 +536,15 @@ describe("Prisma Master Data repository", () => {
       },
     } as never);
     await expect(
-      repository.delete("warehouses", "33333333-3333-4333-8333-333333333333", USER_ID),
+      repository.delete(
+        "warehouses",
+        "33333333-3333-4333-8333-333333333333",
+        USER_ID,
+        async () => undefined,
+      ),
     ).resolves.toEqual({ status: "referenced" });
 
-    const systemRepository = new PrismaMasterDataRepository({
+    const systemRepository = testRepository({
       products: {
         deleteMany: vi.fn(),
         findFirst: vi.fn().mockResolvedValue({
@@ -401,7 +554,12 @@ describe("Prisma Master Data repository", () => {
       },
     } as never);
     await expect(
-      systemRepository.delete("products", "22222222-2222-4222-8222-222222222222", USER_ID),
+      systemRepository.delete(
+        "products",
+        "22222222-2222-4222-8222-222222222222",
+        USER_ID,
+        async () => undefined,
+      ),
     ).resolves.toEqual({ status: "system" });
   });
 
@@ -421,7 +579,7 @@ describe("Prisma Master Data repository", () => {
       },
     ]);
     const count = vi.fn().mockResolvedValue(1);
-    const repository = new PrismaMasterDataRepository({
+    const repository = testRepository({
       stores: { count, findMany },
     } as never);
 

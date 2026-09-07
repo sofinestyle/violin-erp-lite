@@ -11,6 +11,16 @@ related_phase: Phase 1
 
 # DECISION LOG
 
+## DEC-109 批准品牌安全删除 CR-005
+
+状态：Approved
+
+日期：2026-09-07
+
+批准人：Project Owner
+
+批准品牌安全删除 API `MD-081 DELETE /api/v1/brands/{id}`。无产品引用可删除，有产品引用（含停用产品）或系统品牌不可删除。Product Manager Review Completed：品牌删除仅 administrator 可执行，前后端独立限制，`master.brand.update` 仅负责编辑；其余六类删除权限不变。七类删除与真实 Prisma Audit 必须同事务提交，审计失败回滚。继续复用外键、响应和错误码，保留二次确认；SYS- / SYSTEM- 为临时系统数据识别规则。Database Schema、Migration、Permission Code 和阶段状态不变；不开放 Platform、Store 删除。CR-005 保持 Approved，UAT 保持 Fixed / Pending Manual Verification。具体规则以 `docs/changes/CR-005_BRAND_SAFE_DELETE.md` 为准。
+
 ## DEC-108 批准并完成产品型号唯一性约束
 
 ### 状态

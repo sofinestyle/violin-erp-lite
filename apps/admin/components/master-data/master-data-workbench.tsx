@@ -84,16 +84,68 @@ export function formatApiError(envelope: ApiEnvelope): string {
   return `${envelope.error?.message ?? "请求失败"}${detailMessage}${suffix}`;
 }
 
-async function apiRequest(url: string, init: RequestInit = {}): Promise<ApiEnvelope> {
-  const headers = new Headers(init.headers);
-  headers.set("Accept", "application/json");
-  if (init.body) headers.set("Content-Type", "application/json");
-  const response = await authenticatedFetch(url, { ...init, headers });
-  const envelope = (await response.json()) as ApiEnvelope;
+export function MasterDataDeleteAction({
+  definition,
+  onConfirm,
+}: {
+  definition: WorkbenchDefinition;
+  onConfirm: () => void;
+}) {
+  const { hasPermission, isAdministrator } = usePermission();
+  const allowed =
+    definition.key === "brands" ? isAdministrator : hasPermission(definition.updatePermission);
+  if (!definition.deleteSupported || !allowed) return null;
+  return (
+    <ConfirmDialog
+      title={`删除${definition.label}`}
+      description="删除后无法恢复，确认删除吗？"
+      confirmLabel="确认删除"
+      onConfirm={onConfirm}
+      trigger={
+        <Button variant="danger" size="sm">
+          删除
+        </Button>
+      }
+    />
+  );
+}
+
+export async function readMasterDataResponse(response: Response): Promise<ApiEnvelope> {
+  const requestId = response.headers.get("X-Request-ID");
+  const suffix = requestId ? `（Request ID：${requestId}）` : "";
+  const invalidResponse = () =>
+    new Error(
+      `服务响应异常（HTTP ${response.status}），请刷新列表确认操作结果；如仍有问题，请联系管理员。${suffix}`,
+    );
+  let parsed: unknown;
+  try {
+    parsed = await response.json();
+  } catch {
+    throw invalidResponse();
+  }
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    !("success" in parsed) ||
+    typeof parsed.success !== "boolean"
+  ) {
+    throw invalidResponse();
+  }
+  const envelope = {
+    ...(parsed as ApiEnvelope),
+    ...(!(parsed as ApiEnvelope).requestId && requestId ? { requestId } : {}),
+  };
   if (!response.ok || envelope.success !== true) {
     throw new Error(formatApiError(envelope));
   }
   return envelope;
+}
+
+async function apiRequest(url: string, init: RequestInit = {}): Promise<ApiEnvelope> {
+  const headers = new Headers(init.headers);
+  headers.set("Accept", "application/json");
+  if (init.body) headers.set("Content-Type", "application/json");
+  return readMasterDataResponse(await authenticatedFetch(url, { ...init, headers }));
 }
 
 function fieldValue(field: WorkbenchField, value: FormDataEntryValue | null): unknown {
@@ -913,20 +965,11 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                             }
                           />
                         </PermissionWrapper>
-                        {group === "master" && definition.deleteSupported ? (
-                          <PermissionWrapper permission={definition.updatePermission}>
-                            <ConfirmDialog
-                              title={`删除${definition.label}`}
-                              description="删除后无法恢复，确认删除吗？"
-                              confirmLabel="确认删除"
-                              onConfirm={() => void deleteItem(item)}
-                              trigger={
-                                <Button variant="danger" size="sm">
-                                  删除
-                                </Button>
-                              }
-                            />
-                          </PermissionWrapper>
+                        {group === "master" ? (
+                          <MasterDataDeleteAction
+                            definition={definition}
+                            onConfirm={() => void deleteItem(item)}
+                          />
                         ) : null}
                       </div>
                     </td>

@@ -11,6 +11,28 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Test Record
 
+## 2026-09-07 品牌安全删除 CR-005
+
+状态：Fixed / Pending Manual Verification。
+
+Product Manager Review Completed。验证品牌删除二次确认、取消、成功刷新、非 administrator 即使有编辑权限仍隐藏按钮，以及有产品引用时的中文拒绝提示。管理员无编辑权限仍可删除。浏览器使用模拟 API，未删除人工验收品牌。
+
+七类正式删除与 Audit 已接入共同事务。本地 PostgreSQL 五项专项另行执行全部通过：管理员删除与成功审计同时提交、非管理员禁止、真实 Audit INSERT 故障导致删除回滚、启用/停用产品引用保护、系统品牌保护。审计失败安全映射为既有 503 错误，无成功审计残留；仅清理本轮精确 ID 的临时测试记录，既有品牌比对未变化。不使用内存 Writer 规避真实验证。
+
+`pnpm check` 通过，372 项通过、35 项条件性集成测试跳过（含上述另行执行的 5 项）；相关四个文件合计 84 项通过，认证客户端另 4 项通过。浏览器无页面错误，唯一控制台错误为故意模拟的 409 引用阻断。3100 Health HTTP 200，应用 ok / 数据库 connected；3000 仍响应 HTTP 307，未操作 PM2。`pnpm status:check`、`git diff --check` 通过。SYS- / SYSTEM- 为临时保护规则；无 Schema、Migration、Permission SSOT 变化。自动化结果不代替人工复验。批准及变更范围见 CR-005、API_SPEC v1.9 和 DEC-109。
+
+待人工复验：管理员与仅编辑权限业务账号的按钮差异；无引用品牌和 SKU 删除；已有引用（含停用产品）及系统数据阻断；取消不删除；列表成功刷新。UAT 保持 Fixed / Pending Manual Verification。
+
+## 2026-09-07 SKU 删除入口故障回归
+
+- 根因：Admin 路由缺少 DELETE 导出，前端解析空的 HTTP 405 响应时报 JSON 解析错误。
+- 修复：接通 API_SPEC 第 25 节已有删除路由；异常响应改为中文反馈，保留状态码和可用 Request ID，提示刷新列表确认结果。
+- 专项回归：Admin 34 项、API 25 项、Repository 13 项，合计 72 项通过。
+- 本地检查：OPTIONS 允许 DELETE；无凭据 DELETE 返回预期 HTTP 401 和规范 JSON；API Health 正常；AI 平台 3000 端口仍响应 HTTP 307。
+- 数据保护：未执行真实业务数据删除；成功删除、引用阻断和权限逻辑通过自动化模拟测试验证。
+- 完整检查：`pnpm check` 通过（格式、Lint、类型检查、默认测试套件及 Admin/Mini Program 构建）；未配置执行条件的集成测试按仓库规则跳过，不计入真实数据库删除验证。`pnpm status:check`、`git diff --check` 通过。
+- 状态：Fixed / Pending Manual Verification；需人工复验无引用 SKU 删除成功，以及有业务引用 SKU 显示停用提示。
+
 ## 1. 当前阶段
 
 Local UAT In Progress

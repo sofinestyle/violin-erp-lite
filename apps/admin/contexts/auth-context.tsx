@@ -160,7 +160,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: authentication.session.userId,
         }}
       >
-        <PermissionProvider permissions={authentication.permissions}>{children}</PermissionProvider>
+        <PermissionProvider
+          permissions={authentication.permissions}
+          roleCodes={authentication.roleCodes}
+        >
+          {children}
+        </PermissionProvider>
       </UserProvider>
     </AuthContext.Provider>
   );

@@ -1,7 +1,27 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { GET, POST } from "../app/api/v1/[...segments]/route";
+import { DELETE, GET, POST } from "../app/api/v1/[...segments]/route";
 
 describe("Frozen v1 API route boundary", () => {
+  it.each([
+    "products",
+    "skus",
+    "product-categories",
+    "brands",
+    "suppliers",
+    "manufacturers",
+    "warehouses",
+  ])("exports DELETE for %s and preserves authentication and trace responses", async (resource) => {
+    const response = await DELETE(
+      new Request(`http://localhost/api/v1/${resource}/11111111-1111-4111-8111-111111111111`, {
+        method: "DELETE",
+      }),
+    );
+    const body = await response.json();
+    expect(response.status).toBe(401);
+    expect(body).toMatchObject({ success: false, error: { code: "AUTH_UNAUTHORIZED" } });
+    expect(body.requestId).toBeTruthy();
+    expect(response.headers.get("X-Request-ID")).toBe(body.requestId);
+  });
   beforeAll(() => {
     process.env.JWT_ACCESS_SECRET = "test-access-secret-with-at-least-32-characters";
     process.env.JWT_REFRESH_PEPPER = "test-refresh-pepper-with-at-least-32-characters";

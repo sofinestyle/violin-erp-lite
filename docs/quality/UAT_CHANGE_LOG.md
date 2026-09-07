@@ -11,6 +11,16 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Change Log
 
+## 2026-09-07 品牌安全删除 CR-005
+
+Project Owner 批准品牌安全删除扩展，Product Manager Review Completed。品牌删除收紧为仅 administrator，前后端独立校验；编辑权限不再授权品牌删除。七类基础资料删除与真实 Prisma Audit 同事务提交，Audit 失败回滚删除；保留全部产品引用保护及并发 FK 错误业务化、二次确认、六类路由修复及中文异常响应。SYS- / SYSTEM- 明确为临时系统数据识别规则。同步 API_SPEC v1.9、Approved CR-005 和 DEC-109。
+
+本批统一验证：`pnpm check` 372 项通过、35 项条件性跳过；其中新增真实 PostgreSQL 专项 5 项另行运行并通过，验证管理员限制、成功审计、真实 Audit INSERT 失败回滚、启用/停用产品引用和系统品牌保护。浏览器模拟 API 验证按钮权限、取消、成功刷新和引用提示通过；既有品牌数据比对一致。状态保持 Fixed / Pending Manual Verification，不直接关闭；完整修改文件和风险说明见 `MASTER_DATA_DELETE_STRATEGY_REPORT.md`。
+
+## 2026-09-07 基础资料删除入口修复
+
+修复已实现删除分支未导出 DELETE 方法的问题，以及基础资料前端对空响应直接 JSON 解析的问题。新增路由、页面响应、SKU 权限及引用保护回归测试，专项 72 项通过。覆盖产品、SKU、分类、供应商、厂家和仓库的既有入口，不新增 API、不修改数据库、权限或生命周期，不清理现有数据。修复与复核详情见 `MASTER_DATA_DELETE_STRATEGY_REPORT.md` 及 `UAT_TEST_RECORD.md`，状态为 Fixed / Pending Manual Verification。
+
 ## 1. 文档说明
 
 本文件用于记录 Local UAT 阶段的问题修复批次，包括：

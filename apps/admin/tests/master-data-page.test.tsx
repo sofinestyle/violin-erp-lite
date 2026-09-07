@@ -2,7 +2,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
   formatApiError,
+  readMasterDataResponse,
   MasterDataWorkbench,
+  MasterDataDeleteAction,
 } from "../components/master-data/master-data-workbench";
 import { WorkbenchHub } from "../components/master-data/workbench-hub";
 import { PermissionProvider } from "../contexts/permission-context";
@@ -15,6 +17,55 @@ import {
 } from "../lib/master-data";
 
 describe("Master Data PC pages", () => {
+  it.each([true, false])(
+    "uses the administrator role, not brand update permission, for delete (admin=%s)",
+    (administrator) => {
+      const definition = MASTER_WORKBENCHES.find((item) => item.key === "brands")!;
+      const html = renderToStaticMarkup(
+        <PermissionProvider
+          roleCodes={administrator ? ["administrator"] : ["sales"]}
+          permissions={administrator ? [] : ["master.brand.update"]}
+        >
+          <MasterDataDeleteAction definition={definition} onConfirm={() => undefined} />
+        </PermissionProvider>,
+      );
+      expect(html.includes("删除")).toBe(administrator);
+    },
+  );
+  it("reads successful delete responses and preserves business errors and trace", async () => {
+    const data = { deleted: true, id: "sku-test" };
+    await expect(
+      readMasterDataResponse(Response.json({ success: true, data })),
+    ).resolves.toMatchObject({ data });
+    await expect(
+      readMasterDataResponse(
+        Response.json(
+          { success: false, error: { message: "该数据已被业务单据引用，无法删除，请停用。" } },
+          { status: 409, headers: { "X-Request-ID": "delete-trace" } },
+        ),
+      ),
+    ).rejects.toThrow("该数据已被业务单据引用，无法删除，请停用。（Request ID：delete-trace）");
+  });
+
+  it.each([
+    [405, ""],
+    [502, "<html>Bad gateway</html>"],
+    [200, ""],
+    [200, "null"],
+    [200, "{}"],
+    [200, "[]"],
+  ])(
+    "handles HTTP %s invalid response %s without exposing parser or server contents",
+    async (status, body) => {
+      await expect(
+        readMasterDataResponse(
+          new Response(body, { status, headers: { "X-Request-ID": "response-trace" } }),
+        ),
+      ).rejects.toThrow(
+        `服务响应异常（HTTP ${status}），请刷新列表确认操作结果；如仍有问题，请联系管理员。（Request ID：response-trace）`,
+      );
+    },
+  );
   it("renders all nine master-data entries and two security entries", () => {
     const master = renderToStaticMarkup(
       <WorkbenchHub basePath="/workspace/master-data" definitions={MASTER_WORKBENCHES} />,
@@ -72,6 +123,7 @@ describe("Master Data PC pages", () => {
       "products",
       "skus",
       "product-categories",
+      "brands",
       "manufacturers",
       "suppliers",
       "warehouses",

@@ -18,6 +18,7 @@ export type AdminSession = Readonly<{
 }>;
 
 export type RestoredAuthentication = Readonly<{
+  roleCodes: readonly string[];
   permissions: readonly PermissionCode[];
   session: AdminSession;
 }>;
@@ -143,8 +144,10 @@ export async function restoreAuthentication(): Promise<RestoredAuthentication | 
     }>(sessionResponse);
     const permissions = await readEnvelope<{
       permissions: readonly { permissionCode: PermissionCode }[];
+      roles?: readonly { roleCode: string }[];
     }>(permissionsResponse);
     return {
+      roleCodes: (permissions.data.roles ?? []).map((role) => role.roleCode),
       permissions: permissions.data.permissions.map((item) => item.permissionCode),
       session: session.data,
     };

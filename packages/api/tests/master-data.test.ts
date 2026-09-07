@@ -25,7 +25,7 @@ function authentication(permissions = ["master.product.read"]): AuthenticationCo
   };
 }
 
-function repository(): MasterDataRepository {
+function repository(deleteWriter = new InMemoryAuditWriter()): MasterDataRepository {
   const record = {
     id: RECORD_ID,
     isActive: true,
@@ -35,7 +35,13 @@ function repository(): MasterDataRepository {
   };
   return {
     create: vi.fn().mockResolvedValue(record),
-    delete: vi.fn().mockResolvedValue({ id: RECORD_ID, status: "deleted" }),
+    delete: vi.fn<
+      Parameters<MasterDataRepository["delete"]>,
+      ReturnType<MasterDataRepository["delete"]>
+    >(async (_resource, _id, _actor, onDeleted) => {
+      await onDeleted(deleteWriter);
+      return { id: RECORD_ID, status: "deleted" };
+    }),
     findById: vi.fn().mockResolvedValue(record),
     list: vi.fn().mockResolvedValue({ items: [record], page: 1, pageSize: 20, total: 1 }),
     setActive: vi.fn().mockResolvedValue({ ...record, isActive: false }),
@@ -371,7 +377,7 @@ describe("Master Data API contracts", () => {
 
   it("allows safe master data delete and records audit with update permission", async () => {
     const writer = new InMemoryAuditWriter();
-    const store = repository();
+    const store = repository(writer);
     const service = new MasterDataService(store, writer);
 
     await expect(
@@ -382,12 +388,90 @@ describe("Master Data API contracts", () => {
         requestContext,
       ),
     ).resolves.toEqual({ deleted: true, id: RECORD_ID });
-    expect(store.delete).toHaveBeenCalledWith("products", RECORD_ID, USER_ID);
+    expect(store.delete).toHaveBeenCalledWith("products", RECORD_ID, USER_ID, expect.any(Function));
     expect(writer.events.at(-1)).toMatchObject({
       action: "delete",
       resourceId: RECORD_ID,
       resourceType: "products",
     });
+  });
+
+  it("requires administrator role independently of edit permission and audits successful deletion", async () => {
+    const writer = new InMemoryAuditWriter();
+    const store = repository(writer);
+    const service = new MasterDataService(store, writer);
+    const editor = authentication(["master.brand.update"]);
+    await expect(
+      service.delete(
+        "brands",
+        RECORD_ID,
+        { user: { ...editor.user, roleCodes: ["sales"] } },
+        requestContext,
+      ),
+    ).rejects.toMatchObject({ httpStatus: 403 });
+    expect(store.delete).not.toHaveBeenCalled();
+    await expect(
+      service.delete("brands", RECORD_ID, authentication([]), requestContext),
+    ).resolves.toEqual({ deleted: true, id: RECORD_ID });
+    expect(store.delete).toHaveBeenCalledWith("brands", RECORD_ID, USER_ID, expect.any(Function));
+    expect(writer.events.at(-1)).toMatchObject({
+      action: "delete",
+      resourceType: "brands",
+      resourceId: RECORD_ID,
+    });
+  });
+
+  it.each([
+    ["referenced", "该品牌已被产品引用，无法删除，请停用。"],
+    ["system", "系统数据不可删除。"],
+  ])("returns the approved brand protection message for %s", async (status, message) => {
+    const store = { ...repository(), delete: vi.fn().mockResolvedValue({ status }) };
+    const writer = new InMemoryAuditWriter();
+    await expect(
+      new MasterDataService(store, writer).delete(
+        "brands",
+        RECORD_ID,
+        authentication(["master.brand.update"]),
+        requestContext,
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT_REQUEST", message });
+    expect(writer.events).toHaveLength(0);
+  });
+
+  it("requires SKU update permission before deletion and audits the deleted SKU", async () => {
+    const writer = new InMemoryAuditWriter();
+    const store = repository(writer);
+    const service = new MasterDataService(store, writer);
+    await expect(
+      service.delete("skus", RECORD_ID, authentication(["master.sku.read"]), requestContext),
+    ).rejects.toMatchObject({ httpStatus: 403 });
+    expect(store.delete).not.toHaveBeenCalled();
+    expect(writer.events).toHaveLength(0);
+    await expect(
+      service.delete("skus", RECORD_ID, authentication(["master.sku.update"]), requestContext),
+    ).resolves.toEqual({ deleted: true, id: RECORD_ID });
+    expect(writer.events.at(-1)).toMatchObject({
+      action: "delete",
+      resourceType: "skus",
+      resourceId: RECORD_ID,
+    });
+  });
+
+  it("rejects referenced SKU deletion without recording a successful delete", async () => {
+    const store = { ...repository(), delete: vi.fn().mockResolvedValue({ status: "referenced" }) };
+    const writer = new InMemoryAuditWriter();
+    await expect(
+      new MasterDataService(store, writer).delete(
+        "skus",
+        RECORD_ID,
+        authentication(["master.sku.update"]),
+        requestContext,
+      ),
+    ).rejects.toMatchObject({
+      code: "CONFLICT_REQUEST",
+      message: "该数据已被业务单据引用，无法删除，请停用。",
+    });
+    expect(writer.events).toHaveLength(0);
   });
 
   it("returns business messages for referenced and system master data deletes", async () => {
@@ -430,9 +514,9 @@ describe("Master Data API contracts", () => {
 
     await expect(
       new MasterDataService(unsupportedStore, new InMemoryAuditWriter()).delete(
-        "brands",
+        "stores",
         RECORD_ID,
-        authentication(["master.brand.update"]),
+        authentication(["master.store.update"]),
         requestContext,
       ),
     ).rejects.toMatchObject({

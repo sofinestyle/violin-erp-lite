@@ -305,6 +305,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
   },
   {
     apiPath: "/api/v1/brands",
+    deleteSupported: true,
     codeField: "brandCode",
     createPermission: "master.brand.create",
     disablePermission: "master.brand.disable",

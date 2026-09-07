@@ -11,6 +11,24 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [Unreleased] - 2026-09-07
+
+### Added
+
+- 按已批准 CR-005 新增品牌安全删除 MD-081，仅 administrator 可执行，前后端双重限制；品牌编辑权限不再承担删除授权。
+- 品牌页面增加删除和二次确认；有产品引用（含停用产品）或系统品牌禁止删除，保留启用/停用。
+
+### Fixed
+
+- 补齐 Admin DELETE 路由导出，修复基础资料删除返回 HTTP 405 的接线遗漏。
+- 基础资料空响应、非 JSON 响应改为中文反馈，保留状态码和可用 Request ID。
+- 七类基础资料删除与真实 Prisma Audit 写入统一事务，审计失败回滚删除；并发外键冲突统一业务化处理。
+- Product Manager Review Completed；SYS- / SYSTEM- 明确为临时系统数据保护规则，UAT 保持 Fixed / Pending Manual Verification。
+
+### Verified
+
+- 完整 `pnpm check`、浏览器模拟 API 交互、真实 Prisma 品牌删除/审计回滚测试通过；待人工复验。
+
 ## [0.11.41] - 2026-08-13
 
 ### Added

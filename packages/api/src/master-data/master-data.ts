@@ -1,8 +1,14 @@
 import type { AuditWriter } from "../audit/audit.js";
 import type { AuthenticationContext } from "../auth/authentication.js";
-import { requirePermission } from "../authorization/authorization.js";
+import { requireAuthentication, requirePermission } from "../authorization/authorization.js";
 import type { PermissionCode } from "../authorization/permissions.js";
-import { AppError, ConflictError, NotFoundError, ValidationError } from "../errors/app-error.js";
+import {
+  AppError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+} from "../errors/app-error.js";
 import type { RequestContext } from "../request-context/request-context.js";
 import { recordAuditEvent } from "../audit/audit.js";
 
@@ -57,6 +63,7 @@ export type MasterDataRepository = Readonly<{
     resource: MasterDataResourceKey,
     id: string,
     actorUserId: string,
+    onDeleted: (transactionAuditWriter: AuditWriter) => Promise<void>,
   ) => Promise<MasterDataDeleteOutcome>;
   findById: (
     resource: MasterDataResourceKey,
@@ -636,26 +643,40 @@ export class MasterDataService {
     authentication: AuthenticationContext,
     requestContext: RequestContext,
   ): Promise<Readonly<{ deleted: true; id: string }>> {
-    const { user } = requirePermission(authentication, permissionFor(resource, "update"));
-    const outcome = await this.#repository.delete(resource, id, user.userId);
+    const { user } =
+      resource === "brands"
+        ? requireAuthentication(authentication)
+        : requirePermission(authentication, permissionFor(resource, "update"));
+    if (resource === "brands" && !user.roleCodes.includes("administrator")) {
+      throw new ForbiddenError("仅管理员可以删除品牌。");
+    }
+    const outcome = await this.#repository.delete(resource, id, user.userId, async (writer) => {
+      await recordAuditEvent(
+        writer,
+        {
+          action: "delete",
+          actorUserId: user.userId,
+          moduleCode: MASTER_DATA_DEFINITIONS[resource].permissionResource,
+          requestId: requestContext.requestId,
+          resourceId: id,
+          resourceType: resource,
+          result: "success",
+          timestamp: new Date(requestContext.timestamp),
+        },
+        { failureMode: "required" },
+      );
+    });
     if (outcome.status === "not_found") throw new NotFoundError("基础资料不存在或不可访问");
     if (outcome.status === "system") throw new ConflictError("系统数据不可删除。");
     if (outcome.status === "referenced") {
+      if (resource === "brands") {
+        throw new ConflictError("该品牌已被产品引用，无法删除，请停用。");
+      }
       throw new ConflictError("该数据已被业务单据引用，无法删除，请停用。");
     }
     if (outcome.status === "unsupported") {
       throw new ValidationError("该基础资料暂不支持删除，请停用。");
     }
-    await recordAuditEvent(this.#auditWriter, {
-      action: "delete",
-      actorUserId: user.userId,
-      moduleCode: MASTER_DATA_DEFINITIONS[resource].permissionResource,
-      requestId: requestContext.requestId,
-      resourceId: id,
-      resourceType: resource,
-      result: "success",
-      timestamp: new Date(requestContext.timestamp),
-    });
     return { deleted: true, id };
   }
 

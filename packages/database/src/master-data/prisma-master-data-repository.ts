@@ -2,6 +2,7 @@ import {
   ConflictError,
   MASTER_DATA_DEFINITIONS,
   ValidationError,
+  type AuditWriter,
   type MasterDataListQuery,
   type MasterDataListResult,
   type MasterDataDeleteOutcome,
@@ -11,6 +12,7 @@ import {
 } from "@violin-erp/api";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { getPrismaClient } from "../client.js";
+import { PrismaAuditWriter } from "../audit/prisma-audit-writer.js";
 import {
   CodeGenerationService,
   isAutomaticCodeResource,
@@ -44,6 +46,7 @@ const RESOURCE_MODELS: Readonly<Record<MasterDataResourceKey, string>> = {
 };
 
 const DELETABLE_RESOURCES = new Set<MasterDataResourceKey>([
+  "brands",
   "product-categories",
   "products",
   "skus",
@@ -53,7 +56,7 @@ const DELETABLE_RESOURCES = new Set<MasterDataResourceKey>([
 ]);
 
 const REFERENCE_CHECKS: Readonly<Record<MasterDataResourceKey, readonly ReferenceCheck[]>> = {
-  brands: [],
+  brands: [{ model: "products", field: "brand_id" }],
   "ecommerce-platforms": [],
   "product-categories": [
     { model: "product_categories", field: "parent_category_id" },
@@ -581,6 +584,27 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
   }
 
   async delete(
+    resource: MasterDataResourceKey,
+    id: string,
+    actorUserId: string,
+    onDeleted: (transactionAuditWriter: AuditWriter) => Promise<void>,
+  ): Promise<MasterDataDeleteOutcome> {
+    try {
+      return await this.#client.$transaction(async (transaction) => {
+        const repository = new PrismaMasterDataRepository(transaction as PrismaClient);
+        const result = await repository.#deleteRecord(resource, id, actorUserId);
+        if (result.status === "deleted") {
+          await onDeleted(new PrismaAuditWriter(transaction));
+        }
+        return result;
+      });
+    } catch (error) {
+      if (prismaErrorCode(error) === "P2003") return { status: "referenced" };
+      throw error;
+    }
+  }
+
+  async #deleteRecord(
     resource: MasterDataResourceKey,
     id: string,
     actorUserId: string,
