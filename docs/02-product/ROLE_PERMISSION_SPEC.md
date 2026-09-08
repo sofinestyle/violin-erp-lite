@@ -279,3 +279,8 @@ related_phase: Phase 2
 | 新增角色/业务职责/审批流程 | 0 |
 
 本规格已完成角色、权限目录、角色权限矩阵、数据范围和来源引用的内部一致性检查，状态为 Completed / Approved / Frozen。未修改 Frozen 业务、数据库、API 或 Phase 6 内容，正式 API 数量保持 315。
+
+
+## CR-009 新建对象范围初始化例外（2026-09-08，Approved）
+
+Project Owner 批准仅 Warehouse / Store Create 在服务端为创建者当前有效且具备对应 Create 权限的角色初始化该新对象 manage 范围。同角色有效成员共享，其他角色不获授权。现有功能权限和数据范围过滤不变，administrator 不新增全局范围旁路；无新 Permission、Role 或平行数据范围。对象、范围、编码流水及初始化审计同事务；无有效角色或写入失败全部回滚。普通更新与 SEC 常规范围替换规则不变。唯一历史对象补齐例外为 CR-009 已明确批准的 WH-000009 诊断仓库，之后使用正式 API 停用。

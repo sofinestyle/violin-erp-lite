@@ -2062,7 +2062,7 @@ model stores {
   store_code                      String              @db.VarChar(50)
   store_name                      String              @db.VarChar(200)
   platform_id                     String              @db.Uuid
-  external_store_id               String?             @db.Uuid
+  external_store_id               String?             @db.VarChar(100)
   country_code                    String              @db.VarChar(2)
   currency_code                   String              @db.VarChar(3)
   operator_name                   String?             @db.VarChar(200)

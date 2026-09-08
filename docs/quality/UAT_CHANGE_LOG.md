@@ -11,6 +11,14 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Change Log
 
+## 2026-09-08 Manual UAT Bug Batch – SKU / Store / Warehouse / Category
+
+状态：Fixed / Pending Manual Verification；同一批次，不拆 UAT 编号，不自动 Closed。CR-008 / CR-009 已由 Project Owner 于 2026-09-08 正式批准并实施，DEC-112、Database v2.8、API v1.12 及 Permission Spec 已同步。
+
+SKU L3 正确回显且保存不丢失 Product；分类列表显示上级名称及中文层级，编辑回显正确。Store 空标识 / TEMU-US-001 / 123456789 浏览器分别生成 STR-000037 / 000038 / 000039 并正确关联 PLT-000033。Warehouse HTTP WH-000011、浏览器 WH-000012 新建后立即可见，采购入库下拉实际可选，同角色共享与无范围角色隔离通过真实 PostgreSQL 回滚事务验证；WH-000009 正式补齐范围后 API 停用，审计成功。
+
+pnpm check：481 通过 / 60 条件性跳过；新增及修改专项通过，真实 HTTP / PostgreSQL 专项另 4 项通过；Prisma validate、12 条迁移状态、status:check、diff 检查通过。最终浏览器控制台 0 error / 0 warn，未观察到新增 5xx。四条测试分类正式删除，其余本轮测试 Store / Platform / Warehouse 正式停用；角色范围随停用对象保留，未永久新增账号或角色，未修改密码或操作 PM2。待人工复验四项真实岗位流程。详见 [统一专项报告](MANUAL_UAT_BUG_BATCH_SKU_STORE_WAREHOUSE_CATEGORY.md)。
+
 ## 2026-09-08 Automatic Code Generation Phase 2（CR-007）
 
 状态：Automated Verification Passed / Pending Manual Spot Check。Approved CR-007 / DEC-111 扩展四类自动编码，API_SPEC v1.11，复用既有编号表及事务行锁，无新Schema、API Path或Permission Code。

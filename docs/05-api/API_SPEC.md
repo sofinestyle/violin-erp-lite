@@ -1,7 +1,7 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.11
+version: 1.12
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -10,6 +10,8 @@ related_phase: Phase 5 / UAT-009 / UAT Master Data Delete Strategy
 ---
 
 # API Master Specification
+
+CR-008 / CR-009 于 2026-09-08 Approved / Implemented；当前 v1.12 支持可空平台店铺标识文本及 Warehouse / Store Create 正式角色范围初始化，接口数仍为 343，Permission Code 不变。
 
 CR-007 已于 2026-09-08 获项目负责人批准。v1.11 扩展第 24 节至 Category / Brand / Platform / Store；接口仍为 343 个，Permission Code、Response 包装及错误码不变。
 
@@ -53,7 +55,7 @@ API Master Specification v1.8 为 Completed / Approved。CR-002 Allow Server-sid
 
 ## 3. 接口编号与数量
 
-以下表格保留 v1.8 的 341 个接口历史基线。当前 v1.11 沿用 v1.10 在该基线上增加 CR-005 的 MD-081 和 CR-006 的 PUR-030，共 343 个；当前基础资料 81 个、采购 30 个，其余模块数量不变。
+以下表格保留 v1.8 的 341 个接口历史基线。当前 v1.12 沿用 v1.10 在该基线上增加 CR-005 的 MD-081 和 CR-006 的 PUR-030，共 343 个；当前基础资料 81 个、采购 30 个，其余模块数量不变。
 
 | 来源 | 模块与编号 | 数量 | 状态 |
 | --- | --- | ---: | --- |
@@ -1514,3 +1516,14 @@ Product Manager Review Completed（2026-09-07）：品牌物理删除仅限已�
 采购单锁定、状态/范围/引用复查、明细级联删除及真实 Audit 同事务；Audit 失败全部回滚。附件关联写入持有采购父单锁并重新校验父单存在，避免悬空多态关联。
 
 复用错误：403 权限不足；404 不存在或范围不可见；409 CONFLICT_REQUEST，引用提示“该采购订单已产生后续业务记录，无法删除。”，状态提示“当前状态的采购订单不允许删除。”；审计故障沿用既有 503。外键冲突映射为同一引用提示。不新增错误码、权限或数据模型。
+
+
+## CR-008 / CR-009：Manual UAT Bug Batch 批准增量（2026-09-08）
+
+API Master Specification v1.12，接口数 343 不变。Project Owner 已批准 CR-008 与 CR-009。
+
+Store Create / Update 的 externalStoreId 为 optional / nullable 普通字符串，最大 100 字符，去首尾空白，空字符串归一 null；数字型平台编号须作为字符串提交。支持数字、字母、连字符等平台实际编号；不再校验 UUID。缺省更新不覆盖原值。非空值仍在 platformId 范围唯一，既有 UUID 文本不改写；storeCode 仍为独立 STR 自动编号，platformId 仍为 UUID 外键。
+
+仅 Warehouse / Store Create 在同一数据库事务内为创建者当前有效、实际具备该资源 Create 权限的角色建立新对象 manage 范围；同角色成员共享，其他角色不新增范围。角色/用户/权限有效性在服务端重新核对；无合格角色或范围/审计写入失败则回滚对象和编码流水。初始化审计携带请求标识、目标对象和角色集合。Create Response 返回最终访问级别；列表、详情、业务 options 继续使用原角色范围规则。普通 Update 不初始化范围。
+
+SEC-023 / SEC-025 的常规范围替换与禁止自身提权规则不变；本次仅批准新对象初始化例外及 CR-009 指定诊断仓库 WH-000009 的一次性补齐维护。无新 API Path、Permission Code、Role 或平行 ACL。

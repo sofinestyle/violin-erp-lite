@@ -1,5 +1,10 @@
+import { randomUUID } from "node:crypto";
 import {
   ConflictError,
+  ForbiddenError,
+  requirePermission,
+  type AuthenticationContext,
+  type RequestContext,
   MASTER_DATA_DEFINITIONS,
   ValidationError,
   type AuditWriter,
@@ -11,6 +16,7 @@ import {
   type MasterDataRepository,
   type MasterDataResourceKey,
 } from "@violin-erp/api";
+import { initializeMasterDataScope } from "./initialize-master-data-scope.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { getPrismaClient } from "../client.js";
 import { PrismaAuditWriter } from "../audit/prisma-audit-writer.js";
@@ -585,6 +591,11 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
     resource: MasterDataResourceKey,
     data: Readonly<Record<string, unknown>>,
     actorUserId: string,
+    requestContext: RequestContext = {
+      requestId: randomUUID(),
+      requestTraceId: randomUUID(),
+      timestamp: new Date().toISOString(),
+    },
   ): Promise<MasterDataRecord> {
     try {
       const createWithClient = async (client: PrismaClient) => {
@@ -602,13 +613,27 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
           },
           select: selectFor(resource, actorUserId),
         });
+        if (resource === "warehouses" || resource === "stores") {
+          await initializeMasterDataScope(
+            client,
+            resource,
+            String(record.id),
+            actorUserId,
+            requestContext,
+          );
+          const scoped = await delegate(client, resource).findFirst({
+            where: { id: record.id },
+            select: selectFor(resource, actorUserId),
+          });
+          return toApiRecord(scoped!);
+        }
         return toApiRecord(record);
       };
       const codeField = MASTER_DATA_DEFINITIONS[resource].codeField;
       const shouldGenerateCode =
         isAutomaticCodeResource(resource) &&
         !(typeof data[codeField] === "string" && data[codeField].trim());
-      if (shouldGenerateCode || requiresCodeTransaction(resource)) {
+      if (shouldGenerateCode || requiresCodeTransaction(resource) || resource === "warehouses") {
         return await this.#client.$transaction(async (transaction) =>
           createWithClient(transaction as PrismaClient),
         );
@@ -623,6 +648,33 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
       }
       throw error;
     }
+  }
+
+  /** CR-009 explicitly approved, idempotent maintenance for this diagnostic only. */
+  async repairApprovedDiagnosticWarehouse(
+    authentication: AuthenticationContext,
+    context: RequestContext,
+  ): Promise<string> {
+    const { user } = requirePermission(authentication, "master.warehouse.create");
+    requirePermission(authentication, "security.role.assign");
+    requirePermission(authentication, "security.permission.assign");
+    if (!user.roleCodes.includes("administrator"))
+      throw new ForbiddenError("诊断仓库补齐仅限获批管理员");
+    return this.#client.$transaction(async (transaction) => {
+      const record = await transaction.warehouses.findFirst({
+        where: {
+          warehouse_code: "WH-000009",
+          warehouse_name: "UAT-WAREHOUSE-CHECK",
+          created_by: user.userId,
+        },
+        select: { id: true, role_warehouses: { select: { id: true } } },
+      });
+      if (!record) throw new ForbiddenError("未找到本轮获批诊断仓库");
+      if (record.role_warehouses.length === 0) {
+        await initializeMasterDataScope(transaction, "warehouses", record.id, user.userId, context);
+      }
+      return record.id;
+    });
   }
 
   async delete(

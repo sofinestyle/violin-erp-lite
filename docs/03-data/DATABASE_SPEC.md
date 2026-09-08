@@ -1,12 +1,12 @@
 ---
 document_name: 数据库规格
 project: Violin ERP Lite
-version: 2.7
+version: 2.8
 status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-08-13
-related_phase: Phase 3 / Phase 7 / UAT-009 / CR-004
+updated_date: 2026-09-08
+related_phase: Phase 3 / Phase 7 / Manual UAT Bug Batch / CR-008
 ---
 
 # DATABASE SPEC
@@ -17,7 +17,7 @@ Phase 3 数据库设计（Database Design）已完成并冻结。Database Logica
 
 当前唯一有效版本为：
 
-- Database Logical Design：v2.7；
+- Database Logical Design：v2.8；
 - 状态：Completed / Approved；
 - 正式表：75；
 - 正式字段：1343；
@@ -1043,3 +1043,10 @@ CR-004 Migration 执行前必须审计历史数据。发现空型号或重复型
 新增数据 Migration `20260908090000_seed_code_generation_phase_2`，为 code_generation_rules 初始化 category / CAT、brand / BRD、platform / PLT、store / STR，format 均为 `{prefix}-{seq:000000}`；为 code_sequences 初始化相应 current_value = 0、version = 0。使用既有 lower(code_type) 唯一索引 ON CONFLICT DO NOTHING，可重复执行，不重置流水或覆盖已有规则。
 
 四类自动与显式编码创建在同一业务事务内锁定对应流水行。自动生成逐号跳过已占用历史编码（含大小写等价），不查询最大编码，不改写历史行；事务失败回滚流水与新业务记录。Store 全局编号，不以 platformId 分组；external_store_id 现有定义不变。
+
+
+## CR-008 / CR-009 批准增量（2026-09-08）
+
+当前 Database Logical Design v2.8：CR-008 将 stores.external_store_id 从 nullable UUID 调整为 nullable VARCHAR(100)，它是第三方平台编号而非本系统对象引用。该字段为历史 *_id 类型规则的明确业务例外，platform_id 与其他内部引用仍为 UUID。既有 UUID 用 ::text 无损转换，空白输入由 API 归一 null，保留同平台非空唯一约束。正式表 75、字段 1343、主键 75、唯一约束/索引 91、外键 310、普通索引 131、Check 280、正式枚举 2 均不变。
+
+CR-009 只向现有 role_warehouses / role_stores 初始化新对象范围，不增加结构、Permission 或枚举。仅创建者具备 Create 权限的有效角色获得对应新对象 manage 范围；对象、流水、范围和初始化审计同事务提交。既有对象不批量回填，唯一维护例外为本轮 WH-000009，严格按批准身份/对象条件调用正式范围机制，随后经正式 API 停用。

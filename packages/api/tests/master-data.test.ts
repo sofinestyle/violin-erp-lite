@@ -798,7 +798,12 @@ describe("Master Data API contracts", () => {
       expect(writer.events.every((event) => event.requestId === requestContext.requestId)).toBe(
         true,
       );
-      expect(store.create).toHaveBeenCalledWith(resource, expect.any(Object), USER_ID);
+      expect(store.create).toHaveBeenCalledWith(
+        resource,
+        expect.any(Object),
+        USER_ID,
+        requestContext,
+      );
       expect(store.update).toHaveBeenCalledWith(
         resource,
         RECORD_ID,
@@ -1096,4 +1101,52 @@ describe("Master Data API contracts", () => {
       expect.objectContaining({ details: [expect.objectContaining({ field: "apiKey" })] }),
     );
   });
+});
+
+describe("CR-008 platform store identifiers", () => {
+  const base = {
+    storeName: "UAT-MANUAL-STORE",
+    platformId: RECORD_ID,
+    countryCode: "US",
+    currencyCode: "USD",
+  };
+  it.each(["123456789", "TEMU-US-001", "AMZJP001", "ABC", "a.b_store/01", RECORD_ID])(
+    "accepts real platform identifier %s on create and update",
+    (externalStoreId) => {
+      expect(
+        validateMasterDataInput("stores", { ...base, externalStoreId }, "create").data
+          .externalStoreId,
+      ).toBe(externalStoreId);
+      expect(
+        validateMasterDataInput(
+          "stores",
+          { externalStoreId, updatedAt: requestContext.timestamp },
+          "update",
+        ).data.externalStoreId,
+      ).toBe(externalStoreId);
+    },
+  );
+  it.each([null, "", "   "])("normalizes empty identifiers to null (%s)", (externalStoreId) => {
+    expect(
+      validateMasterDataInput("stores", { ...base, externalStoreId }, "create").data
+        .externalStoreId,
+    ).toBeNull();
+  });
+  it("preserves omitted updates and trims input", () => {
+    expect(
+      validateMasterDataInput("stores", { updatedAt: requestContext.timestamp }, "update").data,
+    ).not.toHaveProperty("externalStoreId");
+    expect(
+      validateMasterDataInput("stores", { ...base, externalStoreId: " TEMU-US-001 " }, "create")
+        .data.externalStoreId,
+    ).toBe("TEMU-US-001");
+  });
+  it.each([123, {}, [], "x".repeat(101)])(
+    "rejects wrong types and excessive length",
+    (externalStoreId) => {
+      expect(() =>
+        validateMasterDataInput("stores", { ...base, externalStoreId }, "create"),
+      ).toThrow();
+    },
+  );
 });

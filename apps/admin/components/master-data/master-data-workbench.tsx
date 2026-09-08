@@ -389,12 +389,40 @@ type MasterDataWorkbenchProps = Readonly<{
   group: "master" | "security";
 }>;
 
+export function categoryLevelLabel(value: unknown): string {
+  const level = Number(value);
+  const labels = ["一级", "二级", "三级", "四级", "五级", "六级", "七级", "八级", "九级", "十级"];
+  return Number.isInteger(level) && level > 0 ? (labels[level - 1] ?? `第${level}级`) : "层级未知";
+}
+
+export async function resolveCategoryParents(
+  records: RecordItem[],
+  readParent: (id: string) => Promise<RecordItem>,
+): Promise<Record<string, string>> {
+  const parentIds = [
+    ...new Set(
+      records
+        .map((item) => item.parentCategoryId)
+        .filter((id): id is string => typeof id === "string" && Boolean(id)),
+    ),
+  ];
+  return Object.fromEntries(
+    await Promise.all(
+      parentIds.map(async (id) => {
+        const parent = records.find((item) => item.id === id) ?? (await readParent(id));
+        return [id, displayValue(parent.categoryName)];
+      }),
+    ),
+  );
+}
+
 export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchProps) {
   const { hasPermission } = usePermission();
   const searchParams = useSearchParams();
   const initialProductFilter =
     definition.key === "skus" ? (searchParams?.get("productId") ?? "") : "";
   const [items, setItems] = useState<RecordItem[]>([]);
+  const [categoryParents, setCategoryParents] = useState<Record<string, string>>({});
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
@@ -445,20 +473,31 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     return params;
   }, [definition.key, isActive, keyword, page, pageSize, skuFilterProductId]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const envelope = await apiRequest(`${definition.apiPath}?${query}`);
-      setItems(Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : []);
-      setTotal(envelope.meta?.total ?? 0);
-    } catch (requestError) {
-      setItems([]);
-      setError(requestError instanceof Error ? requestError.message : "加载失败");
-    } finally {
-      setLoading(false);
-    }
-  }, [definition.apiPath, query]);
+  const load = useCallback(
+    async (overrideQuery?: URLSearchParams) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const envelope = await apiRequest(`${definition.apiPath}?${overrideQuery ?? query}`);
+        const records = Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : [];
+        if (definition.key === "product-categories") {
+          const parents = await resolveCategoryParents(records, async (id) => {
+            const parent = await apiRequest(`${definition.apiPath}/${id}`);
+            return parent.data as RecordItem;
+          });
+          setCategoryParents(parents);
+        }
+        setItems(records);
+        setTotal(envelope.meta?.total ?? 0);
+      } catch (requestError) {
+        setItems([]);
+        setError(requestError instanceof Error ? requestError.message : "加载失败");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [definition.apiPath, definition.key, query],
+  );
 
   useEffect(() => {
     const timer = globalThis.setTimeout(() => void load(), 0);
@@ -483,10 +522,17 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
           const envelope = await apiRequest(
             `/api/v1/${field.optionResource}/options?page=1&pageSize=100`,
           );
-          return [
-            field.key,
-            Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : [],
-          ] as const;
+          const options = Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : [];
+          const currentId = selected?.[field.key];
+          if (
+            typeof currentId === "string" &&
+            currentId &&
+            !options.some((item) => item.id === currentId)
+          ) {
+            const current = await apiRequest(`/api/v1/${field.optionResource}/${currentId}`);
+            options.push(current.data as RecordItem);
+          }
+          return [field.key, options] as const;
         }),
       )
         .then((entries) => {
@@ -508,7 +554,7 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
       active = false;
       globalThis.clearTimeout(timer);
     };
-  }, [drawerOpen, relationFields]);
+  }, [drawerOpen, relationFields, selected]);
 
   async function openDetail(item: RecordItem) {
     setError(null);
@@ -547,7 +593,11 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
     if (definition.key === "warehouses" && values.ownerType !== "manufacturer") {
       values.manufacturerId = "";
     }
-    setFormValues({ ...initialFormValues(definition, selected), ...values });
+    setFormValues((current) => ({
+      ...initialFormValues(definition, selected),
+      ...current,
+      ...values,
+    }));
   }
 
   function updateSkuCombinationRow(rowId: string, patch: Partial<SkuCombinationRow>) {
@@ -793,7 +843,21 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
         toast.success(`${definition.label}${selected ? "更新" : "创建"}成功`);
       }
       setDrawerOpen(false);
-      await load();
+      if (!selected && (definition.key === "warehouses" || definition.key === "stores")) {
+        setKeyword("");
+        setIsActive("");
+        setPage(1);
+        await load(
+          new URLSearchParams({
+            page: "1",
+            pageSize: String(pageSize),
+            sortBy: "updatedAt",
+            sortOrder: "desc",
+          }),
+        );
+      } else {
+        await load();
+      }
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "保存失败");
     } finally {
@@ -908,6 +972,12 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                 <tr>
                   <th className="px-4 py-3 font-medium">编码</th>
                   <th className="px-4 py-3 font-medium">名称</th>
+                  {definition.key === "product-categories" ? (
+                    <>
+                      <th className="px-4 py-3 font-medium">上级分类</th>
+                      <th className="px-4 py-3 font-medium">层级</th>
+                    </>
+                  ) : null}
                   <th className="px-4 py-3 font-medium">状态</th>
                   <th className="px-4 py-3 font-medium">更新时间</th>
                   <th className="px-4 py-3 text-right font-medium">操作</th>
@@ -920,6 +990,16 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                       {displayValue(item[definition.codeField])}
                     </td>
                     <td className="px-4 py-3">{displayValue(item[definition.nameField])}</td>
+                    {definition.key === "product-categories" ? (
+                      <>
+                        <td className="px-4 py-3">
+                          {item.parentCategoryId
+                            ? (categoryParents[String(item.parentCategoryId)] ?? "上级分类不可用")
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3">{categoryLevelLabel(item.categoryLevel)}</td>
+                      </>
+                    ) : null}
                     <td className="px-4 py-3">
                       <StatusBadge tone={item.isActive === false ? "neutral" : "success"}>
                         {item.isActive === false ? "停用" : "启用"}
@@ -1043,6 +1123,9 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                           )}
                           field={field}
                           formValues={formValues}
+                          onValueChange={(key, value) =>
+                            setFormValues((current) => ({ ...current, [key]: value }))
+                          }
                           key={field.key}
                           relationOptions={relationOptions}
                           relationOptionsLoading={relationOptionsLoading}
@@ -1136,6 +1219,7 @@ function MasterDataUxHint({ definition }: { definition: WorkbenchDefinition }) {
 }
 
 export function MasterDataFieldControl({
+  onValueChange,
   definition,
   disabled,
   field,
@@ -1151,6 +1235,7 @@ export function MasterDataFieldControl({
   relationOptions: RelationOptions;
   relationOptionsLoading: boolean;
   selected: RecordItem | null;
+  onValueChange?: (key: string, value: string) => void;
 }) {
   const value = formValues[field.key] ?? fieldDefaultValue(field, selected);
   const datalistId = `${definition.key}-${field.key}-options`;
@@ -1190,15 +1275,11 @@ export function MasterDataFieldControl({
         </span>
       ) : field.optionResource ? (
         <select
-          key={
-            definition.key === "stores" && field.key === "platformId"
-              ? String(relationOptionsLoading)
-              : field.key
-          }
           name={field.key}
           required={required}
           disabled={Boolean(relationOptionsLoading || disabled)}
-          defaultValue={value}
+          value={value}
+          onChange={(event) => onValueChange?.(field.key, event.target.value)}
           className="h-10 rounded-md border bg-white px-3 text-sm text-[#1F2937]"
         >
           <option value="">

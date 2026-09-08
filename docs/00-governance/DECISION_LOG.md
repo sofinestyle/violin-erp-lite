@@ -2771,3 +2771,15 @@ Approved
 ### DEC-111 实施交付补充（2026-09-08）
 
 四类自动编码正式HTTP及浏览器E2E已完成，Update保护、历史编码兼容、数据库一致性与本批表单修复通过。按项目负责人本次指令以单个 `feat: complete automatic code generation phase 2` 提交交付。UAT状态为 Automated Verification Passed / Pending Manual Spot Check，不自动Verified / Closed；无新API Path、Schema、Permission Code或项目Phase变更。
+
+
+## DEC-112 Manual UAT Bug Batch 契约与范围初始化批准
+
+状态：Approved。Approved By：Project Owner。Approval Date：2026-09-08。
+
+负责人在同一批次正式批准 CR-008 外部店铺标识兼容及 CR-009 新建 Warehouse / Store 角色范围初始化；批准 WH-000009 仅经正式 Scope 机制补齐后使用正式 API 停用，不直接 SQL 修改或物理删除。Database v2.8、API v1.12 与 Permission Spec 同步批准增量；不新增权限、角色、字段、接口或 Phase / Task。实施完成后统一回归、文档、单 Commit 推送；UAT 最终状态仅 Fixed / Pending Manual Verification。
+
+
+### DEC-112 实施证据（2026-09-08）
+
+CR-008 / CR-009 均 Approved / Implemented；本地 VARCHAR(100) Migration 已部署，12 条迁移一致。Store 真实 HTTP / Browser 空值、平台文本与数字标识通过；Warehouse 新建立即可见、角色共享/隔离、下游选项及范围审计通过，WH-000009 正式补齐后停用并有两项审计。SKU / Category 回归通过；完整 pnpm check 481 通过 / 60 条件性跳过，真实专项另 4 项通过。未永久新增账号、角色或 Permission；未变更库存及历史业务关系。统一 UAT 为 Fixed / Pending Manual Verification。

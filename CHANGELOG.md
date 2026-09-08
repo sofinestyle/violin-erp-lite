@@ -11,6 +11,12 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## 2026-09-08 Manual UAT Bug Batch
+
+修复 SKU 产品异步回显、分类上级名称及中文层级展示；Warehouse / Store 创建时按 CR-009 在事务内初始化创建角色的新对象 manage 范围与审计，保存后刷新至可见列表。CR-008 将 Store externalStoreId 改为可空 VARCHAR(100)，支持平台真实编号，保持内部 STR 编码和 Platform 关联独立；迁移已部署本地 UAT。
+
+CR-008 / CR-009 Approved / Implemented，DEC-112 已记录。WH-000009 经正式范围机制补齐后由 API 停用并审计；完整 pnpm check 481 通过 / 60 条件性跳过，真实 HTTP / PostgreSQL 专项另 4 项通过；浏览器四项复核通过。状态 Fixed / Pending Manual Verification。
+
 ## [Unreleased] - 2026-09-08
 
 ### Added
