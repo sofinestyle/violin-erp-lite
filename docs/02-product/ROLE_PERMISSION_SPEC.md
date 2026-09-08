@@ -284,3 +284,8 @@ related_phase: Phase 2
 ## CR-009 新建对象范围初始化例外（2026-09-08，Approved）
 
 Project Owner 批准仅 Warehouse / Store Create 在服务端为创建者当前有效且具备对应 Create 权限的角色初始化该新对象 manage 范围。同角色有效成员共享，其他角色不获授权。现有功能权限和数据范围过滤不变，administrator 不新增全局范围旁路；无新 Permission、Role 或平行数据范围。对象、范围、编码流水及初始化审计同事务；无有效角色或写入失败全部回滚。普通更新与 SEC 常规范围替换规则不变。唯一历史对象补齐例外为 CR-009 已明确批准的 WH-000009 诊断仓库，之后使用正式 API 停用。
+
+
+## CR-010 安全删除角色约束（2026-09-08，Approved）
+
+Store DELETE 仅 administrator，且必须已有目标 manage 数据范围；Warehouse DELETE 在既有 update 权限及 manage 范围基础上限 administrator。普通角色即使有 update 权限也不能使用这两类删除。无业务引用时可在删除对象的同一事务清除该目标正式 Scope；这不是角色授权修改入口，不允许删除用户、角色、其他目标范围或绕过业务引用。Permission Code 集合不变。

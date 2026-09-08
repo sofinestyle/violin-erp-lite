@@ -1,5 +1,6 @@
 "use client";
 
+import { categoryParentOptions } from "../../lib/category-hierarchy";
 import { FileUp, Pencil, Plus, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -92,8 +93,10 @@ export function MasterDataDeleteAction({
   onConfirm: () => void;
 }) {
   const { hasPermission, isAdministrator } = usePermission();
-  const allowed =
-    definition.key === "brands" ? isAdministrator : hasPermission(definition.updatePermission);
+  const allowed = ["brands", "stores"].includes(definition.key)
+    ? isAdministrator
+    : hasPermission(definition.updatePermission) &&
+      (definition.key !== "warehouses" || isAdministrator);
   if (!definition.deleteSupported || !allowed) return null;
   return (
     <ConfirmDialog
@@ -188,6 +191,7 @@ function displayValue(value: unknown): string {
 }
 
 function optionLabel(field: WorkbenchField, option: RecordItem): string {
+  if (typeof option.treeLabel === "string") return option.treeLabel;
   const code = field.optionCodeField ? displayValue(option[field.optionCodeField]) : "";
   const name = field.optionNameField ? displayValue(option[field.optionNameField]) : "";
   return [code, name].filter((item) => item && item !== "—").join(" / ") || option.id;
@@ -519,10 +523,22 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
       setRelationOptionsError(null);
       void Promise.all(
         relationFields.map(async (field) => {
-          const envelope = await apiRequest(
-            `/api/v1/${field.optionResource}/options?page=1&pageSize=100`,
-          );
-          const options = Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : [];
+          const hierarchy =
+            field.key === "parentCategoryId" && field.optionResource === "product-categories";
+          const options: RecordItem[] = [];
+          let page = 1;
+          let total = 0;
+          do {
+            const envelope = await apiRequest(
+              hierarchy
+                ? `/api/v1/product-categories?page=${page}&pageSize=100&sortBy=sortOrder&sortOrder=asc`
+                : `/api/v1/${field.optionResource}/options?page=1&pageSize=100`,
+            );
+            const rows = Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : [];
+            options.push(...rows);
+            total = rows.length ? (envelope.meta?.total ?? 0) : 0;
+            page += 1;
+          } while (hierarchy && options.length < total);
           const currentId = selected?.[field.key];
           if (
             typeof currentId === "string" &&
@@ -532,7 +548,16 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
             const current = await apiRequest(`/api/v1/${field.optionResource}/${currentId}`);
             options.push(current.data as RecordItem);
           }
-          return [field.key, options] as const;
+          return [
+            field.key,
+            hierarchy
+              ? categoryParentOptions(
+                  options,
+                  selected?.id,
+                  typeof currentId === "string" ? currentId : undefined,
+                )
+              : options,
+          ] as const;
         }),
       )
         .then((entries) => {

@@ -1,5 +1,41 @@
 # Master Data Delete Strategy Report
 
+## 2026-09-08 Manual UAT UX & Safe Delete Enhancement（CR-010）
+
+结论：四项已实施，状态 **Fixed / Pending Manual Verification**。本轮不新增 UAT 编号；CR-010 由 Project Owner 于 2026-09-08 按本次授权 Approved，实施后为 Approved / Implemented，DEC-113 同步。基准 `45fb75495cc7b8975f88c4bcaa597e6399be5c7e`，属于 Phase 10 已批准发布后的维护，不变更 Phase / Task。本节是 Store / Warehouse 最新删除规则；以下旧日期报告保留历史证据，旧“店铺不开放删除”“仅角色范围阻止仓库删除”不再适用。
+
+### 根因与最终规则
+
+| 项目 | 根因 | 本轮修复 |
+| --- | --- | --- |
+| Store 删除 | 正式 API 缺少 Store DELETE，Repository 未开放，Admin 无入口 | CR-010 新增 MD-082；administrator 且现有 manage 范围、非系统、无业务引用时允许删除。普通用户按钮隐藏，服务端独立拒绝。 |
+| 分类父级下拉 | 通用 options 为平铺且只取第一页，缺少完整父链信息及后代排除；服务端依赖客户端层级，缺少循环保护 | 全部分页读取正式分类列表，按父子树递进缩进；排除自身及全部后代。服务端事务锁串行协调结构写入，遍历父链拒绝循环并计算层级，移动子树同步后代派生层级及审计。 |
+| Warehouse 删除 | role_warehouses 被归为业务引用，Scope 本身阻断安全删除 | administrator + 原 update 权限 + manage 范围；仅 Scope 时可删除，任何真实业务引用继续拒绝。 |
+| 可用库存文案 | 技术化名称缺少业务说明 | 改“计入可用库存”及完整帮助文案；正式枚举不能可靠区分成品/正常/不良品，不推断默认值。 |
+
+Store 业务阻断提示：“该店铺已被业务记录引用，无法删除，请停用。”Warehouse 业务阻断提示：“该仓库存在库存或历史业务记录，无法删除，请停用。”保留既有错误包装、Request ID、系统 SYS- / SYSTEM- 保护及无范围不可访问语义。
+
+Store 真实业务外键为 outbound_orders.store_id、sales_returns.store_id、import_tasks.store_id；销售、平台订单、跨境来源沿既有业务链关联，不虚构新表。Warehouse 的 20 项业务外键涵盖 inventory、inventory_transactions、inbound、inspection、outbound、adjustment、cross-border 三个仓库方向、transfer 三个方向、stock_count、damage_report、sales_return、purchase_return、import_task、import_task_item、inventory_alert、production_completion。实际 PostgreSQL FK 目录与代码清单一致；不存在独立 user_warehouse_scope 表，用户通过正式角色范围访问。
+
+两类安全删除均在同一事务中 FOR UPDATE 锁目标、重新核验 manage 范围与系统保护、检查业务引用、仅删除目标 role_stores / role_warehouses、删除对象、写必需 Audit 后提交。拒绝时不清 Scope；Audit 或最终 FK 拒绝时全部回滚。测试确认 FK 写入持锁时删除等待，引用诊断事务回滚后才能继续；其他用户、角色、仓库/店铺范围均不扩大。
+
+### 真实验证
+
+- 正式登录成功，凭据仅从 .env 内存读取，未修改密码或输出凭据。HTTP / PostgreSQL 专项 9 项通过：实际 FK 目录、Store / Warehouse 无引用删除、两类真实 Audit INSERT 失败回滚、真实导入记录引用拒绝、并发 FK 锁、分类派生层级/移动子树、并发循环拒绝。引用诊断仅在独立回滚事务中新建 UAT 记录，无历史业务清理；业务引用拒绝经过真实 Prisma + 正式 Service，HTTP 成功删除及分类失败响应通过正式 API 验证。
+- Browser 实际新增 `UAT-STORE-DELETE-CHECK` → `STR-000049`，HTTP 201；删除确认 → HTTP 200，自动刷新列表已无该记录。平台关联使用既有 Temu，未改变平台。
+- 已有“提琴 → 小提琴 / 中提琴 / 大提琴”关系正确。新增 `UAT-UX-分类三级` → `CAT-000054`，选小提琴后服务端保存三级，列表显示父级“小提琴”及“三级”；编辑自动选中缩进父级。编辑小提琴选中提琴，选项排除自身及 CAT-000054；新增下拉可见三级递进。三级诊断分类已通过正式 Delete 清理，既有分类关系未修改。
+- 指定“乐器文化产业园仓库”=`WH-000013`。删除前再次核对 21 项 FK：20 项真实业务外键全部为零，仅 role_warehouses 1 条，原阻断原因确为角色 Scope。正式 API DELETE 返回 200；仓库剩余 0、目标 Scope 剩余 0、成功删除审计 1。其他仓库 Scope 逐项一致、角色/用户数量一致。浏览器列表已无该仓库，未删除历史业务数据。
+- 仓库新增表单显示“计入可用库存”，帮助为“开启后，该仓库中的库存计入可销售、可领用的可用库存。在途、待检、不良品等仓库通常建议关闭。”，底层 allowsAvailableStock 和已有数据保持原值。
+- 浏览器控制台 0 error / 0 warn；记录的流程无异常 5xx。有 1 次导航取消旧 Fetch（ERR_ABORTED / canceled），不属于业务请求失败。截图与本地日志未进入仓库。
+
+### 契约、测试与待人工复验
+
+API v1.13 共 344 个接口（基础资料 82）；只新增 Store DELETE。Database v2.8、Prisma Schema、Migration、Permission Code 均无变化；Store / Warehouse 删除新增/明确 administrator 角色限制并清理仅目标 Scope，其他 CRUD 权限不变。分类沿用 DTO，categoryLevel 保持兼容但服务器按实际父链派生。CURRENT_STATUS、ROADMAP、PROJECT、README 核验无阶段变化。
+
+pnpm check 全部通过：513 项通过、69 项条件性集成测试默认跳过；其中本轮 9 项已启用 UX_SAFE_DELETE_UAT 单独执行并全部通过，其余 60 项条件性测试本轮未执行，不计为通过。格式、Lint、类型检查、Admin / Mini Program 构建、pnpm status:check 与 git diff --check 通过。API Health HTTP 200，application.status=ok、database.status=connected；3100 首页 200，AI 视觉平台 3000 返回正常 307，未操作 PM2。默认条件跳过与独立真实专项分开统计，不将跳过计为通过。专项覆盖 23 项业务外键拒绝、事务顺序、角色拒绝、分类任意深度与循环、页面删除入口及文案。
+
+待人工复验：真实岗位账号的 Store / Warehouse 删除按钮及服务端拒绝、业务引用提示与停用替代路径、分类新增/改父级的层级辨识、库存帮助说明理解。UAT 不直接 Closed。
+
 ## 2026-09-08 Master Data Delete Blocking Message UX Enhancement
 
 实施设计：仅优化删除拒绝的中文原因和处理建议，不改变任何删除条件。Repository 复用首个命中的引用检查结果，返回内部业务摘要；Service 将摘要映射到既有 `CONFLICT_REQUEST` 的 message。公开响应结构、Request ID、接口、权限、生命周期、系统前缀保护、停用引用保护及删除/Audit 事务保持不变。

@@ -1050,3 +1050,8 @@ CR-004 Migration 执行前必须审计历史数据。发现空型号或重复型
 当前 Database Logical Design v2.8：CR-008 将 stores.external_store_id 从 nullable UUID 调整为 nullable VARCHAR(100)，它是第三方平台编号而非本系统对象引用。该字段为历史 *_id 类型规则的明确业务例外，platform_id 与其他内部引用仍为 UUID。既有 UUID 用 ::text 无损转换，空白输入由 API 归一 null，保留同平台非空唯一约束。正式表 75、字段 1343、主键 75、唯一约束/索引 91、外键 310、普通索引 131、Check 280、正式枚举 2 均不变。
 
 CR-009 只向现有 role_warehouses / role_stores 初始化新对象范围，不增加结构、Permission 或枚举。仅创建者具备 Create 权限的有效角色获得对应新对象 manage 范围；对象、流水、范围和初始化审计同事务提交。既有对象不批量回填，唯一维护例外为本轮 WH-000009，严格按批准身份/对象条件调用正式范围机制，随后经正式 API 停用。
+
+
+## CR-010 安全删除及分类完整性实施约束（2026-09-08，Approved）
+
+物理设计仍为 v2.8，无 Schema / Migration。Store / Warehouse 的 RESTRICT 外键保持原样；安全删除仅在已授权目标事务中清除其 role_stores / role_warehouses，并保留其他业务外键的强制保护、用户、角色及审计历史。分类 parent_category_id 自引用与 category_level 范围约束不变，由正式 Repository 事务锁与祖先链验证保证禁止循环、派生层级及子树同步。

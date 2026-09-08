@@ -16,6 +16,11 @@ import {
   type MasterDataRepository,
   type MasterDataResourceKey,
 } from "@violin-erp/api";
+import {
+  lockCategoryHierarchy,
+  categoryLevelForParent,
+  syncDescendantLevels,
+} from "./category-hierarchy.js";
 import { initializeMasterDataScope } from "./initialize-master-data-scope.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
 import { getPrismaClient } from "../client.js";
@@ -61,78 +66,83 @@ const DELETABLE_RESOURCES = new Set<MasterDataResourceKey>([
   "suppliers",
   "manufacturers",
   "warehouses",
+  "stores",
 ]);
 
-const REFERENCE_CHECKS: Readonly<Record<MasterDataResourceKey, readonly ReferenceCheck[]>> = {
-  brands: [{ model: "products", field: "brand_id" }],
-  "ecommerce-platforms": [],
-  "product-categories": [
-    { model: "product_categories", field: "parent_category_id" },
-    { model: "products", field: "category_id" },
-  ],
-  products: [
-    { model: "skus", field: "product_id" },
-    { model: "product_manufacturers", field: "product_id" },
-    { model: "product_suppliers", field: "product_id" },
-  ],
-  skus: [
-    { model: "inventories", field: "sku_id" },
-    { model: "inventory_transactions", field: "sku_id" },
-    { model: "purchase_order_items", field: "sku_id" },
-    { model: "production_order_items", field: "sku_id" },
-    { model: "inspection_order_items", field: "sku_id" },
-    { model: "inbound_order_items", field: "sku_id" },
-    { model: "outbound_order_items", field: "sku_id" },
-    { model: "inventory_adjustment_items", field: "sku_id" },
-    { model: "cross_border_shipment_items", field: "sku_id" },
-    { model: "sales_return_items", field: "sku_id" },
-    { model: "transfer_order_items", field: "sku_id" },
-    { model: "stock_count_items", field: "sku_id" },
-    { model: "damage_report_items", field: "sku_id" },
-    { model: "purchase_return_items", field: "sku_id" },
-    { model: "production_completion_record_items", field: "sku_id" },
-    { model: "import_task_items", field: "matched_sku_id" },
-    { model: "inventory_alerts", field: "sku_id" },
-  ],
-  suppliers: [
-    { model: "purchase_orders", field: "supplier_id" },
-    { model: "purchase_payments", field: "supplier_id" },
-    { model: "purchase_returns", field: "supplier_id" },
-    { model: "inbound_orders", field: "supplier_id" },
-    { model: "product_suppliers", field: "supplier_id" },
-  ],
-  manufacturers: [
-    { model: "production_orders", field: "manufacturer_id" },
-    { model: "production_payments", field: "manufacturer_id" },
-    { model: "inbound_orders", field: "manufacturer_id" },
-    { model: "product_manufacturers", field: "manufacturer_id" },
-    { model: "warehouses", field: "manufacturer_id" },
-  ],
-  warehouses: [
-    { model: "inventories", field: "warehouse_id" },
-    { model: "inventory_transactions", field: "warehouse_id" },
-    { model: "inbound_orders", field: "warehouse_id" },
-    { model: "inspection_orders", field: "inspection_warehouse_id" },
-    { model: "outbound_orders", field: "warehouse_id" },
-    { model: "inventory_adjustments", field: "warehouse_id" },
-    { model: "cross_border_shipments", field: "source_warehouse_id" },
-    { model: "cross_border_shipments", field: "transit_warehouse_id" },
-    { model: "cross_border_shipments", field: "destination_warehouse_id" },
-    { model: "transfer_orders", field: "source_warehouse_id" },
-    { model: "transfer_orders", field: "transit_warehouse_id" },
-    { model: "transfer_orders", field: "destination_warehouse_id" },
-    { model: "stock_counts", field: "warehouse_id" },
-    { model: "damage_reports", field: "warehouse_id" },
-    { model: "sales_returns", field: "return_warehouse_id" },
-    { model: "purchase_returns", field: "return_warehouse_id" },
-    { model: "import_tasks", field: "warehouse_id" },
-    { model: "import_task_items", field: "matched_warehouse_id" },
-    { model: "inventory_alerts", field: "warehouse_id" },
-    { model: "production_completion_records", field: "warehouse_id" },
-    { model: "role_warehouses", field: "warehouse_id" },
-  ],
-  stores: [],
-};
+export const REFERENCE_CHECKS: Readonly<Record<MasterDataResourceKey, readonly ReferenceCheck[]>> =
+  {
+    brands: [{ model: "products", field: "brand_id" }],
+    "ecommerce-platforms": [],
+    "product-categories": [
+      { model: "product_categories", field: "parent_category_id" },
+      { model: "products", field: "category_id" },
+    ],
+    products: [
+      { model: "skus", field: "product_id" },
+      { model: "product_manufacturers", field: "product_id" },
+      { model: "product_suppliers", field: "product_id" },
+    ],
+    skus: [
+      { model: "inventories", field: "sku_id" },
+      { model: "inventory_transactions", field: "sku_id" },
+      { model: "purchase_order_items", field: "sku_id" },
+      { model: "production_order_items", field: "sku_id" },
+      { model: "inspection_order_items", field: "sku_id" },
+      { model: "inbound_order_items", field: "sku_id" },
+      { model: "outbound_order_items", field: "sku_id" },
+      { model: "inventory_adjustment_items", field: "sku_id" },
+      { model: "cross_border_shipment_items", field: "sku_id" },
+      { model: "sales_return_items", field: "sku_id" },
+      { model: "transfer_order_items", field: "sku_id" },
+      { model: "stock_count_items", field: "sku_id" },
+      { model: "damage_report_items", field: "sku_id" },
+      { model: "purchase_return_items", field: "sku_id" },
+      { model: "production_completion_record_items", field: "sku_id" },
+      { model: "import_task_items", field: "matched_sku_id" },
+      { model: "inventory_alerts", field: "sku_id" },
+    ],
+    suppliers: [
+      { model: "purchase_orders", field: "supplier_id" },
+      { model: "purchase_payments", field: "supplier_id" },
+      { model: "purchase_returns", field: "supplier_id" },
+      { model: "inbound_orders", field: "supplier_id" },
+      { model: "product_suppliers", field: "supplier_id" },
+    ],
+    manufacturers: [
+      { model: "production_orders", field: "manufacturer_id" },
+      { model: "production_payments", field: "manufacturer_id" },
+      { model: "inbound_orders", field: "manufacturer_id" },
+      { model: "product_manufacturers", field: "manufacturer_id" },
+      { model: "warehouses", field: "manufacturer_id" },
+    ],
+    warehouses: [
+      { model: "inventories", field: "warehouse_id" },
+      { model: "inventory_transactions", field: "warehouse_id" },
+      { model: "inbound_orders", field: "warehouse_id" },
+      { model: "inspection_orders", field: "inspection_warehouse_id" },
+      { model: "outbound_orders", field: "warehouse_id" },
+      { model: "inventory_adjustments", field: "warehouse_id" },
+      { model: "cross_border_shipments", field: "source_warehouse_id" },
+      { model: "cross_border_shipments", field: "transit_warehouse_id" },
+      { model: "cross_border_shipments", field: "destination_warehouse_id" },
+      { model: "transfer_orders", field: "source_warehouse_id" },
+      { model: "transfer_orders", field: "transit_warehouse_id" },
+      { model: "transfer_orders", field: "destination_warehouse_id" },
+      { model: "stock_counts", field: "warehouse_id" },
+      { model: "damage_reports", field: "warehouse_id" },
+      { model: "sales_returns", field: "return_warehouse_id" },
+      { model: "purchase_returns", field: "return_warehouse_id" },
+      { model: "import_tasks", field: "warehouse_id" },
+      { model: "import_task_items", field: "matched_warehouse_id" },
+      { model: "inventory_alerts", field: "warehouse_id" },
+      { model: "production_completion_records", field: "warehouse_id" },
+    ],
+    stores: [
+      { model: "outbound_orders", field: "store_id" },
+      { model: "sales_returns", field: "store_id" },
+      { model: "import_tasks", field: "store_id" },
+    ],
+  };
 
 const CAMEL_BOUNDARY = /[A-Z]/g;
 const SNAKE_BOUNDARY = /_([a-z])/g;
@@ -599,10 +609,18 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
   ): Promise<MasterDataRecord> {
     try {
       const createWithClient = async (client: PrismaClient) => {
+        if (resource === "product-categories") await lockCategoryHierarchy(client);
+        const categoryData =
+          resource === "product-categories"
+            ? {
+                ...data,
+                categoryLevel: await categoryLevelForParent(client, data.parentCategoryId),
+              }
+            : data;
         const dataWithCode = await this.#codeGeneration.applyMasterDataCode(
           client as never,
           resource,
-          data,
+          categoryData,
         );
         await validateActiveRelations(client, resource, dataWithCode);
         const record = await delegate(client, resource).create({
@@ -704,6 +722,15 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
     actorUserId: string,
   ): Promise<MasterDataDeleteOutcome> {
     if (!DELETABLE_RESOURCES.has(resource)) return { status: "unsupported" };
+    if (resource === "product-categories") await lockCategoryHierarchy(this.#client);
+    const scopedDelete = resource === "stores" || resource === "warehouses";
+    if (scopedDelete) {
+      // Fixed table names; FK writers must wait for this transaction before adding references.
+      await this.#client.$queryRawUnsafe(
+        `SELECT id FROM ${RESOURCE_MODELS[resource]} WHERE id = $1::uuid FOR UPDATE`,
+        id,
+      );
+    }
     const model = delegate(this.#client, resource);
     const scope = dataScopeWhere(resource, actorUserId, "manage");
     const record = await model.findFirst({
@@ -714,7 +741,14 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
     if (isSystemMasterData(resource, record)) return { status: "system" };
     const reference = await findBusinessReference(this.#client, resource, id);
     if (reference) return { status: "referenced", reference };
-    const result = await model.deleteMany({ where: { AND: [{ id }, scope] } });
+    if (resource === "stores")
+      await this.#client.role_stores.deleteMany({ where: { store_id: id } });
+    if (resource === "warehouses")
+      await this.#client.role_warehouses.deleteMany({ where: { warehouse_id: id } });
+    // Scope was checked under the row lock, before removing only this object’s grants.
+    const result = await model.deleteMany({
+      where: scopedDelete ? { id } : { AND: [{ id }, scope] },
+    });
     return result.count === 1 ? { status: "deleted", id } : { status: "not_found" };
   }
 
@@ -724,8 +758,38 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
     data: Readonly<Record<string, unknown>>,
     updatedAt: string,
     actorUserId: string,
+    requestContext?: RequestContext,
   ): Promise<MasterDataRecord | null> {
     try {
+      if (resource === "product-categories") {
+        return await this.#client.$transaction(async (transaction) => {
+          const client = transaction as PrismaClient;
+          await lockCategoryHierarchy(client);
+          const existing = await client.product_categories.findUnique({
+            where: { id },
+            select: { parent_category_id: true },
+          });
+          if (!existing) return null;
+          const parentId =
+            data.parentCategoryId === undefined
+              ? existing.parent_category_id
+              : data.parentCategoryId;
+          const level = await categoryLevelForParent(client, parentId, id);
+          await validateActiveRelations(client, resource, data);
+          const result = await client.product_categories.updateMany({
+            where: { id, updated_at: new Date(updatedAt) },
+            data: {
+              ...dataToPrisma(data),
+              category_level: level,
+              updated_at: new Date(),
+              updated_by: actorUserId,
+            },
+          });
+          if (result.count !== 1) return null;
+          await syncDescendantLevels(client, id, level, actorUserId, requestContext);
+          return new PrismaMasterDataRepository(client).findById(resource, id, actorUserId);
+        });
+      }
       await validateActiveRelations(this.#client, resource, data);
       const model = delegate(this.#client, resource);
       const result = await model.updateMany({

@@ -86,7 +86,6 @@ describe("Prisma Master Data repository", () => {
     ["manufacturers", "manufacturers", "warehouses", "manufacturer_id", "仓库关联"],
     ["suppliers", "suppliers", "product_suppliers", "supplier_id", "产品与供应商关联"],
     ["products", "products", "product_manufacturers", "product_id", "产品与厂家关联"],
-    ["warehouses", "warehouses", "role_warehouses", "warehouse_id", "角色仓库范围关联"],
   ] as const)(
     "returns a confirmed reference label for %s via %s/%s",
     async (resource, model, referenceModel, field, label) => {
@@ -615,7 +614,7 @@ describe("Prisma Master Data repository", () => {
       purchase_orders: { count: zeroCount },
       purchase_payments: { count: zeroCount },
       purchase_returns: { count: zeroCount },
-      role_warehouses: { count: zeroCount },
+      role_warehouses: { count: zeroCount, deleteMany: vi.fn().mockResolvedValue({ count: 1 }) },
       sales_returns: { count: zeroCount },
       stock_counts: { count: zeroCount },
       suppliers: {

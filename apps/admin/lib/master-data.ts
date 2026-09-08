@@ -485,8 +485,10 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
       field("address", "地址", false, "text", { group: "地址信息" }),
       field("contactName", "联系人", false, "text", { group: "联系方式" }),
       field("contactPhone", "联系电话", false, "text", { group: "联系方式" }),
-      field("allowsAvailableStock", "允许形成可用库存", true, "boolean", {
+      field("allowsAvailableStock", "计入可用库存", true, "boolean", {
         group: "库存规则",
+        helpText:
+          "开启后，该仓库中的库存计入可销售、可领用的可用库存。在途、待检、不良品等仓库通常建议关闭。",
       }),
       field("sortOrder", "显示顺序", true, "number", {
         defaultValue: "0",
@@ -502,6 +504,7 @@ export const MASTER_WORKBENCHES: readonly WorkbenchDefinition[] = [
   },
   {
     apiPath: "/api/v1/stores",
+    deleteSupported: true,
     codeField: "storeCode",
     createPermission: "master.store.create",
     disablePermission: "master.store.disable",

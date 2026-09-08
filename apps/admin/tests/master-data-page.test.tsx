@@ -152,6 +152,7 @@ describe("Master Data PC pages", () => {
       "manufacturers",
       "suppliers",
       "warehouses",
+      "stores",
     ]);
     for (const definition of MASTER_WORKBENCHES) {
       if (deletable.includes(definition.key)) {

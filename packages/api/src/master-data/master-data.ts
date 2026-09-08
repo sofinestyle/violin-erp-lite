@@ -64,6 +64,8 @@ function deleteBlockingMessage(
   if (resource === "product-categories" && reference?.label === "子分类") {
     return "该分类下仍有子分类，无法删除，请先处理子分类或停用该分类。";
   }
+  if (resource === "stores") return "该店铺已被业务记录引用，无法删除，请停用。";
+  if (resource === "warehouses") return "该仓库存在库存或历史业务记录，无法删除，请停用。";
   if (resource === "brands") return "该品牌已被产品引用，无法删除，请停用。";
   if (reference) {
     const name =
@@ -147,6 +149,7 @@ export type MasterDataRepository = Readonly<{
     data: Readonly<Record<string, unknown>>,
     updatedAt: string,
     actorUserId: string,
+    requestContext?: RequestContext,
   ) => Promise<MasterDataRecord | null>;
 }>;
 
@@ -681,7 +684,14 @@ export class MasterDataService {
     const { user } = requirePermission(authentication, permissionFor(resource, "update"));
     const { data, updatedAt } = validateMasterDataInput(resource, input, "update");
     await this.#assertProductModelUnique(resource, data, id, user.userId);
-    const record = await this.#repository.update(resource, id, data, updatedAt!, user.userId);
+    const record = await this.#repository.update(
+      resource,
+      id,
+      data,
+      updatedAt!,
+      user.userId,
+      requestContext,
+    );
     if (!record) throw new ConflictError("基础资料已被其他请求修改或不存在");
     const safeRecord = this.#sanitize(resource, record, authentication);
     await this.#audit("update", resource, safeRecord, user.userId, requestContext);
@@ -695,11 +705,14 @@ export class MasterDataService {
     requestContext: RequestContext,
   ): Promise<Readonly<{ deleted: true; id: string }>> {
     const { user } =
-      resource === "brands"
+      resource === "brands" || resource === "stores"
         ? requireAuthentication(authentication)
         : requirePermission(authentication, permissionFor(resource, "update"));
-    if (resource === "brands" && !user.roleCodes.includes("administrator")) {
-      throw new ForbiddenError("仅管理员可以删除品牌。");
+    if (
+      ["brands", "stores", "warehouses"].includes(resource) &&
+      !user.roleCodes.includes("administrator")
+    ) {
+      throw new ForbiddenError(`仅管理员可以删除${MASTER_DATA_DEFINITIONS[resource].label}。`);
     }
     const outcome = await this.#repository.delete(resource, id, user.userId, async (writer) => {
       await recordAuditEvent(

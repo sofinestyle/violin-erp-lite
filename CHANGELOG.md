@@ -11,6 +11,14 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## 2026-09-08 Manual UAT UX & Safe Delete Enhancement
+
+状态：Fixed / Pending Manual Verification，不新增 UAT 编号。CR-010 / DEC-113 Approved / Implemented：Store 增加管理员安全删除（MD-082），Warehouse 仅 Scope 允许管理员同事务清理目标范围、删除与审计，真实业务引用继续阻断；Category 父级树状显示、排除自身和后代，服务端锁内推导层级并防并发循环；仓库字段改“计入可用库存”及业务帮助，无新默认值。
+
+真实 HTTP / PostgreSQL 专项 9 项通过。浏览器 STR-000049 新增/删除和列表刷新、CAT-000054 三级分类及父级回显/排除、库存文案通过，诊断对象已正式删除。WH-000013 删除前仅 1 条角色 Scope、20 项业务 FK 均零，正式 DELETE 200，目标及 Scope 删除、成功审计 1，其他范围/角色/用户未变化。浏览器 0 error / 0 warn，无异常 5xx；1 次导航取消 Fetch 已区分。
+
+pnpm check 全部通过：513 项通过、69 项条件性集成测试默认跳过；其中本轮 9 项已启用 UX_SAFE_DELETE_UAT 单独执行并全部通过，其余 60 项条件性测试本轮未执行，不计为通过。格式、Lint、类型检查、Admin / Mini Program 构建、pnpm status:check 与 git diff --check 通过。API Health HTTP 200，application.status=ok、database.status=connected；3100 首页 200，AI 视觉平台 3000 返回正常 307，未操作 PM2。API v1.13 共 344 接口；Database / Migration / Permission Code 不变；未操作 PM2 或 AI 视觉平台，未清理历史业务。详见 [删除策略和完整验证报告](docs/quality/MASTER_DATA_DELETE_STRATEGY_REPORT.md)。待人工岗位复验，不直接 Closed。
+
 ## 2026-09-08 Manual UAT Bug Batch
 
 修复 SKU 产品异步回显、分类上级名称及中文层级展示；Warehouse / Store 创建时按 CR-009 在事务内初始化创建角色的新对象 manage 范围与审计，保存后刷新至可见列表。CR-008 将 Store externalStoreId 改为可空 VARCHAR(100)，支持平台真实编号，保持内部 STR 编码和 Platform 关联独立；迁移已部署本地 UAT。

@@ -1,7 +1,7 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.12
+version: 1.13
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -11,7 +11,9 @@ related_phase: Phase 5 / UAT-009 / UAT Master Data Delete Strategy
 
 # API Master Specification
 
-CR-008 / CR-009 于 2026-09-08 Approved / Implemented；当前 v1.12 支持可空平台店铺标识文本及 Warehouse / Store Create 正式角色范围初始化，接口数仍为 343，Permission Code 不变。
+CR-010 于 2026-09-08 Approved / Implemented。当前 v1.13 新增 MD-082 店铺安全删除，接口总数 344、基础资料 82；Store / Warehouse 仅管理员按现有 manage 范围删除，无业务引用时同事务清理该目标 Scope 并写 Audit。
+
+CR-008 / CR-009 于 2026-09-08 Approved / Implemented；v1.12 历史增量支持可空平台店铺标识文本及 Warehouse / Store Create 正式角色范围初始化，接口数仍为 343，Permission Code 不变。
 
 CR-007 已于 2026-09-08 获项目负责人批准。v1.11 扩展第 24 节至 Category / Brand / Platform / Store；接口仍为 343 个，Permission Code、Response 包装及错误码不变。
 
@@ -55,7 +57,7 @@ API Master Specification v1.8 为 Completed / Approved。CR-002 Allow Server-sid
 
 ## 3. 接口编号与数量
 
-以下表格保留 v1.8 的 341 个接口历史基线。当前 v1.12 沿用 v1.10 在该基线上增加 CR-005 的 MD-081 和 CR-006 的 PUR-030，共 343 个；当前基础资料 81 个、采购 30 个，其余模块数量不变。
+以下表格保留 v1.8 的 341 个接口历史基线。当前 v1.13 在该基线上增加 CR-005 的 MD-081、CR-006 的 PUR-030 和 CR-010 的 MD-082，共 344 个；当前基础资料 82 个、采购 30 个，其余模块数量不变。
 
 | 来源 | 模块与编号 | 数量 | 状态 |
 | --- | --- | ---: | --- |
@@ -1527,3 +1529,12 @@ Store Create / Update 的 externalStoreId 为 optional / nullable 普通字符�
 仅 Warehouse / Store Create 在同一数据库事务内为创建者当前有效、实际具备该资源 Create 权限的角色建立新对象 manage 范围；同角色成员共享，其他角色不新增范围。角色/用户/权限有效性在服务端重新核对；无合格角色或范围/审计写入失败则回滚对象和编码流水。初始化审计携带请求标识、目标对象和角色集合。Create Response 返回最终访问级别；列表、详情、业务 options 继续使用原角色范围规则。普通 Update 不初始化范围。
 
 SEC-023 / SEC-025 的常规范围替换与禁止自身提权规则不变；本次仅批准新对象初始化例外及 CR-009 指定诊断仓库 WH-000009 的一次性补齐维护。无新 API Path、Permission Code、Role 或平行 ACL。
+
+
+## CR-010 Store / Warehouse Safe Delete（2026-09-08）
+
+MD-082：DELETE /api/v1/stores/{id}，Authentication 必需，administrator 且目标 store manage 数据范围；不新增 Permission Code。成功 200 { deleted: true, id }；业务引用 409“该店铺已被业务记录引用，无法删除，请停用。”，角色拒绝 403，不可访问 404。SYS- / SYSTEM- 保持禁止。正式 Store 外键为销售出库、销售退货、导入任务和角色范围；前三类属于业务保护，最后一类仅在安全删除事务中按目标清除。
+
+Warehouse 既有 DELETE 继续要求 master.warehouse.update、manage 范围，新增 administrator 限制。库存或任何业务外键引用返回 409“该仓库存在库存或历史业务记录，无法删除，请停用。”。仅目标 role_warehouses 不阻止删除。两类删除均在目标 FOR UPDATE 行锁后检查授权和业务引用、清理目标 Scope、删除及必需 Audit，同事务提交或回滚。其他对象的 Scope、Role、User 不变。
+
+分类 Create / PATCH 沿用现有 DTO；categoryLevel 是派生值，服务器按父链计算，防止自身、后代及并发更新形成循环。结构修改使用事务级串行协调；移动分类同步子树派生层级，不改后代 parentCategoryId。沿用字段业务校验错误，不新增 API Path。

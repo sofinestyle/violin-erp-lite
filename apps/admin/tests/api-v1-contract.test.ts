@@ -10,6 +10,7 @@ describe("Frozen v1 API route boundary", () => {
     "suppliers",
     "manufacturers",
     "warehouses",
+    "stores",
     "purchase-orders",
   ])("exports DELETE for %s and preserves authentication and trace responses", async (resource) => {
     const response = await DELETE(

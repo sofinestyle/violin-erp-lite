@@ -2783,3 +2783,14 @@ Approved
 ### DEC-112 实施证据（2026-09-08）
 
 CR-008 / CR-009 均 Approved / Implemented；本地 VARCHAR(100) Migration 已部署，12 条迁移一致。Store 真实 HTTP / Browser 空值、平台文本与数字标识通过；Warehouse 新建立即可见、角色共享/隔离、下游选项及范围审计通过，WH-000009 正式补齐后停用并有两项审计。SKU / Category 回归通过；完整 pnpm check 481 通过 / 60 条件性跳过，真实专项另 4 项通过。未永久新增账号、角色或 Permission；未变更库存及历史业务关系。统一 UAT 为 Fixed / Pending Manual Verification。
+
+
+## DEC-113 Manual UAT UX & Safe Delete Enhancement
+
+状态：Approved / Implemented。Approved By：Project Owner。Approval Date：2026-09-08。
+
+负责人本次任务明确授权形成并批准 CR-010。先同步 Store MD-082、安全删除 Scope 事务规则和管理员限制，再实施代码与测试；API v1.13 共 344 个接口，数据库 v2.8 不变。分类树状选择与服务端循环保护落实既有规则；库存字段仅改中文说明，不推断默认值。本轮一个 Commit，UAT 为 Fixed / Pending Manual Verification，不新增 UAT 编号或变更 Phase / Task。
+
+DEC-113 实施证据：真实专项 9 项通过，浏览器新增/删除店铺、分类三级及父级排除、库存文案复核通过。WH-000013 仅 Scope 且无业务引用，经正式 API 删除并审计；其他范围、角色、用户不变。数据库无迁移，API v1.13；本轮状态 Fixed / Pending Manual Verification，待人工岗位复验。
+
+DEC-113 完整检查：pnpm check 513 通过 / 69 条件性跳过，真实专项 9 项单独通过；状态治理一致，Health HTTP 200，AI 视觉平台正常。

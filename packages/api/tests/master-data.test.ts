@@ -448,6 +448,34 @@ describe("Master Data API contracts", () => {
     });
   });
 
+  it.each(["stores", "warehouses"] as const)(
+    "rejects ordinary %s deletion even with update permission",
+    async (resource) => {
+      const store = repository();
+      const auth = authentication([
+        `${MASTER_DATA_DEFINITIONS[resource].permissionResource}.update`,
+      ]);
+      const ordinary = { user: { ...auth.user, roleCodes: ["sales"] } } as AuthenticationContext;
+      await expect(
+        new MasterDataService(store, new InMemoryAuditWriter()).delete(
+          resource,
+          RECORD_ID,
+          ordinary,
+          requestContext,
+        ),
+      ).rejects.toMatchObject({ httpStatus: 403 });
+      expect(store.delete).not.toHaveBeenCalled();
+      await expect(
+        new MasterDataService(store, new InMemoryAuditWriter()).delete(
+          resource,
+          RECORD_ID,
+          auth,
+          requestContext,
+        ),
+      ).resolves.toMatchObject({ deleted: true });
+    },
+  );
+
   it("requires administrator role independently of edit permission and audits successful deletion", async () => {
     const writer = new InMemoryAuditWriter();
     const store = repository(writer);
@@ -568,8 +596,8 @@ describe("Master Data API contracts", () => {
     ],
     ["manufacturers", { label: "生产订单记录" }, "该厂家存在生产订单记录，无法删除，请停用。"],
     ["manufacturers", { label: "仓库关联" }, "该厂家存在仓库关联，无法删除，请停用。"],
-    ["warehouses", { label: "库存记录" }, "该仓库存在库存记录，无法删除，请停用。"],
-    ["warehouses", { label: "角色仓库范围关联" }, "该仓库存在角色仓库范围关联，无法删除，请停用。"],
+    ["warehouses", { label: "库存记录" }, "该仓库存在库存或历史业务记录，无法删除，请停用。"],
+    ["stores", { label: "历史业务记录" }, "该店铺已被业务记录引用，无法删除，请停用。"],
   ])(
     "returns the confirmed %s blocking reason without successful audit",
     async (resource, reference, message) => {
@@ -810,6 +838,7 @@ describe("Master Data API contracts", () => {
         expect.any(Object),
         "2026-07-23T00:00:00.000Z",
         USER_ID,
+        requestContext,
       );
     },
   );
