@@ -17,6 +17,7 @@ import { PrismaAuditWriter } from "../audit/prisma-audit-writer.js";
 import {
   CodeGenerationService,
   isAutomaticCodeResource,
+  requiresCodeTransaction,
 } from "../code-generation/code-generation-service.js";
 
 type UnknownRecord = Record<string, unknown>;
@@ -607,7 +608,7 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
       const shouldGenerateCode =
         isAutomaticCodeResource(resource) &&
         !(typeof data[codeField] === "string" && data[codeField].trim());
-      if (shouldGenerateCode) {
+      if (shouldGenerateCode || requiresCodeTransaction(resource)) {
         return await this.#client.$transaction(async (transaction) =>
           createWithClient(transaction as PrismaClient),
         );

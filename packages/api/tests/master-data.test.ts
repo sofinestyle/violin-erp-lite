@@ -77,9 +77,7 @@ function updateInputFor(
 ): Record<string, unknown> {
   const result = { ...input, updatedAt: "2026-07-23T00:00:00.000Z" };
   const codeField = MASTER_DATA_DEFINITIONS[resource].codeField;
-  if (["products", "skus", "suppliers", "manufacturers", "warehouses"].includes(resource)) {
-    delete result[codeField];
-  }
+  delete result[codeField];
   return result;
 }
 
@@ -194,6 +192,58 @@ describe("Master Data API contracts", () => {
       ),
     ).rejects.toMatchObject({ code: "PERMISSION_FORBIDDEN" });
   });
+
+  it.each([
+    [
+      "product-categories",
+      "categoryCode",
+      { categoryName: "UAT-AUTO-分类", categoryLevel: 1, sortOrder: 0 },
+    ],
+    ["brands", "brandCode", { brandName: "UAT-AUTO-BRAND" }],
+    [
+      "ecommerce-platforms",
+      "platformCode",
+      { platformName: "UAT-AUTO-PLATFORM", platformType: "domestic", isCrossBorder: false },
+    ],
+    [
+      "stores",
+      "storeCode",
+      {
+        storeName: "UAT-AUTO-STORE",
+        platformId: RECORD_ID,
+        countryCode: "US",
+        currencyCode: "USD",
+      },
+    ],
+  ] as const)(
+    "validates Phase 2 optional and immutable code contract for %s",
+    (resource, field, payload) => {
+      for (const value of [undefined, null, "", "  "]) {
+        expect(
+          validateMasterDataInput(resource, { ...payload, [field]: value }, "create").data,
+        ).not.toHaveProperty(field);
+      }
+      expect(
+        validateMasterDataInput(resource, { ...payload, [field]: "LEGACY-001" }, "create").data[
+          field
+        ],
+      ).toBe("LEGACY-001");
+      for (const value of [123, {}, "X".repeat(51)]) {
+        expect(() =>
+          validateMasterDataInput(resource, { ...payload, [field]: value }, "create"),
+        ).toThrow();
+      }
+      for (const value of ["LEGACY-001", "NEW-001", null, ""]) {
+        expect(() =>
+          validateMasterDataInput(
+            resource,
+            { [field]: value, updatedAt: new Date().toISOString() },
+            "update",
+          ),
+        ).toThrow();
+      }
+    },
+  );
 
   it("allows first-stage automatic code resources to omit code on create", () => {
     expect(

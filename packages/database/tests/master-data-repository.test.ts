@@ -4,7 +4,11 @@ import { PrismaMasterDataRepository } from "../src/index";
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 
 function testRepository(client: unknown) {
-  const delegates = client as Record<string, unknown>;
+  const delegates = {
+    $queryRawUnsafe: vi.fn().mockResolvedValue([{ id: USER_ID, current_value: 0, version: 0 }]),
+    $executeRawUnsafe: vi.fn().mockResolvedValue(1),
+    ...(client as Record<string, unknown>),
+  };
   return new PrismaMasterDataRepository({
     ...delegates,
     $transaction: async (work: (tx: unknown) => Promise<unknown>) => work(delegates),

@@ -1,15 +1,17 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.10
+version: 1.11
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-09-07
+updated_date: 2026-09-08
 related_phase: Phase 5 / UAT-009 / UAT Master Data Delete Strategy
 ---
 
 # API Master Specification
+
+CR-007 已于 2026-09-08 获项目负责人批准。v1.11 扩展第 24 节至 Category / Brand / Platform / Store；接口仍为 343 个，Permission Code、Response 包装及错误码不变。
 
 CR-006 已于 2026-09-07 获项目负责人批准。v1.10 在第 26 节增加采购订单受控删除 PUR-030；不修改 Database、Migration、Permission Code、既有响应或错误码。
 
@@ -51,7 +53,7 @@ API Master Specification v1.8 为 Completed / Approved。CR-002 Allow Server-sid
 
 ## 3. 接口编号与数量
 
-以下表格保留 v1.8 的 341 个接口历史基线。当前 v1.10 在该基线上增加 CR-005 的 MD-081 和 CR-006 的 PUR-030，共 343 个；当前基础资料 81 个、采购 30 个，其余模块数量不变。
+以下表格保留 v1.8 的 341 个接口历史基线。当前 v1.11 沿用 v1.10 在该基线上增加 CR-005 的 MD-081 和 CR-006 的 PUR-030，共 343 个；当前基础资料 81 个、采购 30 个，其余模块数量不变。
 
 | 来源 | 模块与编号 | 数量 | 状态 |
 | --- | --- | ---: | --- |
@@ -1354,18 +1356,20 @@ CR-002 Allow Server-side Code Generation 已批准并实施。API v1.7 只调整
 | Manufacturer | `MD-*` | `manufacturerCode` | `MFR-000001` |
 | Warehouse | `MD-*` | `warehouseCode` | `WH-000001` |
 
-第一阶段不调整：
+### 24.1.1 第二阶段范围（CR-007）
 
-- Category `categoryCode`；
-- Brand `brandCode`；
-- Platform `platformCode`；
-- Store `storeCode`。
+| 对象 | Create API | optional 编码字段 | 生成规则 |
+| --- | --- | --- | --- |
+| Category | `POST /api/v1/product-categories` | `categoryCode` | `CAT-000001` |
+| Brand | `POST /api/v1/brands` | `brandCode` | `BRD-000001` |
+| Platform | `POST /api/v1/ecommerce-platforms` | `platformCode` | `PLT-000001` |
+| Store | `POST /api/v1/stores` | `storeCode` | `STR-000001` |
 
-上述对象继续要求客户端按既有 API Contract 提交编码字段。
+上述四类同样适用下列 Create / Update 规则。Store 使用全局唯一流水，platformId 关联和 externalStoreId 外部标识语义及既有类型保持不变。流水在业务事务内推进，历史占用跳过，六位空间耗尽返回既有字段校验错误。
 
 ### 24.2 Create DTO 兼容规则
 
-第一阶段对象创建时：
+第一、第二阶段对象创建时：
 
 1. 客户端不提交编码字段、提交 `null` 或提交空字符串时，服务端必须生成编码；
 2. 客户端提交合法历史编码时，服务端保持兼容并使用客户端编码；
@@ -1375,7 +1379,7 @@ CR-002 Allow Server-side Code Generation 已批准并实施。API v1.7 只调整
 
 ### 24.3 Update DTO 规则
 
-自动编码第一阶段对象创建后，普通更新不得修改编码字段。若请求体显式提交第一阶段自动编码字段，服务端必须返回字段级校验错误。历史已有编码继续作为只读业务标识展示，不被自动重写。
+自动编码第一、第二阶段对象创建后，普通更新不得修改编码字段。若请求体显式提交自动编码字段，服务端必须返回字段级校验错误。历史已有编码继续作为只读业务标识展示，不被自动重写。
 
 ### 24.4 SKU 组合编码规则
 

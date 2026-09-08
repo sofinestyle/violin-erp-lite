@@ -11,6 +11,14 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## [Unreleased] - 2026-09-08
+
+### Added
+
+- 按 Approved CR-007 / DEC-111 扩展四类基础资料自动编码：Category CAT、Brand BRD、Platform PLT、Store STR；Create 编码可选、编辑只读，兼容历史编码。复用统一服务、事务行锁和既有唯一约束，跳过历史占用号码，六位耗尽明确拒绝。
+- 数据 Migration 幂等初始化四条规则和四条流水，不新增 Schema、API Path、Permission Code 或编号管理后台；新增契约、前端、真实 PostgreSQL 并发与回滚测试。正式 HTTP / 浏览器 E2E 已通过，UAT 为 Automated Verification Passed / Pending Manual Spot Check。
+- 修复本批E2E发现的分类自定义文本入口及店铺编辑平台异步回显；12条测试资料通过正式API删除或停用，未直接SQL删除。
+
 ## [Unreleased] - 2026-09-07
 
 ### Added

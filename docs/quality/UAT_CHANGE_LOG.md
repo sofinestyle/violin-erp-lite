@@ -11,6 +11,14 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Change Log
 
+## 2026-09-08 Automatic Code Generation Phase 2（CR-007）
+
+状态：Automated Verification Passed / Pending Manual Spot Check。Approved CR-007 / DEC-111 扩展四类自动编码，API_SPEC v1.11，复用既有编号表及事务行锁，无新Schema、API Path或Permission Code。
+
+有效UAT账号正式HTTP登录/Session及浏览器登录通过。Category / Brand / Platform / Store HTTP编码分别为CAT-000023、BRD-000023、PLT-000026、STR-000021，数据库一致；四类PATCH改码拒绝，显式旧码沿用、重复409拒绝。浏览器四类实际创建、列表编码及编辑只读通过，Store关联正确且外部平台标识区分清楚。修复分类自定义文本入口及Store平台异步回显；控制台0 error，两次开发热更新warn，无应用新增异常，0个5xx。
+
+完整pnpm check、状态与diff检查通过；前序真实PostgreSQL五项专项通过。本次12条E2E记录经正式API删除6条、停用6条，无直接SQL删除。三条测试店铺范围关联随停用店铺保留，未修改既有业务范围。详见 [专项报告](UAT_CODE_GENERATION_PHASE_2_VERIFICATION_REPORT.md)。不自动Verified / Closed。
+
 ## 2026-09-08 Master Data Delete Blocking Message UX Enhancement
 
 复用既有引用预检查，补充内部业务摘要；产品命中 SKU 后仅增加两次整组存在性查询，说明 SKU 数量及库存/历史业务引用，其他基础资料返回对象化原因。保留并发 FK 保护、权限、系统前缀、停用引用、二次确认和原子审计，不修改删除条件、Database / Migration、公开 API Contract 或 Permission，不新增 UAT 编号。

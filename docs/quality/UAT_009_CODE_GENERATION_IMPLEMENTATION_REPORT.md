@@ -2,9 +2,9 @@
 
 ## 1. CR执行范围
 
-本报告记录 UAT-009 自动编码第一阶段实施结果。
+本报告记录 UAT-009 自动编码两阶段实施范围。第一阶段历史证据保留；第二阶段当前验证结果以文末补充及专项报告为准。
 
-已实施：
+Phase 1 已实施：
 
 - Product Code：`PRD-000001`
 - SKU Code：`型号-尺寸-颜色`，例如 `L2-44-BK`
@@ -12,18 +12,19 @@
 - Manufacturer Code：`MFR-000001`
 - Warehouse Code：`WH-000001`
 
-暂不实施：
+Phase 2 已实施（CR-007，2026-09-08）：
 
-- Category Code
-- Brand Code
-- Platform Code
-- Store Code
+- Category Code：`CAT-000001`
+- Brand Code：`BRD-000001`
+- Platform Code：`PLT-000001`
+- Store Code：`STR-000001`
 
 本次实施依据：
 
 - `CR-001_CODE_GENERATION_BUSINESS_RULE.md`
 - `CR-002_CODE_GENERATION_API_CHANGE.md`
 - `CR-003_CODE_GENERATION_DATABASE_CHANGE.md`
+- `CR-007_CODE_GENERATION_PHASE_2_EXTENSION.md`
 
 ## 2. Database变化
 
@@ -153,7 +154,7 @@ PC Admin 基础资料页面已调整：
 - 导入和旧客户端仍可提交已有合法编码；
 - 不自动重写历史编码；
 - 不新增编号管理后台；
-- Category、Brand、Platform、Store 编码仍按现有规则人工维护。
+- Category、Brand、Platform、Store 已按 CR-007 接入自动编码；仍兼容显式合法历史编码。
 
 ## 8. 人工验证步骤
 
@@ -235,3 +236,13 @@ Automated Pass / Pending Final Manual Spot Check
 ```
 
 待项目负责人完成最终人工抽查后，再决定是否进入 Verified / Closed。
+
+## 11. 2026-09-08 第二阶段实施及验证边界
+
+CR-007 / DEC-111 扩展批准四类对象；API_SPEC v1.11 同步 Create 编码可选和 Update 不可改码，接口数量仍为 343。数据库结构保持 v2.7，仅 forward-only Migration 幂等增加四条规则和四条流水，已部署本地 UAT。
+
+真实 Prisma / PostgreSQL 验证已通过：每类五个并发创建、两个独立客户端、显式旧码、重复拒绝、大小写历史占用跳号、失败事务回滚及既有编码比对。有效UAT账号已通过正式HTTP登录与Session校验；四类HTTP创建、PATCH改码拒绝、旧码兼容及重复拒绝全部通过。浏览器实际新增、列表编码展示、编辑只读及Store平台关联复验通过，console error为0，无5xx。
+
+HTTP编码：CAT-000023、BRD-000023、PLT-000026、STR-000021；浏览器编码：CAT-000024、BRD-000024、PLT-000027、STR-000022。本次12条E2E测试资料经正式API安全删除6条、停用6条，无直接SQL删除。修复分类自定义名称录入及Store编辑平台异步回显缺口。
+
+当前状态：Automated Verification Passed / Pending Manual Spot Check。详细证据见 [自动编码第二阶段验证报告](UAT_CODE_GENERATION_PHASE_2_VERIFICATION_REPORT.md)，不自动标记 Verified / Closed。

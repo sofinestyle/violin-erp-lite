@@ -24,6 +24,49 @@ function sequentialClient(currentValue = 0) {
 }
 
 describe("CodeGenerationService", () => {
+  it.each([
+    ["product-categories", "category", "categoryCode", "CAT"],
+    ["brands", "brand", "brandCode", "BRD"],
+    ["ecommerce-platforms", "platform", "platformCode", "PLT"],
+    ["stores", "store", "storeCode", "STR"],
+  ] as const)(
+    "locks, skips historical occupancy and serializes explicit codes for %s",
+    async (resource, type, field, prefix) => {
+      const query = vi
+        .fn()
+        .mockResolvedValueOnce([{ code_type: type, prefix, format: "{prefix}-{seq:000000}" }])
+        .mockResolvedValueOnce([{ id: "sequence", current_value: 0, version: 0 }])
+        .mockResolvedValueOnce([{ id: "historical" }])
+        .mockResolvedValueOnce([]);
+      const execute = vi.fn().mockResolvedValue(1);
+      const client = { $queryRawUnsafe: query, $executeRawUnsafe: execute };
+      const service = new CodeGenerationService();
+      expect(await service.applyMasterDataCode(client, resource, {})).toEqual({
+        [field]: `${prefix}-000002`,
+      });
+      expect(query.mock.calls[1]![0]).toContain("FOR UPDATE");
+      expect(execute).toHaveBeenCalledWith(
+        expect.stringContaining("UPDATE code_sequences"),
+        2,
+        "sequence",
+      );
+      query.mockResolvedValueOnce([{ id: "sequence" }]);
+      expect(await service.applyMasterDataCode(client, resource, { [field]: "LEGACY" })).toEqual({
+        [field]: "LEGACY",
+      });
+      expect(query.mock.calls[4]![0]).toContain("FOR UPDATE");
+      expect(execute).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("rejects exhausted Phase 2 six-digit space without advancing the sequence", async () => {
+    const client = sequentialClient(999999);
+    await expect(
+      new CodeGenerationService().applyMasterDataCode(client, "brands", {}),
+    ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
+    expect(client.execute).not.toHaveBeenCalled();
+  });
+
   it("generates sequential Product codes with locked sequence update", async () => {
     const client = sequentialClient(0);
     const service = new CodeGenerationService();

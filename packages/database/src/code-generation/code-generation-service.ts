@@ -8,7 +8,15 @@ type QueryClient = Readonly<{
   };
 }>;
 
-type SequentialCodeType = "manufacturer" | "product" | "supplier" | "warehouse";
+type SequentialCodeType =
+  | "manufacturer"
+  | "product"
+  | "supplier"
+  | "warehouse"
+  | "category"
+  | "brand"
+  | "platform"
+  | "store";
 
 type CodeRuleRow = Readonly<{
   code_type: string;
@@ -23,6 +31,10 @@ type CodeSequenceRow = Readonly<{
 }>;
 
 const RESOURCE_CODE_TYPE: Readonly<Partial<Record<MasterDataResourceKey, SequentialCodeType>>> = {
+  brands: "brand",
+  "product-categories": "category",
+  "ecommerce-platforms": "platform",
+  stores: "store",
   manufacturers: "manufacturer",
   products: "product",
   suppliers: "supplier",
@@ -30,12 +42,29 @@ const RESOURCE_CODE_TYPE: Readonly<Partial<Record<MasterDataResourceKey, Sequent
 };
 
 const RESOURCE_CODE_FIELD: Readonly<Partial<Record<MasterDataResourceKey, string>>> = {
+  brands: "brandCode",
+  "product-categories": "categoryCode",
+  "ecommerce-platforms": "platformCode",
+  stores: "storeCode",
   manufacturers: "manufacturerCode",
   products: "productCode",
   skus: "skuCode",
   suppliers: "supplierCode",
   warehouses: "warehouseCode",
 };
+
+// Static identifiers only: no request-controlled SQL table or column names.
+const PHASE_TWO_TARGETS: Partial<Record<SequentialCodeType, readonly [string, string]>> = {
+  category: ["product_categories", "category_code"],
+  brand: ["brands", "brand_code"],
+  platform: ["ecommerce_platforms", "platform_code"],
+  store: ["stores", "store_code"],
+};
+
+export function requiresCodeTransaction(resource: MasterDataResourceKey): boolean {
+  const type = RESOURCE_CODE_TYPE[resource];
+  return Boolean(type && PHASE_TWO_TARGETS[type]);
+}
 
 const SIZE_CODES: Readonly<Record<string, string>> = {
   "1/10": "110",
@@ -181,7 +210,20 @@ export class CodeGenerationService {
     data: Readonly<Record<string, unknown>>,
   ): Promise<Readonly<Record<string, unknown>>> {
     const codeField = RESOURCE_CODE_FIELD[resource];
-    if (!codeField || hasUsableCode(data, codeField)) return data;
+    if (!codeField) return data;
+    if (hasUsableCode(data, codeField)) {
+      const type = RESOURCE_CODE_TYPE[resource];
+      if (type && PHASE_TWO_TARGETS[type]) {
+        // Serialize explicit imports with generation, including future-format legacy codes.
+        const raw = requireQueryClient(client);
+        const rows = await raw.$queryRawUnsafe<CodeSequenceRow[]>(
+          "SELECT id, current_value, version FROM code_sequences WHERE lower(code_type) = lower($1) FOR UPDATE",
+          type,
+        );
+        if (!rows[0]) throw new ValidationError("编码流水未初始化");
+      }
+      return data;
+    }
 
     if (resource === "skus") {
       return { ...data, skuCode: await this.#generateSkuCode(client, data) };
@@ -219,7 +261,22 @@ export class CodeGenerationService {
       ]);
     }
 
-    const nextValue = toInteger(sequence.current_value) + 1;
+    let nextValue = toInteger(sequence.current_value) + 1;
+    const target = PHASE_TWO_TARGETS[codeType];
+    if (target) {
+      for (;;) {
+        if (!Number.isSafeInteger(nextValue) || nextValue > 999999) {
+          throw new ValidationError("六位编码流水已耗尽，请联系管理员");
+        }
+        const candidate = formatSequentialCode(rule, nextValue);
+        const occupied = await raw.$queryRawUnsafe<{ id: string }[]>(
+          `SELECT id FROM ${target[0]} WHERE lower(${target[1]}) = lower($1) LIMIT 1`,
+          candidate,
+        );
+        if (occupied.length === 0) break;
+        nextValue += 1;
+      }
+    }
     await raw.$executeRawUnsafe(
       "UPDATE code_sequences SET current_value = $1, version = version + 1, updated_at = now() WHERE id = $2",
       nextValue,

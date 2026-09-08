@@ -1135,7 +1135,7 @@ function MasterDataUxHint({ definition }: { definition: WorkbenchDefinition }) {
   );
 }
 
-function MasterDataFieldControl({
+export function MasterDataFieldControl({
   definition,
   disabled,
   field,
@@ -1190,6 +1190,11 @@ function MasterDataFieldControl({
         </span>
       ) : field.optionResource ? (
         <select
+          key={
+            definition.key === "stores" && field.key === "platformId"
+              ? String(relationOptionsLoading)
+              : field.key
+          }
           name={field.key}
           required={required}
           disabled={Boolean(relationOptionsLoading || disabled)}

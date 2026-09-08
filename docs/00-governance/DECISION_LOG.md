@@ -2761,3 +2761,13 @@ Approved
 ### 影响
 
 本决定完成已批准自动编码 CR 的第一阶段实施，并同步 Database SSOT、API SSOT、UAT 文档和测试。该实施不新增 API Path、接口编号、Response 字段、分页字段、错误码或 Permission Code；不修改历史业务编码；不新增编号管理后台；不扩展到 Category Code、Brand Code、Platform Code 或 Store Code。后续如需扩展编码对象、增加 Product Model 正式字段、建设编号管理后台或调整 SKU 编码字典，必须另行提交并批准对应 CR。
+
+## DEC-111 批准自动编码第二阶段扩展（CR-007）
+
+状态：Approved。日期：2026-09-08。Approved By：Project Owner。
+
+项目负责人通过本次任务批准扩展 CR-001 / CR-002 / CR-003 至 Category、Brand、Platform、Store，授权先同步正式契约再实施。具体规则、事务、历史保护及验收以 CR-007 为准；API_SPEC v1.11 同步四类 Create 编码可选及 Update 只读；DATABASE_SPEC 追加数据初始化范围，v2.7 结构保持不变。Permission Code 无变化，Phase 10 / 当前 Task 状态不变；本次实施验收结果只记入 UAT，不自动宣布人工 Verified / Closed。
+
+### DEC-111 实施交付补充（2026-09-08）
+
+四类自动编码正式HTTP及浏览器E2E已完成，Update保护、历史编码兼容、数据库一致性与本批表单修复通过。按项目负责人本次指令以单个 `feat: complete automatic code generation phase 2` 提交交付。UAT状态为 Automated Verification Passed / Pending Manual Spot Check，不自动Verified / Closed；无新API Path、Schema、Permission Code或项目Phase变更。

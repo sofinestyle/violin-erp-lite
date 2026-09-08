@@ -973,7 +973,7 @@ CR-003 Code Generation Storage 为 UAT-009 自动编码第一阶段提供统一�
 - Warehouse Code：`WH-000001`；
 - SKU Code：业务组合编码，例如 `L2-44-BK`。
 
-第一阶段不覆盖：
+第一阶段历史批准范围不覆盖下列对象；2026-09-08 CR-007 已扩展批准，当前范围见第 43 节：
 
 - Category Code；
 - Brand Code；
@@ -1035,3 +1035,11 @@ CR-003 已通过 Forward-only Migration 创建 `code_generation_rules` 与 `code
 - 唯一索引：`uq_products_product_name_en`，基于 `lower(trim(product_name_en))`，保证大小写不敏感且首尾空格不导致重复型号。
 
 CR-004 Migration 执行前必须审计历史数据。发现空型号或重复型号时 Migration 失败并停止，不自动修改正式业务数据。Product Create / Update 的业务校验必须与数据库约束保持一致，普通用户不得通过前端修改已生成产品编码。
+
+## 43. CR-007 自动编码第二阶段数据初始化
+
+2026-09-08 项目负责人批准 Category / Brand / Platform / Store 范围扩展。继续使用 v2.7 数据结构，Prisma Schema、表、字段、索引、外键、Check 和 Enum 数量不变。
+
+新增数据 Migration `20260908090000_seed_code_generation_phase_2`，为 code_generation_rules 初始化 category / CAT、brand / BRD、platform / PLT、store / STR，format 均为 `{prefix}-{seq:000000}`；为 code_sequences 初始化相应 current_value = 0、version = 0。使用既有 lower(code_type) 唯一索引 ON CONFLICT DO NOTHING，可重复执行，不重置流水或覆盖已有规则。
+
+四类自动与显式编码创建在同一业务事务内锁定对应流水行。自动生成逐号跳过已占用历史编码（含大小写等价），不查询最大编码，不改写历史行；事务失败回滚流水与新业务记录。Store 全局编号，不以 platformId 分组；external_store_id 现有定义不变。
