@@ -11,6 +11,12 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Change Log
 
+## 2026-09-08 Master Data Delete Blocking Message UX Enhancement
+
+复用既有引用预检查，补充内部业务摘要；产品命中 SKU 后仅增加两次整组存在性查询，说明 SKU 数量及库存/历史业务引用，其他基础资料返回对象化原因。保留并发 FK 保护、权限、系统前缀、停用引用、二次确认和原子审计，不修改删除条件、Database / Migration、公开 API Contract 或 Permission，不新增 UAT 编号。
+
+专项 106 项通过；完整门禁 442 项通过 / 51 项条件性跳过，status:check / diff --check 通过。没有执行真实数据删除；前端沿用既有 message + Request ID 展示。状态 Fixed / Pending Manual Verification，待人工抽查，不自动关闭。修改范围及测试限制见 [基础资料删除策略报告](MASTER_DATA_DELETE_STRATEGY_REPORT.md)。
+
 ## 2026-09-07 Procurement Order Safe Delete
 
 Approved CR-006 / DEC-110：新增 PUR-030 受控采购删除及前端二次确认，保守拒绝任何下游引用，取消单必须管理员与明确UAT标记；删除、明细及真实审计同事务，附件多态关联增加父单锁协调。无 Schema / Migration / Permission 变化，无阶段状态变更。

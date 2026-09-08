@@ -8,6 +8,8 @@ import {
   validateMasterDataInput,
   type AuthenticationContext,
   type MasterDataRepository,
+  type MasterDataDeleteReference,
+  type MasterDataResourceKey,
 } from "../src/index";
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
@@ -469,10 +471,76 @@ describe("Master Data API contracts", () => {
       ),
     ).rejects.toMatchObject({
       code: "CONFLICT_REQUEST",
-      message: "该数据已被业务单据引用，无法删除，请停用。",
+      message: "该 SKU 存在库存或历史业务记录，无法删除，请停用。",
     });
     expect(writer.events).toHaveLength(0);
   });
+
+  it.each<[MasterDataResourceKey, MasterDataDeleteReference, string]>([
+    [
+      "products",
+      { label: "SKU", skuCount: 1, hasInventory: false, hasHistory: false },
+      "该产品关联 1 个 SKU，无法删除。请先处理关联 SKU，或停用该产品。",
+    ],
+    [
+      "products",
+      { label: "SKU", skuCount: 2, hasInventory: true, hasHistory: true },
+      "该产品关联 2 个 SKU，且存在库存记录及历史业务记录，无法删除，请停用。",
+    ],
+    [
+      "products",
+      { label: "SKU", skuCount: 1, hasInventory: true, hasHistory: false },
+      "该产品关联 1 个 SKU，且存在库存记录，无法删除，请停用。",
+    ],
+    [
+      "products",
+      { label: "SKU", skuCount: 1, hasInventory: false, hasHistory: true },
+      "该产品关联 1 个 SKU，且存在历史业务记录，无法删除，请停用。",
+    ],
+    ["products", { label: "产品与厂家关联" }, "该产品存在产品与厂家关联，无法删除，请停用。"],
+    ["skus", { label: "库存记录" }, "该 SKU 存在库存记录，无法删除，请停用。"],
+    [
+      "product-categories",
+      { label: "产品" },
+      "该分类下仍有产品，无法删除，请先调整产品分类或停用该分类。",
+    ],
+    [
+      "product-categories",
+      { label: "子分类" },
+      "该分类下仍有子分类，无法删除，请先处理子分类或停用该分类。",
+    ],
+    ["brands", { label: "产品" }, "该品牌已被产品引用，无法删除，请停用。"],
+    ["suppliers", { label: "采购订单记录" }, "该供应商存在采购订单记录，无法删除，请停用。"],
+    [
+      "suppliers",
+      { label: "产品与供应商关联" },
+      "该供应商存在产品与供应商关联，无法删除，请停用。",
+    ],
+    ["manufacturers", { label: "生产订单记录" }, "该厂家存在生产订单记录，无法删除，请停用。"],
+    ["manufacturers", { label: "仓库关联" }, "该厂家存在仓库关联，无法删除，请停用。"],
+    ["warehouses", { label: "库存记录" }, "该仓库存在库存记录，无法删除，请停用。"],
+    ["warehouses", { label: "角色仓库范围关联" }, "该仓库存在角色仓库范围关联，无法删除，请停用。"],
+  ])(
+    "returns the confirmed %s blocking reason without successful audit",
+    async (resource, reference, message) => {
+      const store = {
+        ...repository(),
+        delete: vi.fn().mockResolvedValue({ status: "referenced", reference }),
+      };
+      const writer = new InMemoryAuditWriter();
+      const permission = `${MASTER_DATA_DEFINITIONS[resource].permissionResource}.update`;
+      await expect(
+        new MasterDataService(store, writer).delete(
+          resource,
+          RECORD_ID,
+          authentication([permission]),
+          requestContext,
+        ),
+      ).rejects.toMatchObject({ code: "CONFLICT_REQUEST", message });
+      expect(writer.events).toHaveLength(0);
+      expect(message).not.toMatch(/Prisma|UUID|SQL|_id|Foreign Key/);
+    },
+  );
 
   it("returns business messages for referenced and system master data deletes", async () => {
     const referencedStore = {
@@ -497,7 +565,7 @@ describe("Master Data API contracts", () => {
       ),
     ).rejects.toMatchObject({
       code: "CONFLICT_REQUEST",
-      message: "该数据已被业务单据引用，无法删除，请停用。",
+      message: "该产品仍有关联 SKU、业务记录或其他关联，无法删除，请停用。",
     });
 
     await expect(

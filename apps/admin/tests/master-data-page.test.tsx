@@ -48,6 +48,30 @@ describe("Master Data PC pages", () => {
   });
 
   it.each([
+    "该产品关联 1 个 SKU，无法删除。请先处理关联 SKU，或停用该产品。",
+    "该产品关联 1 个 SKU，且存在库存记录及历史业务记录，无法删除，请停用。",
+    "该分类下仍有产品，无法删除，请先调整产品分类或停用该分类。",
+    "该 SKU 存在库存记录，无法删除，请停用。",
+    "该品牌已被产品引用，无法删除，请停用。",
+    "该供应商存在采购订单记录，无法删除，请停用。",
+    "该厂家存在生产订单记录，无法删除，请停用。",
+    "该仓库存在库存记录，无法删除，请停用。",
+  ])("preserves the full blocking message and Request ID: %s", async (message) => {
+    await expect(
+      readMasterDataResponse(
+        Response.json(
+          {
+            success: false,
+            error: { code: "CONFLICT_REQUEST", message },
+            requestId: "blocking-trace",
+          },
+          { status: 409 },
+        ),
+      ),
+    ).rejects.toThrow(`${message}（Request ID：blocking-trace）`);
+  });
+
+  it.each([
     [405, ""],
     [502, "<html>Bad gateway</html>"],
     [200, ""],

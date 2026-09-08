@@ -28,13 +28,63 @@ export type MasterDataResourceKey = (typeof MASTER_DATA_RESOURCE_KEYS)[number];
 export type MasterDataAction = "create" | "disable" | "enable" | "read" | "update";
 export type MasterDataRecord = Readonly<Record<string, unknown> & { id: string }>;
 
+/** Repository-to-Service only; never included in the public response. */
+export type MasterDataDeleteReference = Readonly<{
+  label: string;
+  skuCount?: number;
+  hasInventory?: boolean;
+  hasHistory?: boolean;
+}>;
+
 export type MasterDataDeleteOutcome = Readonly<
   | { status: "deleted"; id: string }
   | { status: "not_found" }
-  | { status: "referenced" }
+  | { status: "referenced"; reference?: MasterDataDeleteReference }
   | { status: "system" }
   | { status: "unsupported" }
 >;
+
+function deleteBlockingMessage(
+  resource: MasterDataResourceKey,
+  reference?: MasterDataDeleteReference,
+): string {
+  if (resource === "products" && reference?.skuCount) {
+    const prefix = `该产品关联 ${reference.skuCount} 个 SKU`;
+    const records = [
+      reference.hasInventory ? "库存记录" : "",
+      reference.hasHistory ? "历史业务记录" : "",
+    ].filter(Boolean);
+    return records.length
+      ? `${prefix}，且存在${records.join("及")}，无法删除，请停用。`
+      : `${prefix}，无法删除。请先处理关联 SKU，或停用该产品。`;
+  }
+  if (resource === "product-categories" && reference?.label === "产品") {
+    return "该分类下仍有产品，无法删除，请先调整产品分类或停用该分类。";
+  }
+  if (resource === "product-categories" && reference?.label === "子分类") {
+    return "该分类下仍有子分类，无法删除，请先处理子分类或停用该分类。";
+  }
+  if (resource === "brands") return "该品牌已被产品引用，无法删除，请停用。";
+  if (reference) {
+    const name =
+      resource === "skus"
+        ? " SKU "
+        : resource === "manufacturers"
+          ? "厂家"
+          : MASTER_DATA_DEFINITIONS[resource].label;
+    return `该${name}存在${reference.label}，无法删除，请停用。`;
+  }
+  // A concurrent FK refusal has no safe, confirmed reference detail.
+  const fallback: Partial<Record<MasterDataResourceKey, string>> = {
+    products: "该产品仍有关联 SKU、业务记录或其他关联，无法删除，请停用。",
+    skus: "该 SKU 存在库存或历史业务记录，无法删除，请停用。",
+    "product-categories": "该分类仍有产品或子分类关联，无法删除，请先处理关联或停用该分类。",
+    suppliers: "该供应商存在采购业务或其他关联记录，无法删除，请停用。",
+    manufacturers: "该厂家存在生产业务、仓库或其他关联记录，无法删除，请停用。",
+    warehouses: "该仓库存在库存、库存流水、业务记录或权限范围关联，无法删除，请停用。",
+  };
+  return fallback[resource] ?? "该数据仍有关联记录，无法删除，请停用。";
+}
 
 export type MasterDataListQuery = Readonly<{
   filters: Readonly<Record<string, boolean | string>>;
@@ -669,10 +719,7 @@ export class MasterDataService {
     if (outcome.status === "not_found") throw new NotFoundError("基础资料不存在或不可访问");
     if (outcome.status === "system") throw new ConflictError("系统数据不可删除。");
     if (outcome.status === "referenced") {
-      if (resource === "brands") {
-        throw new ConflictError("该品牌已被产品引用，无法删除，请停用。");
-      }
-      throw new ConflictError("该数据已被业务单据引用，无法删除，请停用。");
+      throw new ConflictError(deleteBlockingMessage(resource, outcome.reference));
     }
     if (outcome.status === "unsupported") {
       throw new ValidationError("该基础资料暂不支持删除，请停用。");

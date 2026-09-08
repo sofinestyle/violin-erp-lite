@@ -12,6 +12,134 @@ function testRepository(client: unknown) {
 }
 
 describe("Prisma Master Data repository", () => {
+  it.each([
+    [1, false, false],
+    [5000, true, true],
+    [2, true, false],
+    [2, false, true],
+  ])(
+    "summarizes Product references without per-SKU queries (%s, %s, %s)",
+    async (skuCount, hasInventory, hasHistory) => {
+      const deleteMany = vi.fn();
+      const audit = vi.fn();
+      const count = vi.fn().mockResolvedValue(skuCount);
+      const findFirst = vi
+        .fn()
+        .mockResolvedValueOnce(hasInventory ? { id: USER_ID } : null)
+        .mockResolvedValueOnce(hasHistory ? { id: USER_ID } : null);
+      const repository = testRepository({
+        products: {
+          findFirst: vi.fn().mockResolvedValue({ id: USER_ID, product_code: "PRD-UAT" }),
+          deleteMany,
+        },
+        skus: { count, findFirst },
+      });
+      await expect(repository.delete("products", USER_ID, USER_ID, audit)).resolves.toEqual({
+        status: "referenced",
+        reference: { label: "SKU", skuCount, hasInventory, hasHistory },
+      });
+      expect(count).toHaveBeenCalledTimes(1);
+      expect(count).toHaveBeenCalledWith({ where: { product_id: USER_ID } });
+      expect(findFirst).toHaveBeenCalledTimes(2);
+      expect(findFirst).toHaveBeenNthCalledWith(1, {
+        select: { id: true },
+        where: { product_id: USER_ID, inventories: { some: {} } },
+      });
+      const historyArgs = findFirst.mock.calls[1]![0];
+      expect(historyArgs.where.product_id).toBe(USER_ID);
+      expect(historyArgs.where.OR).toHaveLength(16);
+      for (const relation of [
+        "inventory_transactions",
+        "purchase_order_items",
+        "production_order_items",
+        "inspection_order_items",
+        "inbound_order_items",
+        "outbound_order_items",
+        "inventory_adjustment_items",
+        "cross_border_shipment_items",
+        "sales_return_items",
+        "transfer_order_items",
+        "stock_count_items",
+        "damage_report_items",
+        "purchase_return_items",
+        "production_completion_record_items",
+        "import_task_items",
+        "inventory_alerts",
+      ]) {
+        expect(historyArgs.where.OR).toContainEqual({ [relation]: { some: {} } });
+      }
+      // Disabled SKUs, zero stock rows and all historical states remain protected.
+      expect(JSON.stringify(findFirst.mock.calls)).not.toMatch(/is_active|quantity|status/);
+      expect(deleteMany).not.toHaveBeenCalled();
+      expect(audit).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ["product-categories", "product_categories", "products", "category_id", "产品"],
+    ["brands", "brands", "products", "brand_id", "产品"],
+    ["manufacturers", "manufacturers", "production_orders", "manufacturer_id", "生产订单记录"],
+    ["manufacturers", "manufacturers", "warehouses", "manufacturer_id", "仓库关联"],
+    ["suppliers", "suppliers", "product_suppliers", "supplier_id", "产品与供应商关联"],
+    ["products", "products", "product_manufacturers", "product_id", "产品与厂家关联"],
+    ["warehouses", "warehouses", "role_warehouses", "warehouse_id", "角色仓库范围关联"],
+  ] as const)(
+    "returns a confirmed reference label for %s via %s/%s",
+    async (resource, model, referenceModel, field, label) => {
+      const zero = vi.fn().mockResolvedValue(0);
+      const hit = vi.fn().mockResolvedValue(1);
+      const deleteMany = vi.fn();
+      const audit = vi.fn();
+      const models = [
+        "product_categories",
+        "products",
+        "skus",
+        "product_manufacturers",
+        "product_suppliers",
+        "purchase_orders",
+        "purchase_payments",
+        "purchase_returns",
+        "production_orders",
+        "production_payments",
+        "warehouses",
+        "inventories",
+        "inventory_transactions",
+        "inbound_orders",
+        "inspection_orders",
+        "outbound_orders",
+        "inventory_adjustments",
+        "cross_border_shipments",
+        "transfer_orders",
+        "stock_counts",
+        "damage_reports",
+        "sales_returns",
+        "import_tasks",
+        "import_task_items",
+        "inventory_alerts",
+        "production_completion_records",
+        "role_warehouses",
+      ];
+      const client: Record<string, unknown> = Object.fromEntries(
+        models.map((key) => [key, { count: zero }]),
+      );
+      client[model] = {
+        count: zero,
+        findFirst: vi.fn().mockResolvedValue({ id: USER_ID }),
+        deleteMany,
+      };
+      client[referenceModel] = { count: hit };
+      await expect(
+        testRepository(client).delete(resource, USER_ID, USER_ID, audit),
+      ).resolves.toEqual({
+        status: "referenced",
+        reference: { label },
+      });
+      expect(hit).toHaveBeenCalledWith({ where: { [field]: USER_ID } });
+      expect(deleteMany).not.toHaveBeenCalled();
+      expect(audit).not.toHaveBeenCalled();
+    },
+  );
+
   it.each(["unreferenced", "referenced", "system", "missing", "concurrent-reference"])(
     "handles brand delete protection: %s",
     async (scenario) => {
@@ -109,7 +237,7 @@ describe("Prisma Master Data repository", () => {
         async () => undefined,
       );
       if (referenced) {
-        expect(result).toEqual({ status: "referenced" });
+        expect(result).toEqual({ status: "referenced", reference: { label: "库存记录" } });
         expect(deleteMany).not.toHaveBeenCalled();
       } else {
         expect(result).toEqual({ status: "deleted", id });
@@ -412,7 +540,7 @@ describe("Prisma Master Data repository", () => {
           product_code: "PRD-UAT-001",
         }),
       },
-      skus: { count: vi.fn().mockResolvedValue(1) },
+      skus: { count: vi.fn().mockResolvedValue(1), findFirst: vi.fn().mockResolvedValue(null) },
     } as never);
 
     await expect(
@@ -422,7 +550,10 @@ describe("Prisma Master Data repository", () => {
         USER_ID,
         async () => undefined,
       ),
-    ).resolves.toEqual({ status: "referenced" });
+    ).resolves.toEqual({
+      status: "referenced",
+      reference: { label: "SKU", skuCount: 1, hasInventory: false, hasHistory: false },
+    });
     await expect(
       repository.delete(
         "product-categories",
@@ -430,7 +561,7 @@ describe("Prisma Master Data repository", () => {
         USER_ID,
         async () => undefined,
       ),
-    ).resolves.toEqual({ status: "referenced" });
+    ).resolves.toEqual({ status: "referenced", reference: { label: "子分类" } });
   });
 
   it("blocks Supplier delete when purchase order references exist", async () => {
@@ -456,7 +587,7 @@ describe("Prisma Master Data repository", () => {
         USER_ID,
         async () => undefined,
       ),
-    ).resolves.toEqual({ status: "referenced" });
+    ).resolves.toEqual({ status: "referenced", reference: { label: "采购订单记录" } });
   });
 
   it("deletes unreferenced Supplier and Warehouse master data", async () => {
@@ -542,7 +673,7 @@ describe("Prisma Master Data repository", () => {
         USER_ID,
         async () => undefined,
       ),
-    ).resolves.toEqual({ status: "referenced" });
+    ).resolves.toEqual({ status: "referenced", reference: { label: "库存记录" } });
 
     const systemRepository = testRepository({
       products: {

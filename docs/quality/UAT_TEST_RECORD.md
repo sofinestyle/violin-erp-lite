@@ -11,6 +11,14 @@ related_phase: Phase 10
 
 # Violin ERP Lite UAT Test Record
 
+## 2026-09-08 Master Data Delete Blocking Message UX Enhancement
+
+状态：Fixed / Pending Manual Verification，不新增 UAT 编号。产品提示区分 SKU 数量、库存记录和历史业务记录；分类、SKU、品牌、供应商、厂家、仓库根据首个实际引用返回中文原因及处理建议。内部引用摘要不进入公开响应，Request ID 保留。所有删除保护、权限、系统数据规则和删除/Audit 事务不变。
+
+专项 106 项通过；完整 `pnpm check` 442 项通过 / 51 项条件性跳过，`pnpm status:check`、`git diff --check` 通过。5000 SKU 场景验证的是模拟查询次数恒定，不是真实压力测试。测试包含无引用删除、引用拒绝、停用引用、权限、系统前缀、FK 映射及错误文本/Trace 保留；本轮不启用真实写入/删除集成测试，没有删除任何本地数据。Health 为应用 ok / 数据库 connected，AI 3000 HTTP 200，未重启服务或操作 PM2。
+
+待人工检查对象化提示和处理建议的可读性，不自动标记 Verified / Closed。详见 [基础资料删除策略报告](MASTER_DATA_DELETE_STRATEGY_REPORT.md)。
+
 ## 2026-09-07 采购订单受控删除 CR-006
 
 状态：Fixed / Pending Manual Verification，不新增 UAT 编号。草稿复用取消权限及数据范围，取消单仅 administrator + 明确 UAT 前缀 + 无引用可删；其他状态禁止。保守保护全部下游及审核记录，删除和真实 Audit 同事务，附件写入协调采购父单锁。

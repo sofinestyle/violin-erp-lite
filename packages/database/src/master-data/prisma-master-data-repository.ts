@@ -6,6 +6,7 @@ import {
   type MasterDataListQuery,
   type MasterDataListResult,
   type MasterDataDeleteOutcome,
+  type MasterDataDeleteReference,
   type MasterDataRecord,
   type MasterDataRepository,
   type MasterDataResourceKey,
@@ -129,6 +130,27 @@ const REFERENCE_CHECKS: Readonly<Record<MasterDataResourceKey, readonly Referenc
 const CAMEL_BOUNDARY = /[A-Z]/g;
 const SNAKE_BOUNDARY = /_([a-z])/g;
 
+// Labels describe the confirmed first blocking reference, not every possible reference.
+const REFERENCE_LABELS: Readonly<Record<string, string>> = {
+  products: "产品",
+  product_categories: "子分类",
+  product_manufacturers: "产品与厂家关联",
+  product_suppliers: "产品与供应商关联",
+  inventories: "库存记录",
+  inventory_transactions: "库存流水记录",
+  purchase_orders: "采购订单记录",
+  purchase_payments: "采购付款记录",
+  purchase_returns: "采购退货记录",
+  production_orders: "生产订单记录",
+  production_payments: "生产付款记录",
+  warehouses: "仓库关联",
+  inbound_orders: "入库业务记录",
+  role_warehouses: "角色仓库范围关联",
+  import_tasks: "导入任务记录",
+  import_task_items: "导入匹配记录",
+  inventory_alerts: "库存预警记录",
+};
+
 function prismaErrorCode(error: unknown): string | undefined {
   return error && typeof error === "object" && "code" in error
     ? String((error as { code: unknown }).code)
@@ -180,16 +202,35 @@ function isSystemMasterData(
   return normalized.startsWith("SYS-") || normalized.startsWith("SYSTEM-");
 }
 
-async function hasBusinessReference(
+async function findBusinessReference(
   client: PrismaClient,
   resource: MasterDataResourceKey,
   id: string,
-): Promise<boolean> {
+): Promise<MasterDataDeleteReference | undefined> {
   for (const check of REFERENCE_CHECKS[resource]) {
     const count = await modelCounter(client, check.model)({ where: { [check.field]: id } });
-    if (count > 0) return true;
+    if (count === 0) continue;
+    if (resource === "products" && check.model === "skus") {
+      // Two bounded existence queries over all related SKUs. No per-SKU queries,
+      // quantities, status filtering, or new deletion preconditions.
+      const inventory = await client.skus.findFirst({
+        select: { id: true },
+        where: { product_id: id, inventories: { some: {} } },
+      });
+      const history = await client.skus.findFirst({
+        select: { id: true },
+        where: {
+          product_id: id,
+          OR: REFERENCE_CHECKS.skus
+            .filter((item) => item.model !== "inventories")
+            .map((item) => ({ [item.model]: { some: {} } })),
+        },
+      });
+      return { label: "SKU", skuCount: count, hasInventory: !!inventory, hasHistory: !!history };
+    }
+    return { label: REFERENCE_LABELS[check.model] ?? "历史业务记录" };
   }
-  return false;
+  return undefined;
 }
 
 function selectFor(resource: MasterDataResourceKey, actorUserId?: string): UnknownRecord {
@@ -618,7 +659,8 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
     });
     if (!record) return { status: "not_found" };
     if (isSystemMasterData(resource, record)) return { status: "system" };
-    if (await hasBusinessReference(this.#client, resource, id)) return { status: "referenced" };
+    const reference = await findBusinessReference(this.#client, resource, id);
+    if (reference) return { status: "referenced", reference };
     const result = await model.deleteMany({ where: { AND: [{ id }, scope] } });
     return result.count === 1 ? { status: "deleted", id } : { status: "not_found" };
   }
