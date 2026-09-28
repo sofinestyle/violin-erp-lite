@@ -30,11 +30,20 @@ function fixture() {
     status: "draft",
     paid_amount: new Prisma.Decimal(0),
     purchase_order_items: [],
+    inspection_orders: [],
   };
   const tx = {
-    ...Object.fromEntries(refs.map((name) => [name, { count: vi.fn().mockResolvedValue(0) }])),
+    ...Object.fromEntries(
+      refs.map((name) => [
+        name,
+        { count: vi.fn().mockResolvedValue(0), findMany: vi.fn().mockResolvedValue([]) },
+      ]),
+    ),
     $queryRaw: vi.fn().mockResolvedValue([{ id }]),
+    skus: { findMany: vi.fn().mockResolvedValue([]) },
+    users: { findMany: vi.fn().mockResolvedValue([]) },
     purchase_orders: {
+      findMany: vi.fn().mockResolvedValue([order]),
       findUnique: vi.fn().mockResolvedValue(order),
       delete: vi.fn().mockResolvedValue(order),
     },

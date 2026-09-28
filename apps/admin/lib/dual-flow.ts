@@ -9,6 +9,14 @@ export function isDualFlow(view: WorkflowView): boolean {
 export function dualFlowStatusOptions(
   view: WorkflowView,
 ): readonly (readonly [string, string])[] | undefined {
+  if (view.id === "purchase-orders")
+    return [
+      ["pending_approval", "待审核"],
+      ["purchasing", "采购中"],
+      ["inspected", "已质检"],
+      ["received", "已入库"],
+      ["cancelled", "已取消"],
+    ];
   if (view.id === "production-completions")
     return [
       ["Draft", "待完工确认"],
@@ -55,10 +63,15 @@ export function dualFlowStatusOptions(
 export function eligibleSourceRows(view: WorkflowView, key: string, rows: readonly BusinessRow[]) {
   if (key === "purchaseInspections" || key === "productionInspections") {
     const sourceType = key === "purchaseInspections" ? "purchase" : "production";
-    return rows.filter((row) => row.sourceType === sourceType && row.status === "confirmed");
+    return rows.filter(
+      (row) =>
+        row.sourceType === sourceType &&
+        row.status === "confirmed" &&
+        (sourceType !== "purchase" || row.purchaseBusinessStatus === "inspected"),
+    );
   }
   if (view.id === "purchase-inspections" && key === "purchaseOrders") {
-    return rows.filter((row) => row.status === "approved");
+    return rows.filter((row) => row.businessStatus === "purchasing" && !row.legacyReviewRequired);
   }
   if (view.id === "production-inspections" && key === "productionOrders") {
     return rows.filter((row) =>
@@ -133,6 +146,12 @@ export function actionStateAllowed(view: WorkflowView, action: string, row: Busi
     const state = String(row.completionStatus).toLowerCase();
     return action === "revoke" ? state === "confirmed" : state === "draft";
   }
+  if (view.id === "purchase-orders")
+    return (
+      !row.legacyReviewRequired &&
+      row.businessStatus === "pending_approval" &&
+      ["approve", "reject"].includes(action)
+    );
   const state = String(row.status);
   if (view.id.endsWith("-inspections")) {
     return (

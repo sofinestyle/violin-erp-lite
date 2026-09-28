@@ -39,3 +39,27 @@ export function categoryParentOptions(
   // Cyclic legacy data is never offered as a parent; the server also rejects it.
   return result;
 }
+
+/** Preorder display retains inactive ancestors and guards malformed legacy cycles. */
+export function categoryTreeRows(records: readonly Category[]): Category[] {
+  const ids = new Set(records.map((row) => row.id));
+  const children = new Map<string, Category[]>();
+  for (const row of records) {
+    const parent = ids.has(String(row.parentCategoryId)) ? String(row.parentCategoryId) : "";
+    children.set(parent, [...(children.get(parent) ?? []), row]);
+  }
+  const result: Category[] = [];
+  const visited = new Set<string>();
+  const visit = (row: Category, depth: number) => {
+    if (visited.has(row.id)) return;
+    visited.add(row.id);
+    result.push({
+      ...row,
+      treeLabel: `${depth ? "　".repeat(depth) + "└─ " : ""}${String(row.categoryName ?? "未命名分类")}`,
+    });
+    for (const child of children.get(row.id) ?? []) visit(child, depth + 1);
+  };
+  for (const root of children.get("") ?? []) visit(root, 0);
+  for (const row of records) if (!visited.has(row.id)) visit(row, 0);
+  return result;
+}

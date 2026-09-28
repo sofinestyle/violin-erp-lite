@@ -1,3 +1,4 @@
+import { procurementRows } from "./procurement-state.js";
 import {
   assertPurchaseDeleteState,
   ConflictError,
@@ -31,8 +32,13 @@ export function purchaseDelete(
         ) {
           throw new NotFoundError();
         }
+        if (order.created_by !== actor.userId && !actor.roleCodes.includes("administrator"))
+          throw new ForbiddenError("仅制单人或管理员可删除待审核订单");
+        const [projected] = await procurementRows(tx as PrismaClient, { id });
+        if (!projected || projected.legacyReviewRequired)
+          throw new ConflictError("历史数据待复核，当前订单只允许查看");
         assertPurchaseDeleteState(
-          { ...order, documentNo: order.document_no },
+          { ...order, status: projected.businessStatus!, documentNo: order.document_no },
           actor.roleCodes.includes("administrator"),
         );
         const itemIds = order.purchase_order_items.map((item) => item.id);
@@ -50,7 +56,7 @@ export function purchaseDelete(
           tx.attachment_links.count({
             where: { OR: [{ object_id: id }, { object_item_id: { in: itemIds } }] },
           }),
-          tx.approval_records.count({ where: { object_id: id } }),
+          tx.approval_records.count({ where: { object_id: id, approval_result: "approved" } }),
         ]);
         const executed = order.purchase_order_items.some((item) =>
           [

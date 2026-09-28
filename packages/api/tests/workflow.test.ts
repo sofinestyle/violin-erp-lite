@@ -74,6 +74,71 @@ function inboundCommand(payload: Record<string, unknown>): WorkflowCommand {
 }
 
 describe("Frozen workflow API contracts", () => {
+  it("rejects obsolete purchase withdrawal before reading or mutating the database", async () => {
+    const repository: WorkflowRepository = {
+      execute: vi.fn(),
+      executeAtomicProcurement: vi.fn(),
+    };
+    const audit = new InMemoryAuditWriter();
+    const service = new WorkflowService(repository, audit);
+    await expect(
+      service.execute(
+        {
+          ...purchaseCommand({ versionNo: 1 }),
+          action: "withdraw",
+          apiId: "PUR-006",
+          entityId: DOCUMENT_ID,
+        },
+        "purchase.order.withdraw",
+        authentication(["purchase.order.withdraw"]),
+        context,
+      ),
+    ).rejects.toMatchObject({ code: "CONFLICT_REQUEST", httpStatus: 409 });
+    expect(repository.executeAtomicProcurement).not.toHaveBeenCalled();
+    expect(repository.execute).not.toHaveBeenCalled();
+    expect(audit.events).toHaveLength(0);
+  });
+  it("does not let self approval bypass purchase approval permission or required audit", async () => {
+    const repository: WorkflowRepository = {
+      execute: vi.fn(),
+      executeAtomicProcurement: vi.fn().mockImplementation(async (_command, _actor, audit) => {
+        await audit(
+          {
+            write: async () => {
+              throw new Error("audit unavailable");
+            },
+          },
+          { id: DOCUMENT_ID, status: "purchasing" },
+        );
+        return { result: { id: DOCUMENT_ID } };
+      }),
+    };
+    const service = new WorkflowService(repository, new InMemoryAuditWriter());
+    const approve: WorkflowCommand = {
+      ...purchaseCommand({ versionNo: 1 }),
+      action: "approve",
+      apiId: "PUR-007",
+      entityId: DOCUMENT_ID,
+    };
+    await expect(
+      service.execute(
+        approve,
+        "purchase.order.approve",
+        authentication(["purchase.order.create"]),
+        context,
+      ),
+    ).rejects.toMatchObject({ httpStatus: 403 });
+    expect(repository.executeAtomicProcurement).not.toHaveBeenCalled();
+    await expect(
+      service.execute(
+        approve,
+        "purchase.order.approve",
+        authentication(["purchase.order.approve"]),
+        context,
+      ),
+    ).rejects.toThrow();
+    expect(repository.execute).not.toHaveBeenCalled();
+  });
   it("registers all in-scope APIs and excludes only INB-005 other inbound", () => {
     expect(WORKFLOW_API_IDS).toHaveLength(76);
     expect(new Set(WORKFLOW_API_IDS).size).toBe(76);
@@ -253,11 +318,28 @@ describe("Frozen workflow API contracts", () => {
         context,
       ),
     ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
+    await expect(
+      service.execute(
+        inspectionCommand({
+          inspectionDate: "2026-08-20",
+          inspectionWarehouseId: DOCUMENT_ID,
+          inspectorId: USER_ID,
+          items: [item],
+          purchaseOrderId: DOCUMENT_ID,
+          sourceType: "purchase",
+        }),
+        "inspection.order.create",
+        authentication(["inspection.order.create"]),
+        context,
+      ),
+    ).rejects.toMatchObject({
+      code: "VALIDATION_INVALID_FIELD",
+      details: [{ field: "inspectorName", message: "必填字段不能为空" }],
+    });
     await service.execute(
       inspectionCommand({
         inspectionDate: "2026-08-20",
-        inspectionWarehouseId: DOCUMENT_ID,
-        inspectorId: USER_ID,
+        inspectorName: "UAT采购质检员",
         items: [item],
         purchaseOrderId: DOCUMENT_ID,
         sourceType: "purchase",

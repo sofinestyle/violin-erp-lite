@@ -39,6 +39,11 @@ export type WorkflowCommand = Readonly<{
 
 export type WorkflowRepository = Readonly<{
   execute: (command: WorkflowCommand, actor: AuthenticatedUser) => Promise<unknown>;
+  executeAtomicProcurement?: (
+    command: WorkflowCommand,
+    actor: AuthenticatedUser,
+    audit: (writer: AuditWriter, result: unknown) => Promise<void>,
+  ) => Promise<{ result: unknown } | null>;
   deletePurchase?: (
     id: string,
     actor: AuthenticatedUser,
@@ -589,13 +594,7 @@ function validateCommand(command: WorkflowCommand): void {
   }
   if (!command.mutation || stateActions.includes(command.action)) return;
   if (command.action === "create" && command.resource === "purchase") {
-    required(command.payload, [
-      "documentDate",
-      "supplierId",
-      "expectedDeliveryDate",
-      "settlementMethod",
-      "items",
-    ]);
+    required(command.payload, ["documentDate", "supplierId", "expectedDeliveryDate", "items"]);
   } else if (command.action === "create" && command.resource === "production") {
     required(command.payload, [
       "documentDate",
@@ -609,8 +608,9 @@ function validateCommand(command: WorkflowCommand): void {
     required(command.payload, [
       "sourceType",
       "inspectionDate",
-      "inspectionWarehouseId",
-      "inspectorId",
+      ...(command.payload.sourceType === "purchase"
+        ? ["inspectorName"]
+        : ["inspectionWarehouseId", "inspectorId"]),
       "items",
     ]);
     const sourceType = command.payload.sourceType;
@@ -671,6 +671,9 @@ export class WorkflowService {
   ): Promise<unknown> {
     const authenticated = requirePermission(authentication, permission);
     validateCommand(command);
+    if (command.resource === "purchase" && command.action === "withdraw") {
+      throw new AppError("CONFLICT_REQUEST", 409, "采购订单保存后直接待审核，当前流程不支持撤回。");
+    }
     if (command.action === "delete") {
       requirePermission(authentication, "purchase.order.cancel");
       if (command.resource !== "purchase" || command.apiId !== "PUR-030" || !command.entityId) {
@@ -689,7 +692,7 @@ export class WorkflowService {
               actorUserId: authenticated.user.userId,
               beforeSnapshot: before,
               afterSnapshot: { deleted: true },
-              metadata: { action: "delete", policy: "CR-006" },
+              metadata: { action: "delete", policy: "CR-012" },
               moduleCode: "purchase",
               requestId: context.requestId,
               resourceId: command.entityId!,
@@ -703,6 +706,32 @@ export class WorkflowService {
           );
         },
       );
+    }
+    if (command.mutation && this.repository.executeAtomicProcurement) {
+      const atomic = await this.repository.executeAtomicProcurement(
+        command,
+        authenticated.user,
+        async (writer, result) => {
+          await recordAuditEvent(
+            writer,
+            {
+              action: command.apiId,
+              actorUserId: authenticated.user.userId,
+              afterSnapshot: result,
+              metadata: { action: command.action, policy: "CR-011" },
+              moduleCode: command.resource,
+              requestId: context.requestId,
+              resourceId: auditResourceId(result, command.entityId ?? command.parentId),
+              resourceType: command.resource,
+              result: "success",
+              timestamp: new Date(context.timestamp),
+              usernameSnapshot: authenticated.user.username,
+            },
+            { failureMode: "required" },
+          );
+        },
+      );
+      if (atomic) return atomic.result;
     }
     const result = await this.repository.execute(command, authenticated.user);
     if (command.mutation) {

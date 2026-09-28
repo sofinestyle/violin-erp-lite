@@ -289,3 +289,11 @@ Project Owner 批准仅 Warehouse / Store Create 在服务端为创建者当前�
 ## CR-010 安全删除角色约束（2026-09-08，Approved）
 
 Store DELETE 仅 administrator，且必须已有目标 manage 数据范围；Warehouse DELETE 在既有 update 权限及 manage 范围基础上限 administrator。普通角色即使有 update 权限也不能使用这两类删除。无业务引用时可在删除对象的同一事务清除该目标正式 Scope；这不是角色授权修改入口，不允许删除用户、角色、其他目标范围或绕过业务引用。Permission Code 集合不变。
+
+## CR-011 采购流程权限增量（2026-09-08，Approved）
+
+不新增 Permission Code / Role。待审核删除复用 purchase.order.cancel 与原范围，另需本人制单或 administrator；采购审核仍要求制单/审核分离。采购质检去掉仓库字段后按既有采购来源记录范围及 inspection 动作权限授权，只有仓库 Scope 不自动获得采购来源访问权。采购入库继续目标仓库操作范围；旧生产验收范围不变。
+
+## CR-012 采购自审例外（2026-09-28，Approved）
+
+本节覆盖前文及 CR-011 对 purchase_order 的制单/审核分离约束。采购订单审核允许同一用户制单与审核，仍需正式 purchase.order.approve、既有记录范围、版本、合法状态和真实审计。生产、入库和其他单据的分离校验不变，不新增权限码、角色或范围，不扩张临时账号权限。

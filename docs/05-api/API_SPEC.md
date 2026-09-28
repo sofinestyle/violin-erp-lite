@@ -1,17 +1,17 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.13
+version: 1.15
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-09-08
+updated_date: 2026-09-28
 related_phase: Phase 5 / UAT-009 / UAT Master Data Delete Strategy
 ---
 
 # API Master Specification
 
-CR-010 于 2026-09-08 Approved / Implemented。当前 v1.13 新增 MD-082 店铺安全删除，接口总数 344、基础资料 82；Store / Warehouse 仅管理员按现有 manage 范围删除，无业务引用时同事务清理该目标 Scope 并写 Audit。
+CR-010 于 2026-09-08 Approved / Implemented。v1.13 历史增量新增 MD-082 店铺安全删除，接口总数 344、基础资料 82；Store / Warehouse 仅管理员按现有 manage 范围删除，无业务引用时同事务清理该目标 Scope 并写 Audit。
 
 CR-008 / CR-009 于 2026-09-08 Approved / Implemented；v1.12 历史增量支持可空平台店铺标识文本及 Warehouse / Store Create 正式角色范围初始化，接口数仍为 343，Permission Code 不变。
 
@@ -1538,3 +1538,11 @@ MD-082：DELETE /api/v1/stores/{id}，Authentication 必需，administrator 且�
 Warehouse 既有 DELETE 继续要求 master.warehouse.update、manage 范围，新增 administrator 限制。库存或任何业务外键引用返回 409“该仓库存在库存或历史业务记录，无法删除，请停用。”。仅目标 role_warehouses 不阻止删除。两类删除均在目标 FOR UPDATE 行锁后检查授权和业务引用、清理目标 Scope、删除及必需 Audit，同事务提交或回滚。其他对象的 Scope、Role、User 不变。
 
 分类 Create / PATCH 沿用现有 DTO；categoryLevel 是派生值，服务器按父链计算，防止自身、后代及并发更新形成循环。结构修改使用事务级串行协调；移动分类同步子树派生层级，不改后代 parentCategoryId。沿用字段业务校验错误，不新增 API Path。
+
+## CR-011 采购五状态与质检员字段（2026-09-08，Approved）
+
+当前 v1.14，接口总数保持 344。[CR-011](../changes/CR-011_PROCUREMENT_WORKFLOW_SIMPLIFICATION.md) 覆盖旧 PUR Create/动作/删除及采购来源 INS / INB 语义：保存即待审核，整单执行与确认后状态更新、手工 inspectorName、历史事实映射及只读隔离。新增 businessStatus / legacyReviewRequired / legacyReviewReason、列表 legacyReviewCount 及 legacyReview 查询；生产分支契约保持原样。采购来源不再要求质检仓库/账号，目标入库仓仍必填并授权。所有确认与主单状态、数量、流水和 Audit 同事务；原 Permission Code 不变。
+
+## CR-012 采购管理体验（2026-09-28，Approved）
+
+当前 v1.15，接口总数保持 344。采购 approve 允许有权且有记录范围的创建人自审；其他模块分离不变。PUR Create 由正式 Supplier 读取 settlementMethod / paymentTermsSnapshot，保存到现有快照字段；客户端不再必填结算方式，兼容既有字段但不能覆盖正式快照来源。明细 expectedDeliveryDate 默认继承订单交期。PUR List/Detail 使用 CR-011 businessStatus 与历史隔离，并通过正式批量关联提供 SKU 产品型号/名称/尺寸/颜色及创建/审核人名称，禁止 N+1。原始 status/内部关联仍用于服务端与审计，不作为主要业务展示。无新增数据库字段或权限。

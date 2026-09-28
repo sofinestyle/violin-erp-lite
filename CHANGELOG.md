@@ -3278,3 +3278,16 @@ CR-008 / CR-009 Approved / Implemented，DEC-112 已记录。WH-000009 经正式
 - Phase 1: Approved
 - Business Rules: Frozen
 - Development: Not Started
+
+## 2026-09-28 采购保存与旧撤回入口修复
+
+新建采购单统一创建、更新、提交时间，避免数据库时间约束导致偶发 500。CR-011 已批准迁移部署本地 UAT，补齐质检员字段。采购撤回按 CR-011 停用：页面移除入口，旧请求返回明确中文业务提示并保持单据不变；生产撤回规则不变。浏览器保存与真实 HTTP 专项通过，完整采购状态链仍未验收。
+
+
+## 2026-09-28：Manual UAT UX Batch 主数据与采购体验合并收口
+
+沿用当前采购批次，不新增 UAT 编号。保留此前采购状态机、迁移与保存/撤回修复，完成 Product 中文分类路径/型号/单位、Store 平台名称、Category 前序层级、采购八列列表、日历/供应商快照/多明细/实时金额表单和完整业务详情。CR-012 按负责人明确批准允许有权限及范围的采购自审，生产/入库职责分离不变，未新增 Permission 或扩大账号范围。
+
+真实浏览器 10 × 300 保存待审核、同账号审核采购中，Audit 真实身份一致；HTTP 整单质检后已质检、无下游待审核删除无残留、供应商快照不变；采购审核和质检 Audit 故障在真实 PostgreSQL 全部回滚。临时账号正式停用。新建采购入库的跨用户完整实库闭环尚未执行，相关仓储回归不替代真实 E2E。现有质检作废/撤销补齐取消人/时间/原因，遵守原数据库 CHECK。
+
+状态：**Fixed / Pending Manual Verification**。CR-011 / CR-012 Approved / Implemented；API v1.15、344 接口，沿用已部署 CR-011，CR-012 无新迁移。测试、浏览器证据及人工复验边界详见 `docs/quality/PROCUREMENT_MANAGEMENT_UX_REFACTOR_REPORT.md`。当前 Phase/Task 不变。

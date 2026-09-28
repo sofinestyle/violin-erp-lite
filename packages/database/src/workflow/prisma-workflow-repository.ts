@@ -1,8 +1,11 @@
+import { procurementRows } from "./procurement-state.js";
+import { procurementInspector, assertWholeProcurement } from "./procurement-rules.js";
 import {
   ConflictError,
   NotFoundError,
   ValidationError,
   type AuthenticatedUser,
+  type AuditWriter,
   type WorkflowCommand,
   type WorkflowPayload,
   type WorkflowRepository,
@@ -10,6 +13,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { getPrismaClient } from "../client.js";
 import type { PrismaClient } from "../generated/prisma/client.js";
+import { procurementTransaction } from "./procurement-transaction.js";
 import { purchaseDelete } from "./prisma-purchase-delete.js";
 
 type JsonRecord = Record<string, unknown>;
@@ -26,6 +30,32 @@ type DynamicDelegate = {
 type DynamicClient = Record<string, DynamicDelegate> & {
   $transaction<T>(callback: (transaction: DynamicClient) => Promise<T>): Promise<T>;
 };
+
+async function purchaseState(client: DynamicClient, id: unknown) {
+  const [order] = await procurementRows(client as unknown as PrismaClient, { id: String(id) });
+  if (!order) throw new NotFoundError();
+  if (order.legacyReviewRequired) throw new ConflictError("历史数据待复核，当前订单只允许查看。");
+  return order;
+}
+async function setPurchaseState(client: DynamicClient, id: unknown, status: string, actor: string) {
+  const order = await client.purchase_orders!.findFirst({ where: { id } });
+  if (!order) throw new NotFoundError();
+  await client.purchase_orders!.update({
+    where: { id },
+    data: { status, updated_by: actor, version_no: { increment: 1 } },
+  });
+  await client.document_status_histories!.create({
+    data: {
+      object_id: id,
+      object_no_snapshot: order.document_no,
+      object_type: "purchase",
+      from_status: order.status,
+      to_status: status,
+      changed_at: new Date(),
+      changed_by: actor,
+    },
+  });
+}
 
 const SNAKE_BOUNDARY = /_([a-z])/g;
 const CAMEL_BOUNDARY = /[A-Z]/g;
@@ -155,8 +185,21 @@ function itemRelation(resource: WorkflowCommand["resource"]): string | undefined
 function dataScopeWhere(command: WorkflowCommand, actor: AuthenticatedUser): JsonRecord {
   if (actor.dataScopes.includes("all")) return {};
   const warehouseIds = (actor.warehouseScopes ?? []).map((scope) => scope.targetId);
+  if (command.resource === "inspection")
+    return {
+      OR: [
+        ...(actor.dataScopes.includes("self_created")
+          ? [{ source_type: "purchase", purchase_orders: { created_by: actor.userId } }]
+          : []),
+        ...(actor.dataScopes.includes("warehouse") && warehouseIds.length
+          ? [{ source_type: "production", inspection_warehouse_id: { in: warehouseIds } }]
+          : actor.dataScopes.includes("self_created")
+            ? [{ source_type: "production", created_by: actor.userId }]
+            : []),
+      ],
+    };
   if (
-    (command.resource === "inbound" || command.resource === "inspection") &&
+    command.resource === "inbound" &&
     actor.dataScopes.includes("warehouse") &&
     warehouseIds.length > 0
   ) {
@@ -187,7 +230,8 @@ function listWhere(command: WorkflowCommand, actor: AuthenticatedUser): JsonReco
   ];
   for (const key of allowed) {
     const value = command.query.get(key);
-    if (value) where.push({ [toSnake(key)]: value });
+    if (value && !(command.resource === "purchase" && key === "status"))
+      where.push({ [toSnake(key)]: value });
   }
   const documentNoValue = command.query.get("documentNo") ?? command.query.get("keyword");
   if (documentNoValue)
@@ -207,6 +251,25 @@ async function list(
 ): Promise<JsonRecord> {
   const pagination = page(command);
   const where = listWhere(command, actor);
+  if (command.resource === "purchase") {
+    const all = await procurementRows(client as unknown as PrismaClient, where);
+    const legacyReviewCount = all.filter((row) => row.legacyReviewRequired).length;
+    const legacy = command.query.get("legacyReview") === "true";
+    const filtered = all.filter(
+      (row) =>
+        row.legacyReviewRequired === legacy &&
+        (!command.query.get("status") || row.businessStatus === command.query.get("status")),
+    );
+    return {
+      items: filtered
+        .slice((pagination.page - 1) * pagination.pageSize, pagination.page * pagination.pageSize)
+        .map((row) => record(row as unknown as JsonRecord)),
+      ...pagination,
+      total: filtered.length,
+      totalPages: Math.ceil(filtered.length / pagination.pageSize),
+      legacyReviewCount,
+    };
+  }
   const delegate = client[modelFor(command.resource)]!;
   const relation = itemRelation(command.resource);
   const [rows, total] = await Promise.all([
@@ -223,8 +286,25 @@ async function list(
     }),
     delegate.count({ where }),
   ]);
+  let displayed = rows.map(record);
+  if (command.resource === "inspection" && rows.some((row) => row.source_type === "purchase")) {
+    const parents = await procurementRows(client as unknown as PrismaClient, {
+      id: {
+        in: rows
+          .filter((row) => row.source_type === "purchase")
+          .map((row) => row.purchase_order_id),
+      },
+    });
+    const states = new Map(parents.map((row) => [row.id, row.businessStatus]));
+    displayed = displayed.map((row, index) => ({
+      ...row,
+      ...(rows[index]?.source_type === "purchase"
+        ? { purchaseBusinessStatus: states.get(String(rows[index]!.purchase_order_id)) ?? null }
+        : {}),
+    }));
+  }
   return {
-    items: rows.map(record),
+    items: displayed,
     page: pagination.page,
     pageSize: pagination.pageSize,
     total,
@@ -237,6 +317,14 @@ async function detail(
   command: WorkflowCommand,
   actor: AuthenticatedUser,
 ): Promise<JsonRecord> {
+  if (command.resource === "purchase") {
+    const [order] = await procurementRows(client as unknown as PrismaClient, {
+      id: command.entityId ?? command.parentId,
+      ...dataScopeWhere(command, actor),
+    });
+    if (!order) throw new NotFoundError();
+    return record(order as unknown as JsonRecord);
+  }
   const relation = itemRelation(command.resource);
   const found = await client[modelFor(command.resource)]!.findFirst({
     ...(relation ? { include: { [relation]: { orderBy: { line_no: "asc" } } } } : {}),
@@ -333,7 +421,7 @@ async function createPurchase(client: DynamicClient, payload: WorkflowPayload, a
     quantityTotal += quantity;
     return {
       ...commonItem(item, snapshots.get(String(item.skuId))!, index + 1, actor),
-      expected_delivery_date: optionalDate(item, "expectedDeliveryDate"),
+      expected_delivery_date: optionalDate(item, "expectedDeliveryDate") ?? expectedDeliveryDate,
       inbound_quantity: 0,
       inspected_quantity: 0,
       line_amount: lineAmount,
@@ -345,20 +433,29 @@ async function createPurchase(client: DynamicClient, payload: WorkflowPayload, a
       unit_price: unitPrice,
     };
   });
+  const paymentTerms = typeof supplier.payment_terms === "string" ? supplier.payment_terms : null;
+  if (paymentTerms && paymentTerms.length > 200)
+    throw new ValidationError("供应商账期说明超过订单可保存长度，请先调整供应商资料");
+  // Saving also submits the order. Use one clock value for the action-field constraint.
+  const savedAt = new Date();
   return client.purchase_orders!.create({
     data: {
-      approval_status: "not_submitted",
+      approval_status: "pending",
+      created_at: savedAt,
       created_by: actor,
+      updated_at: savedAt,
       currency_code: "CNY",
       document_date: documentDate,
       document_no: documentNo("PO"),
       expected_delivery_date: expectedDeliveryDate,
       paid_amount: 0,
-      payment_terms_snapshot: text(payload, "paymentTermsSnapshot", true),
+      payment_terms_snapshot: paymentTerms,
       purchase_order_items: { create: detailRows },
       remark: text(payload, "remark", true),
-      settlement_method: text(payload, "settlementMethod"),
-      status: "draft",
+      settlement_method: requiredText(supplier, "settlement_method"),
+      status: "pending_approval",
+      submitted_at: savedAt,
+      submitted_by: actor,
       subtotal_amount: subtotal,
       supplier_code_snapshot: supplier.supplier_code,
       supplier_id: supplier.id,
@@ -372,46 +469,6 @@ async function createPurchase(client: DynamicClient, payload: WorkflowPayload, a
     },
     include: { purchase_order_items: true },
   });
-}
-
-async function purchaseDetailRows(
-  client: DynamicClient,
-  sourceItems: JsonRecord[],
-  actor: string,
-): Promise<{
-  detailRows: JsonRecord[];
-  subtotal: number;
-  taxTotal: number;
-  quantityTotal: number;
-}> {
-  const snapshots = await skuSnapshots(client, sourceItems);
-  let subtotal = 0;
-  let taxTotal = 0;
-  let quantityTotal = 0;
-  const detailRows = sourceItems.map((item, index) => {
-    const quantity = positiveDecimal(item.quantity, "quantity");
-    const unitPrice = decimal(item.unitPrice, "unitPrice");
-    const taxRate = decimal(item.taxRate, "taxRate");
-    const lineAmount = quantity * unitPrice;
-    const taxAmount = lineAmount * taxRate;
-    subtotal += lineAmount;
-    taxTotal += taxAmount;
-    quantityTotal += quantity;
-    return {
-      ...commonItem(item, snapshots.get(String(item.skuId))!, index + 1, actor),
-      expected_delivery_date: optionalDate(item, "expectedDeliveryDate"),
-      inbound_quantity: 0,
-      inspected_quantity: 0,
-      line_amount: lineAmount,
-      qualified_quantity: 0,
-      received_quantity: 0,
-      returned_quantity: 0,
-      tax_amount: taxAmount,
-      tax_rate: taxRate,
-      unit_price: unitPrice,
-    };
-  });
-  return { detailRows, quantityTotal, subtotal, taxTotal };
 }
 
 async function productionDetailRows(
@@ -510,7 +567,11 @@ async function createPayment(client: DynamicClient, command: WorkflowCommand, ac
   const order = await client[orderModel]!.findFirst({ where: { id: command.parentId } });
   if (!order) throw new NotFoundError();
   const amount = decimal(command.payload.paymentAmount, "paymentAmount");
-  if (order.status !== "approved") {
+  if (
+    purchase
+      ? !["approved", "purchasing", "inspected", "received"].includes(String(order.status))
+      : order.status !== "approved"
+  ) {
     throw new ConflictError("仅已审核订单允许登记付款");
   }
   if (amount <= 0 || amount > Number(order.unpaid_amount)) {
@@ -755,7 +816,11 @@ async function loadInspectionSource(
     sourceType === "purchase"
       ? ["approved"]
       : ["approved", "in_production", "partially_completed", "completed"];
-  if (!allowedSourceStates.includes(String(source.status))) {
+  if (
+    sourceType === "purchase"
+      ? (await purchaseState(client, sourceId)).businessStatus !== "purchasing"
+      : !allowedSourceStates.includes(String(source.status))
+  ) {
     throw new ConflictError("当前来源单据状态不允许创建验收");
   }
   return {
@@ -827,6 +892,8 @@ function buildInspectionDetailRows(
       updated_by: actor,
     };
   });
+  if (sourceType === "purchase")
+    assertWholeProcurement([...sourceItemsById.values()], detailRows, "inspection");
   return { detailRows, inspected, qualified, unqualified };
 }
 
@@ -836,7 +903,8 @@ function overallInspectionResult(qualified: number, unqualified: number): string
 
 async function createInspection(client: DynamicClient, payload: WorkflowPayload, actor: string) {
   const { sourceId, sourceItemsById, sourceType } = await loadInspectionSource(client, payload);
-  await activeWarehouse(client, requiredText(payload, "inspectionWarehouseId"));
+  if (sourceType === "production")
+    await activeWarehouse(client, requiredText(payload, "inspectionWarehouseId"));
   const sourceItems = items(payload);
   const { detailRows, inspected, qualified, unqualified } = buildInspectionDetailRows(
     sourceType,
@@ -854,8 +922,12 @@ async function createInspection(client: DynamicClient, payload: WorkflowPayload,
       inspection_date: inspectionDate,
       inspection_order_items: { create: detailRows },
       inspection_result: overallInspectionResult(qualified, unqualified),
-      inspection_warehouse_id: requiredText(payload, "inspectionWarehouseId"),
-      inspector_id: requiredText(payload, "inspectorId"),
+      ...(sourceType === "purchase"
+        ? procurementInspector(payload)
+        : {
+            inspection_warehouse_id: requiredText(payload, "inspectionWarehouseId"),
+            inspector_id: requiredText(payload, "inspectorId"),
+          }),
       production_order_id: sourceType === "production" ? sourceId : null,
       purchase_order_id: sourceType === "purchase" ? sourceId : null,
       remark: text(payload, "remark", true),
@@ -892,8 +964,8 @@ async function createInbound(client: DynamicClient, command: WorkflowCommand, ac
     },
   });
   if (!source || !inspection) throw new ValidationError("正式入库必须关联已确认且来源一致的验收单");
-  if (purchase && source.status !== "approved") {
-    throw new ConflictError("仅已审核采购单允许创建入库单");
+  if (purchase && (await purchaseState(client, source.id)).businessStatus !== "inspected") {
+    throw new ConflictError("仅已质检采购单允许创建入库单");
   }
   if (
     !purchase &&
@@ -955,6 +1027,7 @@ async function createInbound(client: DynamicClient, command: WorkflowCommand, ac
       unit_cost: unitCost,
     };
   });
+  if (purchase) assertWholeProcurement([...sourceItemMap.values()], detailRows, "inbound");
   return client.inbound_orders!.create({
     data: {
       approval_status: "not_submitted",
@@ -999,6 +1072,42 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
     Number(command.payload.versionNo) !== Number(current.version_no)
   ) {
     throw new ConflictError("单据版本已变化");
+  }
+  if (command.resource === "purchase") {
+    const order = await purchaseState(client, current.id);
+    if (
+      order.businessStatus !== "pending_approval" ||
+      !["approve", "reject"].includes(command.action)
+    )
+      throw new ConflictError("当前采购状态不支持该操作");
+    const status = command.action === "approve" ? "purchasing" : "pending_approval";
+    const now = new Date();
+    const updated = await client.purchase_orders!.update({
+      where: { id: current.id },
+      data: {
+        status,
+        approval_status: command.action === "approve" ? "approved" : "rejected",
+        submitted_at: current.submitted_at ?? now,
+        submitted_by: current.submitted_by ?? current.created_by,
+        ...(command.action === "approve" ? { approved_by: actor, approved_at: now } : {}),
+        updated_by: actor,
+        version_no: { increment: 1 },
+      },
+    });
+    await client.document_status_histories!.create({
+      data: {
+        object_id: current.id,
+        object_no_snapshot: current.document_no,
+        object_type: "purchase",
+        from_status: current.status,
+        to_status: status,
+        changed_at: now,
+        changed_by: actor,
+        change_reason: text(command.payload, "reason", true),
+        remark: text(command.payload, "comment", true),
+      },
+    });
+    return updated;
   }
   if (command.resource === "production-completion") {
     const state = {
@@ -1095,6 +1204,16 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
       where: { id: current.id },
     });
     const inspectionItems = (inspection?.inspection_order_items as JsonRecord[]) ?? [];
+    if (current.source_type === "purchase" && command.action === "confirm") {
+      const source = await purchaseState(client, current.purchase_order_id);
+      if (source.businessStatus !== "purchasing")
+        throw new ConflictError("仅采购中订单允许确认质检");
+      assertWholeProcurement(
+        source.purchase_order_items as unknown as JsonRecord[],
+        inspectionItems,
+        "inspection",
+      );
+    }
     return client.$transaction(async (transaction) => {
       const direction = command.action === "revoke" ? -1 : command.action === "confirm" ? 1 : 0;
       if (direction !== 0) {
@@ -1119,7 +1238,11 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
         data: {
           ...(command.action === "confirm" ? { approved_at: new Date(), approved_by: actor } : {}),
           ...(command.action === "revoke" || command.action === "void"
-            ? { cancel_reason: text(command.payload, "reason", true) }
+            ? {
+                cancel_reason: requiredText(command.payload, "reason"),
+                cancelled_at: new Date(),
+                cancelled_by: actor,
+              }
             : {}),
           ...(command.action === "submit" ? { submitted_at: new Date(), submitted_by: actor } : {}),
           status: state.to,
@@ -1141,6 +1264,13 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
           to_status: state.to,
         },
       });
+      if (current.source_type === "purchase" && direction !== 0)
+        await setPurchaseState(
+          transaction,
+          current.purchase_order_id,
+          direction === 1 ? "inspected" : "purchasing",
+          actor,
+        );
       return updated;
     });
   }
@@ -1154,13 +1284,9 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
   const rule = transition[command.action];
   if (!rule || !rule.from.includes(String(current.status)))
     throw new ConflictError("当前单据状态不允许此操作");
-  if (
-    (command.resource === "purchase" || command.resource === "production") &&
-    ["unapprove", "void"].includes(command.action)
-  ) {
-    const sourceField =
-      command.resource === "purchase" ? "purchase_order_id" : "production_order_id";
-    const sourceType = command.resource === "purchase" ? "purchase_order" : "production_order";
+  if (command.resource === "production" && ["unapprove", "void"].includes(command.action)) {
+    const sourceField = "production_order_id";
+    const sourceType = "production_order";
     const [inspections, inbounds] = await Promise.all([
       client.inspection_orders!.count({ where: { [sourceField]: current.id } }),
       client.inbound_orders!.count({
@@ -1213,6 +1339,8 @@ async function updateDocument(
   command: WorkflowCommand,
   actor: string,
 ): Promise<JsonRecord> {
+  if (command.resource === "purchase")
+    throw new ConflictError("采购订单保存后不支持编辑，请删除未执行的待审核订单后重新创建");
   const model = modelFor(command.resource);
   const current = await client[model]!.findFirst({ where: { id: command.entityId } });
   if (!current) throw new NotFoundError();
@@ -1223,80 +1351,7 @@ async function updateDocument(
   if (!Number.isInteger(versionNo) || versionNo !== Number(current.version_no)) {
     throw new ConflictError("单据版本已变化");
   }
-  if (command.resource === "purchase" && command.payload.items !== undefined) {
-    const sourceItems = items(command.payload);
-    const { detailRows, quantityTotal, subtotal, taxTotal } = await purchaseDetailRows(
-      client,
-      sourceItems,
-      actor,
-    );
-    const supplier =
-      command.payload.supplierId !== undefined
-        ? await activeSupplier(client, requiredText(command.payload, "supplierId"))
-        : current;
-    const documentDate =
-      command.payload.documentDate !== undefined ? date(command.payload, "documentDate") : null;
-    const expectedDeliveryDate =
-      command.payload.expectedDeliveryDate !== undefined
-        ? date(command.payload, "expectedDeliveryDate")
-        : null;
-    const effectiveDocumentDate = documentDate ?? (current.document_date as Date);
-    const effectiveExpectedDeliveryDate =
-      expectedDeliveryDate ?? (current.expected_delivery_date as Date);
-    if (
-      effectiveDocumentDate instanceof Date &&
-      effectiveExpectedDeliveryDate instanceof Date &&
-      effectiveExpectedDeliveryDate < effectiveDocumentDate
-    ) {
-      throw new ValidationError("预计交付日不得早于单据日期", [
-        { field: "expectedDeliveryDate", message: "日期范围无效" },
-      ]);
-    }
-    if (subtotal + taxTotal < Number(current.paid_amount ?? 0)) {
-      throw new ConflictError("订单金额不得低于已付款金额");
-    }
-    return client.$transaction(async (transaction) => {
-      await transaction.purchase_order_items!.deleteMany({
-        where: { purchase_order_id: current.id },
-      });
-      return record(
-        await transaction.purchase_orders!.update({
-          data: {
-            ...(command.payload.documentDate !== undefined ? { document_date: documentDate } : {}),
-            ...(command.payload.expectedDeliveryDate !== undefined
-              ? { expected_delivery_date: expectedDeliveryDate }
-              : {}),
-            ...(command.payload.supplierId !== undefined
-              ? {
-                  supplier_code_snapshot: supplier.supplier_code,
-                  supplier_id: supplier.id,
-                  supplier_name_snapshot: supplier.supplier_name,
-                }
-              : {}),
-            ...(command.payload.settlementMethod !== undefined
-              ? { settlement_method: text(command.payload, "settlementMethod") }
-              : {}),
-            ...(command.payload.paymentTermsSnapshot !== undefined
-              ? { payment_terms_snapshot: text(command.payload, "paymentTermsSnapshot", true) }
-              : {}),
-            ...(command.payload.remark !== undefined
-              ? { remark: text(command.payload, "remark", true) }
-              : {}),
-            purchase_order_items: { create: detailRows },
-            subtotal_amount: subtotal,
-            tax_amount: taxTotal,
-            total_amount: subtotal + taxTotal,
-            total_quantity: quantityTotal,
-            unpaid_amount: subtotal + taxTotal - Number(current.paid_amount ?? 0),
-            updated_by: actor,
-            version_no: versionNo + 1,
-          },
-          include: { purchase_order_items: true },
-          where: { id: current.id },
-        }),
-      );
-    });
-  } else if (command.resource === "production" && command.payload.items !== undefined) {
+  if (command.resource === "production" && command.payload.items !== undefined) {
     if ("purchaseOrderId" in command.payload) throw new ValidationError("生产单不得引用采购单");
     const sourceItems = items(command.payload);
     const existingItems = await client.production_order_items!.findMany({
@@ -1383,6 +1438,13 @@ async function updateDocument(
     });
   } else if (command.resource === "inspection" && command.payload.items !== undefined) {
     const currentSourceType = requireInspectionSourceType(String(current.source_type));
+    if (
+      (command.payload.purchaseOrderId !== undefined &&
+        command.payload.purchaseOrderId !== current.purchase_order_id) ||
+      (command.payload.productionOrderId !== undefined &&
+        command.payload.productionOrderId !== current.production_order_id)
+    )
+      throw new ValidationError("质检来源不可修改");
     const payloadWithSource: WorkflowPayload = {
       ...command.payload,
       sourceType: currentSourceType,
@@ -1391,7 +1453,12 @@ async function updateDocument(
         : { productionOrderId: current.production_order_id }),
     };
     const { sourceItemsById, sourceType } = await loadInspectionSource(client, payloadWithSource);
-    if (command.payload.inspectionWarehouseId !== undefined) {
+    if (currentSourceType === "purchase")
+      procurementInspector({
+        ...command.payload,
+        inspectorName: command.payload.inspectorName ?? current.inspector_name,
+      });
+    if (currentSourceType === "production" && command.payload.inspectionWarehouseId !== undefined) {
       await activeWarehouse(client, requiredText(command.payload, "inspectionWarehouseId"));
     }
     const sourceItems = items(command.payload);
@@ -1410,6 +1477,12 @@ async function updateDocument(
       return record(
         await transaction.inspection_orders!.update({
           data: {
+            ...(currentSourceType === "purchase"
+              ? procurementInspector({
+                  ...command.payload,
+                  inspectorName: command.payload.inspectorName ?? current.inspector_name,
+                })
+              : {}),
             ...(command.payload.inspectionDate !== undefined
               ? { document_date: inspectionDate, inspection_date: inspectionDate }
               : {}),
@@ -1472,6 +1545,15 @@ async function updateDocument(
   const fields = allowed[command.resource];
   if (!fields) throw new ConflictError("当前资源不支持编辑");
   const data: JsonRecord = { updated_by: actor, version_no: versionNo + 1 };
+  if (command.resource === "inspection" && current.source_type === "purchase") {
+    Object.assign(
+      data,
+      procurementInspector({
+        ...command.payload,
+        inspectorName: command.payload.inspectorName ?? current.inspector_name,
+      }),
+    );
+  }
   for (const field of fields) {
     if (!(field in command.payload)) continue;
     data[toSnake(field)] =
@@ -1498,6 +1580,10 @@ async function confirmInbound(
     where: { id: inbound.id },
   });
   const rows = (inboundWithItems?.inbound_order_items as JsonRecord[]) ?? [];
+  const purchase = inbound.source_document_type === "purchase_order";
+  const purchaseOrder = purchase ? await purchaseState(client, inbound.source_document_id) : null;
+  if (purchaseOrder && purchaseOrder.businessStatus !== "inspected")
+    throw new ConflictError("仅已质检采购单允许确认入库");
   if (rows.length === 0) throw new ValidationError("入库单明细不能为空");
   await activeWarehouse(client, String(inbound.warehouse_id));
   const inspection = await client.inspection_orders!.findFirst({
@@ -1544,6 +1630,8 @@ async function confirmInbound(
       const remaining =
         Number(row.quantity) - (alreadyConfirmedByInboundItem.get(inboundOrderItemId) ?? 0);
       if (quantity > remaining) throw new ValidationError("确认入库数量超过入库单剩余数量");
+      if (quantityByInboundItem.has(inboundOrderItemId))
+        throw new ValidationError("确认明细不得重复");
       quantityByInboundItem.set(inboundOrderItemId, quantity);
     }
   } else {
@@ -1580,6 +1668,14 @@ async function confirmInbound(
     }
     sourceRemaining.set(String(row.source_document_item_id), remaining - quantity);
   }
+  if (purchaseOrder)
+    assertWholeProcurement(
+      purchaseOrder.purchase_order_items as unknown as JsonRecord[],
+      rows
+        .filter((row) => quantityByInboundItem.has(String(row.id)))
+        .map((row) => ({ ...row, quantity: quantityByInboundItem.get(String(row.id)) })),
+      "inbound",
+    );
   const willComplete = rows.every((row) => {
     const already = alreadyConfirmedByInboundItem.get(String(row.id)) ?? 0;
     const current = quantityByInboundItem.get(String(row.id)) ?? 0;
@@ -1602,9 +1698,9 @@ async function confirmInbound(
           warehouse_id: inbound.warehouse_id,
         },
         update: {
-          available_quantity: { increment: item.quantity },
+          available_quantity: { increment: quantity },
           last_transaction_at: new Date(),
-          on_hand_quantity: { increment: item.quantity },
+          on_hand_quantity: { increment: quantity },
           updated_by: actor,
         },
         where: { sku_id_warehouse_id: { sku_id: item.sku_id, warehouse_id: inbound.warehouse_id } },
@@ -1661,6 +1757,8 @@ async function confirmInbound(
         to_status: nextStatus,
       },
     });
+    if (purchase && willComplete)
+      await setPurchaseState(transaction, inbound.source_document_id, "received", actor);
     return updated;
   });
 }
@@ -1727,6 +1825,8 @@ async function reverseInbound(client: DynamicClient, inbound: JsonRecord, actor:
         where: { id: item.source_document_item_id },
       });
     }
+    if (inbound.source_document_type === "purchase_order")
+      await setPurchaseState(transaction, inbound.source_document_id, "inspected", actor);
     return transaction.inbound_orders!.update({
       data: {
         status: "reversed",
@@ -1790,6 +1890,20 @@ export class PrismaWorkflowRepository implements WorkflowRepository {
     this.deletePurchase = purchaseDelete(client);
   }
 
+  async executeAtomicProcurement(
+    command: WorkflowCommand,
+    actor: AuthenticatedUser,
+    audit: (writer: AuditWriter, result: unknown) => Promise<void>,
+  ) {
+    return procurementTransaction(
+      this.client as unknown as PrismaClient,
+      command,
+      actor,
+      (tx) => new PrismaWorkflowRepository(tx).execute(command, actor),
+      audit,
+    );
+  }
+
   async execute(command: WorkflowCommand, actor: AuthenticatedUser): Promise<unknown> {
     if (command.action === "list") return list(this.client, command, actor);
     if (command.action === "detail") return detail(this.client, command, actor);
@@ -1826,6 +1940,7 @@ export class PrismaWorkflowRepository implements WorkflowRepository {
         "export",
       ].includes(command.action)
     ) {
+      if (command.resource === "purchase") await detail(this.client, command, actor);
       return related(this.client, command);
     }
     return record(await action(this.client, command, actor.userId));

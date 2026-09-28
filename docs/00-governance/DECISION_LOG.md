@@ -2794,3 +2794,20 @@ CR-008 / CR-009 均 Approved / Implemented；本地 VARCHAR(100) Migration 已�
 DEC-113 实施证据：真实专项 9 项通过，浏览器新增/删除店铺、分类三级及父级排除、库存文案复核通过。WH-000013 仅 Scope 且无业务引用，经正式 API 删除并审计；其他范围、角色、用户不变。数据库无迁移，API v1.13；本轮状态 Fixed / Pending Manual Verification，待人工岗位复验。
 
 DEC-113 完整检查：pnpm check 513 通过 / 69 条件性跳过，真实专项 9 项单独通过；状态治理一致，Health HTTP 200，AI 视觉平台正常。
+
+## DEC-114 Procurement Workflow Simplification
+
+状态：Approved。Approved By：Project Owner。Approval Date：2026-09-08。
+
+项目负责人批准 CR-011 业务目标，并正式确认采购整单一次执行、采购退出 BR-007 分批范围，异常历史只读隔离、正常历史按确认事实和数量映射。具体 Database v2.9 / API v1.14 增量与权限约束已先行登记 CR-011；保留生产分批和原授权边界，完成后一个 Commit 交付，UAT 为 Fixed / Pending Manual Verification。
+
+DEC-114 实施增量（2026-09-28）：按已批准 CR-011 部署数据库迁移；修正新建采购创建/提交时间竞争，保留原 CHECK；采购旧撤回入口移除且接口拒绝业务动作，不恢复 draft。真实保存和撤回保护专项已验证，完整采购五状态/跨用户范围任务仍在进行，未标记整体 Implemented 或 Closed。
+
+## DEC-115 Manual UAT UX Batch / Procurement Self Approval
+
+2026-09-28，Project Owner Approved，CR-012。采购订单允许有权限、有范围且状态合法的创建人自审；生产及入库职责分离保留。复用供应商结算快照和现有分类/平台关系，实施六项 UX 与采购状态收口，不新增权限/数据库字段，不覆盖已有未提交成果。一个批次、一个完整 Commit，Fixed / Pending Manual Verification。
+
+
+### DEC-115 实施收口（2026-09-28）
+
+CR-012 已实施，采购订单允许在原权限/数据范围内自审。CR-011 一并完成工程实施，历史异常保持只读；迁移已部署，无新增角色或 Permission。真实浏览器自审、HTTP 质检/快照/删除与 PostgreSQL Audit 回滚通过；新的跨用户采购入库闭环未执行，保留正式职责分离要求及人工复验项。最新报告为 `PROCUREMENT_MANAGEMENT_UX_REFACTOR_REPORT.md`，UAT Fixed / Pending Manual Verification，不标记 Closed。Phase/Task 状态不变。

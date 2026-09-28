@@ -906,8 +906,9 @@ model inspection_orders {
   purchase_order_id                           String?                  @db.Uuid
   production_order_id                         String?                  @db.Uuid
   inspection_date                             DateTime                 @db.Date
-  inspection_warehouse_id                     String                   @db.Uuid
-  inspector_id                                String                   @db.Uuid
+  inspection_warehouse_id                     String?                  @db.Uuid
+  inspector_id                                String?                  @db.Uuid
+  inspector_name                              String?                  @db.VarChar(100)
   total_inspected_quantity                    Decimal                  @db.Decimal(18, 4)
   total_qualified_quantity                    Decimal                  @db.Decimal(18, 4)
   total_unqualified_quantity                  Decimal                  @db.Decimal(18, 4)
@@ -918,8 +919,8 @@ model inspection_orders {
   users_inspection_orders_approved_byTousers  users?                   @relation("inspection_orders_approved_byTousers", fields: [approved_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_inspection_orders_approved_by")
   users_inspection_orders_cancelled_byTousers users?                   @relation("inspection_orders_cancelled_byTousers", fields: [cancelled_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_inspection_orders_cancelled_by")
   users_inspection_orders_created_byTousers   users                    @relation("inspection_orders_created_byTousers", fields: [created_by], references: [id], onUpdate: Restrict, map: "fk_inspection_orders_created_by")
-  warehouses                                  warehouses               @relation(fields: [inspection_warehouse_id], references: [id], onUpdate: Restrict, map: "fk_inspection_orders_inspection_warehouse_id")
-  users_inspection_orders_inspector_idTousers users                    @relation("inspection_orders_inspector_idTousers", fields: [inspector_id], references: [id], onUpdate: Restrict, map: "fk_inspection_orders_inspector_id")
+  warehouses                                  warehouses?              @relation(fields: [inspection_warehouse_id], references: [id], onUpdate: Restrict, map: "fk_inspection_orders_inspection_warehouse_id")
+  users_inspection_orders_inspector_idTousers users?                   @relation("inspection_orders_inspector_idTousers", fields: [inspector_id], references: [id], onUpdate: Restrict, map: "fk_inspection_orders_inspector_id")
   production_orders                           production_orders?       @relation(fields: [production_order_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_inspection_orders_production_order_id")
   purchase_orders                             purchase_orders?         @relation(fields: [purchase_order_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_inspection_orders_purchase_order_id")
   users_inspection_orders_submitted_byTousers users?                   @relation("inspection_orders_submitted_byTousers", fields: [submitted_by], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_inspection_orders_submitted_by")

@@ -20,19 +20,39 @@ import {
 } from "@/lib/workflow";
 
 describe("Parallel workflow pages", () => {
-  it("shows purchase delete only for permitted draft or administrator UAT cancelled", () => {
+  it("hides obsolete purchase withdrawal without changing production withdrawal", () => {
+    expect(actionsFor(procurementViews[0]!).map((action) => action.action)).not.toContain(
+      "withdraw",
+    );
+    expect(actionsFor(productionViews[0]!).map((action) => action.action)).toContain("withdraw");
+  });
+  it("shows purchase delete only for permitted pending approval or administrator UAT cancelled", () => {
     const visible = (
       status: string,
       administrator = false,
       canCancel = true,
       remark = "UAT-003A-test",
-    ) => purchaseDeleteVisible("purchase-orders", { status, remark }, canCancel, administrator);
-    expect(visible("draft")).toBe(true);
-    expect(visible("draft", false, false)).toBe(false);
+    ) =>
+      purchaseDeleteVisible(
+        "purchase-orders",
+        { status, businessStatus: status, remark },
+        canCancel,
+        administrator,
+      );
+    expect(visible("pending_approval")).toBe(true);
+    expect(visible("pending_approval", false, false)).toBe(false);
     expect(visible("cancelled")).toBe(false);
     expect(visible("cancelled", true)).toBe(true);
     expect(visible("cancelled", true, true, "正式订单")).toBe(false);
-    for (const status of ["approved", "completed", "pending_approval", "rejected"])
+    for (const status of [
+      "draft",
+      "purchasing",
+      "inspected",
+      "received",
+      "approved",
+      "completed",
+      "rejected",
+    ])
       expect(visible(status, true)).toBe(false);
     expect(purchaseDeleteVisible("production-orders", { status: "draft" }, true, true)).toBe(false);
   });
@@ -218,12 +238,8 @@ describe("Parallel workflow pages", () => {
 
   it("exposes Chinese status action buttons through existing permission codes", () => {
     expect(actionsFor(procurementViews[0]!).map((action) => action.label)).toEqual([
-      "提交",
-      "撤回",
       "审核",
       "驳回",
-      "反审核",
-      "取消",
     ]);
     expect(actionsFor(crossBorderViews[0]!).map((action) => action.label)).toContain("确认发货");
     expect(actionsFor(warehouseOperationViews[4]!).map((action) => action.label)).toContain(

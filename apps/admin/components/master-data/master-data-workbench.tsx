@@ -1,6 +1,6 @@
 "use client";
 
-import { categoryParentOptions } from "../../lib/category-hierarchy";
+import { categoryParentOptions, categoryTreeRows } from "../../lib/category-hierarchy";
 import { FileUp, Pencil, Plus, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -482,17 +482,38 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
       setLoading(true);
       setError(null);
       try {
-        const envelope = await apiRequest(`${definition.apiPath}?${overrideQuery ?? query}`);
-        const records = Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : [];
         if (definition.key === "product-categories") {
-          const parents = await resolveCategoryParents(records, async (id) => {
-            const parent = await apiRequest(`${definition.apiPath}/${id}`);
-            return parent.data as RecordItem;
-          });
-          setCategoryParents(parents);
+          const params = new URLSearchParams(overrideQuery ?? query);
+          const search = params.get("keyword")?.toLowerCase() ?? "";
+          const active = params.get("isActive");
+          const currentPage = Number(params.get("page") ?? 1);
+          const size = Number(params.get("pageSize") ?? 20);
+          params.delete("keyword");
+          params.delete("isActive");
+          params.set("pageSize", "100");
+          const all: RecordItem[] = [];
+          for (let index = 1; ; index += 1) {
+            params.set("page", String(index));
+            const response = await apiRequest(`${definition.apiPath}?${params}`);
+            all.push(...(Array.isArray(response.data) ? (response.data as RecordItem[]) : []));
+            if (all.length >= (response.meta?.total ?? all.length)) break;
+          }
+          setCategoryParents(
+            Object.fromEntries(all.map((row) => [row.id, String(row.categoryName)])),
+          );
+          const ordered = categoryTreeRows(all).filter(
+            (row) =>
+              (!search ||
+                `${row.categoryCode} ${row.categoryName}`.toLowerCase().includes(search)) &&
+              (!active || String(row.isActive) === active),
+          );
+          setItems(ordered.slice((currentPage - 1) * size, currentPage * size));
+          setTotal(ordered.length);
+        } else {
+          const envelope = await apiRequest(`${definition.apiPath}?${overrideQuery ?? query}`);
+          setItems(Array.isArray(envelope.data) ? (envelope.data as RecordItem[]) : []);
+          setTotal(envelope.meta?.total ?? 0);
         }
-        setItems(records);
-        setTotal(envelope.meta?.total ?? 0);
       } catch (requestError) {
         setItems([]);
         setError(requestError instanceof Error ? requestError.message : "加载失败");
@@ -995,16 +1016,18 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
             <table className="w-full border-collapse text-left text-sm">
               <thead className="bg-muted/50 text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 font-medium">编码</th>
-                  <th className="px-4 py-3 font-medium">名称</th>
-                  {definition.key === "product-categories" ? (
-                    <>
-                      <th className="px-4 py-3 font-medium">上级分类</th>
-                      <th className="px-4 py-3 font-medium">层级</th>
-                    </>
-                  ) : null}
-                  <th className="px-4 py-3 font-medium">状态</th>
-                  <th className="px-4 py-3 font-medium">更新时间</th>
+                  {(definition.key === "products"
+                    ? ["产品编码", "产品分类", "产品名称", "产品型号", "默认单位", "状态"]
+                    : definition.key === "stores"
+                      ? ["店铺编码", "所属平台", "店铺名称", "平台店铺标识", "状态"]
+                      : definition.key === "product-categories"
+                        ? ["编码", "名称", "上级分类", "层级", "状态"]
+                        : ["编码", "名称", "状态", "更新时间"]
+                  ).map((label) => (
+                    <th key={label} className="px-4 py-3 font-medium">
+                      {label}
+                    </th>
+                  ))}
                   <th className="px-4 py-3 text-right font-medium">操作</th>
                 </tr>
               </thead>
@@ -1014,7 +1037,32 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                     <td className="px-4 py-3 font-medium">
                       {displayValue(item[definition.codeField])}
                     </td>
-                    <td className="px-4 py-3">{displayValue(item[definition.nameField])}</td>
+                    {definition.key === "products" ? (
+                      <td className="px-4 py-3">{displayValue(item.categoryPath)}</td>
+                    ) : null}
+                    {definition.key === "stores" ? (
+                      <td className="px-4 py-3">
+                        {displayValue(
+                          (item.platform as Record<string, unknown> | undefined)?.platformName,
+                        )}
+                      </td>
+                    ) : null}
+                    <td className="px-4 py-3 whitespace-pre">
+                      {displayValue(item.treeLabel ?? item[definition.nameField])}
+                    </td>
+                    {definition.key === "products" ? (
+                      <>
+                        <td className="px-4 py-3">{displayValue(item.productNameEn)}</td>
+                        <td className="px-4 py-3">
+                          {MASTER_DATA_FIELD_OPTIONS.units.find(
+                            (option) => option.value === item.defaultUnit,
+                          )?.label ?? displayValue(item.defaultUnit)}
+                        </td>
+                      </>
+                    ) : null}
+                    {definition.key === "stores" ? (
+                      <td className="px-4 py-3">{displayValue(item.externalStoreId)}</td>
+                    ) : null}
                     {definition.key === "product-categories" ? (
                       <>
                         <td className="px-4 py-3">
@@ -1030,9 +1078,11 @@ export function MasterDataWorkbench({ definition, group }: MasterDataWorkbenchPr
                         {item.isActive === false ? "停用" : "启用"}
                       </StatusBadge>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {displayValue(item.updatedAt)}
-                    </td>
+                    {!["products", "stores", "product-categories"].includes(definition.key) ? (
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {displayValue(item.updatedAt)}
+                      </td>
+                    ) : null}
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
                         {definition.key === "products" ? (

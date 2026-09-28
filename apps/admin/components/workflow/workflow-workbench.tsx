@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  PurchaseForm,
+  PurchaseDetail,
+  PurchaseListCells,
+  purchaseStatus,
+} from "./purchase-experience";
 import { Eye, Plus, RefreshCw, X } from "lucide-react";
 import {
   type ChangeEvent,
@@ -59,7 +65,7 @@ export function purchaseDeleteVisible(
   return (
     viewId === "purchase-orders" &&
     canCancel &&
-    (row.status === "draft" ||
+    ((!row.legacyReviewRequired && row.businessStatus === "pending_approval") ||
       (row.status === "cancelled" &&
         administrator &&
         isUatPurchaseOrder({ documentNo: row.documentNo, remark: row.remark })))
@@ -145,6 +151,9 @@ export const WORKFLOW_SURFACE_CLASSES = {
 } as const;
 
 const STATUS_LABELS: Record<string, string> = {
+  purchasing: "采购中",
+  inspected: "已质检",
+  received: "已入库",
   approved: "已审核",
   cancelled: "已取消",
   completed: "已完成",
@@ -292,7 +301,7 @@ const OPTION_SOURCES = {
   },
   purchaseOrders: {
     key: "purchaseOrders",
-    labelFields: ["documentNo", "supplierNameSnapshot", "status"],
+    labelFields: ["documentNo", "supplierNameSnapshot", "businessStatus"],
     path: "/api/v1/purchase-orders?page=1&pageSize=100",
   },
   skus: {
@@ -343,15 +352,12 @@ export function formFor(view: WorkflowView): BusinessForm | null {
           type: "select",
         },
         { key: "expectedDeliveryDate", label: "预计交付日", required: true, type: "date" },
-        { key: "settlementMethod", label: "结算方式", required: true, type: "text" },
         { key: "remark", label: "备注", type: "textarea" },
       ],
       itemFields: [
         { key: "skuId", label: "SKU", optionKey: "skus", required: true, type: "select" },
         createNumberField("quantity", "采购数量"),
         createNumberField("unitPrice", "单价"),
-        { key: "taxRate", label: "税率", required: true, type: "number" },
-        { key: "expectedDeliveryDate", label: "明细交期", type: "date" },
       ],
       optionSources: [OPTION_SOURCES.suppliers, OPTION_SOURCES.skus],
     };
@@ -490,13 +496,17 @@ export function formFor(view: WorkflowView): BusinessForm | null {
           type: "select",
         },
         { key: "inspectionDate", label: "质检日期", required: true, type: "date" },
-        {
-          key: "inspectionWarehouseId",
-          label: "质检仓库",
-          optionKey: "warehouses",
-          required: true,
-          type: "select",
-        },
+        ...(purchase
+          ? [{ key: "inspectorName", label: "质检员", required: true, type: "text" as const }]
+          : [
+              {
+                key: "inspectionWarehouseId",
+                label: "质检仓库",
+                optionKey: "warehouses",
+                required: true,
+                type: "select" as const,
+              },
+            ]),
         { key: "remark", label: "质检说明", type: "textarea" },
       ],
       itemFields: [
@@ -790,16 +800,11 @@ export function actionsFor(view: WorkflowView): readonly WorkflowAction[] {
       permission: `${resource}.${action}` as PermissionCode,
       ...(requiresReason ? { requiresReason } : {}),
     }));
-  if (view.id === "purchase-orders") {
+  if (view.id === "purchase-orders")
     return map("purchase.order", [
-      ["submit", "提交"],
-      ["withdraw", "撤回"],
       ["approve", "审核"],
       ["reject", "驳回", true],
-      ["unapprove", "反审核"],
-      ["cancel", "取消", true],
     ]);
-  }
   if (view.id === "production-orders") {
     return map("production.order", [
       ["submit", "提交"],
@@ -995,6 +1000,7 @@ function rowDate(row: Row): string {
 }
 
 function rowStatus(row: Row, view?: WorkflowView): string {
+  if (view?.id === "purchase-orders") return purchaseStatus(row);
   const value =
     row.status ??
     row.alertStatus ??
@@ -1062,6 +1068,7 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Row | null>(null);
   const [timeline, setTimeline] = useState<Row[]>([]);
+  const [legacyReview, setLegacyReview] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [options, setOptions] = useState<OptionsMap>({});
@@ -1084,8 +1091,9 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
     const query = new URLSearchParams({ page: String(page), pageSize: String(PAGE_SIZE) });
     if (keyword.trim()) query.set("keyword", keyword.trim());
     if (status) query.set("status", status);
+    if (legacyReview) query.set("legacyReview", "true");
     return `${view.apiPath}${separator}${query}`;
-  }, [keyword, page, parentFilter, status, view.apiPath]);
+  }, [keyword, page, parentFilter, status, view.apiPath, legacyReview]);
 
   const sourceItemOptions = useMemo<readonly Option[]>(() => {
     if (!form?.sourceItems) return [];
@@ -1167,8 +1175,20 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
     let active = true;
     void Promise.all(
       form.optionSources.map(async (source) => {
-        const envelope = await request(source.path);
-        const data = Array.isArray(envelope.data) ? (envelope.data as Row[]) : [];
+        const path =
+          view.id === "purchase-orders" && ["suppliers", "skus"].includes(source.key)
+            ? `/api/v1/${source.key}?isActive=true&pageSize=100`
+            : source.path;
+        const data: Row[] = [];
+        for (let optionPage = 1; ; optionPage += 1) {
+          const [base, search] = path.split("?");
+          const params = new URLSearchParams(search);
+          params.set("page", String(optionPage));
+          const envelope = await request(`${base}?${params}`);
+          const batch = Array.isArray(envelope.data) ? (envelope.data as Row[]) : [];
+          data.push(...batch);
+          if (!batch.length || data.length >= (envelope.meta?.total ?? data.length)) break;
+        }
         return [source.key, data.map((item) => toOption(item, source))] as const;
       }),
     )
@@ -1246,7 +1266,7 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
       }
     }
     if (view.sourceType && view.id.includes("inspection")) payload.sourceType = view.sourceType;
-    if (user?.id && view.id.includes("inspection")) payload.inspectorId = user.id;
+    if (user?.id && view.id === "production-inspections") payload.inspectorId = user.id;
     if (form.sourceItems) {
       const selectedId = fieldInputValue(formData.get(form.sourceItems.dependsOn));
       if (sourceLoading || !sourceRows[0] || sourceRows[0].id !== selectedId)
@@ -1254,7 +1274,39 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
       Object.assign(payload, sourceContextFor(view, sourceRows[0]));
     }
 
-    if (form.itemFields?.length) {
+    if (["purchase-inspections", "purchase-inbound"].includes(view.id)) {
+      if (!sourceItemOptions.length) throw new Error("来源单据没有可处理明细。");
+      payload.items = sourceItemOptions.map((option) => {
+        const quantity = availableSourceQuantity(view, option.raw, sourceRows[1])!;
+        if (view.id === "purchase-inspections") {
+          const qualifiedQuantity = Number(formData.get(`batch.${option.value}.qualifiedQuantity`));
+          const unqualifiedQuantity = Number(
+            formData.get(`batch.${option.value}.unqualifiedQuantity`),
+          );
+          if (qualifiedQuantity + unqualifiedQuantity !== quantity)
+            throw new Error("合格与不合格数量之和必须覆盖全部待质检数量。");
+          return {
+            sourceItemId: option.value,
+            skuId: option.raw.skuId,
+            inspectedQuantity: quantity,
+            qualifiedQuantity,
+            unqualifiedQuantity,
+            inspectionResult: unqualifiedQuantity > 0 ? "unqualified" : "qualified",
+            defectDescription: formData.get(`batch.${option.value}.defectDescription`) || undefined,
+            dispositionMethod: formData.get(`batch.${option.value}.dispositionMethod`) || undefined,
+          };
+        }
+        return {
+          inspectionOrderItemId: option.value,
+          purchaseOrderItemId: option.raw.sourceItemId,
+          skuId: option.raw.skuId,
+          quantity,
+          unitCost: Number(formData.get(`batch.${option.value}.unitCost`)),
+          inventoryCondition: "qualified",
+          batchNo: formData.get(`batch.${option.value}.batchNo`),
+        };
+      });
+    } else if (form.itemFields?.length) {
       const item: Record<string, unknown> = {};
       for (const field of form.itemFields) {
         if (field.derived) continue;
@@ -1483,7 +1535,20 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
         </Card>
       ) : null}
 
-      <Card className="overflow-hidden">
+      {view.id === "purchase-orders" ? (
+        <label className="flex gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={legacyReview}
+            onChange={(event) => {
+              setLegacyReview(event.target.checked);
+              setPage(1);
+            }}
+          />
+          查看历史数据待复核订单（只读）
+        </label>
+      ) : null}
+      <Card className="overflow-x-auto">
         {loading ? (
           <div className="space-y-3 p-5" aria-label="正在加载">
             <Skeleton className="h-10" />
@@ -1496,22 +1561,32 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
           <table className="w-full text-left text-sm">
             <thead className="bg-muted/50 text-muted-foreground">
               <tr>
-                <th className="px-4 py-3">单号</th>
-                <th className="px-4 py-3">日期</th>
-                <th className="px-4 py-3">状态</th>
-                <th className="px-4 py-3">数量</th>
+                {(view.id === "purchase-orders"
+                  ? ["采购日期", "供应商", "SKU", "数量", "单价", "总金额", "状态"]
+                  : ["单号", "日期", "状态", "数量"]
+                ).map((label) => (
+                  <th key={label} className="px-4 py-3">
+                    {label}
+                  </th>
+                ))}
                 <th className="px-4 py-3 text-right">操作</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr className="border-t" key={row.id}>
-                  <td className="px-4 py-3 font-medium">{rowTitle(row)}</td>
-                  <td className="px-4 py-3">{rowDate(row)}</td>
-                  <td className="px-4 py-3">
-                    <StatusBadge tone="info">{rowStatus(row, view)}</StatusBadge>
-                  </td>
-                  <td className="px-4 py-3">{rowQuantity(row)}</td>
+                  {view.id === "purchase-orders" ? (
+                    <PurchaseListCells row={row} />
+                  ) : (
+                    <>
+                      <td className="px-4 py-3 font-medium">{rowTitle(row)}</td>
+                      <td className="px-4 py-3">{rowDate(row)}</td>
+                      <td className="px-4 py-3">
+                        <StatusBadge tone="info">{rowStatus(row, view)}</StatusBadge>
+                      </td>
+                      <td className="px-4 py-3">{rowQuantity(row)}</td>
+                    </>
+                  )}
                   <td className="px-4 py-3 text-right">
                     <Button variant="ghost" onClick={() => void openDetail(row)}>
                       <Eye data-icon="inline-start" />
@@ -1546,7 +1621,11 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-semibold">{view.label}详情</h2>
-                <p className="text-sm text-muted-foreground">业务字段、状态操作与正式时间线。</p>
+                <p className="text-sm text-muted-foreground">
+                  {view.id === "purchase-orders"
+                    ? "查看采购内容、金额及流程进度。"
+                    : "业务字段、状态操作与正式时间线。"}
+                </p>
               </div>
               <Button
                 variant="ghost"
@@ -1557,7 +1636,11 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                 <X />
               </Button>
             </div>
-            {actions.length ? (
+            {actions.some(
+              (action) =>
+                actionStateAllowed(view, action.action, selected) &&
+                hasPermission(action.permission),
+            ) ? (
               <Card className={WORKFLOW_SURFACE_CLASSES.sectionCard}>
                 <h3 className="text-sm font-semibold">状态操作</h3>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -1582,28 +1665,34 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                 {error}
               </p>
             ) : null}
-            <Card className={WORKFLOW_SURFACE_CLASSES.detailCard}>
-              <h3 className="text-sm font-semibold">基础信息</h3>
-              <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-                {detailFields(selected)
-                  .filter(
-                    ([key]) =>
-                      !isDualFlow(view) ||
-                      (key in BASIC_FIELDS && !["id", "versionNo"].includes(key)),
-                  )
-                  .map(([key, value]) => (
-                    <div className={WORKFLOW_SURFACE_CLASSES.fieldPanel} key={key}>
-                      <dt className="text-xs text-muted-foreground">{BASIC_FIELDS[key] ?? key}</dt>
-                      <dd className="mt-1 break-words text-sm font-medium">
-                        {["status", "completionStatus"].includes(key)
-                          ? rowStatus(selected, view)
-                          : display(value)}
-                      </dd>
-                    </div>
-                  ))}
-              </dl>
-            </Card>
-            {view.historyPath ? (
+            {view.id === "purchase-orders" ? (
+              <PurchaseDetail row={selected} />
+            ) : (
+              <Card className={WORKFLOW_SURFACE_CLASSES.detailCard}>
+                <h3 className="text-sm font-semibold">基础信息</h3>
+                <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {detailFields(selected)
+                    .filter(
+                      ([key]) =>
+                        !isDualFlow(view) ||
+                        (key in BASIC_FIELDS && !["id", "versionNo"].includes(key)),
+                    )
+                    .map(([key, value]) => (
+                      <div className={WORKFLOW_SURFACE_CLASSES.fieldPanel} key={key}>
+                        <dt className="text-xs text-muted-foreground">
+                          {BASIC_FIELDS[key] ?? key}
+                        </dt>
+                        <dd className="mt-1 break-words text-sm font-medium">
+                          {["status", "completionStatus"].includes(key)
+                            ? rowStatus(selected, view)
+                            : display(value)}
+                        </dd>
+                      </div>
+                    ))}
+                </dl>
+              </Card>
+            )}
+            {view.historyPath && view.id !== "purchase-orders" ? (
               <Card className={WORKFLOW_SURFACE_CLASSES.historyCard}>
                 <h3 className="text-sm font-semibold">状态历史</h3>
                 {timeline.length ? (
@@ -1626,146 +1715,226 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
 
       {formOpen && form ? (
         <div className={WORKFLOW_SURFACE_CLASSES.dialogOverlay} role="dialog" aria-modal="true">
-          <form className={WORKFLOW_SURFACE_CLASSES.dialogContent} onSubmit={create}>
-            <div className={WORKFLOW_SURFACE_CLASSES.dialogHeader}>
-              <div>
-                <h2 className="text-lg font-semibold">新增{view.label}</h2>
-                <p className="text-sm text-muted-foreground">{WORKFLOW_FORM_HELP_TEXT}</p>
+          {view.id === "purchase-orders" ? (
+            <PurchaseForm
+              suppliers={allOptions.suppliers ?? []}
+              skus={allOptions.skus ?? []}
+              saving={saving}
+              error={formError}
+              onCancel={() => setFormOpen(false)}
+              onSave={async (payload) => {
+                setSaving(true);
+                setFormError(null);
+                try {
+                  await request(view.createApiPath!, {
+                    headers: { "Idempotency-Key": crypto.randomUUID() },
+                    method: "POST",
+                    body: JSON.stringify(payload),
+                  });
+                  toast.success("采购订单保存成功");
+                  setFormOpen(false);
+                  await load();
+                } catch (reason) {
+                  setFormError(reason instanceof Error ? reason.message : "保存失败");
+                } finally {
+                  setSaving(false);
+                }
+              }}
+            />
+          ) : (
+            <form className={WORKFLOW_SURFACE_CLASSES.dialogContent} onSubmit={create}>
+              <div className={WORKFLOW_SURFACE_CLASSES.dialogHeader}>
+                <div>
+                  <h2 className="text-lg font-semibold">新增{view.label}</h2>
+                  <p className="text-sm text-muted-foreground">{WORKFLOW_FORM_HELP_TEXT}</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setFormOpen(false)}
+                  aria-label="关闭"
+                >
+                  <X />
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setFormOpen(false)}
-                aria-label="关闭"
-              >
-                <X />
-              </Button>
-            </div>
-            <div className={WORKFLOW_SURFACE_CLASSES.dialogBody}>
-              {formError ? (
-                <p className="rounded-md border border-danger/30 !bg-white p-3 text-sm text-danger dark:!bg-slate-950">
-                  {formError}
-                </p>
-              ) : null}
-              <div className="grid gap-4 md:grid-cols-2">
-                {form.fields.map((field) => (
-                  <label className="block text-sm font-medium" key={field.key}>
-                    {field.label}
-                    {field.required ? <span className="text-danger"> *</span> : null}
-                    {field.type === "select" ? (
-                      <select
-                        className={WORKFLOW_SURFACE_CLASSES.formControl}
-                        defaultValue={form.defaults?.[field.key] ?? ""}
-                        name={field.key}
-                        onChange={(event) => onFieldChange(field, event)}
-                        required={field.required}
-                      >
-                        <option value="">请选择{field.label}</option>
-                        {(field.values ?? allOptions[field.optionKey ?? ""] ?? []).map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : field.type === "textarea" ? (
-                      <textarea
-                        className={WORKFLOW_SURFACE_CLASSES.textareaControl}
-                        defaultValue={form.defaults?.[field.key] ?? ""}
-                        name={field.key}
-                        required={field.required}
-                      />
-                    ) : (
-                      <input
-                        className={WORKFLOW_SURFACE_CLASSES.formControl}
-                        defaultValue={form.defaults?.[field.key] ?? ""}
-                        name={field.key}
-                        placeholder={field.placeholder}
-                        required={field.required}
-                        type={field.type ?? "text"}
-                      />
-                    )}
-                  </label>
-                ))}
-              </div>
-              {form.itemFields?.length ? (
-                <Card className={WORKFLOW_SURFACE_CLASSES.sectionCard}>
-                  <h3 className="text-sm font-semibold">明细行</h3>
-                  {sourceLoading ? (
-                    <p className="mt-3 text-sm text-muted-foreground">正在加载来源明细…</p>
-                  ) : null}
-                  {sourceRows[0] && form.sourceItems ? (
-                    <p className="mt-2 text-sm">
-                      已选择：{rowTitle(sourceRows[0])}。
-                      {sourceRows[1] ? `来源订单：${rowTitle(sourceRows[1])}。` : ""}
-                      可处理数量以服务端最终校验为准。
-                    </p>
-                  ) : null}
-                  <div
-                    key={`${sourceRows[0]?.id ?? ""}:${chosenSourceItem?.value ?? ""}`}
-                    className="mt-3 grid gap-4 md:grid-cols-3"
-                  >
-                    {form.itemFields
-                      .filter((field) => !field.derived)
-                      .map((field) => (
-                        <label className="block text-sm font-medium" key={field.key}>
-                          {field.label}
-                          {field.required ? <span className="text-danger"> *</span> : null}
-                          {field.type === "select" ? (
-                            <select
-                              className={WORKFLOW_SURFACE_CLASSES.formControl}
-                              name={`item.${field.key}`}
-                              required={field.required}
-                              defaultValue={
-                                field.optionKey === "sourceItems"
-                                  ? (chosenSourceItem?.value ?? "")
-                                  : (itemDefaults[`item.${field.key}`] ?? "")
-                              }
-                              onChange={
-                                field.optionKey === "sourceItems"
-                                  ? (event) => setSourceItemId(event.target.value)
-                                  : undefined
-                              }
-                            >
-                              <option value="">请选择{field.label}</option>
-                              {(field.values ?? allOptions[field.optionKey ?? ""] ?? []).map(
-                                (option) => (
-                                  <option key={option.value} value={option.value}>
-                                    {option.label}
-                                  </option>
-                                ),
-                              )}
-                            </select>
-                          ) : (
-                            <input
-                              className={WORKFLOW_SURFACE_CLASSES.formControl}
-                              name={`item.${field.key}`}
-                              defaultValue={itemDefaults[`item.${field.key}`] ?? ""}
-                              required={field.required}
-                              type={field.type ?? "text"}
-                            />
-                          )}
-                        </label>
-                      ))}
-                  </div>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    当前批次先提供单行明细录入；多行明细可重复创建或后续进入增强批次。
+              <div className={WORKFLOW_SURFACE_CLASSES.dialogBody}>
+                {formError ? (
+                  <p className="rounded-md border border-danger/30 !bg-white p-3 text-sm text-danger dark:!bg-slate-950">
+                    {formError}
                   </p>
-                </Card>
-              ) : null}
-            </div>
-            <div className={WORKFLOW_SURFACE_CLASSES.dialogFooter}>
-              <Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>
-                取消
-              </Button>
-              <Button
-                disabled={saving || sourceLoading || Boolean(form.sourceItems && !chosenSourceItem)}
-                type="submit"
-              >
-                {saving ? "保存中…" : "保存"}
-              </Button>
-            </div>
-          </form>
+                ) : null}
+                <div className="grid gap-4 md:grid-cols-2">
+                  {form.fields.map((field) => (
+                    <label className="block text-sm font-medium" key={field.key}>
+                      {field.label}
+                      {field.required ? <span className="text-danger"> *</span> : null}
+                      {field.type === "select" ? (
+                        <select
+                          className={WORKFLOW_SURFACE_CLASSES.formControl}
+                          defaultValue={form.defaults?.[field.key] ?? ""}
+                          name={field.key}
+                          onChange={(event) => onFieldChange(field, event)}
+                          required={field.required}
+                        >
+                          <option value="">请选择{field.label}</option>
+                          {(field.values ?? allOptions[field.optionKey ?? ""] ?? []).map(
+                            (option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      ) : field.type === "textarea" ? (
+                        <textarea
+                          className={WORKFLOW_SURFACE_CLASSES.textareaControl}
+                          defaultValue={form.defaults?.[field.key] ?? ""}
+                          name={field.key}
+                          required={field.required}
+                        />
+                      ) : (
+                        <input
+                          className={WORKFLOW_SURFACE_CLASSES.formControl}
+                          defaultValue={form.defaults?.[field.key] ?? ""}
+                          name={field.key}
+                          placeholder={field.placeholder}
+                          required={field.required}
+                          type={field.type ?? "text"}
+                        />
+                      )}
+                    </label>
+                  ))}
+                </div>
+                {["purchase-inspections", "purchase-inbound"].includes(view.id) ? (
+                  <Card className={WORKFLOW_SURFACE_CLASSES.sectionCard}>
+                    <h3 className="text-sm font-semibold">
+                      {view.id === "purchase-inspections" ? "采购质检明细" : "采购入库明细"}
+                    </h3>
+                    <p className="my-2 text-xs text-muted-foreground">
+                      本次一次性处理全部待处理数量。
+                    </p>
+                    {sourceItemOptions.map((option) => (
+                      <div key={option.value} className="my-3 border-t pt-3">
+                        <p className="mb-2 text-sm">{option.label}</p>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          {(view.id === "purchase-inspections"
+                            ? [
+                                [
+                                  "qualifiedQuantity",
+                                  "合格数量",
+                                  "number",
+                                  String(availableSourceQuantity(view, option.raw, sourceRows[1])),
+                                ],
+                                ["unqualifiedQuantity", "不合格数量", "number", "0"],
+                                ["defectDescription", "不合格说明", "text", ""],
+                                ["dispositionMethod", "处理说明", "text", ""],
+                              ]
+                            : [
+                                ["unitCost", "单位成本", "number", ""],
+                                ["batchNo", "批次号", "text", ""],
+                              ]
+                          ).map(([key, label, type, value]) => (
+                            <label className="text-sm" key={key}>
+                              {label}
+                              <input
+                                className={WORKFLOW_SURFACE_CLASSES.formControl}
+                                name={`batch.${option.value}.${key}`}
+                                type={type}
+                                min={type === "number" ? "0" : undefined}
+                                step={type === "number" ? "0.0001" : undefined}
+                                defaultValue={value}
+                                required={
+                                  !["defectDescription", "dispositionMethod"].includes(key!)
+                                }
+                              />
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </Card>
+                ) : form.itemFields?.length ? (
+                  <Card className={WORKFLOW_SURFACE_CLASSES.sectionCard}>
+                    <h3 className="text-sm font-semibold">明细行</h3>
+                    {sourceLoading ? (
+                      <p className="mt-3 text-sm text-muted-foreground">正在加载来源明细…</p>
+                    ) : null}
+                    {sourceRows[0] && form.sourceItems ? (
+                      <p className="mt-2 text-sm">
+                        已选择：{rowTitle(sourceRows[0])}。
+                        {sourceRows[1] ? `来源订单：${rowTitle(sourceRows[1])}。` : ""}
+                        可处理数量以服务端最终校验为准。
+                      </p>
+                    ) : null}
+                    <div
+                      key={`${sourceRows[0]?.id ?? ""}:${chosenSourceItem?.value ?? ""}`}
+                      className="mt-3 grid gap-4 md:grid-cols-3"
+                    >
+                      {form.itemFields
+                        .filter((field) => !field.derived)
+                        .map((field) => (
+                          <label className="block text-sm font-medium" key={field.key}>
+                            {field.label}
+                            {field.required ? <span className="text-danger"> *</span> : null}
+                            {field.type === "select" ? (
+                              <select
+                                className={WORKFLOW_SURFACE_CLASSES.formControl}
+                                name={`item.${field.key}`}
+                                required={field.required}
+                                defaultValue={
+                                  field.optionKey === "sourceItems"
+                                    ? (chosenSourceItem?.value ?? "")
+                                    : (itemDefaults[`item.${field.key}`] ?? "")
+                                }
+                                onChange={
+                                  field.optionKey === "sourceItems"
+                                    ? (event) => setSourceItemId(event.target.value)
+                                    : undefined
+                                }
+                              >
+                                <option value="">请选择{field.label}</option>
+                                {(field.values ?? allOptions[field.optionKey ?? ""] ?? []).map(
+                                  (option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ),
+                                )}
+                              </select>
+                            ) : (
+                              <input
+                                className={WORKFLOW_SURFACE_CLASSES.formControl}
+                                name={`item.${field.key}`}
+                                defaultValue={itemDefaults[`item.${field.key}`] ?? ""}
+                                required={field.required}
+                                type={field.type ?? "text"}
+                              />
+                            )}
+                          </label>
+                        ))}
+                    </div>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      当前批次先提供单行明细录入；多行明细可重复创建或后续进入增强批次。
+                    </p>
+                  </Card>
+                ) : null}
+              </div>
+              <div className={WORKFLOW_SURFACE_CLASSES.dialogFooter}>
+                <Button type="button" variant="secondary" onClick={() => setFormOpen(false)}>
+                  取消
+                </Button>
+                <Button
+                  disabled={
+                    saving || sourceLoading || Boolean(form.sourceItems && !chosenSourceItem)
+                  }
+                  type="submit"
+                >
+                  {saving ? "保存中…" : "保存"}
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       ) : null}
     </div>

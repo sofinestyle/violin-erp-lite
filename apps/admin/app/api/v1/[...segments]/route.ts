@@ -455,6 +455,7 @@ async function dispatchWorkflow(
       pageSize: number;
       total: number;
       totalPages: number;
+      legacyReviewCount?: number;
     };
     return createSuccessResponse(list.items, context, {
       meta: {
@@ -462,6 +463,9 @@ async function dispatchWorkflow(
         pageSize: list.pageSize,
         total: list.total,
         totalPages: list.totalPages,
+        ...(list.legacyReviewCount === undefined
+          ? {}
+          : { legacyReviewCount: list.legacyReviewCount }),
       },
     });
   }

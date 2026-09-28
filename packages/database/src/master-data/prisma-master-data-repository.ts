@@ -303,6 +303,7 @@ function selectFor(resource: MasterDataResourceKey, actorUserId?: string): Unkno
           id: true,
           product_code: true,
           product_name: true,
+          product_name_en: true,
           brands: { select: { id: true, brand_code: true, brand_name: true } },
           product_categories: {
             select: { id: true, category_code: true, category_name: true },
@@ -577,8 +578,33 @@ export class PrismaMasterDataRepository implements MasterDataRepository {
       }),
       model.count({ where }),
     ]);
+    const categoryPaths = new Map<string, string>();
+    if (resource === "products" && items.length) {
+      const categories = await this.#client.product_categories.findMany({
+        select: { id: true, parent_category_id: true, category_name: true },
+      });
+      const byId = new Map(categories.map((category) => [category.id, category]));
+      for (const item of items) {
+        const names: string[] = [];
+        const seen = new Set<string>();
+        let id = String(item.category_id ?? "");
+        while (id && !seen.has(id)) {
+          seen.add(id);
+          const category = byId.get(id);
+          if (!category) break;
+          names.unshift(category.category_name);
+          id = category.parent_category_id ?? "";
+        }
+        categoryPaths.set(String(item.id), names.join(" / "));
+      }
+    }
     return {
-      items: items.map(toApiRecord),
+      items: items.map((item) => ({
+        ...toApiRecord(item),
+        ...(resource === "products"
+          ? { categoryPath: categoryPaths.get(String(item.id)) ?? "" }
+          : {}),
+      })),
       page: query.page,
       pageSize: query.pageSize,
       total,

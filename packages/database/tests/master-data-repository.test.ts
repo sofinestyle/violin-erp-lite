@@ -16,6 +16,51 @@ function testRepository(client: unknown) {
 }
 
 describe("Prisma Master Data repository", () => {
+  it("returns product category paths with a single hierarchy query including inactive ancestors", async () => {
+    const findMany = vi.fn().mockResolvedValue([
+      { id: "root", category_name: "提琴", parent_category_id: null },
+      { id: "child", category_name: "小提琴", parent_category_id: "root" },
+    ]);
+    const repository = testRepository({
+      products: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: "one", category_id: "child" },
+          { id: "two", category_id: "child" },
+        ]),
+        count: vi.fn().mockResolvedValue(2),
+      },
+      product_categories: { findMany },
+    });
+    const result = await repository.list(
+      "products",
+      { page: 1, pageSize: 20, sortBy: "updatedAt", sortOrder: "desc", filters: {} },
+      USER_ID,
+    );
+    expect(result.items.map((row) => row.categoryPath)).toEqual(["提琴 / 小提琴", "提琴 / 小提琴"]);
+    expect(findMany).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(findMany.mock.calls)).not.toContain("is_active");
+  });
+  it("loads every Store platform name in the store query without per-row lookups", async () => {
+    const findMany = vi.fn().mockResolvedValue([
+      { id: "one", ecommerce_platforms: { platform_name: "Temu" } },
+      { id: "two", ecommerce_platforms: { platform_name: "Amazon" } },
+    ]);
+    const platformLookup = vi.fn();
+    const repository = testRepository({
+      stores: { findMany, count: vi.fn().mockResolvedValue(2) },
+      ecommerce_platforms: { findFirst: platformLookup },
+    });
+    const result = await repository.list(
+      "stores",
+      { page: 1, pageSize: 20, sortBy: "updatedAt", sortOrder: "desc", filters: {} },
+      USER_ID,
+    );
+    expect(
+      result.items.map((row) => (row.platform as Record<string, unknown>).platformName),
+    ).toEqual(["Temu", "Amazon"]);
+    expect(findMany).toHaveBeenCalledTimes(1);
+    expect(platformLookup).not.toHaveBeenCalled();
+  });
   it.each([
     [1, false, false],
     [5000, true, true],

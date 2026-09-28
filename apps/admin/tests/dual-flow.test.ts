@@ -43,7 +43,7 @@ describe("Independent procurement and production UI orchestration", () => {
     expect(formFor(productionInspection)?.optionSources?.[0]?.path).toContain("production-orders");
     const rows = [
       { id: "draft", status: "draft" },
-      { id: "approved", status: "approved" },
+      { id: "approved", status: "approved", businessStatus: "purchasing" },
       { id: "done", status: "completed" },
     ];
     expect(eligibleSourceRows(purchaseInspection, "purchaseOrders", rows).map((r) => r.id)).toEqual(
@@ -77,7 +77,13 @@ describe("Independent procurement and production UI orchestration", () => {
 
   it("only accepts confirmed matching inspection sources and derives the original order", () => {
     const rows = [
-      { id: "p", sourceType: "purchase", status: "confirmed", purchaseOrderId: "po" },
+      {
+        id: "p",
+        sourceType: "purchase",
+        status: "confirmed",
+        purchaseBusinessStatus: "inspected",
+        purchaseOrderId: "po",
+      },
       { id: "r", sourceType: "production", status: "confirmed", productionOrderId: "pro" },
       { id: "d", sourceType: "purchase", status: "draft" },
     ];
@@ -119,7 +125,7 @@ describe("Independent procurement and production UI orchestration", () => {
 
   it("hides invalid actions without changing the approved state machine", () => {
     expect(actionStateAllowed(purchase, "approve", { id: "p", status: "draft" })).toBe(false);
-    expect(actionStateAllowed(purchase, "submit", { id: "p", status: "draft" })).toBe(true);
+    expect(actionStateAllowed(purchase, "submit", { id: "p", status: "draft" })).toBe(false);
     expect(actionStateAllowed(production, "start", { id: "p", status: "approved" })).toBe(true);
     expect(actionStateAllowed(production, "start", { id: "p", status: "in_production" })).toBe(
       false,

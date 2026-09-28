@@ -1,11 +1,11 @@
 ---
 document_name: 数据库规格
 project: Violin ERP Lite
-version: 2.8
+version: 2.9
 status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-09-08
+updated_date: 2026-09-28
 related_phase: Phase 3 / Phase 7 / Manual UAT Bug Batch / CR-008
 ---
 
@@ -17,15 +17,15 @@ Phase 3 数据库设计（Database Design）已完成并冻结。Database Logica
 
 当前唯一有效版本为：
 
-- Database Logical Design：v2.8；
+- Database Logical Design：v2.9；
 - 状态：Completed / Approved；
 - 正式表：75；
-- 正式字段：1343；
+- 正式字段：1344；
 - 主键：75；
 - 唯一约束/唯一索引：91；
 - 外键：310；
 - 普通索引：131；
-- Check：280；
+- Check：283；
 - 正式数据库枚举：2。
 
 Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check。v2.3 按 DCR-005 为既有 `attachments.status` 增加 `active` 默认值和五值域 Check，并新增一个状态定位普通索引；不新增表、字段、外键、唯一约束或 PostgreSQL Enum。v2.4 按 Task 7.6 Background Job Database Change Request 新增 `jobs`、`job_attempts`、`job_results`、`job_dead_letters` 与 `scheduler_locks` 五个逻辑表，新增 65 个字段、5 个主键、5 个唯一约束/唯一索引、8 个外键、8 个普通索引和 16 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.5 按 Task 7.7 Event Infrastructure Database Change Request 新增 `event_outbox`、`event_history`、`event_consumptions`、`event_dead_letters` 与 `event_deliveries` 五个逻辑表，新增 89 个字段、5 个主键、4 个唯一约束/唯一索引、10 个外键、24 个普通索引和 27 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.6 按 CR-003 新增 `code_generation_rules` 与 `code_sequences` 两个逻辑表，新增 13 个字段、2 个主键、2 个唯一约束/唯一索引、1 个普通索引和 2 项 Check；不新增外键、不新增 PostgreSQL Enum、不修改既有业务领域表。v2.7 按 CR-004 只修改 `products.product_name_en` 约束语义，新增 1 个唯一索引和 1 项 Check，不新增表、字段、外键、普通索引或 PostgreSQL Enum。
@@ -1055,3 +1055,10 @@ CR-009 只向现有 role_warehouses / role_stores 初始化新对象范围，不
 ## CR-010 安全删除及分类完整性实施约束（2026-09-08，Approved）
 
 物理设计仍为 v2.8，无 Schema / Migration。Store / Warehouse 的 RESTRICT 外键保持原样；安全删除仅在已授权目标事务中清除其 role_stores / role_warehouses，并保留其他业务外键的强制保护、用户、角色及审计历史。分类 parent_category_id 自引用与 category_level 范围约束不变，由正式 Repository 事务锁与祖先链验证保证禁止循环、派生层级及子树同步。
+
+
+## CR-011 采购流程结构增量（2026-09-08 Approved，2026-09-28 Migration Applied）
+
+按 [CR-011](../changes/CR-011_PROCUREMENT_WORKFLOW_SIMPLIFICATION.md) 新增 inspection_orders.inspector_name VARCHAR(100)，两项旧质检 UUID 改可空并保留 FK/历史。新采购使用姓名、生产继续旧仓库及用户引用，条件 CHECK 区分合法组合。采购状态增加五状态值域并兼容旧值，不更新历史业务行。新增 1 字段、3 CHECK，无表/索引/外键/Enum 增量；物理部署完成后核对数量。
+
+2026-09-28：迁移已部署本地 UAT PostgreSQL，migrate status 为 up to date。实际核对 1344 字段、283 CHECK；既有 ck_purchase_orders_action_fields 未放宽。保存即提交的 created_at / updated_at / submitted_at 使用同一时间值，避免应用提交时间早于数据库默认创建时间导致随机失败。该部署不代表整个采购状态机已经验收。

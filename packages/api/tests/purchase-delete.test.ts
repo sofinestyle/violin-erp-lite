@@ -32,8 +32,8 @@ describe("CR-006 purchase deletion", () => {
       expect(isUatPurchaseOrder({ remark })).toBe(false);
     },
   );
-  it("allows draft and only administrator UAT cancelled", () => {
-    expect(() => assertPurchaseDeleteState({ status: "draft" }, false)).not.toThrow();
+  it("allows pending approval and only administrator UAT cancelled", () => {
+    expect(() => assertPurchaseDeleteState({ status: "pending_approval" }, false)).not.toThrow();
     expect(() =>
       assertPurchaseDeleteState({ status: "cancelled", remark: "UAT-003A" }, true),
     ).not.toThrow();
@@ -44,14 +44,20 @@ describe("CR-006 purchase deletion", () => {
       assertPurchaseDeleteState({ status: "cancelled", remark: "正式订单" }, true),
     ).toThrow("当前状态");
   });
-  it.each(["pending_approval", "approved", "in_progress", "completed", "voided", "rejected"])(
-    "rejects state %s",
-    (status) => {
-      expect(() => assertPurchaseDeleteState({ status, remark: "UAT-003A" }, true)).toThrow(
-        "当前状态",
-      );
-    },
-  );
+  it.each([
+    "draft",
+    "purchasing",
+    "inspected",
+    "received",
+    "approved",
+    "completed",
+    "voided",
+    "rejected",
+  ])("rejects state %s", (status) => {
+    expect(() => assertPurchaseDeleteState({ status, remark: "UAT-003A" }, true)).toThrow(
+      "当前状态",
+    );
+  });
   it("registers existing path DELETE with cancel permission and prevents permission argument bypass", async () => {
     const endpoint = matchWorkflowEndpoint(
       "DELETE",
