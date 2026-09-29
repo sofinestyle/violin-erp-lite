@@ -437,6 +437,23 @@ async function dispatchWorkflow(
   if (matched.command.mutation && !["export"].includes(matched.command.action)) {
     requireIdempotencyKey(request);
   }
+  if (matched.command.action === "create-purchase" && matched.command.resource === "inbound") {
+    const endpoint = new WorkflowService(
+      new PrismaWorkflowRepository(),
+      new PrismaAuditWriter(),
+      createPersistentIdempotencyAdapter(),
+    );
+    return idempotencyResponse(
+      await endpoint.executeIdempotent(
+        matched.command,
+        matched.permission,
+        requirePersistentIdempotencyKey(request),
+        authentication,
+        context,
+      ),
+      context,
+    );
+  }
   const result = await services().workflow.execute(
     matched.command,
     matched.permission,

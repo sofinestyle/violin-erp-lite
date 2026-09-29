@@ -17,37 +17,17 @@ export const procurementViews: readonly WorkflowView[] = [
     apiPath: "/api/v1/purchase-orders",
     createApiPath: "/api/v1/purchase-orders",
     createPermission: "purchase.order.create",
-    description: "采购业务：供应商 → 采购订单 → 采购质检 → 采购入库 → 库存。采购不触发生产。",
+    description: "采购业务：供应商 → 采购订单 → 采购入库 → 库存。采购不触发生产。",
     detailPath: "/api/v1/purchase-orders/{id}",
     historyPath: "/api/v1/purchase-orders/{id}/status-history",
     id: "purchase-orders",
     label: "采购订单",
   },
   {
-    apiPath: "/api/v1/purchase-orders/{parentId}/payments",
-    createApiPath: "/api/v1/purchase-orders/{parentId}/payments",
-    createPermission: "purchase.payment.create",
-    description: "按采购订单查询与登记付款事实；付款不改变采购完成状态。",
-    detailPath: "/api/v1/purchase-payments/{id}",
-    id: "purchase-payments",
-    label: "采购付款",
-  },
-  {
-    apiPath: "/api/v1/inspection-orders?sourceType=purchase",
-    createApiPath: "/api/v1/inspection-orders",
-    createPermission: "inspection.order.create",
-    description: "采购质检仅选择已审核采购订单；确认合格数量后进入采购入库，不直接增加库存。",
-    detailPath: "/api/v1/inspection-orders/{id}",
-    historyPath: "/api/v1/inspection-orders/{id}/status-history",
-    id: "purchase-inspections",
-    label: "采购质检",
-    sourceType: "purchase",
-  },
-  {
     apiPath: "/api/v1/inbound-orders?sourceDocumentType=purchase_order",
     createApiPath: "/api/v1/inbound-orders/purchase",
     createPermission: "inbound.order.create-purchase",
-    description: "选择已确认采购质检单，系统自动关联采购订单；确认入库才增加库存并生成流水。",
+    description: "选择采购中订单，记录到货检查信息，确认保存即完成整单入库并生成库存流水。",
     detailPath: "/api/v1/inbound-orders/{id}",
     historyPath: "/api/v1/inbound-orders/{id}/status-history",
     id: "purchase-inbound",
@@ -110,7 +90,7 @@ export const productionViews: readonly WorkflowView[] = [
   },
 ];
 
-export const inboundViews: readonly WorkflowView[] = [procurementViews[3]!, productionViews[4]!];
+export const inboundViews: readonly WorkflowView[] = [procurementViews[1]!, productionViews[4]!];
 
 export const inventoryViews: readonly WorkflowView[] = [
   {

@@ -785,7 +785,7 @@ model inbound_order_items {
   inbound_order_id                            String                  @db.Uuid
   source_document_item_id                     String                  @db.Uuid
   inspection_order_item_id                    String?                 @db.Uuid
-  batch_no                                    String                  @db.VarChar(50)
+  batch_no                                    String?                 @db.VarChar(50)
   production_date                             DateTime?               @db.Date
   unit_cost                                   Decimal                 @db.Decimal(18, 4)
   line_cost                                   Decimal                 @db.Decimal(18, 4)
@@ -829,6 +829,8 @@ model inbound_orders {
   source_document_type                     String                @db.VarChar(50)
   source_document_id                       String                @db.Uuid
   inspection_order_id                      String?               @db.Uuid
+  inspection_performed                     Boolean?
+  inspector_name                           String?               @db.VarChar(100)
   total_quantity                           Decimal               @db.Decimal(18, 4)
   inbound_completed_at                     DateTime?             @db.Timestamptz(6)
   inbound_order_items                      inbound_order_items[]

@@ -11,6 +11,11 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## 2026-09-29 Procurement Workflow Final Simplification
+
+CR-013 Approved / Implemented：采购付款/独立采购质检停写并移除入口，采购入库直接引用采购中订单，一次保存原子完成入库、库存、流水、采购 received 和 required Audit。必选是否质检、选填质检人、日历日期、自动明细、采购单价继承及 NULL 批次；保留整单一次规则、生产质检与历史数据。API v1.16 / Database v2.10，迁移已部署，无新 Permission Code。pnpm check 549 passed / 70 conditional skipped，真实 PostgreSQL 专项已另行启用通过。自动浏览器完成制单后原生审核确认交互超时，保留自动验证未完成记录。2026-09-29 项目负责人确认人工测试通过，状态 Fixed / Manual Verification Passed；按原授权统一提交推送，详见采购最终简化报告。
+
+
 ## 2026-09-08 Manual UAT UX & Safe Delete Enhancement
 
 状态：Fixed / Pending Manual Verification，不新增 UAT 编号。CR-010 / DEC-113 Approved / Implemented：Store 增加管理员安全删除（MD-082），Warehouse 仅 Scope 允许管理员同事务清理目标范围、删除与审计，真实业务引用继续阻断；Category 父级树状显示、排除自身和后代，服务端锁内推导层级并防并发循环；仓库字段改“计入可用库存”及业务帮助，无新默认值。

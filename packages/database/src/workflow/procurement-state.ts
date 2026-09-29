@@ -1,8 +1,7 @@
 import type { PrismaClient } from "../generated/prisma/client.js";
 
 type Row = Record<string, unknown>;
-export type ProcurementState =
-  "pending_approval" | "purchasing" | "inspected" | "received" | "cancelled";
+export type ProcurementState = "pending_approval" | "purchasing" | "received" | "cancelled";
 export function projectProcurementState(
   order: Row,
   confirmedInspection: boolean,
@@ -43,9 +42,19 @@ export function projectProcurementState(
   )
     businessStatus = "pending_approval";
   else if (["approved", "completed", "purchasing", "inspected", "received"].includes(status)) {
-    if (allReceived && confirmedInspection && confirmedInbound) businessStatus = "received";
-    else if (allInspected && confirmedInspection && quantities.every((item) => item.inbound === 0))
-      businessStatus = "inspected";
+    if (
+      confirmedInbound &&
+      ((allReceived && confirmedInspection) ||
+        (quantities.length > 0 &&
+          quantities.every((item) => item.ordered > 0 && item.inbound === item.ordered)))
+    )
+      businessStatus = "received";
+    else if (
+      allInspected &&
+      confirmedInspection &&
+      quantities.every((item) => item.inbound === 0 && item.qualified === item.ordered)
+    )
+      businessStatus = "purchasing";
     else if (
       !executed &&
       !confirmedInspection &&

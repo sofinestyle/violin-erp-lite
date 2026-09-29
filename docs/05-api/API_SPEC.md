@@ -1,11 +1,11 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.15
+version: 1.16
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
-updated_date: 2026-09-28
+updated_date: 2026-09-29
 related_phase: Phase 5 / UAT-009 / UAT Master Data Delete Strategy
 ---
 
@@ -1546,3 +1546,8 @@ Warehouse 既有 DELETE 继续要求 master.warehouse.update、manage 范围，�
 ## CR-012 采购管理体验（2026-09-28，Approved）
 
 当前 v1.15，接口总数保持 344。采购 approve 允许有权且有记录范围的创建人自审；其他模块分离不变。PUR Create 由正式 Supplier 读取 settlementMethod / paymentTermsSnapshot，保存到现有快照字段；客户端不再必填结算方式，兼容既有字段但不能覆盖正式快照来源。明细 expectedDeliveryDate 默认继承订单交期。PUR List/Detail 使用 CR-011 businessStatus 与历史隔离，并通过正式批量关联提供 SKU 产品型号/名称/尺寸/颜色及创建/审核人名称，禁止 N+1。原始 status/内部关联仍用于服务端与审计，不作为主要业务展示。无新增数据库字段或权限。
+
+
+## CR-013 采购最终简化批准契约（2026-09-29）
+
+采购付款、采购来源独立质检写接口停止使用，返回明确业务冲突；历史读取保留，生产不变。INB-003 POST /inbound-orders/purchase 改为采购中订单直接整单入库，必填 documentDate/purchaseOrderId/warehouseId/inspectionPerformed/items，items 使用 purchaseOrderItemId/skuId/quantity。inspectorName 选填最多 100 字，未质检清空；旧 inspectionOrderId 不接受，unitCost 由采购单价决定，batchNo 为 NULL。一次保存返回 completed，不再二次审批；权限同时校验 inbound.order.create-purchase 和 inbound.order.confirm、来源记录范围及目标仓范围。创建与库存、流水、采购 received、Audit 原子提交；重复请求不得重复记账。正式路径数量不变，历史业务状态依据证据只读映射，生产 API 不变。

@@ -9,7 +9,6 @@ type Option = { value: string; label: string; raw: Row };
 export const PURCHASE_STATES: Record<string, string> = {
   pending_approval: "待审核",
   purchasing: "采购中",
-  inspected: "已质检",
   received: "已入库",
   cancelled: "已取消",
 };
@@ -444,9 +443,11 @@ export function PurchaseDetail({ row }: { row: Row }) {
       <section className="rounded-lg border bg-white p-4">
         <h3 className="font-semibold">流程进度</h3>
         <p className="mt-2 text-sm">
-          采购质检：
-          {["inspected", "received"].includes(String(row.businessStatus)) ? "已确认" : "尚未完成"}
-          {" · "}采购入库：{row.businessStatus === "received" ? "已确认" : "尚未完成"}
+          采购入库进度：
+          {summary.items.reduce((sum, item) => sum + Number(item.inboundQuantity ?? 0), 0)} /{" "}
+          {summary.quantity}
+          {" · "}
+          {row.businessStatus === "received" ? "已入库" : "尚未完成"}
         </p>
       </section>
       <section className="rounded-lg border bg-slate-50 p-4 text-sm text-muted-foreground">

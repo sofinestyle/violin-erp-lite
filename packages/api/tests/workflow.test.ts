@@ -333,16 +333,16 @@ describe("Frozen workflow API contracts", () => {
         context,
       ),
     ).rejects.toMatchObject({
-      code: "VALIDATION_INVALID_FIELD",
-      details: [{ field: "inspectorName", message: "必填字段不能为空" }],
+      code: "CONFLICT_REQUEST",
     });
     await service.execute(
       inspectionCommand({
         inspectionDate: "2026-08-20",
-        inspectorName: "UAT采购质检员",
+        inspectorId: USER_ID,
+        inspectionWarehouseId: DOCUMENT_ID,
         items: [item],
-        purchaseOrderId: DOCUMENT_ID,
-        sourceType: "purchase",
+        productionOrderId: DOCUMENT_ID,
+        sourceType: "production",
       }),
       "inspection.order.create",
       authentication(["inspection.order.create"]),
@@ -368,13 +368,13 @@ describe("Frozen workflow API contracts", () => {
       service.execute(
         inboundCommand({
           documentDate: "2026-08-21",
-          inspectionOrderId: DOCUMENT_ID,
+          inspectionPerformed: true,
           items: [],
           purchaseOrderId: DOCUMENT_ID,
           warehouseId: DOCUMENT_ID,
         }),
         "inbound.order.create-purchase",
-        authentication(["inbound.order.create-purchase"]),
+        authentication(["inbound.order.create-purchase", "inbound.order.confirm"]),
         context,
       ),
     ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
@@ -382,7 +382,7 @@ describe("Frozen workflow API contracts", () => {
       service.execute(
         inboundCommand({
           documentDate: "2026-08-21",
-          inspectionOrderId: DOCUMENT_ID,
+          inspectionPerformed: true,
           items: [
             {
               batchNo: "B-001",
@@ -406,7 +406,7 @@ describe("Frozen workflow API contracts", () => {
     await service.execute(
       inboundCommand({
         documentDate: "2026-08-21",
-        inspectionOrderId: DOCUMENT_ID,
+        inspectionPerformed: true,
         items: [
           {
             batchNo: "B-001",
@@ -422,7 +422,7 @@ describe("Frozen workflow API contracts", () => {
         warehouseId: DOCUMENT_ID,
       }),
       "inbound.order.create-purchase",
-      authentication(["inbound.order.create-purchase"]),
+      authentication(["inbound.order.create-purchase", "inbound.order.confirm"]),
       context,
     );
     expect(repository.execute).toHaveBeenCalledTimes(1);

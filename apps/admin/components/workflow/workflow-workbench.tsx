@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  PurchaseInboundForm,
+  PurchaseInboundDetail,
+  PurchaseInboundListCells,
+  inboundHeaders,
+} from "./purchase-inbound-experience";
+import {
   PurchaseForm,
   PurchaseDetail,
   PurchaseListCells,
@@ -553,6 +559,11 @@ export function formFor(view: WorkflowView): BusinessForm | null {
       },
     };
   }
+  if (view.id === "purchase-inbound")
+    return {
+      fields: [],
+      optionSources: [OPTION_SOURCES.purchaseOrders, OPTION_SOURCES.warehouses],
+    };
   if (view.id === "purchase-inbound" || view.id === "production-inbound") {
     const purchase = view.sourceType === "purchase";
     return {
@@ -824,6 +835,7 @@ export function actionsFor(view: WorkflowView): readonly WorkflowAction[] {
       ["void", "作废", true],
     ]);
   }
+  if (view.id === "purchase-inbound") return [];
   if (view.id === "purchase-inbound" || view.id === "production-inbound") {
     return map("inbound.order", [
       ["submit", "提交"],
@@ -1054,7 +1066,15 @@ function sourceDetailPath(view: WorkflowView, fieldKey: string, id: string): str
   return null;
 }
 
-export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
+export function WorkflowWorkbench({
+  view,
+  initialOrderId,
+  onPurchaseInbound,
+}: Readonly<{
+  view: WorkflowView;
+  initialOrderId?: string;
+  onPurchaseInbound?: (id: string) => void;
+}>) {
   const { user } = useUser();
   const { hasPermission, isAdministrator } = usePermission();
   const deleting = useRef(false);
@@ -1069,7 +1089,7 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
   const [selected, setSelected] = useState<Row | null>(null);
   const [timeline, setTimeline] = useState<Row[]>([]);
   const [legacyReview, setLegacyReview] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(view.id === "purchase-inbound" && !!initialOrderId);
   const [saving, setSaving] = useState(false);
   const [options, setOptions] = useState<OptionsMap>({});
   const [sourceRows, setSourceRows] = useState<readonly Row[]>([]);
@@ -1518,7 +1538,10 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
             <RefreshCw data-icon="inline-start" />
             刷新
           </Button>
-          {view.createApiPath && view.createPermission && form ? (
+          {view.createApiPath &&
+          view.createPermission &&
+          form &&
+          (view.id !== "purchase-inbound" || hasPermission("inbound.order.confirm")) ? (
             <PermissionWrapper permission={view.createPermission}>
               <Button className="ml-auto" onClick={openCreate}>
                 <Plus data-icon="inline-start" />
@@ -1563,7 +1586,9 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
               <tr>
                 {(view.id === "purchase-orders"
                   ? ["采购日期", "供应商", "SKU", "数量", "单价", "总金额", "状态"]
-                  : ["单号", "日期", "状态", "数量"]
+                  : view.id === "purchase-inbound"
+                    ? inboundHeaders
+                    : ["单号", "日期", "状态", "数量"]
                 ).map((label) => (
                   <th key={label} className="px-4 py-3">
                     {label}
@@ -1577,6 +1602,8 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                 <tr className="border-t" key={row.id}>
                   {view.id === "purchase-orders" ? (
                     <PurchaseListCells row={row} />
+                  ) : view.id === "purchase-inbound" ? (
+                    <PurchaseInboundListCells row={row} />
                   ) : (
                     <>
                       <td className="px-4 py-3 font-medium">{rowTitle(row)}</td>
@@ -1588,6 +1615,15 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                     </>
                   )}
                   <td className="px-4 py-3 text-right">
+                    {view.id === "purchase-orders" &&
+                    row.businessStatus === "purchasing" &&
+                    !row.legacyReviewRequired &&
+                    hasPermission("inbound.order.create-purchase") &&
+                    hasPermission("inbound.order.confirm") ? (
+                      <Button variant="ghost" onClick={() => onPurchaseInbound?.(row.id)}>
+                        采购入库
+                      </Button>
+                    ) : null}
                     <Button variant="ghost" onClick={() => void openDetail(row)}>
                       <Eye data-icon="inline-start" />
                       详情
@@ -1667,6 +1703,8 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
             ) : null}
             {view.id === "purchase-orders" ? (
               <PurchaseDetail row={selected} />
+            ) : view.id === "purchase-inbound" ? (
+              <PurchaseInboundDetail row={selected} />
             ) : (
               <Card className={WORKFLOW_SURFACE_CLASSES.detailCard}>
                 <h3 className="text-sm font-semibold">基础信息</h3>
@@ -1692,7 +1730,7 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                 </dl>
               </Card>
             )}
-            {view.historyPath && view.id !== "purchase-orders" ? (
+            {view.historyPath && !["purchase-orders", "purchase-inbound"].includes(view.id) ? (
               <Card className={WORKFLOW_SURFACE_CLASSES.historyCard}>
                 <h3 className="text-sm font-semibold">状态历史</h3>
                 {timeline.length ? (
@@ -1732,6 +1770,33 @@ export function WorkflowWorkbench({ view }: Readonly<{ view: WorkflowView }>) {
                     body: JSON.stringify(payload),
                   });
                   toast.success("采购订单保存成功");
+                  setFormOpen(false);
+                  await load();
+                } catch (reason) {
+                  setFormError(reason instanceof Error ? reason.message : "保存失败");
+                } finally {
+                  setSaving(false);
+                }
+              }}
+            />
+          ) : view.id === "purchase-inbound" ? (
+            <PurchaseInboundForm
+              orders={allOptions.purchaseOrders ?? []}
+              warehouses={allOptions.warehouses ?? []}
+              initialOrderId={initialOrderId}
+              saving={saving}
+              error={formError}
+              onCancel={() => setFormOpen(false)}
+              onSave={async (payload) => {
+                setSaving(true);
+                setFormError(null);
+                try {
+                  await request(view.createApiPath!, {
+                    method: "POST",
+                    headers: { "Idempotency-Key": crypto.randomUUID() },
+                    body: JSON.stringify(payload),
+                  });
+                  toast.success("采购入库成功，库存已更新");
                   setFormOpen(false);
                   await load();
                 } catch (reason) {

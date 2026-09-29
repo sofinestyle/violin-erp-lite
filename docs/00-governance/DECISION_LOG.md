@@ -2811,3 +2811,10 @@ DEC-114 实施增量（2026-09-28）：按已批准 CR-011 部署数据库迁移
 ### DEC-115 实施收口（2026-09-28）
 
 CR-012 已实施，采购订单允许在原权限/数据范围内自审。CR-011 一并完成工程实施，历史异常保持只读；迁移已部署，无新增角色或 Permission。真实浏览器自审、HTTP 质检/快照/删除与 PostgreSQL Audit 回滚通过；新的跨用户采购入库闭环未执行，保留正式职责分离要求及人工复验项。最新报告为 `PROCUREMENT_MANAGEMENT_UX_REFACTOR_REPORT.md`，UAT Fixed / Pending Manual Verification，不标记 Closed。Phase/Task 状态不变。
+
+
+## DEC-116 CR-013 采购流程最终简化（2026-09-29）
+
+Project Owner 本次正式批准：去除采购付款及独立采购质检新业务，采购入库直接来源采购中订单，质检信息合并入库，保存即完成库存与流水；必要 Frozen Business/API/Database 调整纳入统一 CR-013。采购保留整单一次执行，状态待审核、采购中、已入库、已取消；生产链、历史事实、权限代码和数据范围不扩展。新增入库检查信息及批次可空迁移已部署，API v1.16、Database v2.10；历史 inspected 依据证据兼容读取，异常只读隔离。
+
+代码与自动化、真实 HTTP/PostgreSQL 事务闭环已验证；保留自动浏览器原生审核确认交互超时及余下闭环未完成记录，不声明自动浏览器全量 E2E 通过。2026-09-29，Project Owner 明确确认“经过人工测试，测试通过。”据此记录 CR-013 Approved / Implemented，UAT Fixed / Manual Verification Passed，按原授权统一一个 Commit/Push；不直接 Closed，Phase 10 正式状态不变。

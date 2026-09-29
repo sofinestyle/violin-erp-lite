@@ -1,8 +1,14 @@
+import type { IdempotencyAdapter } from "../idempotency/idempotency.js";
+import type {
+  IdempotencyJson,
+  IdempotencyReconciliationStrategy,
+  IdempotencySafeResponse,
+} from "../idempotency/types.js";
 import { recordAuditEvent, type AuditWriter } from "../audit/audit.js";
 import type { AuthenticatedUser, AuthenticationContext } from "../auth/authentication.js";
 import { requirePermission } from "../authorization/authorization.js";
 import type { PermissionCode } from "../authorization/permissions.js";
-import { AppError, ValidationError } from "../errors/app-error.js";
+import { AppError, normalizeError, ValidationError } from "../errors/app-error.js";
 import type { RequestContext } from "../request-context/request-context.js";
 
 export const WORKFLOW_API_IDS = [
@@ -624,7 +630,7 @@ function validateCommand(command: WorkflowCommand): void {
     required(command.payload, [
       "documentDate",
       source,
-      "inspectionOrderId",
+      ...(command.action === "create-purchase" ? ["inspectionPerformed"] : ["inspectionOrderId"]),
       "warehouseId",
       "items",
     ]);
@@ -657,10 +663,44 @@ function validateCommand(command: WorkflowCommand): void {
   }
 }
 
+function idempotencyJson(value: unknown): IdempotencyJson {
+  return JSON.parse(JSON.stringify(value)) as IdempotencyJson;
+}
+
+function idempotencySuccessEnvelope(result: unknown, context: RequestContext): IdempotencyJson {
+  return idempotencyJson({
+    data: result,
+    meta: {},
+    requestId: context.requestId,
+    success: true,
+    timestamp: context.timestamp,
+  });
+}
+
+function idempotencyErrorEnvelope(error: AppError, context: RequestContext): IdempotencyJson {
+  return idempotencyJson({
+    error: {
+      code: error.code,
+      details: error.expose ? error.details : [],
+      message: error.expose ? error.message : "系统异常，请稍后重试",
+    },
+    requestId: context.requestId,
+    success: false,
+    timestamp: context.timestamp,
+  });
+}
+
+function resultId(result: unknown): string | undefined {
+  if (!result || typeof result !== "object" || Array.isArray(result)) return undefined;
+  const id = (result as Readonly<Record<string, unknown>>).id;
+  return typeof id === "string" ? id : undefined;
+}
+
 export class WorkflowService {
   constructor(
     private readonly repository: WorkflowRepository,
     private readonly audit: AuditWriter,
+    private readonly idempotency?: IdempotencyAdapter,
   ) {}
 
   async execute(
@@ -670,6 +710,23 @@ export class WorkflowService {
     context: RequestContext,
   ): Promise<unknown> {
     const authenticated = requirePermission(authentication, permission);
+    if (command.mutation && command.resource === "purchase-payment")
+      throw new AppError("CONFLICT_REQUEST", 409, "采购付款已停止使用，历史记录仅供查询。");
+    if (
+      command.mutation &&
+      command.resource === "inspection" &&
+      command.payload.sourceType === "purchase"
+    )
+      throw new AppError(
+        "CONFLICT_REQUEST",
+        409,
+        "独立采购质检已停止使用，请在采购入库填写到货检查信息。",
+      );
+    if (command.action === "create-purchase" && command.resource === "inbound") {
+      requirePermission(authentication, "inbound.order.confirm");
+      if (typeof command.payload.inspectionPerformed !== "boolean")
+        throw new ValidationError("请选择是否质检");
+    }
     validateCommand(command);
     if (command.resource === "purchase" && command.action === "withdraw") {
       throw new AppError("CONFLICT_REQUEST", 409, "采购订单保存后直接待审核，当前流程不支持撤回。");
@@ -718,7 +775,10 @@ export class WorkflowService {
               action: command.apiId,
               actorUserId: authenticated.user.userId,
               afterSnapshot: result,
-              metadata: { action: command.action, policy: "CR-011" },
+              metadata: {
+                action: command.action,
+                policy: command.action === "create-purchase" ? "CR-013" : "CR-011",
+              },
               moduleCode: command.resource,
               requestId: context.requestId,
               resourceId: auditResourceId(result, command.entityId ?? command.parentId),
@@ -750,6 +810,90 @@ export class WorkflowService {
       });
     }
     return result;
+  }
+  async executeIdempotent(
+    command: WorkflowCommand,
+    permission: PermissionCode,
+    idempotencyKey: string,
+    authentication: AuthenticationContext,
+    context: RequestContext,
+  ): Promise<IdempotencySafeResponse> {
+    if (!command.mutation) {
+      throw new TypeError("Idempotent inventory workflow execution requires a mutation command");
+    }
+    if (!this.idempotency) {
+      throw new TypeError("Persistent idempotency is not configured");
+    }
+    const authorize = () => {
+      requirePermission(authentication, permission);
+      validateCommand(command);
+      if (command.action === "create-purchase")
+        requirePermission(authentication, "inbound.order.confirm");
+    };
+    const reconciliation: IdempotencyReconciliationStrategy = {
+      reconcileExpiredProcessing: async () => ({ outcome: "unresolved" }),
+    };
+    const responseStatus = command.action.startsWith("create") ? 201 : 200;
+
+    return this.idempotency.execute({
+      authorize,
+      operation: async () => {
+        try {
+          const result = await this.execute(command, permission, authentication, context);
+          const resourceId = resultId(result) ?? command.entityId;
+          return {
+            outcome: "completed",
+            response: {
+              body: idempotencySuccessEnvelope(result, context),
+              httpStatus: responseStatus,
+              requestTraceId: context.requestId,
+              ...(resourceId ? { resourceId, resourceType: command.resource } : {}),
+            },
+          };
+        } catch (error) {
+          const appError = normalizeError(error);
+          return {
+            outcome: "failed",
+            response: {
+              body: idempotencyErrorEnvelope(appError, context),
+              httpStatus: appError.httpStatus,
+              requestTraceId: context.requestId,
+            },
+          };
+        }
+      },
+      rawKey: idempotencyKey,
+      reconciliation,
+      request: {
+        action: command.apiId,
+        authenticationScope: {
+          dataScopes: [...authentication.user.dataScopes].sort(),
+          storeIds: [...(authentication.user.storeScopes ?? [])]
+            .map(({ targetId }) => targetId)
+            .sort(),
+          userId: authentication.user.userId,
+          warehouseIds: [...(authentication.user.warehouseScopes ?? [])]
+            .map(({ targetId }) => targetId)
+            .sort(),
+        },
+        body: command.payload,
+        method: command.action === "update" ? "PATCH" : "POST",
+        path: {
+          action: command.action,
+          entityId: command.entityId,
+          resource: command.resource,
+        },
+        query: Object.fromEntries(command.query.entries()),
+        ...(typeof command.payload.storeId === "string"
+          ? { storeId: command.payload.storeId }
+          : {}),
+        ...(typeof command.payload.warehouseId === "string"
+          ? { warehouseId: command.payload.warehouseId }
+          : {}),
+      },
+      requestTraceId: context.requestId,
+      scope: { apiId: command.apiId, userId: authentication.user.userId },
+    });
   }
 }
 

@@ -1158,7 +1158,7 @@ describe("Prisma workflow repository", () => {
     ).toBeUndefined();
   });
 
-  it("creates purchase source inbound from confirmed inspection without touching inventory", async () => {
+  it("rejects the retired purchase inbound inspection DTO without writing inventory", async () => {
     const purchaseOrderItemId = "77777777-7777-4777-8777-777777777777";
     const inspectionOrderItemId = "88888888-8888-4888-8888-888888888888";
     const create = vi.fn().mockResolvedValue({
@@ -1243,34 +1243,8 @@ describe("Prisma workflow repository", () => {
         },
         actor,
       ),
-    ).resolves.toMatchObject({ status: "draft", totalQuantity: 3 });
-    expect(create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          inbound_order_items: expect.objectContaining({
-            create: [
-              expect.objectContaining({
-                inspection_order_item_id: inspectionOrderItemId,
-                line_cost: 300,
-                quantity: 3,
-                source_document_item_id: purchaseOrderItemId,
-              }),
-            ],
-          }),
-          inbound_type: "purchase",
-          source_document_id: ORDER_ID,
-          source_document_type: "purchase_order",
-          status: "draft",
-          warehouse_id: WAREHOUSE_ID,
-        }),
-      }),
-    );
-    expect(
-      (client as { inventories?: unknown; inventory_transactions?: unknown }).inventories,
-    ).toBeUndefined();
-    expect(
-      (client as { inventory_transactions?: { create?: unknown } }).inventory_transactions?.create,
-    ).toBeUndefined();
+    ).rejects.toThrow("请选择是否质检");
+    expect(create).not.toHaveBeenCalled();
   });
 
   it("creates production source inbound from confirmed inspection", async () => {
@@ -1380,9 +1354,9 @@ describe("Prisma workflow repository", () => {
           .mockResolvedValueOnce({
             document_no: "INB-001",
             id: inboundId,
-            inbound_type: "purchase",
+            inbound_type: "production",
             inspection_order_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-            source_document_type: "purchase_order",
+            source_document_type: "production_order",
             source_document_id: ORDER_ID,
             status: "approved",
             version_no: 2,
@@ -1424,7 +1398,7 @@ describe("Prisma workflow repository", () => {
         create: transactionCreate,
         findMany: vi.fn().mockResolvedValue([]),
       },
-      purchase_order_items: {
+      production_order_items: {
         findMany: vi.fn().mockResolvedValue([
           {
             id: purchaseOrderItemId,
@@ -1437,7 +1411,6 @@ describe("Prisma workflow repository", () => {
       },
       warehouses: { findFirst: vi.fn().mockResolvedValue({ id: WAREHOUSE_ID }) },
     };
-    parentEvidence(client, "inspected", 3);
     const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
 
     await expect(
@@ -1482,7 +1455,7 @@ describe("Prisma workflow repository", () => {
           source_document_id: inboundId,
           source_document_item_id: inboundItemId,
           source_document_type: "inbound_order",
-          transaction_type: "purchase",
+          transaction_type: "production",
         }),
       }),
     );
@@ -1549,9 +1522,9 @@ describe("Prisma workflow repository", () => {
           .mockResolvedValueOnce({
             document_no: "INB-001",
             id: inboundId,
-            inbound_type: "purchase",
+            inbound_type: "production",
             inspection_order_id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
-            source_document_type: "purchase_order",
+            source_document_type: "production_order",
             source_document_id: ORDER_ID,
             status: "approved",
             version_no: 2,
@@ -1593,7 +1566,7 @@ describe("Prisma workflow repository", () => {
         create: vi.fn().mockRejectedValue(new Error("write failed")),
         findMany: vi.fn().mockResolvedValue([]),
       },
-      purchase_order_items: {
+      production_order_items: {
         findMany: vi.fn().mockResolvedValue([
           {
             id: purchaseOrderItemId,
@@ -1606,7 +1579,6 @@ describe("Prisma workflow repository", () => {
       },
       warehouses: { findFirst: vi.fn().mockResolvedValue({ id: WAREHOUSE_ID }) },
     };
-    parentEvidence(client, "inspected", 3);
     const repository = new PrismaWorkflowRepository(client as unknown as PrismaClient);
 
     await expect(

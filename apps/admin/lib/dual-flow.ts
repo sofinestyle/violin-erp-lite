@@ -13,9 +13,13 @@ export function dualFlowStatusOptions(
     return [
       ["pending_approval", "待审核"],
       ["purchasing", "采购中"],
-      ["inspected", "已质检"],
       ["received", "已入库"],
       ["cancelled", "已取消"],
+    ];
+  if (view.id === "purchase-inbound")
+    return [
+      ["completed", "已入库"],
+      ["reversed", "已冲销"],
     ];
   if (view.id === "production-completions")
     return [
@@ -70,7 +74,7 @@ export function eligibleSourceRows(view: WorkflowView, key: string, rows: readon
         (sourceType !== "purchase" || row.purchaseBusinessStatus === "inspected"),
     );
   }
-  if (view.id === "purchase-inspections" && key === "purchaseOrders") {
+  if (["purchase-inspections", "purchase-inbound"].includes(view.id) && key === "purchaseOrders") {
     return rows.filter((row) => row.businessStatus === "purchasing" && !row.legacyReviewRequired);
   }
   if (view.id === "production-inspections" && key === "productionOrders") {
@@ -92,6 +96,11 @@ export function eligibleSourceRows(view: WorkflowView, key: string, rows: readon
 }
 
 export function sourceContextFor(view: WorkflowView, source: BusinessRow): Record<string, unknown> {
+  if (view.id === "purchase-inbound") {
+    if (source.businessStatus !== "purchasing" || source.legacyReviewRequired)
+      throw new Error("请选择采购中的采购订单。");
+    return { purchaseOrderId: source.id };
+  }
   if (view.id.endsWith("-inbound") && view.sourceType) {
     if (source.sourceType !== view.sourceType || source.status !== "confirmed") {
       throw new Error(
@@ -114,6 +123,8 @@ export function availableSourceQuantity(
   item: BusinessRow,
   order?: BusinessRow,
 ): number | undefined {
+  if (view.id === "purchase-inbound")
+    return Math.max(0, Number(item.quantity) - Number(item.inboundQuantity ?? 0));
   if (view.id.endsWith("-inspections")) {
     return Math.max(
       0,
@@ -142,6 +153,7 @@ export function availableSourceQuantity(
 
 export function actionStateAllowed(view: WorkflowView, action: string, row: BusinessRow): boolean {
   if (!isDualFlow(view)) return true;
+  if (view.id === "purchase-inbound") return false;
   if (view.id === "production-completions") {
     const state = String(row.completionStatus).toLowerCase();
     return action === "revoke" ? state === "confirmed" : state === "draft";

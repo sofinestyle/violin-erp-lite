@@ -50,6 +50,10 @@ export async function procurementTransaction(
           : target.warehouse_id;
     }
   } else return null;
+  if (command.resource === "purchase-payment" || command.resource === "inspection")
+    throw new ConflictError("采购付款及独立采购质检已停止写入，历史记录仅供查询。");
+  if (command.resource === "inbound" && command.action !== "create-purchase")
+    throw new ConflictError("采购入库已合并为一次确认保存，历史入库单仅供查询。");
   return client.$transaction(
     async (tx) => {
       if (sourceId) {

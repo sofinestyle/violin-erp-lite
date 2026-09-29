@@ -12,7 +12,7 @@ const routeTitles: Partial<
   Record<NavigationSectionId, Readonly<{ description: string; title: string }>>
 > = {
   purchase: {
-    description: "供应商采购独立流转：采购订单、采购质检、采购入库。",
+    description: "供应商采购独立流转：采购订单、采购入库。",
     title: "采购管理",
   },
   production: {

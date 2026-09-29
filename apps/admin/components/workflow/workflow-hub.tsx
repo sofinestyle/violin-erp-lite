@@ -6,6 +6,7 @@ import type { WorkflowView } from "@/lib/workflow";
 import { WorkflowWorkbench } from "./workflow-workbench";
 
 export function WorkflowHub({ views }: Readonly<{ views: readonly WorkflowView[] }>) {
+  const [orderId, setOrderId] = useState("");
   const [active, setActive] = useState(views[0]!.id);
   const view = views.find((item) => item.id === active) ?? views[0]!;
   return (
@@ -15,7 +16,10 @@ export function WorkflowHub({ views }: Readonly<{ views: readonly WorkflowView[]
           <Button
             aria-selected={item.id === view.id}
             key={item.id}
-            onClick={() => setActive(item.id)}
+            onClick={() => {
+              setOrderId("");
+              setActive(item.id);
+            }}
             role="tab"
             variant={item.id === view.id ? "primary" : "secondary"}
           >
@@ -24,7 +28,15 @@ export function WorkflowHub({ views }: Readonly<{ views: readonly WorkflowView[]
         ))}
       </div>
       <p className="text-sm text-muted-foreground">{view.description}</p>
-      <WorkflowWorkbench key={view.id} view={view} />
+      <WorkflowWorkbench
+        key={view.id}
+        view={view}
+        initialOrderId={orderId}
+        onPurchaseInbound={(id) => {
+          setOrderId(id);
+          setActive("purchase-inbound");
+        }}
+      />
     </div>
   );
 }

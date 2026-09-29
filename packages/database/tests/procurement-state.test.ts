@@ -34,7 +34,28 @@ describe("whole-order procurement evidence and quantity boundaries", () => {
       status: "approved",
       purchase_order_items: [{ ...item, inspected_quantity: 100, qualified_quantity: 98 }],
     };
-    expect(projectProcurementState(inspected, true, false).businessStatus).toBe("inspected");
+    expect(projectProcurementState(inspected, true, false).legacyReviewRequired).toBe(true);
+    expect(
+      projectProcurementState(
+        {
+          ...inspected,
+          purchase_order_items: [{ ...item, inspected_quantity: 100, qualified_quantity: 100 }],
+        },
+        true,
+        false,
+      ).businessStatus,
+    ).toBe("purchasing");
+    expect(
+      projectProcurementState(
+        {
+          ...order,
+          status: "received",
+          purchase_order_items: [{ ...item, inbound_quantity: 100 }],
+        },
+        false,
+        true,
+      ).businessStatus,
+    ).toBe("received");
     expect(projectProcurementState(inspected, false, false).legacyReviewRequired).toBe(true);
     expect(
       projectProcurementState(

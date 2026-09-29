@@ -1,3 +1,4 @@
+import { createDirectPurchaseInbound } from "./purchase-inbound.js";
 import { procurementRows } from "./procurement-state.js";
 import { procurementInspector, assertWholeProcurement } from "./procurement-rules.js";
 import {
@@ -286,7 +287,9 @@ async function list(
     }),
     delegate.count({ where }),
   ]);
-  let displayed = rows.map(record);
+  let displayed = (
+    command.resource === "inbound" ? await enrichPurchaseInbounds(client, rows) : rows
+  ).map(record);
   if (command.resource === "inspection" && rows.some((row) => row.source_type === "purchase")) {
     const parents = await procurementRows(client as unknown as PrismaClient, {
       id: {
@@ -312,6 +315,35 @@ async function list(
   };
 }
 
+async function enrichPurchaseInbounds(client: DynamicClient, rows: JsonRecord[]) {
+  const purchases = rows.filter((row) => row.source_document_type === "purchase_order");
+  if (!purchases.length) return rows;
+  const [parents, warehouses, suppliers] = await Promise.all([
+    client.purchase_orders!.findMany({
+      where: { id: { in: purchases.map((row) => row.source_document_id) } },
+    }),
+    client.warehouses!.findMany({
+      where: { id: { in: purchases.map((row) => row.warehouse_id) } },
+    }),
+    client.suppliers!.findMany({ where: { id: { in: purchases.map((row) => row.supplier_id) } } }),
+  ]);
+  const parentMap = new Map(parents.map((row) => [row.id, row]));
+  const warehouseMap = new Map(warehouses.map((row) => [row.id, row]));
+  const supplierMap = new Map(suppliers.map((row) => [row.id, row]));
+  return rows.map((row) =>
+    row.source_document_type !== "purchase_order"
+      ? row
+      : {
+          ...row,
+          purchase_order_no: parentMap.get(row.source_document_id)?.document_no,
+          supplier_name:
+            parentMap.get(row.source_document_id)?.supplier_name_snapshot ??
+            supplierMap.get(row.supplier_id)?.supplier_name,
+          warehouse_name: warehouseMap.get(row.warehouse_id)?.warehouse_name,
+        },
+  );
+}
+
 async function detail(
   client: DynamicClient,
   command: WorkflowCommand,
@@ -331,7 +363,9 @@ async function detail(
     where: { id: command.entityId ?? command.parentId, ...dataScopeWhere(command, actor) },
   });
   if (!found) throw new NotFoundError();
-  return record(found);
+  return record(
+    command.resource === "inbound" ? (await enrichPurchaseInbounds(client, [found]))[0]! : found,
+  );
 }
 
 async function skuSnapshots(client: DynamicClient, sourceItems: JsonRecord[]) {
@@ -946,6 +980,8 @@ async function createInspection(client: DynamicClient, payload: WorkflowPayload,
 
 async function createInbound(client: DynamicClient, command: WorkflowCommand, actor: string) {
   const purchase = command.action === "create-purchase";
+  if (purchase)
+    return createDirectPurchaseInbound(client as unknown as PrismaClient, command.payload, actor);
   const sourceModel = purchase ? "purchase_orders" : "production_orders";
   const sourceField = purchase ? "purchaseOrderId" : "productionOrderId";
   const sourceItemRelation = purchase ? "purchase_order_items" : "production_order_items";
@@ -964,7 +1000,7 @@ async function createInbound(client: DynamicClient, command: WorkflowCommand, ac
     },
   });
   if (!source || !inspection) throw new ValidationError("正式入库必须关联已确认且来源一致的验收单");
-  if (purchase && (await purchaseState(client, source.id)).businessStatus !== "inspected") {
+  if (purchase && String((await purchaseState(client, source.id)).businessStatus) !== "inspected") {
     throw new ConflictError("仅已质检采购单允许创建入库单");
   }
   if (
@@ -1582,7 +1618,7 @@ async function confirmInbound(
   const rows = (inboundWithItems?.inbound_order_items as JsonRecord[]) ?? [];
   const purchase = inbound.source_document_type === "purchase_order";
   const purchaseOrder = purchase ? await purchaseState(client, inbound.source_document_id) : null;
-  if (purchaseOrder && purchaseOrder.businessStatus !== "inspected")
+  if (purchaseOrder && String(purchaseOrder.businessStatus) !== "inspected")
     throw new ConflictError("仅已质检采购单允许确认入库");
   if (rows.length === 0) throw new ValidationError("入库单明细不能为空");
   await activeWarehouse(client, String(inbound.warehouse_id));

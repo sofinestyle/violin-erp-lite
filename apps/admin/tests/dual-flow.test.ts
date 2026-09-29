@@ -11,9 +11,13 @@ import {
 
 const purchase = procurementViews[0]!;
 const production = productionViews[0]!;
-const purchaseInspection = procurementViews[2]!;
+const purchaseInspection = {
+  ...productionViews[3]!,
+  id: "purchase-inspections",
+  sourceType: "purchase" as const,
+};
 const productionInspection = productionViews[3]!;
-const purchaseInbound = procurementViews[3]!;
+const purchaseInbound = procurementViews[1]!;
 const productionInbound = productionViews[4]!;
 const completion = productionViews[2]!;
 
@@ -75,52 +79,48 @@ describe("Independent procurement and production UI orchestration", () => {
     ).toBe(98);
   });
 
-  it("only accepts confirmed matching inspection sources and derives the original order", () => {
-    const rows = [
-      {
-        id: "p",
-        sourceType: "purchase",
+  it("selects purchasing orders directly while production still requires confirmed inspection", () => {
+    const order = { id: "po", businessStatus: "purchasing" };
+    expect(sourceContextFor(purchaseInbound, order)).toEqual({ purchaseOrderId: "po" });
+    for (const state of ["pending_approval", "received", "cancelled", "inspected"])
+      expect(() => sourceContextFor(purchaseInbound, { id: "po", businessStatus: state })).toThrow(
+        "采购中",
+      );
+    expect(
+      sourceContextFor(productionInbound, {
+        id: "ins",
+        sourceType: "production",
         status: "confirmed",
-        purchaseBusinessStatus: "inspected",
-        purchaseOrderId: "po",
-      },
-      { id: "r", sourceType: "production", status: "confirmed", productionOrderId: "pro" },
-      { id: "d", sourceType: "purchase", status: "draft" },
-    ];
-    expect(
-      eligibleSourceRows(purchaseInbound, "purchaseInspections", rows).map((r) => r.id),
-    ).toEqual(["p"]);
-    expect(
-      eligibleSourceRows(productionInbound, "productionInspections", rows).map((r) => r.id),
-    ).toEqual(["r"]);
-    expect(sourceContextFor(purchaseInbound, rows[0]!)).toEqual({ purchaseOrderId: "po" });
-    expect(sourceContextFor(productionInbound, rows[1]!)).toEqual({ productionOrderId: "pro" });
-    expect(() => sourceContextFor(purchaseInbound, rows[1]!)).toThrow("采购质检");
-    expect(() => sourceContextFor(productionInbound, rows[0]!)).toThrow("成品质检");
-    expect(() => sourceContextFor(purchaseInbound, rows[2]!)).toThrow("已确认");
-    expect(formFor(purchaseInbound)?.fields.map((f) => f.key)).not.toContain("purchaseOrderId");
-    expect(formFor(productionInbound)?.fields.map((f) => f.key)).not.toContain("productionOrderId");
+        productionOrderId: "pro",
+      }),
+    ).toEqual({ productionOrderId: "pro" });
+    expect(() =>
+      sourceContextFor(productionInbound, { id: "ins", sourceType: "production", status: "draft" }),
+    ).toThrow("成品质检");
   });
 
-  it("limits inbound defaults by confirmed qualified and remaining order quantities", () => {
-    const inspection = { id: "inspection-item", sourceItemId: "order-item", qualifiedQuantity: 98 };
+  it("uses remaining ordered quantity for purchase and qualified quantity for production", () => {
     expect(
-      availableSourceQuantity(purchaseInbound, inspection, {
-        id: "po",
-        purchaseOrderItems: [{ id: "order-item", qualifiedQuantity: 98, inboundQuantity: 10 }],
+      availableSourceQuantity(purchaseInbound, {
+        id: "line",
+        quantity: 100,
+        inboundQuantity: 0,
+        qualifiedQuantity: 0,
       }),
-    ).toBe(88);
-    expect(availableSourceQuantity(productionInbound, inspection)).toBe(0);
+    ).toBe(100);
+    expect(
+      availableSourceQuantity(purchaseInbound, { id: "line", quantity: 100, inboundQuantity: 100 }),
+    ).toBe(0);
     expect(
       availableSourceQuantity(
-        purchaseInbound,
-        { ...inspection, qualifiedQuantity: 20 },
+        productionInbound,
+        { id: "ins", sourceItemId: "line", qualifiedQuantity: 98 },
         {
-          id: "po",
-          purchaseOrderItems: [{ id: "order-item", qualifiedQuantity: 100, inboundQuantity: 0 }],
+          id: "pro",
+          productionOrderItems: [{ id: "line", qualifiedQuantity: 98, inboundQuantity: 10 }],
         },
       ),
-    ).toBe(20);
+    ).toBe(88);
   });
 
   it("hides invalid actions without changing the approved state machine", () => {
@@ -170,7 +170,7 @@ describe("Independent procurement and production UI orchestration", () => {
       ),
     ).toMatchObject({ versionNo: 3, progressDescription: "开工" });
     expect(
-      dualActionPayload(purchaseInbound, "confirm", {
+      dualActionPayload(productionInbound, "confirm", {
         id: "i",
         versionNo: 3,
         status: "approved",

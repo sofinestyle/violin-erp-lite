@@ -1,5 +1,8 @@
 # Manual UAT UX Batch — 主数据与采购管理体验重构
 
+> 2026-09-29 更新：CR-013 已批准采购最终简化，当前正式采购流程为采购订单 → 采购入库 → 库存（待审核 → 采购中 → 已入库）；独立采购付款/质检停止写入，采购入库一次确认完成。以下原五状态及入库二次审核说明为历史记录。当前代码、真实 HTTP/PostgreSQL 和自动化已通过；项目负责人于 2026-09-29 确认人工测试通过，当前 UAT 为 Fixed / Manual Verification Passed。保留此前自动浏览器原生确认交互超时记录，不将其改记为自动 E2E 通过。详见 [采购最终简化报告](./PROCUREMENT_FINAL_SIMPLIFICATION_REPORT.md)。
+
+
 日期：2026-09-28。状态：**Fixed / Pending Manual Verification**。本次合并已有 Procurement Workflow Simplification 修改，不拆 UAT 编号；当前 Phase 10 / Release & Acceptance 保持 Completed / Approved。
 
 基准：`c42385ebc9dd92864b7e7d0ee64366b0c12a2d0a`。统一提交：`refactor: simplify procurement management experience`。

@@ -59,8 +59,6 @@ describe("Parallel workflow pages", () => {
   it("keeps procurement and production routes independent", () => {
     expect(procurementViews.map((view) => view.id)).toEqual([
       "purchase-orders",
-      "purchase-payments",
-      "purchase-inspections",
       "purchase-inbound",
     ]);
     expect(productionViews.map((view) => view.id)).toEqual([
@@ -105,7 +103,7 @@ describe("Parallel workflow pages", () => {
   });
 
   it("renders business forms without JSON DTO or manual UUID prompts", () => {
-    const purchasePayment = procurementViews.find((view) => view.id === "purchase-payments")!;
+    const purchasePayment = procurementViews.find((view) => view.id === "purchase-inbound")!;
     const html = renderToStaticMarkup(
       <UserProvider user={{ displayName: "管理员", id: "11111111-1111-4111-8111-111111111111" }}>
         <PermissionProvider permissions={["purchase.payment.create"]}>
@@ -114,7 +112,7 @@ describe("Parallel workflow pages", () => {
       </UserProvider>,
     );
 
-    expect(html).toContain("请选择采购订单");
+    expect(html).toContain("采购入库");
     expect(html).not.toContain("请求 DTO");
     expect(html).not.toContain("JSON");
     expect(html).not.toContain("UUID");
@@ -123,10 +121,8 @@ describe("Parallel workflow pages", () => {
   it("defines Chinese business form fields for the core UAT Batch 002-A flows", () => {
     expect(formFor(procurementViews[0]!)?.fields.map((field) => field.label)).toContain("供应商");
     expect(formFor(productionViews[0]!)?.fields.map((field) => field.label)).toContain("生产厂家");
-    expect(formFor(procurementViews[2]!)?.fields.map((field) => field.label)).toContain("采购订单");
-    expect(formFor(procurementViews[3]!)?.fields.map((field) => field.label)).toContain(
-      "已确认采购质检单",
-    );
+    expect(formFor(productionViews[3]!)?.fields.map((field) => field.label)).toContain("生产订单");
+    expect(formFor(procurementViews[1]!)?.optionSources?.[0]?.key).toBe("purchaseOrders");
     expect(formFor(inventoryViews[2]!)?.itemFields?.map((field) => field.label)).toContain("方向");
     expect(formFor(warehouseOperationViews[3]!)?.fields.map((field) => field.label)).toContain(
       "客户快照",
@@ -141,8 +137,8 @@ describe("Parallel workflow pages", () => {
     const coreViews = [
       procurementViews[0],
       productionViews[0],
-      procurementViews[2],
-      procurementViews[3],
+      productionViews[3],
+      procurementViews[1],
       inventoryViews[2],
       warehouseOperationViews[3],
       crossBorderViews[0],
@@ -167,8 +163,8 @@ describe("Parallel workflow pages", () => {
   it("covers the procurement-production-inventory-sales-cross-border loop with existing APIs", () => {
     const purchase = procurementViews[0]!;
     const production = productionViews[0]!;
-    const inspection = procurementViews[2]!;
-    const inbound = procurementViews[3]!;
+    const inspection = productionViews[3]!;
+    const inbound = procurementViews[1]!;
     const adjustment = inventoryViews[2]!;
     const outbound = warehouseOperationViews[3]!;
     const crossBorder = crossBorderViews[0]!;
@@ -183,7 +179,7 @@ describe("Parallel workflow pages", () => {
     expect(crossBorder.createApiPath).toBe("/api/v1/cross-border-shipments");
     expect(salesReturn.createApiPath).toBe("/api/v1/sales-returns");
 
-    expect(actionsFor(inbound).map((action) => action.label)).toContain("确认入库");
+    expect(actionsFor(inbound)).toEqual([]);
     expect(actionsFor(outbound).map((action) => action.label)).toContain("确认出库");
     expect(actionsFor(crossBorder).map((action) => action.label)).toContain("确认发货");
     expect(actionsFor(salesReturn).map((action) => action.label)).toContain("退货入库");
@@ -222,8 +218,8 @@ describe("Parallel workflow pages", () => {
     const views = [
       procurementViews[0],
       productionViews[0],
-      procurementViews[2],
-      procurementViews[3],
+      productionViews[3],
+      procurementViews[1],
       inventoryViews[2],
       warehouseOperationViews[3],
       crossBorderViews[0],
@@ -273,8 +269,8 @@ describe("Parallel workflow pages", () => {
     const coreViews = [
       procurementViews[0],
       productionViews[0],
-      procurementViews[2],
-      procurementViews[3],
+      productionViews[3],
+      procurementViews[1],
       inventoryViews[2],
       warehouseOperationViews[3],
       crossBorderViews[0],

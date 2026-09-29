@@ -822,3 +822,8 @@ Commit：
 真实浏览器 10 × 300 保存待审核、同账号审核采购中，Audit 真实身份一致；HTTP 整单质检后已质检、无下游待审核删除无残留、供应商快照不变；采购审核和质检 Audit 故障在真实 PostgreSQL 全部回滚。临时账号正式停用。新建采购入库的跨用户完整实库闭环尚未执行，相关仓储回归不替代真实 E2E。现有质检作废/撤销补齐取消人/时间/原因，遵守原数据库 CHECK。
 
 状态：**Fixed / Pending Manual Verification**。CR-011 / CR-012 Approved / Implemented；API v1.15、344 接口，沿用已部署 CR-011，CR-012 无新迁移。测试、浏览器证据及人工复验边界详见 `docs/quality/PROCUREMENT_MANAGEMENT_UX_REFACTOR_REPORT.md`。当前 Phase/Task 不变。
+
+
+## 2026-09-29 Procurement Workflow Final Simplification / CR-013
+
+状态 Fixed / Manual Verification Passed（Project Owner Confirmed），不新增 UAT 编号。采购付款与独立采购质检退出流程，采购状态待审核→采购中→已入库；直接采购入库、必选是否质检、选填姓名、日历日期、成本继承、批次 NULL、整单一次保存及原子审计已实施。真实 HTTP/PostgreSQL 闭环 10 × 300、库存/流水/Audit、并发幂等及审计/流水故障回滚通过。pnpm check 549 passed / 70 conditional skipped，本轮 PostgreSQL 专项另行启用通过。浏览器已创建待审核测试单，审核原生确认交互超时，自动浏览器完整闭环及 Console/截图证据未完成，保留该验证边界。2026-09-29 项目负责人确认“经过人工测试，测试通过。”人工验收通过，CR-013 Approved / Implemented，按原授权统一提交与推送，不直接 Closed。完整证据见 `PROCUREMENT_FINAL_SIMPLIFICATION_REPORT.md`。

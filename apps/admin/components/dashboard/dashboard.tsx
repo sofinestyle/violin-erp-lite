@@ -167,6 +167,13 @@ export function Dashboard() {
             "/api/v1/purchase-orders?page=1&pageSize=1&status=pending_approval",
           )
         : Promise.resolve(),
+      hasPermission("purchase.order.read")
+        ? loadTask(
+            "待采购入库",
+            "/workspace/purchase",
+            "/api/v1/purchase-orders?page=1&pageSize=1&status=purchasing",
+          )
+        : Promise.resolve(),
       hasPermission("production.order.read")
         ? loadTask(
             "待处理生产任务",
@@ -176,9 +183,9 @@ export function Dashboard() {
         : Promise.resolve(),
       hasPermission("inbound.order.read")
         ? loadTask(
-            "待入库单据",
+            "待生产入库单据",
             "/workspace/warehouse-operations",
-            "/api/v1/inbound-orders?page=1&pageSize=1&status=pending_approval",
+            "/api/v1/inbound-orders?page=1&pageSize=1&status=pending_approval&sourceDocumentType=production_order",
           )
         : Promise.resolve(),
       hasPermission("outbound.order.read")
