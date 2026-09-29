@@ -20,11 +20,13 @@ import {
 } from "@/lib/workflow";
 
 describe("Parallel workflow pages", () => {
-  it("hides obsolete purchase withdrawal without changing production withdrawal", () => {
+  it("hides obsolete purchase withdrawal and production withdrawal", () => {
     expect(actionsFor(procurementViews[0]!).map((action) => action.action)).not.toContain(
       "withdraw",
     );
-    expect(actionsFor(productionViews[0]!).map((action) => action.action)).toContain("withdraw");
+    expect(actionsFor(productionViews[0]!).map((action) => action.action)).not.toContain(
+      "withdraw",
+    );
   });
   it("shows purchase delete only for permitted pending approval or administrator UAT cancelled", () => {
     const visible = (
@@ -63,9 +65,6 @@ describe("Parallel workflow pages", () => {
     ]);
     expect(productionViews.map((view) => view.id)).toEqual([
       "production-orders",
-      "production-progress",
-      "production-completions",
-      "production-inspections",
       "production-inbound",
     ]);
     expect(procurementViews[0]?.description).toContain("不触发生产");
@@ -121,7 +120,7 @@ describe("Parallel workflow pages", () => {
   it("defines Chinese business form fields for the core UAT Batch 002-A flows", () => {
     expect(formFor(procurementViews[0]!)?.fields.map((field) => field.label)).toContain("供应商");
     expect(formFor(productionViews[0]!)?.fields.map((field) => field.label)).toContain("生产厂家");
-    expect(formFor(productionViews[3]!)?.fields.map((field) => field.label)).toContain("生产订单");
+    expect(formFor(productionViews[1]!)?.optionSources?.[0]?.key).toBe("productionOrders");
     expect(formFor(procurementViews[1]!)?.optionSources?.[0]?.key).toBe("purchaseOrders");
     expect(formFor(inventoryViews[2]!)?.itemFields?.map((field) => field.label)).toContain("方向");
     expect(formFor(warehouseOperationViews[3]!)?.fields.map((field) => field.label)).toContain(
@@ -137,7 +136,7 @@ describe("Parallel workflow pages", () => {
     const coreViews = [
       procurementViews[0],
       productionViews[0],
-      productionViews[3],
+      productionViews[1],
       procurementViews[1],
       inventoryViews[2],
       warehouseOperationViews[3],
@@ -163,7 +162,7 @@ describe("Parallel workflow pages", () => {
   it("covers the procurement-production-inventory-sales-cross-border loop with existing APIs", () => {
     const purchase = procurementViews[0]!;
     const production = productionViews[0]!;
-    const inspection = productionViews[3]!;
+    const inspection = productionViews[1]!;
     const inbound = procurementViews[1]!;
     const adjustment = inventoryViews[2]!;
     const outbound = warehouseOperationViews[3]!;
@@ -172,7 +171,7 @@ describe("Parallel workflow pages", () => {
 
     expect(purchase.createApiPath).toBe("/api/v1/purchase-orders");
     expect(production.createApiPath).toBe("/api/v1/production-orders");
-    expect(inspection.createApiPath).toBe("/api/v1/inspection-orders");
+    expect(inspection.createApiPath).toBe("/api/v1/inbound-orders/production");
     expect(inbound.createApiPath).toBe("/api/v1/inbound-orders/purchase");
     expect(adjustment.createApiPath).toBe("/api/v1/inventory-adjustments");
     expect(outbound.createApiPath).toBe("/api/v1/outbound-orders/domestic-sales");
@@ -218,7 +217,7 @@ describe("Parallel workflow pages", () => {
     const views = [
       procurementViews[0],
       productionViews[0],
-      productionViews[3],
+      productionViews[1],
       procurementViews[1],
       inventoryViews[2],
       warehouseOperationViews[3],
@@ -269,7 +268,7 @@ describe("Parallel workflow pages", () => {
     const coreViews = [
       procurementViews[0],
       productionViews[0],
-      productionViews[3],
+      productionViews[1],
       procurementViews[1],
       inventoryViews[2],
       warehouseOperationViews[3],

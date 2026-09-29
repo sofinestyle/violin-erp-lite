@@ -1,6 +1,19 @@
 "use client";
 
 import {
+  ProductionForm,
+  ProductionDetail,
+  ProductionListCells,
+  productionStatus,
+} from "./production-experience";
+import {
+  ProductionInboundForm,
+  ProductionInboundDetail,
+  ProductionInboundListCells,
+  inboundHeaders as productionInboundHeaders,
+} from "./production-inbound-experience";
+
+import {
   PurchaseInboundForm,
   PurchaseInboundDetail,
   PurchaseInboundListCells,
@@ -400,7 +413,6 @@ export function formFor(view: WorkflowView): BusinessForm | null {
           required: true,
           type: "select",
         },
-        { key: "plannedStartDate", label: "计划开始日", required: true, type: "date" },
         { key: "expectedCompletionDate", label: "预计完成日", required: true, type: "date" },
         { key: "remark", label: "备注", type: "textarea" },
       ],
@@ -559,6 +571,11 @@ export function formFor(view: WorkflowView): BusinessForm | null {
       },
     };
   }
+  if (view.id === "production-inbound")
+    return {
+      fields: [],
+      optionSources: [OPTION_SOURCES.productionOrders, OPTION_SOURCES.warehouses],
+    };
   if (view.id === "purchase-inbound")
     return {
       fields: [],
@@ -816,17 +833,7 @@ export function actionsFor(view: WorkflowView): readonly WorkflowAction[] {
       ["approve", "审核"],
       ["reject", "驳回", true],
     ]);
-  if (view.id === "production-orders") {
-    return map("production.order", [
-      ["submit", "提交"],
-      ["withdraw", "撤回"],
-      ["approve", "审核"],
-      ["reject", "驳回", true],
-      ["unapprove", "反审核"],
-      ["start", "开始生产"],
-      ["cancel", "取消", true],
-    ]);
-  }
+  if (view.id === "production-orders") return map("production.order", [["cancel", "取消", true]]);
   if (view.id === "purchase-inspections" || view.id === "production-inspections") {
     return map("inspection.order", [
       ["submit", "提交"],
@@ -835,7 +842,7 @@ export function actionsFor(view: WorkflowView): readonly WorkflowAction[] {
       ["void", "作废", true],
     ]);
   }
-  if (view.id === "purchase-inbound") return [];
+  if (["purchase-inbound", "production-inbound"].includes(view.id)) return [];
   if (view.id === "purchase-inbound" || view.id === "production-inbound") {
     return map("inbound.order", [
       ["submit", "提交"],
@@ -967,6 +974,12 @@ function optionLabel(row: Row, fields: readonly string[]): string {
 }
 
 function toOption(row: Row, source: OptionSource): Option {
+  if (source.key === "productionOrders")
+    return {
+      value: row.id,
+      raw: row,
+      label: [row.documentNo, row.manufacturerNameSnapshot, productionStatus(row)].join(" / "),
+    };
   return { label: optionLabel(row, source.labelFields), raw: row, value: row.id };
 }
 
@@ -1012,6 +1025,7 @@ function rowDate(row: Row): string {
 }
 
 function rowStatus(row: Row, view?: WorkflowView): string {
+  if (view?.id === "production-orders") return productionStatus(row);
   if (view?.id === "purchase-orders") return purchaseStatus(row);
   const value =
     row.status ??
@@ -1089,7 +1103,9 @@ export function WorkflowWorkbench({
   const [selected, setSelected] = useState<Row | null>(null);
   const [timeline, setTimeline] = useState<Row[]>([]);
   const [legacyReview, setLegacyReview] = useState(false);
-  const [formOpen, setFormOpen] = useState(view.id === "purchase-inbound" && !!initialOrderId);
+  const [formOpen, setFormOpen] = useState(
+    ["purchase-inbound", "production-inbound"].includes(view.id) && !!initialOrderId,
+  );
   const [saving, setSaving] = useState(false);
   const [options, setOptions] = useState<OptionsMap>({});
   const [sourceRows, setSourceRows] = useState<readonly Row[]>([]);
@@ -1196,7 +1212,8 @@ export function WorkflowWorkbench({
     void Promise.all(
       form.optionSources.map(async (source) => {
         const path =
-          view.id === "purchase-orders" && ["suppliers", "skus"].includes(source.key)
+          ["purchase-orders", "production-orders"].includes(view.id) &&
+          ["suppliers", "skus", "manufacturers"].includes(source.key)
             ? `/api/v1/${source.key}?isActive=true&pageSize=100`
             : source.path;
         const data: Row[] = [];
@@ -1484,6 +1501,26 @@ export function WorkflowWorkbench({
 
   const parentField = form?.fields.find((field) => field.key === "parentId");
 
+  async function saveProduction(payload: Record<string, unknown>) {
+    setSaving(true);
+    setFormError(null);
+    try {
+      await request(view.createApiPath!, {
+        method: "POST",
+        headers: { "Idempotency-Key": crypto.randomUUID() },
+        body: JSON.stringify(payload),
+      });
+      toast.success(
+        view.id === "production-orders" ? "生产订单保存成功" : "成品入库成功，库存已更新",
+      );
+      setFormOpen(false);
+      await load();
+    } catch (reason) {
+      setFormError(reason instanceof Error ? reason.message : "保存失败");
+    } finally {
+      setSaving(false);
+    }
+  }
   return (
     <div className="flex flex-col gap-4" data-testid="workflow-workbench">
       <Card className="p-4">
@@ -1541,7 +1578,8 @@ export function WorkflowWorkbench({
           {view.createApiPath &&
           view.createPermission &&
           form &&
-          (view.id !== "purchase-inbound" || hasPermission("inbound.order.confirm")) ? (
+          (!["purchase-inbound", "production-inbound"].includes(view.id) ||
+            hasPermission("inbound.order.confirm")) ? (
             <PermissionWrapper permission={view.createPermission}>
               <Button className="ml-auto" onClick={openCreate}>
                 <Plus data-icon="inline-start" />
@@ -1586,9 +1624,13 @@ export function WorkflowWorkbench({
               <tr>
                 {(view.id === "purchase-orders"
                   ? ["采购日期", "供应商", "SKU", "数量", "单价", "总金额", "状态"]
-                  : view.id === "purchase-inbound"
-                    ? inboundHeaders
-                    : ["单号", "日期", "状态", "数量"]
+                  : view.id === "production-orders"
+                    ? ["日期", "生产商", "SKU", "数量", "状态"]
+                    : view.id === "production-inbound"
+                      ? productionInboundHeaders
+                      : view.id === "purchase-inbound"
+                        ? inboundHeaders
+                        : ["单号", "日期", "状态", "数量"]
                 ).map((label) => (
                   <th key={label} className="px-4 py-3">
                     {label}
@@ -1602,6 +1644,10 @@ export function WorkflowWorkbench({
                 <tr className="border-t" key={row.id}>
                   {view.id === "purchase-orders" ? (
                     <PurchaseListCells row={row} />
+                  ) : view.id === "production-orders" ? (
+                    <ProductionListCells row={row} />
+                  ) : view.id === "production-inbound" ? (
+                    <ProductionInboundListCells row={row} />
                   ) : view.id === "purchase-inbound" ? (
                     <PurchaseInboundListCells row={row} />
                   ) : (
@@ -1703,6 +1749,10 @@ export function WorkflowWorkbench({
             ) : null}
             {view.id === "purchase-orders" ? (
               <PurchaseDetail row={selected} />
+            ) : view.id === "production-orders" ? (
+              <ProductionDetail row={selected} />
+            ) : view.id === "production-inbound" ? (
+              <ProductionInboundDetail row={selected} />
             ) : view.id === "purchase-inbound" ? (
               <PurchaseInboundDetail row={selected} />
             ) : (
@@ -1730,7 +1780,13 @@ export function WorkflowWorkbench({
                 </dl>
               </Card>
             )}
-            {view.historyPath && !["purchase-orders", "purchase-inbound"].includes(view.id) ? (
+            {view.historyPath &&
+            ![
+              "purchase-orders",
+              "purchase-inbound",
+              "production-orders",
+              "production-inbound",
+            ].includes(view.id) ? (
               <Card className={WORKFLOW_SURFACE_CLASSES.historyCard}>
                 <h3 className="text-sm font-semibold">状态历史</h3>
                 {timeline.length ? (
@@ -1753,7 +1809,28 @@ export function WorkflowWorkbench({
 
       {formOpen && form ? (
         <div className={WORKFLOW_SURFACE_CLASSES.dialogOverlay} role="dialog" aria-modal="true">
-          {view.id === "purchase-orders" ? (
+          {view.id === "production-orders" || view.id === "production-inbound" ? (
+            view.id === "production-orders" ? (
+              <ProductionForm
+                manufacturers={allOptions.manufacturers ?? []}
+                skus={allOptions.skus ?? []}
+                saving={saving}
+                error={formError}
+                onCancel={() => setFormOpen(false)}
+                onSave={saveProduction}
+              />
+            ) : (
+              <ProductionInboundForm
+                orders={allOptions.productionOrders ?? []}
+                warehouses={allOptions.warehouses ?? []}
+                initialOrderId={initialOrderId}
+                saving={saving}
+                error={formError}
+                onCancel={() => setFormOpen(false)}
+                onSave={saveProduction}
+              />
+            )
+          ) : view.id === "purchase-orders" ? (
             <PurchaseForm
               suppliers={allOptions.suppliers ?? []}
               skus={allOptions.skus ?? []}

@@ -605,7 +605,6 @@ function validateCommand(command: WorkflowCommand): void {
     required(command.payload, [
       "documentDate",
       "manufacturerId",
-      "plannedStartDate",
       "expectedCompletionDate",
       "items",
     ]);
@@ -630,7 +629,7 @@ function validateCommand(command: WorkflowCommand): void {
     required(command.payload, [
       "documentDate",
       source,
-      ...(command.action === "create-purchase" ? ["inspectionPerformed"] : ["inspectionOrderId"]),
+      "inspectionPerformed",
       "warehouseId",
       "items",
     ]);
@@ -722,11 +721,23 @@ export class WorkflowService {
         409,
         "独立采购质检已停止使用，请在采购入库填写到货检查信息。",
       );
-    if (command.action === "create-purchase" && command.resource === "inbound") {
+    if (
+      ["create-purchase", "create-production"].includes(command.action) &&
+      command.resource === "inbound"
+    ) {
       requirePermission(authentication, "inbound.order.confirm");
       if (typeof command.payload.inspectionPerformed !== "boolean")
         throw new ValidationError("请选择是否质检");
     }
+    if (
+      command.mutation &&
+      ["production-progress", "production-completion", "inspection"].includes(command.resource)
+    )
+      throw new AppError(
+        "CONFLICT_REQUEST",
+        409,
+        "生产进度、完工与独立质检已停止写入，历史记录保留查询。",
+      );
     validateCommand(command);
     if (command.resource === "purchase" && command.action === "withdraw") {
       throw new AppError("CONFLICT_REQUEST", 409, "采购订单保存后直接待审核，当前流程不支持撤回。");
@@ -777,7 +788,12 @@ export class WorkflowService {
               afterSnapshot: result,
               metadata: {
                 action: command.action,
-                policy: command.action === "create-purchase" ? "CR-013" : "CR-011",
+                policy:
+                  command.resource === "production" || command.action === "create-production"
+                    ? "CR-014"
+                    : command.action === "create-purchase"
+                      ? "CR-013"
+                      : "CR-011",
               },
               moduleCode: command.resource,
               requestId: context.requestId,
@@ -826,8 +842,17 @@ export class WorkflowService {
     }
     const authorize = () => {
       requirePermission(authentication, permission);
+      if (
+        command.mutation &&
+        ["production-progress", "production-completion", "inspection"].includes(command.resource)
+      )
+        throw new AppError(
+          "CONFLICT_REQUEST",
+          409,
+          "生产进度、完工与独立质检已停止写入，历史记录保留查询。",
+        );
       validateCommand(command);
-      if (command.action === "create-purchase")
+      if (["create-purchase", "create-production"].includes(command.action))
         requirePermission(authentication, "inbound.order.confirm");
     };
     const reconciliation: IdempotencyReconciliationStrategy = {

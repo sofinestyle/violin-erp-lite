@@ -41,47 +41,17 @@ export const productionViews: readonly WorkflowView[] = [
     apiPath: "/api/v1/production-orders",
     createApiPath: "/api/v1/production-orders",
     createPermission: "production.order.create",
-    description:
-      "生产业务：厂家 → 生产订单 → 完工 → 成品质检 → 成品入库 → 库存。独立创建，无需采购订单。",
+    description: "生产业务：厂家 → 生产订单 → 分批成品入库 → 库存。独立创建，无需采购订单。",
     detailPath: "/api/v1/production-orders/{id}",
     historyPath: "/api/v1/production-orders/{id}/status-history",
     id: "production-orders",
     label: "生产订单",
   },
   {
-    apiPath: "/api/v1/production-orders/{parentId}/progress-records",
-    createApiPath: "/api/v1/production-orders/{parentId}/progress-records",
-    createPermission: "production.progress.create",
-    description: "按生产订单登记执行进度，不引用采购订单。",
-    detailPath: "/api/v1/production-progress-records/{id}",
-    id: "production-progress",
-    label: "生产进度",
-  },
-  {
-    apiPath: "/api/v1/production-orders/{parentId}/completion-records",
-    createApiPath: "/api/v1/production-orders/{parentId}/completion-records",
-    createPermission: "production.completion.create",
-    description: "按生产订单登记并确认分批完工。",
-    detailPath: "/api/v1/production-completion-records/{id}",
-    id: "production-completions",
-    label: "分批完工",
-  },
-  {
-    apiPath: "/api/v1/inspection-orders?sourceType=production",
-    createApiPath: "/api/v1/inspection-orders",
-    createPermission: "inspection.order.create",
-    description: "成品质检仅选择已有确认完工数量的生产明细，与采购质检严格分开。",
-    detailPath: "/api/v1/inspection-orders/{id}",
-    historyPath: "/api/v1/inspection-orders/{id}/status-history",
-    id: "production-inspections",
-    label: "成品质检",
-    sourceType: "production",
-  },
-  {
     apiPath: "/api/v1/inbound-orders?sourceDocumentType=production_order",
     createApiPath: "/api/v1/inbound-orders/production",
     createPermission: "inbound.order.create-production",
-    description: "选择已确认成品质检单，系统自动关联生产订单；确认入库才增加库存并生成流水。",
+    description: "选择生产中或部分入库订单，按 SKU 分批入库，确认保存直接增加库存并生成流水。",
     detailPath: "/api/v1/inbound-orders/{id}",
     historyPath: "/api/v1/inbound-orders/{id}/status-history",
     id: "production-inbound",
@@ -90,7 +60,7 @@ export const productionViews: readonly WorkflowView[] = [
   },
 ];
 
-export const inboundViews: readonly WorkflowView[] = [procurementViews[1]!, productionViews[4]!];
+export const inboundViews: readonly WorkflowView[] = [procurementViews[1]!, productionViews[1]!];
 
 export const inventoryViews: readonly WorkflowView[] = [
   {

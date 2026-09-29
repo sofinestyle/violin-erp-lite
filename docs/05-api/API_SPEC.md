@@ -1,7 +1,7 @@
 ---
 document_name: API Master Specification
 project: Violin ERP Lite
-version: 1.16
+version: 1.17
 status: Completed / Approved / Frozen
 owner: Project Manager
 created_date: 2026-07-19
@@ -1551,3 +1551,18 @@ Warehouse 既有 DELETE 继续要求 master.warehouse.update、manage 范围，�
 ## CR-013 采购最终简化批准契约（2026-09-29）
 
 采购付款、采购来源独立质检写接口停止使用，返回明确业务冲突；历史读取保留，生产不变。INB-003 POST /inbound-orders/purchase 改为采购中订单直接整单入库，必填 documentDate/purchaseOrderId/warehouseId/inspectionPerformed/items，items 使用 purchaseOrderItemId/skuId/quantity。inspectorName 选填最多 100 字，未质检清空；旧 inspectionOrderId 不接受，unitCost 由采购单价决定，batchNo 为 NULL。一次保存返回 completed，不再二次审批；权限同时校验 inbound.order.create-purchase 和 inbound.order.confirm、来源记录范围及目标仓范围。创建与库存、流水、采购 received、Audit 原子提交；重复请求不得重复记账。正式路径数量不变，历史业务状态依据证据只读映射，生产 API 不变。
+
+## CR-014 生产最终简化契约增量（2026-09-29 Approved / Implemented）
+
+当前有效版本 v1.17，正式接口总数仍为 344；旧路径保留历史读取，未新增 Permission Code。
+
+PRO-003 保留 items 多明细，每项 skuId/plannedQuantity/processingUnitPrice/remark，拒绝重复 SKU 和非正数量。plannedStartDate 不再由页面填写，服务端从 documentDate 兼容赋值；expectedCompletionDate 保留正式语义。新单直接 in_production，创建与全部明细、Audit 同事务；新业务不再需要提交/审核/开始动作。
+
+生产详情/列表提供 businessStatus（in_production、partially_received、received、cancelled）、legacyReviewRequired、legacyReviewReason。正常历史按正式 completed 入库及净库存流水与明细累计量核对，不按 completed 旧值直接映射已入库；异常历史只读。历史进度、完工和独立质检查询保留，写请求停止；既有历史原始状态不更新。
+
+INB-004 使用 documentDate/productionOrderId/warehouseId/inspectionPerformed/items；inspectorName 选填最多 100 字、false 时清空。items 使用 productionOrderItemId/skuId/quantity，允许正数子集，不允许重复或超剩余；客户端不可决定累计量和目标状态。保存直接 completed，required Audit 与库存/流水/生产累计和状态同事务。按来源父单行锁串行复核剩余量，正式幂等键复用适配器。功能权限同时要求 inbound.order.create-production 和 inbound.order.confirm，并强制正式记录范围及目标仓范围。成本按下述补充批准规则执行；采购 CR-013 契约不变。
+
+
+### CR-014 成本规则补充批准（2026-09-29，Project Owner）
+
+成品入库单位成本定义为“Lite版本暂估生产入库成本”，逐 SKU、逐批次直接继承对应生产订单明细 processing_unit_price，不使用订单平均价，不计算移动平均生产成本。用户不重复填写；写入入库明细及库存流水。当前不额外计入原材料、配件、油漆、包装、领料、制造费用或其他间接成本，不表述为完整制造成本。历史成本不追溯、不重算；未来 BOM、Material Issue、Manufacturing Cost、Cost Accounting 通过独立 CR 升级。

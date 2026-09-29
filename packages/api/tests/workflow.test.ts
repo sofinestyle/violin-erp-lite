@@ -288,74 +288,18 @@ describe("Frozen workflow API contracts", () => {
     });
   });
 
-  it("validates inspection source boundary and writes inspection audit", async () => {
-    const repository: WorkflowRepository = {
-      execute: vi.fn().mockResolvedValue({ id: DOCUMENT_ID, status: "draft" }),
-    };
-    const audit = new InMemoryAuditWriter();
-    const service = new WorkflowService(repository, audit);
-    const item = {
-      inspectedQuantity: 1,
-      inspectionResult: "qualified",
-      qualifiedQuantity: 1,
-      sourceItemId: DOCUMENT_ID,
-      skuId: DOCUMENT_ID,
-      unqualifiedQuantity: 0,
-    };
+  it("CR-014 rejects independent production inspection without repository writes", async () => {
+    const repository: WorkflowRepository = { execute: vi.fn() };
+    const service = new WorkflowService(repository, new InMemoryAuditWriter());
     await expect(
       service.execute(
-        inspectionCommand({
-          inspectionDate: "2026-08-20",
-          inspectionWarehouseId: DOCUMENT_ID,
-          inspectorId: USER_ID,
-          items: [item],
-          productionOrderId: DOCUMENT_ID,
-          purchaseOrderId: DOCUMENT_ID,
-          sourceType: "production",
-        }),
+        inspectionCommand({ sourceType: "production" }),
         "inspection.order.create",
         authentication(["inspection.order.create"]),
         context,
       ),
-    ).rejects.toMatchObject({ code: "VALIDATION_INVALID_FIELD" });
-    await expect(
-      service.execute(
-        inspectionCommand({
-          inspectionDate: "2026-08-20",
-          inspectionWarehouseId: DOCUMENT_ID,
-          inspectorId: USER_ID,
-          items: [item],
-          purchaseOrderId: DOCUMENT_ID,
-          sourceType: "purchase",
-        }),
-        "inspection.order.create",
-        authentication(["inspection.order.create"]),
-        context,
-      ),
-    ).rejects.toMatchObject({
-      code: "CONFLICT_REQUEST",
-    });
-    await service.execute(
-      inspectionCommand({
-        inspectionDate: "2026-08-20",
-        inspectorId: USER_ID,
-        inspectionWarehouseId: DOCUMENT_ID,
-        items: [item],
-        productionOrderId: DOCUMENT_ID,
-        sourceType: "production",
-      }),
-      "inspection.order.create",
-      authentication(["inspection.order.create"]),
-      context,
-    );
-    expect(repository.execute).toHaveBeenCalledTimes(1);
-    expect(audit.events).toHaveLength(1);
-    expect(audit.events[0]).toMatchObject({
-      action: "INS-003",
-      actorUserId: USER_ID,
-      resourceId: DOCUMENT_ID,
-      resourceType: "inspection",
-    });
+    ).rejects.toMatchObject({ code: "CONFLICT_REQUEST" });
+    expect(repository.execute).not.toHaveBeenCalled();
   });
 
   it("validates inbound creation payload and writes inbound audit", async () => {

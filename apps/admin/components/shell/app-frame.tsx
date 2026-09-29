@@ -16,7 +16,7 @@ const routeTitles: Partial<
     title: "采购管理",
   },
   production: {
-    description: "直接向生产厂家下单，完工后进行成品质检和成品入库；无需先建采购单。",
+    description: "直接向生产厂家下单，支持多 SKU 和分批成品入库；无需先建采购单。",
     title: "生产管理",
   },
   "access-control": {

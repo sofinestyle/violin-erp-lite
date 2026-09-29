@@ -860,3 +860,8 @@ Batch 003-A：Automated Verification Passed / Pending Manual Business Verificati
 ## 2026-09-29 Procurement Workflow Final Simplification / CR-013
 
 状态 Fixed / Manual Verification Passed（Project Owner Confirmed），不新增 UAT 编号。采购付款与独立采购质检退出流程，采购状态待审核→采购中→已入库；直接采购入库、必选是否质检、选填姓名、日历日期、成本继承、批次 NULL、整单一次保存及原子审计已实施。真实 HTTP/PostgreSQL 闭环 10 × 300、库存/流水/Audit、并发幂等及审计/流水故障回滚通过。pnpm check 549 passed / 70 conditional skipped，本轮 PostgreSQL 专项另行启用通过。浏览器已创建待审核测试单，审核原生确认交互超时，自动浏览器完整闭环及 Console/截图证据未完成，保留该验证边界。2026-09-29 项目负责人确认“经过人工测试，测试通过。”人工验收通过，CR-013 Approved / Implemented，按原授权统一提交与推送，不直接 Closed。完整证据见 `PROCUREMENT_FINAL_SIMPLIFICATION_REPORT.md`。
+
+
+## 2026-09-29 Production Workflow Final Simplification
+
+CR-014 Approved / Implemented。生产订单支持多 SKU、保存即生产中；成品入库直接来源生产订单、分批一次确认，逐 SKU 继承加工单价作为 Lite版本暂估生产入库成本，不计其他制造成本、不重算历史。旧进度/完工/成品质检停写，历史保留；权限与范围不扩展。API v1.17，Database v2.11，15 个迁移全部应用。pnpm check 571 passed / 71 conditional skipped，本轮真实 PostgreSQL 专项另行启用通过；浏览器 A100/B50 分三次入库、库存/4条流水/Audit、并发与回滚验证通过，Console error/warn=0。UAT Fixed / Pending Manual Verification，不新增 UAT 编号。详见 PRODUCTION_FINAL_SIMPLIFICATION_REPORT.md。

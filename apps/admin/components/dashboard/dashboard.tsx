@@ -176,16 +176,16 @@ export function Dashboard() {
         : Promise.resolve(),
       hasPermission("production.order.read")
         ? loadTask(
-            "待处理生产任务",
+            "生产中待成品入库",
             "/workspace/production",
-            "/api/v1/production-orders?page=1&pageSize=1&status=pending_approval",
+            "/api/v1/production-orders?page=1&pageSize=1&status=in_production",
           )
         : Promise.resolve(),
-      hasPermission("inbound.order.read")
+      hasPermission("production.order.read")
         ? loadTask(
-            "待生产入库单据",
-            "/workspace/warehouse-operations",
-            "/api/v1/inbound-orders?page=1&pageSize=1&status=pending_approval&sourceDocumentType=production_order",
+            "部分入库生产订单",
+            "/workspace/production",
+            "/api/v1/production-orders?page=1&pageSize=1&status=partially_received",
           )
         : Promise.resolve(),
       hasPermission("outbound.order.read")

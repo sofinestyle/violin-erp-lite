@@ -1,7 +1,7 @@
 ---
 document_name: 数据库规格
 project: Violin ERP Lite
-version: 2.10
+version: 2.11
 status: Completed / Approved
 owner: Project Manager
 created_date: 2026-07-19
@@ -17,7 +17,7 @@ Phase 3 数据库设计（Database Design）已完成并冻结。Database Logica
 
 当前唯一有效版本为：
 
-- Database Logical Design：v2.10；
+- Database Logical Design：v2.11；
 - 状态：Completed / Approved；
 - 正式表：75；
 - 正式字段：1346；
@@ -25,7 +25,7 @@ Phase 3 数据库设计（Database Design）已完成并冻结。Database Logica
 - 唯一约束/唯一索引：91；
 - 外键：310；
 - 普通索引：131；
-- Check：284；
+- Check：285；
 - 正式数据库枚举：2。
 
 Database Logical Design v1.1 的 60 张表和 1128 个字段保留为历史冻结基线。v2.0 按 DCR-002 及其 Completion Fix 新增 `user_wechat_identities` 与 `auth_sessions`。v2.1 按 DCR-003 只为四个既有 `VARCHAR(50)` 字段增加值域 Check。v2.2 按 DCR-004 为 `import_tasks` 增加 `file_checksum`，新增 `idempotency_records`，并增加对应主键、唯一、普通索引和 Check。v2.3 按 DCR-005 为既有 `attachments.status` 增加 `active` 默认值和五值域 Check，并新增一个状态定位普通索引；不新增表、字段、外键、唯一约束或 PostgreSQL Enum。v2.4 按 Task 7.6 Background Job Database Change Request 新增 `jobs`、`job_attempts`、`job_results`、`job_dead_letters` 与 `scheduler_locks` 五个逻辑表，新增 65 个字段、5 个主键、5 个唯一约束/唯一索引、8 个外键、8 个普通索引和 16 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.5 按 Task 7.7 Event Infrastructure Database Change Request 新增 `event_outbox`、`event_history`、`event_consumptions`、`event_dead_letters` 与 `event_deliveries` 五个逻辑表，新增 89 个字段、5 个主键、4 个唯一约束/唯一索引、10 个外键、24 个普通索引和 27 项 Check；不新增 PostgreSQL Enum，不修改业务领域表。v2.6 按 CR-003 新增 `code_generation_rules` 与 `code_sequences` 两个逻辑表，新增 13 个字段、2 个主键、2 个唯一约束/唯一索引、1 个普通索引和 2 项 Check；不新增外键、不新增 PostgreSQL Enum、不修改既有业务领域表。v2.7 按 CR-004 只修改 `products.product_name_en` 约束语义，新增 1 个唯一索引和 1 项 Check，不新增表、字段、外键、普通索引或 PostgreSQL Enum。
@@ -1067,3 +1067,9 @@ CR-009 只向现有 role_warehouses / role_stores 初始化新对象范围，不
 ## CR-013 采购最终简化批准增量（2026-09-29）
 
 inbound_orders 增加 inspection_performed BOOLEAN NULL、inspector_name VARCHAR(100) NULL，无默认值；历史记录保持 NULL。质检记录仅用于采购，false 不得携带姓名，NULL 仅兼容历史无该信息记录。inbound_order_items.batch_no 从必填改为可空，采购保存 NULL；生产仍由正式服务要求批次。原始历史状态、付款、质检、入库、审计全部保留，不改写历史数量，不删除任何表或外键。采购业务不再写 inspected，存储 CHECK 继续接受历史状态。具体原子事务及证据映射见 CR-013。
+
+## CR-014 生产最终简化增量设计（2026-09-29 Approved / Implemented，已部署）
+
+复用 production_orders / production_order_items 一对多及 planned_quantity / inbound_quantity；新业务状态使用既有 VARCHAR status 的 in_production、partially_received、received、cancelled，不新增 PostgreSQL enum 或状态列。planned_start_date 继续必填，由正式生产日期兼容赋值，不伪造实际完工/质检数量。原始历史数据不更新。
+
+最小迁移替换 ck_inbound_orders_inspection_information，允许 production_order 同 purchase_order 使用 inspection_performed / inspector_name，历史 NULL 保留；false 时姓名须为 NULL。复用上一迁移已允许 NULL 的 inbound_order_items.batch_no。新增 ck_production_order_items_inbound_limit：inbound_quantity <= planned_quantity，以 NOT VALID 保留可能存在的历史异常，新写入/更新强制约束；历史审计无异常时执行验证。不增加表、字段、权限或采购语义。Check 总数由 284 增至 285；当前有效版本 v2.11。迁移 20260929150000_production_final_simplification 已部署，15 个迁移全部应用；新增数量约束保留 NOT VALID，历史行不强制重写，新写入/更新仍强制检查。

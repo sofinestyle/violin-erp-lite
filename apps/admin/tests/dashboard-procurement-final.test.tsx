@@ -26,7 +26,9 @@ describe("CR-013 dashboard procurement queues", () => {
     const root = createRoot(element);
     await act(async () =>
       root.render(
-        <PermissionProvider permissions={["purchase.order.read", "inbound.order.read"]}>
+        <PermissionProvider
+          permissions={["purchase.order.read", "inbound.order.read", "production.order.read"]}
+        >
           <Dashboard />
         </PermissionProvider>,
       ),
@@ -36,11 +38,11 @@ describe("CR-013 dashboard procurement queues", () => {
     });
     expect(element.textContent).toContain("待采购入库");
     expect(element.textContent).toContain("7");
-    expect(element.textContent).toContain("待生产入库单据");
+    expect(element.textContent).toContain("部分入库生产订单");
     expect(element.textContent).not.toContain("待采购质检");
     expect(paths).toContain("/api/v1/purchase-orders?page=1&pageSize=1&status=purchasing");
     expect(paths).toContain(
-      "/api/v1/inbound-orders?page=1&pageSize=1&status=pending_approval&sourceDocumentType=production_order",
+      "/api/v1/production-orders?page=1&pageSize=1&status=partially_received",
     );
     await act(async () => root.unmount());
     element.remove();

@@ -11,6 +11,10 @@ related_phase: Phase 1
 
 # CHANGELOG
 
+## 2026-09-29 Production Workflow Final Simplification
+
+CR-014 Approved / Implemented。生产订单支持多 SKU、保存即生产中；成品入库直接来源生产订单、分批一次确认，逐 SKU 继承加工单价作为 Lite版本暂估生产入库成本，不计其他制造成本、不重算历史。旧进度/完工/成品质检停写，历史保留；权限与范围不扩展。API v1.17，Database v2.11，15 个迁移全部应用。pnpm check 571 passed / 71 conditional skipped，本轮真实 PostgreSQL 专项另行启用通过；浏览器 A100/B50 分三次入库、库存/4条流水/Audit、并发与回滚验证通过，Console error/warn=0。UAT Fixed / Pending Manual Verification，不新增 UAT 编号。详见 PRODUCTION_FINAL_SIMPLIFICATION_REPORT.md。
+
 ## 2026-09-29 Procurement Workflow Final Simplification
 
 CR-013 Approved / Implemented：采购付款/独立采购质检停写并移除入口，采购入库直接引用采购中订单，一次保存原子完成入库、库存、流水、采购 received 和 required Audit。必选是否质检、选填质检人、日历日期、自动明细、采购单价继承及 NULL 批次；保留整单一次规则、生产质检与历史数据。API v1.16 / Database v2.10，迁移已部署，无新 Permission Code。pnpm check 549 passed / 70 conditional skipped，真实 PostgreSQL 专项已另行启用通过。自动浏览器完成制单后原生审核确认交互超时，保留自动验证未完成记录。2026-09-29 项目负责人确认人工测试通过，状态 Fixed / Manual Verification Passed；按原授权统一提交推送，详见采购最终简化报告。

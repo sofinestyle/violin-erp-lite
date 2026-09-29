@@ -1,3 +1,6 @@
+import { productionRows } from "./production-state.js";
+import { productionTransaction } from "./production-transaction.js";
+import { createDirectProductionInbound } from "./production-inbound.js";
 import { createDirectPurchaseInbound } from "./purchase-inbound.js";
 import { procurementRows } from "./procurement-state.js";
 import { procurementInspector, assertWholeProcurement } from "./procurement-rules.js";
@@ -231,7 +234,7 @@ function listWhere(command: WorkflowCommand, actor: AuthenticatedUser): JsonReco
   ];
   for (const key of allowed) {
     const value = command.query.get(key);
-    if (value && !(command.resource === "purchase" && key === "status"))
+    if (value && !(["purchase", "production"].includes(command.resource) && key === "status"))
       where.push({ [toSnake(key)]: value });
   }
   const documentNoValue = command.query.get("documentNo") ?? command.query.get("keyword");
@@ -269,6 +272,20 @@ async function list(
       total: filtered.length,
       totalPages: Math.ceil(filtered.length / pagination.pageSize),
       legacyReviewCount,
+    };
+  }
+  if (command.resource === "production") {
+    const rows = await productionRows(client as unknown as PrismaClient, where);
+    const filtered = rows.filter(
+      (row) => !command.query.get("status") || row.businessStatus === command.query.get("status"),
+    );
+    return {
+      items: filtered
+        .slice((pagination.page - 1) * pagination.pageSize, pagination.page * pagination.pageSize)
+        .map((row) => record(row as unknown as JsonRecord)),
+      ...pagination,
+      total: filtered.length,
+      totalPages: Math.ceil(filtered.length / pagination.pageSize),
     };
   }
   const delegate = client[modelFor(command.resource)]!;
@@ -316,6 +333,30 @@ async function list(
 }
 
 async function enrichPurchaseInbounds(client: DynamicClient, rows: JsonRecord[]) {
+  const productions = rows.filter((row) => row.source_document_type === "production_order");
+  if (productions.length) {
+    const [parents, warehouses] = await Promise.all([
+      client.production_orders!.findMany({
+        where: { id: { in: productions.map((row) => row.source_document_id) } },
+      }),
+      client.warehouses!.findMany({
+        where: { id: { in: productions.map((row) => row.warehouse_id) } },
+      }),
+    ]);
+    const parentMap = new Map(parents.map((row) => [row.id, row]));
+    const warehouseMap = new Map(warehouses.map((row) => [row.id, row]));
+    rows = rows.map((row) =>
+      row.source_document_type !== "production_order"
+        ? row
+        : {
+            ...row,
+            production_order_no: parentMap.get(row.source_document_id)?.document_no,
+            manufacturer_name: parentMap.get(row.source_document_id)?.manufacturer_name_snapshot,
+            warehouse_name: warehouseMap.get(row.warehouse_id)?.warehouse_name,
+          },
+    );
+  }
+
   const purchases = rows.filter((row) => row.source_document_type === "purchase_order");
   if (!purchases.length) return rows;
   const [parents, warehouses, suppliers] = await Promise.all([
@@ -351,6 +392,14 @@ async function detail(
 ): Promise<JsonRecord> {
   if (command.resource === "purchase") {
     const [order] = await procurementRows(client as unknown as PrismaClient, {
+      id: command.entityId ?? command.parentId,
+      ...dataScopeWhere(command, actor),
+    });
+    if (!order) throw new NotFoundError();
+    return record(order as unknown as JsonRecord);
+  }
+  if (command.resource === "production") {
+    const [order] = await productionRows(client as unknown as PrismaClient, {
       id: command.entityId ?? command.parentId,
       ...dataScopeWhere(command, actor),
     });
@@ -558,8 +607,10 @@ function validateProductionDates(
 async function createProduction(client: DynamicClient, payload: WorkflowPayload, actor: string) {
   if ("purchaseOrderId" in payload) throw new ValidationError("生产单不得引用采购单");
   const sourceItems = items(payload);
+  if (new Set(sourceItems.map((item) => item.skuId)).size !== sourceItems.length)
+    throw new ValidationError("订单明细不允许重复 SKU");
   const documentDate = date(payload, "documentDate");
-  const plannedStartDate = date(payload, "plannedStartDate");
+  const plannedStartDate = documentDate;
   const expectedCompletionDate = date(payload, "expectedCompletionDate");
   validateProductionDates(documentDate, plannedStartDate, expectedCompletionDate);
   const [manufacturer, { detailRows, quantityTotal, total }] = await Promise.all([
@@ -582,7 +633,7 @@ async function createProduction(client: DynamicClient, payload: WorkflowPayload,
       planned_start_date: plannedStartDate,
       production_order_items: { create: detailRows },
       remark: text(payload, "remark", true),
-      status: "draft",
+      status: "in_production",
       subtotal_amount: total,
       total_amount: total,
       total_quantity: quantityTotal,
@@ -979,6 +1030,8 @@ async function createInspection(client: DynamicClient, payload: WorkflowPayload,
 }
 
 async function createInbound(client: DynamicClient, command: WorkflowCommand, actor: string) {
+  if (command.action === "create-production")
+    return createDirectProductionInbound(client as unknown as PrismaClient, command.payload, actor);
   const purchase = command.action === "create-purchase";
   if (purchase)
     return createDirectPurchaseInbound(client as unknown as PrismaClient, command.payload, actor);
@@ -1108,6 +1161,34 @@ async function action(client: DynamicClient, command: WorkflowCommand, actor: st
     Number(command.payload.versionNo) !== Number(current.version_no)
   ) {
     throw new ConflictError("单据版本已变化");
+  }
+  if (command.resource === "production" && command.action === "cancel") {
+    if (!["in_production", "approved"].includes(String(current.status)))
+      throw new ConflictError("当前生产单不允许取消");
+    const result = await client.production_orders!.update({
+      where: { id: current.id },
+      data: {
+        status: "cancelled",
+        cancelled_at: new Date(),
+        cancelled_by: actor,
+        cancel_reason: String(command.payload.reason),
+        updated_by: actor,
+        version_no: Number(current.version_no) + 1,
+      },
+    });
+    await client.document_status_histories!.create({
+      data: {
+        object_type: "production",
+        object_id: current.id,
+        object_no_snapshot: current.document_no,
+        from_status: current.status,
+        to_status: "cancelled",
+        changed_by: actor,
+        changed_at: new Date(),
+        change_reason: String(command.payload.reason),
+      },
+    });
+    return result;
   }
   if (command.resource === "purchase") {
     const order = await purchaseState(client, current.id);
@@ -1931,6 +2012,14 @@ export class PrismaWorkflowRepository implements WorkflowRepository {
     actor: AuthenticatedUser,
     audit: (writer: AuditWriter, result: unknown) => Promise<void>,
   ) {
+    const production = await productionTransaction(
+      this.client as unknown as PrismaClient,
+      command,
+      actor,
+      (tx) => new PrismaWorkflowRepository(tx).execute(command, actor),
+      audit,
+    );
+    if (production) return production;
     return procurementTransaction(
       this.client as unknown as PrismaClient,
       command,
@@ -1976,7 +2065,8 @@ export class PrismaWorkflowRepository implements WorkflowRepository {
         "export",
       ].includes(command.action)
     ) {
-      if (command.resource === "purchase") await detail(this.client, command, actor);
+      if (["purchase", "production"].includes(command.resource))
+        await detail(this.client, command, actor);
       return related(this.client, command);
     }
     return record(await action(this.client, command, actor.userId));

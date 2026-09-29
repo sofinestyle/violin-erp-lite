@@ -53,9 +53,9 @@ describe("CR-013 purchase inbound presentation", () => {
     expect(html).not.toContain('type="date"');
     for (const text of ["单位成本", "批次", "已确认采购质检单"]) expect(html).not.toContain(text);
   });
-  it("preserves production inspection and removes retired purchase navigation", () => {
+  it("keeps independent purchase and production direct inbound navigation", () => {
     expect(procurementViews.map((v) => v.label)).toEqual(["采购订单", "采购入库"]);
-    expect(productionViews.map((v) => v.label)).toContain("成品质检");
+    expect(productionViews.map((v) => v.label)).toEqual(["生产订单", "成品入库"]);
   });
   it("shows receipt results without raw identifiers and keeps unknown history distinct from no inspection", () => {
     const html = renderToStaticMarkup(

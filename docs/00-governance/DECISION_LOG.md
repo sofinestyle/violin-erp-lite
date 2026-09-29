@@ -2818,3 +2818,12 @@ CR-012 已实施，采购订单允许在原权限/数据范围内自审。CR-011
 Project Owner 本次正式批准：去除采购付款及独立采购质检新业务，采购入库直接来源采购中订单，质检信息合并入库，保存即完成库存与流水；必要 Frozen Business/API/Database 调整纳入统一 CR-013。采购保留整单一次执行，状态待审核、采购中、已入库、已取消；生产链、历史事实、权限代码和数据范围不扩展。新增入库检查信息及批次可空迁移已部署，API v1.16、Database v2.10；历史 inspected 依据证据兼容读取，异常只读隔离。
 
 代码与自动化、真实 HTTP/PostgreSQL 事务闭环已验证；保留自动浏览器原生审核确认交互超时及余下闭环未完成记录，不声明自动浏览器全量 E2E 通过。2026-09-29，Project Owner 明确确认“经过人工测试，测试通过。”据此记录 CR-013 Approved / Implemented，UAT Fixed / Manual Verification Passed，按原授权统一一个 Commit/Push；不直接 Closed，Phase 10 正式状态不变。
+
+## DEC-117 CR-014 生产流程最终简化（2026-09-29）
+
+Project Owner 正式批准本轮生产流程、多 SKU、分批直接入库及必要 Frozen 契约变更，建立统一 CR-014 Approved。保留采购已验收基准，不混合提交。开始前 main 已同步、工作区干净、status:check 通过。本轮成本规则已由负责人补充批准，按下述“Lite版本暂估生产入库成本”实施。CR-014 Approved / Implemented，真实 PostgreSQL、HTTP、浏览器及全量检查通过，UAT Fixed / Pending Manual Verification。Phase/Task 状态不变。
+
+
+### CR-014 成本规则补充批准（2026-09-29，Project Owner）
+
+成品入库单位成本定义为“Lite版本暂估生产入库成本”，逐 SKU、逐批次直接继承对应生产订单明细 processing_unit_price，不使用订单平均价，不计算移动平均生产成本。用户不重复填写；写入入库明细及库存流水。当前不额外计入原材料、配件、油漆、包装、领料、制造费用或其他间接成本，不表述为完整制造成本。历史成本不追溯、不重算；未来 BOM、Material Issue、Manufacturing Cost、Cost Accounting 通过独立 CR 升级。

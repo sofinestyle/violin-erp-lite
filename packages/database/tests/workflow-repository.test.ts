@@ -73,7 +73,7 @@ describe("Prisma workflow repository", () => {
     const create = vi.fn().mockResolvedValue({
       id: ORDER_ID,
       production_order_items: [{ planned_quantity: 2 }],
-      status: "draft",
+      status: "in_production",
       total_amount: 200,
     });
     const client = {
@@ -119,7 +119,7 @@ describe("Prisma workflow repository", () => {
     };
 
     await expect(repository.execute(command, actor)).resolves.toMatchObject({
-      status: "draft",
+      status: "in_production",
       totalAmount: 200,
     });
     expect(create).toHaveBeenCalledWith(
@@ -136,7 +136,7 @@ describe("Prisma workflow repository", () => {
               }),
             ],
           }),
-          status: "draft",
+          status: "in_production",
           total_amount: 200,
         }),
       }),
@@ -1247,7 +1247,7 @@ describe("Prisma workflow repository", () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it("creates production source inbound from confirmed inspection", async () => {
+  it("rejects retired inspection-based production inbound", async () => {
     const productionOrderItemId = "77777777-7777-4777-8777-777777777777";
     const inspectionOrderItemId = "88888888-8888-4888-8888-888888888888";
     const client = {
@@ -1331,7 +1331,7 @@ describe("Prisma workflow repository", () => {
         },
         actor,
       ),
-    ).resolves.toMatchObject({ status: "draft", totalQuantity: 2 });
+    ).rejects.toThrow("请选择是否质检");
   });
 
   it("confirms inbound by atomically increasing inventory and writing inventory transactions", async () => {
